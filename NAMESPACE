@@ -1,0 +1,118 @@
+import(methods)
+importFrom(stats, setNames, dlogis, plogis, qlogis)
+import(BiocGenerics)
+import(S4Vectors)
+import(IRanges)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Export S4 classes
+###
+
+exportClasses(
+    ArrayBlocks, DelayedArray, DelayedMatrix
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Export S3 methods
+###
+
+S3method(as.array, DelayedArray)
+
+S3method(as.data.frame, DelayedArray)
+
+S3method(as.matrix, DelayedArray)
+
+S3method(as.vector, DelayedArray)
+
+S3method(mean, DelayedArray)
+
+S3method(split, DelayedArray)
+
+### We also export them thru the export() directive so that (a) they can be
+### called directly, (b) tab-completion on the name of the generic shows them,
+### and (c) methods() doesn't asterisk them.
+
+export(
+    as.array.DelayedArray,
+
+    as.data.frame.DelayedArray,
+
+    as.matrix.DelayedArray,
+
+    as.vector.DelayedArray,
+
+    mean.DelayedArray,
+
+    split.DelayedArray
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Export S4 methods for generics not defined in DelayedArray
+###
+
+exportMethods(
+    ## Methods for generics defined in the base package:
+    length, names, "names<-",
+    dim, "dim<-", dimnames, "dimnames<-",
+    as.array, as.vector, as.matrix, as.data.frame,
+    "[", "[[",
+    drop,
+    t,
+    c,
+    split,
+    is.na, is.finite, is.infinite, is.nan,
+    "!",
+    #"+", "-", "*", "/", "^", "%%", "%/%",  # "Arith" group generic
+    "==", "!=", "<=", ">=", "<", ">",       # "Compare" group generic
+    anyNA, which,
+    max, min, range, sum, prod, any, all,   # "Summary" group generic
+    mean,
+    round, signif,
+    rowSums, colSums, rowMeans, colMeans,
+    nchar, tolower, toupper,
+
+    ## Methods for generics defined in the methods package:
+    coerce, show,
+
+    ## Methods for generics defined in the stats package:
+    dlogis, plogis, qlogis,
+
+    ## Methods for generics defined in the BiocGenerics package:
+    cbind, rbind,
+
+    ## Methods for generics defined in the S4Vectors package:
+    isEmpty,
+
+    ## Methods for generics defined in the IRanges package:
+    splitAsList,
+    arbind, acbind
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Export non-generic functions
+###
+
+export(
+    ArrayBlocks, DelayedArray
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Export S4 generics defined in DelayedArray + export corresponding methods
+###
+
+export(
+    matrixClass, subset_seed_as_array, type,
+    pmax2, pmin2, apply
+)
+
+### Exactly the same list as above.
+exportMethods(
+    matrixClass, subset_seed_as_array, type,
+    pmax2, pmin2, apply
+)
+

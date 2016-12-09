@@ -1,0 +1,20 @@
+- Add man page and unit tests for statistical methods defined in
+  DelayedArray-stats.R
+
+- Make DelayedArray contain Annotated from S4Vectors.
+
+- Fix bug in "[" method for DelayedArray objects caused by "substitute() +
+  eval()" hack. See R/DelayedArray-class.R for the details.
+
+- Add more examples to the man pages (using the toy dataset).
+
+- Add unit tests for round() and signif() (Math2 group).
+
+- Add vignette.
+
+- Support more matrix- and array-like operations.
+
+- How well supported are DelayedArray of type "character"?
+
+- Add more unit tests.
+
