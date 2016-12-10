@@ -1,0 +1,46 @@
+## Should this go in the SummarizedExperiment package? As an additional section
+## in the vignette? As a separate vignette? As a man page? Probably the former.
+
+
+## The problem
+## ===========
+##
+## When trying to create a SummarizedExperiment object with big dimensions it's
+## critical to use a memory-efficient container for the assay data. Depending
+## on the nature of the data, in-memory containers that compress the data (e.g.
+## a DataFrame of Rle's or a sparse matrix from the Matrix package) might help
+## to a certain extent. However, even after compression some data might remain
+## too big to fit in memory. In that case, one solution is to split the
+## SummarizedExperiment object in smaller objects, then process the smaller
+## objects separately, and finally combine the results. A disadvantage of this
+## approach is that the split/process/combine mechanism is the responsibility
+## of the SummarizedExperiment-based application so it makes the development of
+## such applications more complicated. Having the assay data stored in an
+## on-disk container like HDF5Matrix should greatly simplify this: the goal is
+## to make it possible for the end-user to manipulate the big
+## SummarizedExperiment object as a whole and have the split/process/combine
+## mechanism automatically and transparently happen behind the scene .
+
+## Comparison of assay data containers
+## ===================================
+##
+## Each container has its strengths and weaknesses and which one to use exactly
+## depends on several factors.
+##
+## DataFrame of Rle's
+## ------------------
+## Works great for coverage data. See ?GPos in GenomicRanges for an example.
+
+## Sparse matrix object from the Matrix package
+## --------------------------------------------
+## This sounds like a natural candidate for RNA-seq count data which tends to
+## be sparse. Unfortunately, because the Matrix package can only store the
+## counts as doubles and not as integers, trying to use it on real RNA-seq
+## count data actually increases the size of the matrix of counts:
+library(Matrix)
+library(airway)
+data(airway)
+head(assay(airway))
+object.size(assay(airway))
+object.size(Matrix(assay(airway), sparse=TRUE))
+
