@@ -6,6 +6,37 @@
 ###
 
 
+### Default block size in bytes.
+DEFAULT_BLOCK_SIZE <- 4500000L  # 4.5 Mb
+
+### Atomic type sizes in bytes.
+.TYPE_SIZES <- c(
+    logical=4L,
+    integer=4L,
+    numeric=8L,
+    double=8L,
+    complex=16L,
+    character=8L,  # just the overhead of a CHARSXP; doesn't account for the
+                   # string data itself
+    raw=1L
+)
+
+### NOT exported but used in HDF5Array!
+get_block_length <- function(type)
+{
+    type_size <- .TYPE_SIZES[type]
+    idx <- which(is.na(type_size))
+    if (length(idx) != 0L) {
+        unsupported_types <- unique(type[idx])
+        in1string <- paste0(unsupported_types, collapse=", ")
+        stop("unsupported type(s): ",  in1string)
+    }
+    block_size <- getOption("DelayedArray.block.size",
+                            default=DEFAULT_BLOCK_SIZE)
+    as.integer(block_size / type_size)
+}
+
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### ArrayBlocks objects
 ###
@@ -66,7 +97,6 @@ setMethod("length", "ArrayBlocks",
         .get_ArrayBlocks_inner_length(x) * .get_ArrayBlocks_outer_length(x)
 )
 
-### NOT exported but used in HDF5Array!
 ### Return a "multidimensional subscript" i.e. a list with one subscript per
 ### dimension in the original array.
 get_array_block_subscripts <- function(blocks, i, expand.RangeNSBS=FALSE)
@@ -113,8 +143,7 @@ get_array_block_subscripts <- function(blocks, i, expand.RangeNSBS=FALSE)
     subscripts
 }
 
-### NOT exported but used in HDF5Array!
-extract_array_block <- function(x, blocks, i)
+.extract_array_block <- function(x, blocks, i)
 {
     subscripts <- get_array_block_subscripts(blocks, i,
                                              expand.RangeNSBS=is.array(x))
@@ -126,7 +155,7 @@ split_array_in_blocks <- function(x, max_block_len)
 {
     blocks <- ArrayBlocks(dim(x), max_block_len)
     lapply(seq_along(blocks),
-           function(i) extract_array_block(x, blocks, i))
+           function(i) .extract_array_block(x, blocks, i))
 }
 
 ### NOT exported but used in unit tests.
@@ -146,27 +175,119 @@ unsplit_array_from_blocks <- function(subarrays, x)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### write_to_dump() generic and default methods
+###
+
+### Virtual class with no slots. Intended to be extended by implementations
+### of DelayedArray on-disk backends. Concrete subclasses must implement:
+###   1) A constructor function that takes argument 'dim', 'dimnames', and
+###      'type'.
+###   2) A "write_to_dump" method that works on an ordinary array.
+###   3) A "close" method.
+###   4) Coercion to DelayedArray.
+### See HDF5DatasetDump class in the HDF5Array package for an example.
+setClass("ArrayOnDiskDump", representation("VIRTUAL"))
+
+setGeneric("write_to_dump", signature=c("x", "dump"),
+    function(x, dump, subscripts=NULL) standardGeneric("write_to_dump")
+)
+
+setGeneric("close")
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Walking on the blocks
 ###
 ### 3 utility functions to process array-like objects by block.
 ###
 
-block_APPLY <- function(...)
+.as_array_or_matrix <- function(x)
 {
-    require_HDF5Array()
-    HDF5Array:::block_APPLY(...)
+    if (length(dim(x)) == 2L)
+        return(as.matrix(x))
+    as.array(x)
 }
 
-block_MAPPLY <- function(...)
+### An lapply-like function.
+block_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
 {
-    require_HDF5Array()
-    HDF5Array:::block_MAPPLY(...)
+    APPLY <- match.fun(APPLY)
+    if (is.null(block_len))
+        block_len <- get_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), block_len)
+    nblock <- length(blocks)
+    if (nblock == 0L)
+        return(if_empty)
+    expand_RangeNSBS <- is.array(x) || !is.null(dump)
+    lapply(seq_len(nblock),
+        function(i) {
+            subscripts <- get_array_block_subscripts(blocks, i,
+                                                     expand_RangeNSBS)
+            subarray <- subset_by_subscripts(x, subscripts)
+            if (!is.array(subarray))
+                subarray <- .as_array_or_matrix(subarray)
+            block_ans <- APPLY(subarray, ...)
+            if (is.null(dump))
+                return(block_ans)
+            write_to_dump(block_ans, dump, subscripts=subscripts)
+        })
 }
 
-block_REDUCE_and_COMBINE <- function(...)
+### A mapply-like function for conformable arrays.
+block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
 {
-    require_HDF5Array()
-    HDF5Array:::block_REDUCE_and_COMBINE(...)
+    MAPPLY <- match.fun(MAPPLY)
+    dots <- unname(list(...))
+    dims <- sapply(dots, dim)
+    x_dim <- dims[ , 1L]
+    if (!all(dims == x_dim))
+        stop("non-conformable arrays")
+    if (is.null(block_len)) {
+        types <- unlist(lapply(dots, type))
+        block_len <- min(get_block_length(types))
+    }
+    blocks <- ArrayBlocks(x_dim, block_len)
+    nblock <- length(blocks)
+    if (nblock == 0L)
+        return(if_empty)
+    lapply(seq_len(nblock),
+        function(i) {
+            subscripts <- get_array_block_subscripts(blocks, i, TRUE)
+            subarrays <- lapply(dots,
+                function(x) {
+                    subarray <- subset_by_subscripts(x, subscripts)
+                    if (!is.array(subarray))
+                        subarray <- .as_array_or_matrix(subarray)
+                    subarray
+                })
+            block_ans <- do.call(MAPPLY, subarrays)
+            if (is.null(dump))
+                return(block_ans)
+            write_to_dump(block_ans, dump, subscripts=subscripts)
+        })
+}
+
+### A Reduce-like function.
+block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
+                                        BREAKIF=NULL, block_len=NULL)
+{
+    REDUCE <- match.fun(REDUCE)
+    COMBINE <- match.fun(COMBINE)
+    if (!is.null(BREAKIF))
+        BREAKIF <- match.fun(BREAKIF)
+    if (is.null(block_len))
+        block_len <- get_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), block_len)
+    for (i in seq_along(blocks)) {
+        subarray <- .extract_array_block(x, blocks, i)
+        if (!is.array(subarray))
+            subarray <- .as_array_or_matrix(subarray)
+        reduced <- REDUCE(subarray)
+        init <- COMBINE(i, subarray, init, reduced)
+        if (!is.null(BREAKIF) && BREAKIF(init))
+            break
+    }
+    init
 }
 
 
@@ -177,15 +298,27 @@ block_REDUCE_and_COMBINE <- function(...)
 ### to process a matrix-like object by block of columns.
 ###
 
-colblock_APPLY <- function(...)
+colblock_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL)
 {
-    require_HDF5Array()
-    HDF5Array:::colblock_APPLY(...)
+    x_dim <- dim(x)
+    if (length(x_dim) != 2L)
+        stop("'x' must be a matrix-like object")
+    APPLY <- match.fun(APPLY)
+    ## We're going to walk along the columns so need to increase the block
+    ## length so each block is made of at least one column.
+    block_len <- max(get_block_length(type(x)), x_dim[[1L]])
+    block_APPLY(x, APPLY, ..., if_empty=if_empty, dump=dump,
+                block_len=block_len)
 }
 
-colblock_REDUCE_and_COMBINE <- function(...)
+colblock_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init)
 {
-    require_HDF5Array()
-    HDF5Array:::colblock_REDUCE_and_COMBINE(...)
+    x_dim <- dim(x)
+    if (length(x_dim) != 2L)
+        stop("'x' must be a matrix-like object")
+    ## We're going to walk along the columns so need to increase the block
+    ## length so each block is made of at least one column.
+    block_len <- max(get_block_length(type(x)), x_dim[[1L]])
+    block_REDUCE_and_COMBINE(x, REDUCE, COMBINE, init, block_len=block_len)
 }
 

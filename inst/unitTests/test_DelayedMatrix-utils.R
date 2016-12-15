@@ -1,4 +1,6 @@
-library(HDF5Array)  # for the HDF5Array() constructor and DEFAULT_BLOCK_SIZE
+library(HDF5Array)  # for the HDF5Array() constructor
+
+DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
 
 Arith_members <- c("+", "-", "*", "/", "^", "%%", "%/%")
 Compare_members <- c("==", "!=", "<=", ">=", "<", ">")
@@ -83,7 +85,7 @@ test_DelayedMatrix_Ops <- function()
 test_DelayedMatrix_row_col_summary <- function()
 {
     test_row_col_summary <- function(FUN, m, M, block_sizes) {
-        on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+        on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
         FUN <- match.fun(FUN)
  
         target1 <- FUN(m)
@@ -91,7 +93,7 @@ test_DelayedMatrix_row_col_summary <- function()
         target3 <- FUN(t(m))
         target4 <- FUN(t(m), na.rm=TRUE)
         for (block_size in block_sizes) {
-            options(HDF5Array.block.size=block_size)
+            options(DelayedArray.block.size=block_size)
             current <- FUN(M)
             checkEquals(target1, current)
             checkIdentical(typeof(target1), typeof(current))
@@ -142,9 +144,9 @@ test_DelayedMatrix_mult <- function()
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
     Rm <- rbind(Lm + 7.05, 0.1 * Lm)
 
-    on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+    on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
     for (block_size in block_sizes2) {
-        options(HDF5Array.block.size=block_size)
+        options(DelayedArray.block.size=block_size)
         P <- Lm %*% M
         checkEquals(Lm %*% m, as.matrix(P))
         P <- M %*% Rm

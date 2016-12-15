@@ -949,3 +949,31 @@ split.DelayedArray <- function(x, f, drop=FALSE, ...)
     splitAsList(x, f, drop=drop, ...)
 setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### write_to_dump()
+###
+
+setMethod("write_to_dump", c("DelayedArray", "ArrayOnDiskDump"),
+    function(x, dump, subscripts=NULL)
+    {
+        if (!is.null(subscripts))
+            stop(wmsg("'subscripts' must be NULL when the object to write ",
+                      "is a DelayedArray object"))
+        ## Semantically equivalent to 'write_to_dump(as.array(x), dump)'
+        ## but uses block-processing so the full DelayedArray object is
+        ## not realized at once in memory. Instead the object is first
+        ## split into blocks and the blocks are realized and written to
+        ## disk one at a time.
+        block_APPLY(x, identity, dump=dump)
+    }
+)
+
+setMethod("write_to_dump", c("ANY", "ArrayOnDiskDump"),
+    function(x, dump, subscripts=NULL)
+    {
+        x <- as(x, "DelayedArray")
+        write_to_dump(x, dump, subscripts=subscripts)
+    }
+)
+

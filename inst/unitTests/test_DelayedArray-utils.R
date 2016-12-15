@@ -1,4 +1,6 @@
-library(HDF5Array)  # for the HDF5Array() constructor and DEFAULT_BLOCK_SIZE
+library(HDF5Array)  # for the HDF5Array() constructor
+
+DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
 
 Arith_members <- c("+", "-", "*", "/", "^", "%%", "%/%")
 Compare_members <- c("==", "!=", "<=", ">=", "<", ">")
@@ -76,7 +78,7 @@ test_DelayedArray_Math_ans_Arith <- function()
 test_DelayedArray_Ops_with_left_or_right_vector <- function()
 {
     test_delayed_Ops_on_array <- function(.Generic, a, A, m, M) {
-        on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+        on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
         GENERIC <- match.fun(.Generic)
 
         target_current <- list(
@@ -98,7 +100,7 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
             checkIdentical(target[0, 0, -2], as.array(current[0, 0, -2]))
             checkIdentical(target[ , 0, ], as.array(current[ , 0, ]))
             for (block_size in block_sizes2) {
-                options(HDF5Array.block.size=block_size)
+                options(DelayedArray.block.size=block_size)
                 checkEquals(sum(target, na.rm=TRUE), sum(current, na.rm=TRUE))
             }
         }
@@ -143,7 +145,7 @@ test_DelayedArray_Ops_COMBINE_seeds <- function()
 
 test_DelayedArray_anyNA <- function()
 {
-    on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+    on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
     DelayedArray_block_anyNA <- DelayedArray:::.DelayedArray_block_anyNA
 
     A1 <- HDF5Array(a1)
@@ -152,7 +154,7 @@ test_DelayedArray_anyNA <- function()
     A <- HDF5Array(a)
 
     for (block_size in block_sizes2) {
-        options(HDF5Array.block.size=block_size)
+        options(DelayedArray.block.size=block_size)
         checkIdentical(FALSE, anyNA(A1))
         checkIdentical(FALSE, DelayedArray_block_anyNA(a1))
         checkIdentical(TRUE, anyNA(A))
@@ -162,7 +164,7 @@ test_DelayedArray_anyNA <- function()
 
 test_DelayedArray_which <- function()
 {
-    on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+    on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
     DelayedArray_block_which <- DelayedArray:::.DelayedArray_block_which
 
     a <- a1 == 1L
@@ -171,7 +173,7 @@ test_DelayedArray_which <- function()
 
     target <- which(a)
     for (block_size in block_sizes2) {
-        options(HDF5Array.block.size=block_size)
+        options(DelayedArray.block.size=block_size)
         checkIdentical(target, which(A))
         checkIdentical(target, DelayedArray_block_which(a))
     }
@@ -182,7 +184,7 @@ test_DelayedArray_which <- function()
 
     target <- integer(0)
     for (block_size in block_sizes2) {
-        options(HDF5Array.block.size=block_size)
+        options(DelayedArray.block.size=block_size)
         checkIdentical(target, which(A))
         checkIdentical(target, DelayedArray_block_which(a))
     }
@@ -191,7 +193,7 @@ test_DelayedArray_which <- function()
 test_DelayedArray_Summary <- function()
 {
     test_Summary <- function(.Generic, a, block_sizes) {
-        on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+        on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
         DelayedArray_block_Summary <- DelayedArray:::.DelayedArray_block_Summary
 
         GENERIC <- match.fun(.Generic)
@@ -199,7 +201,7 @@ test_DelayedArray_Summary <- function()
         target2 <- GENERIC(a, na.rm=TRUE)
         A <- HDF5Array(a)
         for (block_size in block_sizes) {
-            options(HDF5Array.block.size=block_size)
+            options(DelayedArray.block.size=block_size)
             checkIdentical(target1, GENERIC(A))
             checkIdentical(target1, GENERIC(t(A)))
             checkIdentical(target1, DelayedArray_block_Summary(.Generic, a))
@@ -232,7 +234,7 @@ test_DelayedArray_Summary <- function()
 
 test_DelayedArray_mean <- function()
 {
-    on.exit(options(HDF5Array.block.size=HDF5Array:::DEFAULT_BLOCK_SIZE))
+    on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
 
     ## on a numeric array
     a <- a2
@@ -243,7 +245,7 @@ test_DelayedArray_mean <- function()
     target2 <- mean(a, na.rm=TRUE)
     target3 <- mean(a[ , 10:4, -2])
     for (block_size in block_sizes2) {
-        options(HDF5Array.block.size=block_size)
+        options(DelayedArray.block.size=block_size)
         checkIdentical(target1, mean(A))
         checkIdentical(target1, mean(t(A)))
         checkIdentical(target2, mean(A, na.rm=TRUE))

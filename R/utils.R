@@ -29,6 +29,16 @@ expand_missing_subscripts <- function(subscripts, dim)
 }
 
 ### Used in HDF5Array!
+set_missing_subscripts_to_NULL <- function(subscripts)
+{
+    stopifnot(is.list(subscripts))
+    ans <- vector("list", length(subscripts))
+    not_missing_idx <- which(!vapply(subscripts, is.name, logical(1)))
+    ans[not_missing_idx] <- subscripts[not_missing_idx]
+    ans
+}
+
+### Used in HDF5Array!
 ### Return the lengths of the subscripts in 'subscripts'. The length of a
 ### missing subscript is the length it would have after expansion.
 ### In other words, 'get_subscripts_lengths(subscripts, dim)' is equivalent

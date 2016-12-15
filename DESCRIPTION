@@ -5,10 +5,10 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	on it without loading the object in memory. In order to reduce memory
 	usage and optimize performance, operations on the object are either
 	delayed or executed using a block processing mechanism. Note that this
-        also works on in-memory array-like objects like DataFrame objects
+	also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, and ordinary arrays and
 	data frames.
-Version: 0.1.0
+Version: 0.1.1
 Encoding: UTF-8
 Author: Hervé Pagès
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
@@ -18,11 +18,11 @@ Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, BiocStyle
 License: Artistic-2.0
 Collate: utils.R
-	show-utils.R
 	block_processing.R
-        DelayedArray-class.R
-        DelayedArray-utils.R
-        DelayedMatrix-utils.R
-        cbind-methods.R
-        DelayedArray-stats.R
+	show-utils.R
+	DelayedArray-class.R
+	DelayedArray-utils.R
+	DelayedMatrix-utils.R
+	cbind-methods.R
+	DelayedArray-stats.R
 	zzz.R

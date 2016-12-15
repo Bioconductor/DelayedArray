@@ -10,7 +10,8 @@ import(IRanges)
 ###
 
 exportClasses(
-    ArrayBlocks, DelayedArray, DelayedMatrix
+    ArrayBlocks, ArrayOnDiskDump,
+    DelayedArray, DelayedMatrix
 )
 
 
@@ -106,12 +107,14 @@ export(
 ###
 
 export(
+    write_to_dump, close,
     matrixClass, subset_seed_as_array, type,
     pmax2, pmin2, apply
 )
 
 ### Exactly the same list as above.
 exportMethods(
+    write_to_dump, close,
     matrixClass, subset_seed_as_array, type,
     pmax2, pmin2, apply
 )
