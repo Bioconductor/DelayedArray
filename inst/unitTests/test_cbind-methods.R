@@ -1,4 +1,4 @@
-library(HDF5Array)  # for the HDF5Array() constructor
+library(HDF5Array)  # for coercion to HDF5Array objects
 
 .TEST_matrices <- list(
     matrix(1:15, nrow=3, ncol=5,
@@ -23,9 +23,9 @@ test_DelayedMatrix_rbind_cbind <- function()
     m1 <- .TEST_matrices[[1]]
     m2 <- .TEST_matrices[[2]]
     m3 <- .TEST_matrices[[3]]
-    M1 <- HDF5Array(m1)
-    M2 <- HDF5Array(m2)
-    M3 <- HDF5Array(m3)
+    M1 <- as(m1, "HDF5Array")
+    M2 <- as(m2, "HDF5Array")
+    M3 <- as(m3, "HDF5Array")
 
     target <- rbind(a=m1, b=m2, c=m3)
     current <- rbind(a=M1, b=M2, c=M3)
@@ -56,8 +56,8 @@ test_DelayedMatrix_rbind_cbind <- function()
 
     m1 <- matrix(nrow=0, ncol=3, dimnames=list(NULL, letters[1:3]))
     m2 <- matrix(1:15, ncol=3, dimnames=list(NULL, LETTERS[1:3]))
-    M1 <- HDF5Array(m1)
-    M2 <- HDF5Array(m2)
+    M1 <- as(m1, "HDF5Array")
+    M2 <- as(m2, "HDF5Array")
 
     target <- rbind(a=m1, a=m2)
     current <- rbind(a=M1, b=M2)
@@ -80,7 +80,7 @@ test_DelayedMatrix_rbind_cbind <- function()
 
 test_DelayedArray_arbind <- function()
 {
-    TEST_hdf5arrays <- lapply(.TEST_arrays, HDF5Array)
+    TEST_hdf5arrays <- lapply(.TEST_arrays, as, "HDF5Array")
 
     target <- do.call(arbind, .TEST_arrays)
     current <- do.call(arbind, TEST_hdf5arrays)
@@ -110,7 +110,7 @@ test_DelayedArray_acbind <- function()
             dimnames(a) <- a_dimnames
             a
     })
-    TEST_hdf5arrays <- lapply(arrays, HDF5Array)
+    TEST_hdf5arrays <- lapply(arrays, as, "HDF5Array")
 
     target <- do.call(acbind, arrays)
     current <- do.call(acbind, TEST_hdf5arrays)

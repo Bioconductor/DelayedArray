@@ -10,7 +10,7 @@ import(IRanges)
 ###
 
 exportClasses(
-    ArrayBlocks, ArrayOnDiskDump,
+    ArrayBlocks, OnDiskArrayDump,
     DelayedArray, DelayedMatrix
 )
 

@@ -6,13 +6,12 @@
 \alias{ArrayBlocks-class}
 \alias{ArrayBlocks}
 
-\alias{class:ArrayOnDiskDump}
-\alias{ArrayOnDiskDump-class}
-\alias{ArrayOnDiskDump}
+\alias{class:OnDiskArrayDump}
+\alias{OnDiskArrayDump-class}
+\alias{OnDiskArrayDump}
 
 \alias{write_to_dump}
-\alias{write_to_dump,ANY,ArrayOnDiskDump-method}
-\alias{write_to_dump,DelayedArray,ArrayOnDiskDump-method}
+\alias{close,OnDiskArrayDump-method}
 
 \title{Internal utilities for block processing an array}
 

@@ -299,7 +299,7 @@ setMethod("drop", "DelayedArray",
 .get_DelayedArray_dimnames_before_transpose <- function(x)
 {
     ans <- lapply(x@metaindex, function(N) names(x@index[[N]]))
-    if (is.null(unlist(ans)))
+    if (all(S4Vectors:::sapply_isNULL(ans)))
         return(NULL)
     ans
 }
@@ -954,7 +954,7 @@ setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
 ### write_to_dump()
 ###
 
-setMethod("write_to_dump", c("DelayedArray", "ArrayOnDiskDump"),
+setMethod("write_to_dump", c("DelayedArray", "OnDiskArrayDump"),
     function(x, dump, subscripts=NULL)
     {
         if (!is.null(subscripts))
@@ -969,7 +969,7 @@ setMethod("write_to_dump", c("DelayedArray", "ArrayOnDiskDump"),
     }
 )
 
-setMethod("write_to_dump", c("ANY", "ArrayOnDiskDump"),
+setMethod("write_to_dump", c("ANY", "OnDiskArrayDump"),
     function(x, dump, subscripts=NULL)
     {
         x <- as(x, "DelayedArray")

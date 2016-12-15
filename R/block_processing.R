@@ -175,7 +175,7 @@ unsplit_array_from_blocks <- function(subarrays, x)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### write_to_dump() generic and default methods
+### OnDiskArrayDump objects
 ###
 
 ### Virtual class with no slots. Intended to be extended by implementations
@@ -186,13 +186,20 @@ unsplit_array_from_blocks <- function(subarrays, x)
 ###   3) A "close" method.
 ###   4) Coercion to DelayedArray.
 ### See HDF5DatasetDump class in the HDF5Array package for an example.
-setClass("ArrayOnDiskDump", representation("VIRTUAL"))
+setClass("OnDiskArrayDump", representation("VIRTUAL"))
 
 setGeneric("write_to_dump", signature=c("x", "dump"),
     function(x, dump, subscripts=NULL) standardGeneric("write_to_dump")
 )
 
 setGeneric("close")
+
+### Default "close" method for OnDiskArrayDump objects. A default
+### "write_to_dump" method is defined in DelayedArray-class.R.
+setMethod("close", "OnDiskArrayDump",
+    function(con)
+        stop(wmsg("don't know how to close a ", class(con), " object"))
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

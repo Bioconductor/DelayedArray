@@ -50,11 +50,15 @@
 % Internal stuff
 \alias{matrixClass}
 \alias{matrixClass,DelayedArray-method}
+
 \alias{subset_seed_as_array}
 \alias{subset_seed_as_array,ANY-method}
 \alias{subset_seed_as_array,array-method}
 \alias{subset_seed_as_array,data.frame-method}
 \alias{subset_seed_as_array,DataFrame-method}
+
+\alias{write_to_dump,DelayedArray,OnDiskArrayDump-method}
+\alias{write_to_dump,ANY,OnDiskArrayDump-method}
 
 \title{DelayedArray objects}
 
@@ -126,8 +130,10 @@ DelayedArray(x)  # constructor function
     \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
           for binding DelayedArray objects along their rows or columns.
 
-    \item \link[HDF5Array]{setHDF5DumpFile} in the \pkg{HDF5Array} package
-          to control the location of automatically created HDF5 datasets.
+    \item \link[HDF5Array]{writeHDF5Dataset} in the \pkg{HDF5Array} package
+          for writting an array-like object to an HDF5 file and other low-level
+          utilities to control the location of automatically created HDF5
+          datasets.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
@@ -177,13 +183,13 @@ colSums(A2)
 ## WRAP A HDF5Dataset OBJECT IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 library(HDF5Array)
-h5a <- HDF5Dataset(a)    # create the dataset
+h5a <- as(a, "HDF5Dataset")  # write 'a' to an HDF5 file
 h5a
 
-A3 <- DelayedArray(h5a)  # wrap the dataset in a DelayedArray object
+A3 <- DelayedArray(h5a)      # wrap the dataset in a DelayedArray object
 A3
 
-B3 <- toto(A3)  # very fast! (operations are delayed)
+B3 <- toto(A3)               # very fast! (operations are delayed)
 B3 <- drop(B3)
 
 CS3 <- colSums(B3)
@@ -192,7 +198,7 @@ stopifnot(identical(cs, CS3))
 ## ---------------------------------------------------------------------
 ## STORE THE RESULT IN A NEW HDF5Dataset OBJECT
 ## ---------------------------------------------------------------------
-b3 <- HDF5Dataset(B3)  # "realize" B3 on disk (as an HDF5 dataset)
+b3 <- as(B3, "HDF5Dataset")  # "realize" B3 on disk (as an HDF5 dataset)
 
 ## If this is just an intermediate result, you can either keep going
 ## with B3 or replace it with b3 wrapped in a DelayedArray object etc...

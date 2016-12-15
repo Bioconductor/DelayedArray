@@ -115,8 +115,10 @@
 
     \item \link{DelayedArray} objects.
 
-    \item \link[HDF5Array]{setHDF5DumpFile} in the \pkg{HDF5Array} package
-          to control the location of automatically created HDF5 datasets.
+    \item \link[HDF5Array]{writeHDF5Dataset} in the \pkg{HDF5Array} package
+          for writting an array-like object to an HDF5 file and other low-level
+          utilities to control the location of automatically created HDF5
+          datasets.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
