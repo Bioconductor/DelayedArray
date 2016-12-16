@@ -10,7 +10,8 @@ import(IRanges)
 ###
 
 exportClasses(
-    ArrayBlocks, OnDiskArrayDump,
+    OnDiskArrayDump,
+    ArrayBlocks,
     DelayedArray, DelayedMatrix
 )
 
@@ -98,6 +99,7 @@ exportMethods(
 ###
 
 export(
+    supportedRealizeBackends, setRealizeBackend, getRealizeBackend, realize,
     ArrayBlocks, DelayedArray
 )
 

@@ -130,10 +130,10 @@ DelayedArray(x)  # constructor function
     \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
           for binding DelayedArray objects along their rows or columns.
 
-    \item \link[HDF5Array]{writeHDF5Dataset} in the \pkg{HDF5Array} package
-          for writting an array-like object to an HDF5 file and other low-level
-          utilities to control the location of automatically created HDF5
-          datasets.
+    \item \code{\link[HDF5Array]{writeHDF5Dataset}} in the \pkg{HDF5Array}
+          package for writting an array-like object to an HDF5 file and other
+          low-level utilities to control the location of automatically created 
+          HDF5 datasets.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 

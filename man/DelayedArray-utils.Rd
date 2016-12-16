@@ -101,6 +101,21 @@
 
 \seealso{
   \itemize{
+    \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
+          for binding \link{DelayedArray} objects along their rows or columns.
+
+    \item \code{\link{setRealizeBackend}} for how to set a \emph{realize()
+          backend}.
+
+    \item \code{\link[HDF5Array]{writeHDF5Dataset}} in the \pkg{HDF5Array}
+          package for writting an array-like object to an HDF5 file and other
+          low-level utilities to control the location of automatically created
+          HDF5 datasets.
+
+    \item \link{DelayedArray} objects.
+
+    \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
+
     \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
           \code{\link[base]{mean}}, \code{\link[base]{apply}},
           \code{\link[base]{colSums}}, \code{\link[base]{\%*\%}} in the
@@ -109,18 +124,6 @@
     \item \code{\link[methods]{S4groupGeneric}} in the \pkg{methods} package
           for the members of the \code{\link[methods]{Ops}},
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups.
-
-    \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
-          for binding \link{DelayedArray} objects along their rows or columns.
-
-    \item \link{DelayedArray} objects.
-
-    \item \link[HDF5Array]{writeHDF5Dataset} in the \pkg{HDF5Array} package
-          for writting an array-like object to an HDF5 file and other low-level
-          utilities to control the location of automatically created HDF5
-          datasets.
-
-    \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
     \item \link[base]{array} objects in base R.
   }
@@ -143,16 +146,32 @@ M <- rbind(M1, t(M2))
 M
 colMeans(M)
 
-## Matrix multiplication writes a new HDF5 dataset to disk and returns
-## an HDF5Matrix object that points to this new dataset.
+## ---------------------------------------------------------------------
+## MATRIX MULTIPLICATION
+## ---------------------------------------------------------------------
+
 m <- matrix(runif(60), ncol=12)
 M <- DelayedArray(matrix(runif(240), nrow=12))
 
+## Matrix multiplication needs to realize the result to disk and thus
+## requires to set a "realize() backend" first if none is set yet.
+setRealizeBackend("HDF5Array")
+
+## The HDF5Array backend being set, matrix multiplication will write a
+## new HDF5 dataset to disk to an automatic location and return an
+## HDF5Matrix object that points to this new dataset.
+
 getHDF5DumpFile()  # HDF5 file where the new dataset will be written
 lsHDF5DumpFile()
+
 P <- m \%*\% M
 P
+
 getHDF5DumpFile()
 lsHDF5DumpFile()
+
+## You can use setHDF5DumpFile() and setHDF5DumpName() defined in the
+## HDF5Array package to control the location of automatically created
+## HDF5 datasets.
 }
 \keyword{methods}

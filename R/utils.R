@@ -102,16 +102,3 @@ get_rev_index <- function(part_index)
     rev_idx
 }
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### require_HDF5Array()
-###
-
-require_HDF5Array <- function()
-{
-    if (!requireNamespace("HDF5Array", quietly=TRUE))
-        stop("This action requires the HDF5Array package. Please ",
-             "install it with:\n\n    library(BiocInstaller)\n",
-             "    biocLite(\"HDF5Array\")\n\n  and try again.")
-}
-

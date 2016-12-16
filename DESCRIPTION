@@ -18,6 +18,7 @@ Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, BiocStyle
 License: Artistic-2.0
 Collate: utils.R
+	dump-utils.R
 	block_processing.R
 	show-utils.R
 	DelayedArray-class.R

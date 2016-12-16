@@ -1,4 +1,4 @@
-library(HDF5Array)  # for coercion to HDF5Array objects
+setRealizeBackend("HDF5Array")
 
 DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
 
@@ -16,14 +16,14 @@ test_DelayedArray_unary_ops <- function()
 {
     a <- 2:-2 / (a1 - 3)
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
     for (.Generic in c("is.na", "is.finite", "is.infinite", "is.nan")) {
         GENERIC <- match.fun(.Generic)
         checkIdentical(GENERIC(a), as.array(GENERIC(A)))
     }
 
     a <- array(sample(c(LETTERS, letters), 60, replace=TRUE), 5:3)
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
     ## For some obscure reason, the tests below fail in the context of
     ## 'DelayedArray:::.test()' or 'R CMD check'.
     ## TODO: Investigate this.
@@ -41,7 +41,7 @@ test_DelayedArray_Math_ans_Arith <- function()
     ## with an integer array
     a <- a1
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
     ## Not sure what's going on but it seems that this call to checkIdentical()
     ## crashes the RUnit package but only when the tests are run by
     ## 'R CMD check'.
@@ -50,7 +50,7 @@ test_DelayedArray_Math_ans_Arith <- function()
     ## with a numeric array
     a <- a2
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
     checkIdentical(toto1(a), as.array(toto1(A)))
     checkIdentical(toto2(a), as.array(toto2(A)))
     checkIdentical(toto2(toto1(a)), as.array(toto2(toto1(A))))
@@ -65,7 +65,7 @@ test_DelayedArray_Math_ans_Arith <- function()
 
     ## with a numeric matrix
     m <- a[ , , 2]
-    M <- as(m, "HDF5Array")
+    M <- realize(m)
     checkIdentical(toto1(m), as.matrix(toto1(M)))
     checkIdentical(t(toto1(m)), as.matrix(toto1(t(M))))
     checkIdentical(t(toto1(m)), as.matrix(t(toto1(M))))
@@ -108,9 +108,9 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
 
     a <- a2
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
     m <- a[ , , 2]
-    M <- as(m, "HDF5Array")
+    M <- realize(m)
 
     ## "Logic" members currently untested.
     for (.Generic in c(Arith_members, Compare_members))
@@ -124,12 +124,12 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
 
 test_DelayedArray_Ops_COMBINE_seeds <- function()
 {
-    ## comparing 2 HDF5Array objects
-    A1 <- as(a1, "HDF5Array")
-    A2 <- as(a2, "HDF5Array")
+    ## comparing 2 DelayedArray objects
+    A1 <- realize(a1)
+    A2 <- realize(a2)
     a3 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))
     a3[2, 9, 2] <- NA  # same as a3[[92]] <- NA
-    A3 <- as(a3, "HDF5Array")
+    A3 <- realize(a3)
 
     ## "Logic" members currently untested.
     for (.Generic in c(Arith_members, Compare_members)) {
@@ -148,10 +148,10 @@ test_DelayedArray_anyNA <- function()
     on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
     DelayedArray_block_anyNA <- DelayedArray:::.DelayedArray_block_anyNA
 
-    A1 <- as(a1, "HDF5Array")
+    A1 <- realize(a1)
     a <- a1
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
 
     for (block_size in block_sizes2) {
         options(DelayedArray.block.size=block_size)
@@ -169,7 +169,7 @@ test_DelayedArray_which <- function()
 
     a <- a1 == 1L
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
 
     target <- which(a)
     for (block_size in block_sizes2) {
@@ -180,7 +180,7 @@ test_DelayedArray_which <- function()
 
     a <- a1 == -1L    # all FALSE
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
 
     target <- integer(0)
     for (block_size in block_sizes2) {
@@ -199,7 +199,7 @@ test_DelayedArray_Summary <- function()
         GENERIC <- match.fun(.Generic)
         target1 <- GENERIC(a)
         target2 <- GENERIC(a, na.rm=TRUE)
-        A <- as(a, "HDF5Array")
+        A <- realize(a)
         for (block_size in block_sizes) {
             options(DelayedArray.block.size=block_size)
             checkIdentical(target1, GENERIC(A))
@@ -239,7 +239,7 @@ test_DelayedArray_mean <- function()
     ## on a numeric array
     a <- a2
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
-    A <- as(a, "HDF5Array")
+    A <- realize(a)
 
     target1 <- mean(a)
     target2 <- mean(a, na.rm=TRUE)
@@ -258,7 +258,7 @@ test_DelayedArray_mean <- function()
 test_DelayedArray_apply <- function()
 {
     test_apply <- function(a) {
-        A <- as(a, "HDF5Array")
+        A <- realize(a)
         for (MARGIN in seq_along(dim(a))) {
             checkIdentical(apply(a, MARGIN, dim),
                            apply(A, MARGIN, dim))

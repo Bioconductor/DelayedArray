@@ -1,4 +1,4 @@
-library(HDF5Array)  # for coercion to HDF5Array objects
+setRealizeBackend("HDF5Array")
 
 DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
 
@@ -69,13 +69,13 @@ test_DelayedMatrix_Ops <- function()
     toto <- function(x) t((5 * x[ , 1:2] ^ 3 + 1L) * log(x)[, 10:9])[ , -1]
 
     m <- a[ , , 2]
-    M <- as(m, "HDF5Array")
+    M <- realize(m)
     checkIdentical(toto(m), as.array(toto(M)))
     ## "Logic" members currently untested.
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)
 
-    A <- as(a, "HDF5Array")[ , , 2]
+    A <- realize(a)[ , , 2]
     M <- drop(A)
     checkIdentical(toto(m), as.array(toto(M)))
     for (.Generic in c(Arith_members, Compare_members))
@@ -111,7 +111,7 @@ test_DelayedMatrix_row_col_summary <- function()
 
     ## on an integer matrix
     m <- a1[ , , 1]
-    A1 <- as(a1, "HDF5Array")
+    A1 <- realize(a1)
     M <- drop(A1[ , , 1])
     for (FUN in c("rowSums", "colSums", "rowMeans", "colMeans")) {
         test_row_col_summary(FUN, m, M, block_sizes2)
@@ -124,7 +124,7 @@ test_DelayedMatrix_row_col_summary <- function()
     m[2, 4] <- NA
     m[5, 4] <- Inf
     m[6, 3] <- -Inf
-    M <- as(m, "HDF5Array")
+    M <- realize(m)
     for (FUN in c("rowSums", "colSums", "rowMeans", "colMeans"))
         test_row_col_summary(FUN, m, M, block_sizes2)
 
@@ -139,7 +139,7 @@ test_DelayedMatrix_mult <- function()
     m[2, 4] <- NA
     m[5, 4] <- Inf
     m[6, 3] <- -Inf
-    M <- as(m, "HDF5Array")
+    M <- realize(m)
 
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
     Rm <- rbind(Lm + 7.05, 0.1 * Lm)
