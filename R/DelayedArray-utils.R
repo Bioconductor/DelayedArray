@@ -352,7 +352,7 @@ setMethod("signif", "DelayedArray",
 ### "native" order. The result is a DelayedArray object where the array
 ### elements are in the same order as in the seeds. This makes block-processing
 ### faster if the seeds are on-disk objects where the 1st dimension is the fast
-### changing dimension (e.g. 5x faster if the seeds are HDF5Dataset objects).
+### changing dimension (e.g. 5x faster if the seeds are HDF5ArraySeed objects).
 ###
 
 .straighten_index <- function(i)

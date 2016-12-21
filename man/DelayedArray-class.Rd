@@ -71,11 +71,11 @@
 }
 
 \usage{
-DelayedArray(x)  # constructor function
+DelayedArray(seed)  # constructor function
 }
 
 \arguments{
-  \item{x}{
+  \item{seed}{
     An array-like object.
   }
 }
@@ -87,9 +87,9 @@ DelayedArray(x)  # constructor function
   full object at once \emph{in memory} which could require too much memory
   if the object is big. A big DelayedArray object is preferrably realized
   \emph{on disk} e.g. by calling the \code{\link[HDF5Array]{writeHDF5Dataset}}
-  function or the \code{\link[HDF5Array]{HDF5Dataset}} constructor on it, both
-  defined in the \pkg{HDF5Array} package. Other on-disk backends can be
-  supported. This uses a block-processing strategy so that the full
+  function or the \code{\link[HDF5Array]{HDF5ArraySeed}} constructor on it,
+  both defined in the \pkg{HDF5Array} package. Other on-disk backends can
+  be supported. This uses a block-processing strategy so that the full
   object is not realized at once in memory. Instead the object is processed
   block by block i.e. the blocks are realized in memory and written to disk
   one at a time. See \code{?\link[HDF5Array]{writeHDF5Dataset}} in the
@@ -180,25 +180,25 @@ t(A2)  # delayed transpose is very fast and very memory efficient because
 colSums(A2)
 
 ## ---------------------------------------------------------------------
-## WRAP A HDF5Dataset OBJECT IN A DelayedArray OBJECT
+## WRAP A HDF5ArraySeed OBJECT IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 library(HDF5Array)
-h5a <- as(a, "HDF5Dataset")  # write 'a' to an HDF5 file
+h5a <- as(a, "HDF5ArraySeed")  # write 'a' to an HDF5 file
 h5a
 
-A3 <- DelayedArray(h5a)      # wrap the dataset in a DelayedArray object
+A3 <- DelayedArray(h5a)        # wrap the dataset in a DelayedArray object
 A3
 
-B3 <- toto(A3)               # very fast! (operations are delayed)
+B3 <- toto(A3)                 # very fast! (operations are delayed)
 B3 <- drop(B3)
 
 CS3 <- colSums(B3)
 stopifnot(identical(cs, CS3))
 
 ## ---------------------------------------------------------------------
-## STORE THE RESULT IN A NEW HDF5Dataset OBJECT
+## STORE THE RESULT IN A NEW HDF5ArraySeed OBJECT
 ## ---------------------------------------------------------------------
-b3 <- as(B3, "HDF5Dataset")  # "realize" B3 on disk (as an HDF5 dataset)
+b3 <- as(B3, "HDF5ArraySeed")  # "realize" B3 on disk (as an HDF5 dataset)
 
 ## If this is just an intermediate result, you can either keep going
 ## with B3 or replace it with b3 wrapped in a DelayedArray object etc...

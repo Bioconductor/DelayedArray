@@ -11,7 +11,7 @@
 .SUPPORTED_REALIZE_BACKENDS <- data.frame(
     class="HDF5Array",
     package="HDF5Array",
-    dump_constructor="HDF5DatasetDump",
+    dump_constructor="HDF5ArrayDump",
     stringsAsFactors=FALSE
 )
 
@@ -95,7 +95,7 @@ realize <- function(x) as(x, getRealizeBackend())
 ###   2) A "write_to_dump" method that works on an ordinary array.
 ###   3) A "close" method.
 ###   4) Coercion to DelayedArray.
-### See HDF5DatasetDump class in the HDF5Array package for an example.
+### See HDF5ArrayDump class in the HDF5Array package for an example.
 setClass("OnDiskArrayDump", representation("VIRTUAL"))
 
 setGeneric("write_to_dump", signature=c("x", "dump"),

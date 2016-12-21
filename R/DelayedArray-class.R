@@ -125,7 +125,7 @@ new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
     new2(Class, seed=seed, index=index, metaindex=seq_along(index))
 }
 
-DelayedArray <- function(x) new_DelayedArray(x)
+DelayedArray <- function(seed) new_DelayedArray(seed)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
