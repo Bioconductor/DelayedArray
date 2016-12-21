@@ -6,6 +6,9 @@
 \alias{ArrayBlocks-class}
 \alias{ArrayBlocks}
 
+\alias{getListElement,ArrayBlocks-method}
+\alias{show,ArrayBlocks-method}
+
 \title{Internal utilities for block processing an array}
 
 \description{

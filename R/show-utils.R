@@ -244,8 +244,7 @@
     }
     x_dimnames <- dimnames(x)
     for (i in idx) {
-        subscripts <- get_array_block_subscripts(blocks, i,
-                                                 expand.RangeNSBS=TRUE)
+        subscripts <- get_array_block_subscripts(blocks, i)
         cat(subscripts_as_string(subscripts, x_dimnames), "\n", sep="")
         slice <- subset_by_subscripts(x, subscripts)
         dim(slice) <- dim(slice)[1:2]

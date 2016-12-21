@@ -955,10 +955,10 @@ setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
 ###
 
 setMethod("write_to_dump", c("DelayedArray", "OnDiskArrayDump"),
-    function(x, dump, subscripts=NULL)
+    function(x, dump, offsets=NULL)
     {
-        if (!is.null(subscripts))
-            stop(wmsg("'subscripts' must be NULL when the object to write ",
+        if (!is.null(offsets))
+            stop(wmsg("'offsets' must be NULL when the object to write ",
                       "is a DelayedArray object"))
         ## Semantically equivalent to 'write_to_dump(as.array(x), dump)'
         ## but uses block-processing so the full DelayedArray object is
@@ -970,10 +970,10 @@ setMethod("write_to_dump", c("DelayedArray", "OnDiskArrayDump"),
 )
 
 setMethod("write_to_dump", c("ANY", "OnDiskArrayDump"),
-    function(x, dump, subscripts=NULL)
+    function(x, dump, offsets=NULL)
     {
         x <- as(x, "DelayedArray")
-        write_to_dump(x, dump, subscripts=subscripts)
+        write_to_dump(x, dump, offsets=offsets)
     }
 )
 

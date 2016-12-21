@@ -99,7 +99,7 @@ realize <- function(x) as(x, getRealizeBackend())
 setClass("OnDiskArrayDump", representation("VIRTUAL"))
 
 setGeneric("write_to_dump", signature=c("x", "dump"),
-    function(x, dump, subscripts=NULL) standardGeneric("write_to_dump")
+    function(x, dump, offsets=NULL) standardGeneric("write_to_dump")
 )
 
 setGeneric("close")

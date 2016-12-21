@@ -42,11 +42,14 @@ get_block_length <- function(type)
 ###
 
 setClass("ArrayBlocks",
+    contains="List",
     representation(
         dim="integer",
+        max_block_len="integer",
         N="integer",
         by="integer"
-    )
+    ),
+    prototype(elementType="list")
 )
 
 ### Return an ArrayBlocks object i.e. a collection of subarrays of the
@@ -67,7 +70,7 @@ ArrayBlocks <- function(dim, max_block_len)
     } else {
         by <- max_block_len %/% as.integer(p[[N - 1L]])
     }
-    new("ArrayBlocks", dim=dim, N=N, by=by)
+    new("ArrayBlocks", dim=dim, max_block_len=max_block_len, N=N, by=by)
 }
 
 .get_ArrayBlocks_inner_length <- function(x)
@@ -97,18 +100,17 @@ setMethod("length", "ArrayBlocks",
         .get_ArrayBlocks_inner_length(x) * .get_ArrayBlocks_outer_length(x)
 )
 
-### Return a "multidimensional subscript" i.e. a list with one subscript per
-### dimension in the original array.
-get_array_block_subscripts <- function(blocks, i, expand.RangeNSBS=FALSE)
+### Return an IRanges object with 1 range per dimension.
+.get_block_ranges <- function(blocks, i)
 {
     nblock <- length(blocks)
     stopifnot(isSingleInteger(i), i >= 1L, i <= nblock)
 
     ndim <- length(blocks@dim)
-    subscripts <- rep.int(alist(foo=), ndim)
+    ans <- IRanges(rep.int(1L, ndim), blocks@dim)
 
     if (blocks@N > ndim)
-        return(subscripts)
+        return(ans)
 
     i <- i - 1L
     if (blocks@N < ndim) {
@@ -125,28 +127,49 @@ get_array_block_subscripts <- function(blocks, i, expand.RangeNSBS=FALSE)
     upper_bound <- blocks@dim[[blocks@N]]
     if (k2 > upper_bound)
         k2 <- upper_bound
-    if (expand.RangeNSBS) {
-        subscript <- k1:k2  # same as doing as.integer() on the RangeNSBS
-                            # object below
-    } else {
-        subscript <- new2("RangeNSBS", subscript=c(k1, k2),
-                                       upper_bound=upper_bound,
-                                       check=FALSE)
-    }
-    subscripts[[blocks@N]] <- subscript
+    start(ans)[[blocks@N]] <- k1
+    end(ans)[[blocks@N]] <- k2
 
     if (blocks@N < ndim) {
         outer_dim <- blocks@dim[(blocks@N + 1L):ndim]
         subindex <- arrayInd(i2 + 1L, outer_dim)
-        subscripts[(blocks@N + 1L):ndim] <- as.list(subindex)
+        ans[(blocks@N + 1L):ndim] <- IRanges(subindex, width=1L)
     }
-    subscripts
+    ans
 }
+
+get_array_block_subscripts <- function(blocks, i)
+{
+    make_subscripts_from_ranges(.get_block_ranges(blocks, i), blocks@dim)
+}
+
+setMethod("getListElement", "ArrayBlocks",
+    function(x, i, exact=TRUE)
+    {
+        i <- normalizeDoubleBracketSubscript(i, x, exact=exact, 
+                                             error.if.nomatch=TRUE)
+        get_array_block_subscripts(x, i)
+    }
+)
+
+setMethod("show", "ArrayBlocks",
+    function(object)
+    {
+        dim_in1string <- paste0(object@dim, collapse=" x ")
+        cat(class(object), " object with ", length(object), " blocks ",
+            "of length <= ", object@max_block_len, " on a ",
+            dim_in1string, " array:\n", sep="")
+        for (i in seq_along(object)) {
+            subscripts <- object[[i]]
+            cat("[[", i, "]]: [", subscripts_as_string(subscripts), "]\n",
+                sep="")
+        }
+    }
+)
 
 .extract_array_block <- function(x, blocks, i)
 {
-    subscripts <- get_array_block_subscripts(blocks, i,
-                                             expand.RangeNSBS=is.array(x))
+    subscripts <- get_array_block_subscripts(blocks, i)
     subset_by_subscripts(x, subscripts)
 }
 
@@ -197,18 +220,17 @@ block_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
     nblock <- length(blocks)
     if (nblock == 0L)
         return(if_empty)
-    expand_RangeNSBS <- is.array(x) || !is.null(dump)
     lapply(seq_len(nblock),
         function(i) {
-            subscripts <- get_array_block_subscripts(blocks, i,
-                                                     expand_RangeNSBS)
+            block_ranges <- .get_block_ranges(blocks, i)
+            subscripts <- make_subscripts_from_ranges(block_ranges, blocks@dim)
             subarray <- subset_by_subscripts(x, subscripts)
             if (!is.array(subarray))
                 subarray <- .as_array_or_matrix(subarray)
             block_ans <- APPLY(subarray, ...)
             if (is.null(dump))
                 return(block_ans)
-            write_to_dump(block_ans, dump, subscripts=subscripts)
+            write_to_dump(block_ans, dump, offsets=start(block_ranges))
         })
 }
 
@@ -231,7 +253,8 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
         return(if_empty)
     lapply(seq_len(nblock),
         function(i) {
-            subscripts <- get_array_block_subscripts(blocks, i, TRUE)
+            block_ranges <- .get_block_ranges(blocks, i)
+            subscripts <- make_subscripts_from_ranges(block_ranges, blocks@dim)
             subarrays <- lapply(dots,
                 function(x) {
                     subarray <- subset_by_subscripts(x, subscripts)
@@ -242,7 +265,7 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
             block_ans <- do.call(MAPPLY, subarrays)
             if (is.null(dump))
                 return(block_ans)
-            write_to_dump(block_ans, dump, subscripts=subscripts)
+            write_to_dump(block_ans, dump, offsets=start(block_ranges))
         })
 }
 

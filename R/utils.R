@@ -11,31 +11,61 @@
 ###
 
 ### Used in HDF5Array!
+expand_RangeNSBS_subscripts <- function(subscripts)
+{
+    stopifnot(is.list(subscripts))
+    RangeNSBS_idx <- which(vapply(subscripts, is, logical(1), "RangeNSBS"))
+    subscripts[RangeNSBS_idx] <- lapply(subscripts[RangeNSBS_idx], as.integer)
+    subscripts
+}
+
+### Used in HDF5Array!
+### Return a "multidimensional subscript" i.e. a list with one subscript per
+### dimension in the original array. Missing subscripts are represented by
+### list elements of class "name".
+make_subscripts_from_ranges <- function(block_ranges, dim,
+                                        expand.RangeNSBS=FALSE)
+{
+    stopifnot(is(block_ranges, "Ranges"),
+              is.integer(dim),
+              length(block_ranges) == length(dim))
+    block_offsets <- start(block_ranges)
+    block_dim <- width(block_ranges)
+    stopifnot(all(block_dim <= dim))
+    ndim <- length(dim)
+    subscripts <- rep.int(alist(foo=), ndim)
+    is_not_missing <- block_dim != dim
+    if (expand.RangeNSBS) {
+        expand_idx <- which(is_not_missing)
+    } else {
+        is_width1 <- block_dim == 1L
+        expand_idx <- which(is_not_missing & is_width1)
+        RangeNSBS_idx <- which(is_not_missing & !is_width1)
+        subscripts[RangeNSBS_idx] <- lapply(RangeNSBS_idx,
+            function(i) {
+                start <- block_offsets[[i]]
+                end <- start + block_dim[[i]] - 1L
+                upper_bound <- dim[[i]]
+                new2("RangeNSBS", subscript=c(start, end),
+                                  upper_bound=upper_bound,
+                                  check=FALSE)
+            }
+        )
+    }
+    subscripts[expand_idx] <- as.list(block_ranges[expand_idx])
+    subscripts
+}
+
+### Used in HDF5Array!
 ### 'subscripts' must be a "multidimensional subscript" i.e. a list with one
 ### subscript per dimension in 'x'. Missing subscripts are represented by
 ### list elements of class "name".
 subset_by_subscripts <- function(x, subscripts, drop=FALSE)
 {
     stopifnot(is.list(subscripts), length(subscripts) == length(dim(x)))
+    if (is.array(x))
+        subscripts <- expand_RangeNSBS_subscripts(subscripts)
     do.call(`[`, c(list(x), subscripts, list(drop=drop)))
-}
-
-expand_missing_subscripts <- function(subscripts, dim)
-{
-    stopifnot(is.list(subscripts), length(subscripts) == length(dim))
-    missing_idx <- which(vapply(subscripts, is.name, logical(1)))
-    subscripts[missing_idx] <- lapply(dim[missing_idx], seq_len)
-    subscripts
-}
-
-### Used in HDF5Array!
-set_missing_subscripts_to_NULL <- function(subscripts)
-{
-    stopifnot(is.list(subscripts))
-    ans <- vector("list", length(subscripts))
-    not_missing_idx <- which(!vapply(subscripts, is.name, logical(1)))
-    ans[not_missing_idx] <- subscripts[not_missing_idx]
-    ans
 }
 
 ### Used in HDF5Array!
@@ -51,6 +81,26 @@ get_subscripts_lengths <- function(subscripts, dim)
     ans <- lengths(subscripts)
     ans[missing_idx] <- dim[missing_idx]
     ans
+}
+
+subscripts_as_string <- function(subscripts, dimnames=NULL)
+{
+    stopifnot(is.list(subscripts))
+    s <- as.character(subscripts)
+    RangeNSBS_idx <- which(vapply(subscripts, is, logical(1), "RangeNSBS"))
+    s[RangeNSBS_idx] <- lapply(subscripts[RangeNSBS_idx],
+        function(i) paste0(i@subscript, collapse=":")
+    )
+    if (!is.null(dimnames)) {
+        stopifnot(is.list(dimnames), length(subscripts) == length(dimnames))
+        usename_idx <- which(nzchar(s) &
+                             lengths(subscripts) == 1L &
+                             lengths(dimnames) != 0L)
+        s[usename_idx] <- mapply(`[`, dimnames[usename_idx],
+                                      subscripts[usename_idx],
+                                      SIMPLIFY=FALSE)
+    }
+    paste0(s, collapse=", ")
 }
 
 

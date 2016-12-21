@@ -153,8 +153,8 @@ colMeans(M)
 m <- matrix(runif(60), ncol=12)
 M <- DelayedArray(matrix(runif(240), nrow=12))
 
-## Matrix multiplication needs to realize the result to disk and thus
-## requires to set a "realize() backend" first if none is set yet.
+## Matrix multiplication is not delayed. It will realize the result and
+## thus one needs to set a "realize() backend" first if none is set yet.
 setRealizeBackend("HDF5Array")
 
 ## The HDF5Array backend being set, matrix multiplication will write a
