@@ -115,7 +115,7 @@ new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
     seed_dimnames <- dimnames(seed)
     ## If 'seed' has dimnames, then we put them on 'index'.
     if (!is.null(seed_dimnames)) {
-        expand_idx <- which(!vapply(seed_dimnames, is.null, logical(1)))
+        expand_idx <- which(!S4Vectors:::sapply_isNULL(seed_dimnames))
         index[expand_idx] <- mapply(
             function(d, names) setNames(seq_len(d), names),
             seed_dim[expand_idx], seed_dimnames[expand_idx],
@@ -202,13 +202,14 @@ setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
     if (is.null(value))
         stop(wmsg("you can't do that, sorry"))
     if (!is.numeric(value))
-        stop("the supplied dim vector must be numeric")
+        stop(wmsg("the supplied dim vector must be numeric"))
     if (length(value) == 0L)
-        stop("the supplied dim vector cannot be empty")
+        stop(wmsg("the supplied dim vector cannot be empty"))
     if (!is.integer(value))
         value <- as.integer(value)
     if (S4Vectors:::anyMissingOrOutside(value, 0L))
-        stop("the supplied dim vector cannot contain negative or NA values")
+        stop(wmsg("the supplied dim vector cannot contain negative ",
+                  "or NA values"))
     if (length(value) > length(x_dim))
         stop(wmsg("too many dimensions supplied"))
     prod1 <- prod(value)
