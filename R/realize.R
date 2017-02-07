@@ -81,5 +81,9 @@ get_DUMP_CONSTRUCTOR <- function()
 ### realize()
 ###
 
-realize <- function(x) as(DelayedArray(x), getRealizeBackend())
+setGeneric("realize", function(x) standardGeneric("realize"))
+
+setMethod("realize", "ANY",
+    function(x) as(DelayedArray(x), getRealizeBackend())
+)
 

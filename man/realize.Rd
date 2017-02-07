@@ -5,11 +5,12 @@
 \alias{getRealizeBackend}
 
 \alias{realize}
+\alias{realize,ANY-method}
 
-\title{Realize a DelayedArray object on disk}
+\title{Realize a delayed object on disk}
 
 \description{
-  Realize a DelayedArray object on disk.
+  Realize a delayed object on disk.
 }
 
 \details{

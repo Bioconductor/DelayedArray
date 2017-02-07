@@ -99,8 +99,8 @@ exportMethods(
 ###
 
 export(
-    supportedRealizeBackends, setRealizeBackend, getRealizeBackend, realize,
-    ArrayBlocks, DelayedArray
+    ArrayBlocks, DelayedArray,
+    supportedRealizeBackends, setRealizeBackend, getRealizeBackend
 )
 
 
@@ -111,13 +111,15 @@ export(
 export(
     write_to_dump, close,
     matrixClass, subset_seed_as_array, type,
-    pmax2, pmin2, apply
+    pmax2, pmin2, apply,
+    realize
 )
 
 ### Exactly the same list as above.
 exportMethods(
     write_to_dump, close,
     matrixClass, subset_seed_as_array, type,
-    pmax2, pmin2, apply
+    pmax2, pmin2, apply,
+    realize
 )
 
