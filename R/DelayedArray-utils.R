@@ -469,7 +469,7 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
         objects <- objects[-NULL_idx]
     is_array_like <- function(x) is(x, "DelayedArray") || is.array(x)
     if (!all(vapply(objects, is_array_like, logical(1))))
-        stop("the objects to combine must be array-like objects (or NULLs)")
+        stop("the supplied objects must be array-like objects (or NULLs)")
     objects
 }
 

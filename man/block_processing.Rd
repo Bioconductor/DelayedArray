@@ -6,6 +6,7 @@
 \alias{ArrayBlocks-class}
 \alias{ArrayBlocks}
 
+\alias{length,ArrayBlocks-method}
 \alias{getListElement,ArrayBlocks-method}
 \alias{show,ArrayBlocks-method}
 

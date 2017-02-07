@@ -2,8 +2,6 @@
 
 \alias{DelayedArray-utils}
 
-\alias{length,ArrayBlocks-method}
-
 % DelayedArray utils
 
 \alias{dim,ConformableSeedCombiner-method}
