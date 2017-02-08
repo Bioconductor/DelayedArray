@@ -211,7 +211,8 @@ unsplit_array_from_blocks <- function(subarrays, x)
 }
 
 ### An lapply-like function.
-block_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
+block_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL,
+                           block_len=NULL)
 {
     APPLY <- match.fun(APPLY)
     if (is.null(block_len))
@@ -228,14 +229,15 @@ block_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
             if (!is.array(subarray))
                 subarray <- .as_array_or_matrix(subarray)
             block_ans <- APPLY(subarray, ...)
-            if (is.null(dump))
+            if (is.null(sink))
                 return(block_ans)
-            write_to_dump(block_ans, dump, offsets=start(block_ranges))
+            write_to_sink(block_ans, sink, offsets=start(block_ranges))
         })
 }
 
 ### A mapply-like function for conformable arrays.
-block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
+block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, sink=NULL,
+                         block_len=NULL)
 {
     MAPPLY <- match.fun(MAPPLY)
     dots <- unname(list(...))
@@ -263,9 +265,9 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, dump=NULL, block_len=NULL)
                     subarray
                 })
             block_ans <- do.call(MAPPLY, subarrays)
-            if (is.null(dump))
+            if (is.null(sink))
                 return(block_ans)
-            write_to_dump(block_ans, dump, offsets=start(block_ranges))
+            write_to_sink(block_ans, sink, offsets=start(block_ranges))
         })
 }
 
@@ -300,7 +302,7 @@ block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
 ### to process a matrix-like object by block of columns.
 ###
 
-colblock_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL)
+colblock_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -309,8 +311,8 @@ colblock_APPLY <- function(x, APPLY, ..., if_empty=NULL, dump=NULL)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
     block_len <- max(get_block_length(type(x)), x_dim[[1L]])
-    block_APPLY(x, APPLY, ..., if_empty=if_empty, dump=dump,
-                block_len=block_len)
+    block_APPLY(x, APPLY, ..., if_empty=if_empty, sink=sink,
+                   block_len=block_len)
 }
 
 colblock_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init)

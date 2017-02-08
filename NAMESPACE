@@ -10,7 +10,7 @@ import(IRanges)
 ###
 
 exportClasses(
-    OnDiskArrayDump,
+    RealizationSink,
     ArrayBlocks,
     DelayedArray, DelayedMatrix
 )
@@ -100,7 +100,8 @@ exportMethods(
 
 export(
     ArrayBlocks, DelayedArray,
-    supportedRealizeBackends, setRealizeBackend, getRealizeBackend
+    supportedRealizeBackends, setRealizeBackend, getRealizeBackend,
+    RealizationSink
 )
 
 
@@ -109,7 +110,7 @@ export(
 ###
 
 export(
-    write_to_dump, close,
+    write_to_sink, close,
     matrixClass, subset_seed_as_array, type,
     pmax2, pmin2, apply,
     realize
@@ -117,7 +118,7 @@ export(
 
 ### Exactly the same list as above.
 exportMethods(
-    write_to_dump, close,
+    write_to_sink, close,
     matrixClass, subset_seed_as_array, type,
     pmax2, pmin2, apply,
     realize

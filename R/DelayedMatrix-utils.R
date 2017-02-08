@@ -98,10 +98,10 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
     ans_dim <- c(nrow(x), ncol(y))
     ans_dimnames <- list(rownames(x), colnames(y))
     ans_type <- typeof(match.fun(type(x))(1) * match.fun(type(y))(1))
-    dump <- get_DUMP_CONSTRUCTOR()(ans_dim, ans_dimnames, ans_type)
-    on.exit(close(dump))
-    colblock_APPLY(y, function(submatrix) x %*% submatrix, dump=dump)
-    as(dump, "DelayedArray")
+    sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
+    on.exit(close(sink))
+    colblock_APPLY(y, function(submatrix) x %*% submatrix, sink=sink)
+    as(sink, "DelayedArray")
 }
 
 setMethod("%*%", c("DelayedMatrix", "matrix"),

@@ -1,9 +1,5 @@
 \name{realize}
 
-\alias{supportedRealizeBackends}
-\alias{setRealizeBackend}
-\alias{getRealizeBackend}
-
 \alias{realize}
 \alias{realize,ANY-method}
 
