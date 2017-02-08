@@ -86,14 +86,15 @@ DelayedArray(seed)  # constructor function
   ordinary array), call \code{as.array} on it. However this realizes the
   full object at once \emph{in memory} which could require too much memory
   if the object is big. A big DelayedArray object is preferrably realized
-  \emph{on disk} e.g. by calling the \code{\link[HDF5Array]{writeHDF5Dataset}}
-  function or the \code{\link[HDF5Array]{HDF5ArraySeed}} constructor on it,
-  both defined in the \pkg{HDF5Array} package. Other on-disk backends can
-  be supported. This uses a block-processing strategy so that the full
-  object is not realized at once in memory. Instead the object is processed
-  block by block i.e. the blocks are realized in memory and written to disk
-  one at a time. See \code{?\link[HDF5Array]{writeHDF5Dataset}} in the
-  \pkg{HDF5Array} package for more information about this.
+  \emph{on disk} e.g. by calling \code{\link[HDF5Array]{writeHDF5Array}} on
+  it (this function is defined in the \pkg{HDF5Array} package) or coercing it
+  to an \link[HDF5Array]{HDF5Array} object with \code{as(x, "HDF5Array")}.
+  Other on-disk backends can be supported. This uses a block-processing
+  strategy so that the full object is not realized at once in memory. Instead
+  the object is processed block by block i.e. the blocks are realized in
+  memory and written to disk one at a time.
+  See \code{?\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array} package
+  for more information about this.
 }
 
 \section{Accessors}{
@@ -130,7 +131,7 @@ DelayedArray(seed)  # constructor function
     \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
           for binding DelayedArray objects along their rows or columns.
 
-    \item \code{\link[HDF5Array]{writeHDF5Dataset}} in the \pkg{HDF5Array}
+    \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
           package for writting an array-like object to an HDF5 file and other
           low-level utilities to control the location of automatically created 
           HDF5 datasets.
@@ -180,29 +181,36 @@ t(A2)  # delayed transpose is very fast and very memory efficient because
 colSums(A2)
 
 ## ---------------------------------------------------------------------
-## WRAP A HDF5ArraySeed OBJECT IN A DelayedArray OBJECT
+## A HDF5Array OBJECT IS A (PARTICULAR KIND OF) DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 library(HDF5Array)
-h5a <- as(a, "HDF5ArraySeed")  # write 'a' to an HDF5 file
-h5a
-
-A3 <- DelayedArray(h5a)        # wrap the dataset in a DelayedArray object
+A3 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file
 A3
+is(A3, "DelayedArray")     # TRUE
 
-B3 <- toto(A3)                 # very fast! (operations are delayed)
+B3 <- toto(A3)             # very fast! (operations are delayed)
+
+B3                         # not a HDF5Array object because now it
+                           # carries delayed operations
 B3 <- drop(B3)
 
 CS3 <- colSums(B3)
 stopifnot(identical(cs, CS3))
 
 ## ---------------------------------------------------------------------
-## STORE THE RESULT IN A NEW HDF5ArraySeed OBJECT
+## PERFORM THE DELAYED OPERATIONS
 ## ---------------------------------------------------------------------
-b3 <- as(B3, "HDF5ArraySeed")  # "realize" B3 on disk (as an HDF5 dataset)
+as(B3, "HDF5Array")        # "realize" 'B3' on disk
 
 ## If this is just an intermediate result, you can either keep going
-## with B3 or replace it with b3 wrapped in a DelayedArray object etc...
-B3 <- DelayedArray(b3)  # semantically equivalent to the previous B3
+## with B3 or replace it with its "realized" version:
+B3 <- as(B3, "HDF5Array")  # no more delayed operations on new 'B3'
+
+## For convenience, the backend used for realization can be set at the
+## session level and realize() used instead of explicit coercion:
+D <- cbind(B3, exp(B3))
+setRealizeBackend("HDF5Array")
+D <- realize(D)
 }
 \keyword{methods}
 \keyword{classes}

@@ -105,7 +105,7 @@
     \item \code{\link{setRealizeBackend}} for how to set a \emph{realize()
           backend}.
 
-    \item \code{\link[HDF5Array]{writeHDF5Dataset}} in the \pkg{HDF5Array}
+    \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
           package for writting an array-like object to an HDF5 file and other
           low-level utilities to control the location of automatically created
           HDF5 datasets.
