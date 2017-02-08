@@ -13,18 +13,15 @@
 ### See HDF5RealizationSink class in the HDF5Array package for an example.
 setClass("RealizationSink", representation("VIRTUAL"))
 
+### A default "write_to_sink" method is defined in DelayedArray-class.R.
 setGeneric("write_to_sink", signature=c("x", "sink"),
     function(x, sink, offsets=NULL) standardGeneric("write_to_sink")
 )
 
 setGeneric("close")
 
-### Default "close" method for RealizationSink objects. A default
-### "write_to_sink" method is defined in DelayedArray-class.R.
-setMethod("close", "RealizationSink",
-    function(con)
-        stop(wmsg("don't know how to close a ", class(con), " object"))
-)
+### The default "close" method for RealizationSink objects is a no-op.
+setMethod("close", "RealizationSink", function(con) invisible(NULL))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -73,7 +70,7 @@ setRealizeBackend <- function(class=NULL)
                                         envir=.getNamespace(package),
                                         inherits=FALSE)
     stopifnot(is.function(REALIZATION_SINK_CONSTRUCTOR))
-    stopifnot(identical(formalArgs(REALIZATION_SINK_CONSTRUCTOR),
+    stopifnot(identical(head(formalArgs(REALIZATION_SINK_CONSTRUCTOR), n=3L),
                         c("dim", "dimnames", "type")))
     assign("class", class, envir=.realize_backend_envir)
     assign("REALIZATION_SINK_CONSTRUCTOR", REALIZATION_SINK_CONSTRUCTOR,
