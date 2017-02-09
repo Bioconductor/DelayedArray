@@ -36,6 +36,22 @@ get_block_length <- function(type)
     as.integer(block_size / type_size)
 }
 
+### NOT exported but used in HDF5Array!
+get_verbose_block_processing <- function()
+{
+    getOption("DelayedArray.verbose.block.processing", default=FALSE)
+}
+
+### NOT exported but used in HDF5Array!
+set_verbose_block_processing <- function(verbose)
+{
+    if (!isTRUEorFALSE(verbose))
+        stop("'verbose' must be TRUE or FALSE")
+    old_verbose <- get_verbose_block_processing()
+    options(DelayedArray.verbose.block.processing=verbose)
+    old_verbose
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### ArrayBlocks objects
@@ -223,15 +239,22 @@ block_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL,
         return(if_empty)
     lapply(seq_len(nblock),
         function(i) {
+            if (get_verbose_block_processing())
+                message("Processing block ", i, "/", nblock, " ... ",
+                        appendLF=FALSE)
             block_ranges <- .get_block_ranges(blocks, i)
             subscripts <- make_subscripts_from_ranges(block_ranges, blocks@dim)
             subarray <- subset_by_subscripts(x, subscripts)
             if (!is.array(subarray))
                 subarray <- .as_array_or_matrix(subarray)
             block_ans <- APPLY(subarray, ...)
-            if (is.null(sink))
-                return(block_ans)
-            write_to_sink(block_ans, sink, offsets=start(block_ranges))
+            if (!is.null(sink)) {
+                write_to_sink(block_ans, sink, offsets=start(block_ranges))
+                block_ans <- NULL
+            }
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
         })
 }
 
@@ -255,6 +278,9 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, sink=NULL,
         return(if_empty)
     lapply(seq_len(nblock),
         function(i) {
+            if (get_verbose_block_processing())
+                message("Processing block ", i, "/", nblock, " ... ",
+                        appendLF=FALSE)
             block_ranges <- .get_block_ranges(blocks, i)
             subscripts <- make_subscripts_from_ranges(block_ranges, blocks@dim)
             subarrays <- lapply(dots,
@@ -265,9 +291,13 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, sink=NULL,
                     subarray
                 })
             block_ans <- do.call(MAPPLY, subarrays)
-            if (is.null(sink))
-                return(block_ans)
-            write_to_sink(block_ans, sink, offsets=start(block_ranges))
+            if (!is.null(sink)) {
+                write_to_sink(block_ans, sink, offsets=start(block_ranges))
+                block_ans <- NULL
+            }
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
         })
 }
 
@@ -282,14 +312,22 @@ block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
     if (is.null(block_len))
         block_len <- get_block_length(type(x))
     blocks <- ArrayBlocks(dim(x), block_len)
-    for (i in seq_along(blocks)) {
+    nblock <- length(blocks)
+    for (i in seq_len(nblock)) {
+        if (get_verbose_block_processing())
+            message("Processing block ", i, "/", nblock, " ... ",
+                    appendLF=FALSE)
         subarray <- .extract_array_block(x, blocks, i)
         if (!is.array(subarray))
             subarray <- .as_array_or_matrix(subarray)
         reduced <- REDUCE(subarray)
         init <- COMBINE(i, subarray, init, reduced)
-        if (!is.null(BREAKIF) && BREAKIF(init))
+        if (get_verbose_block_processing())
+            message("OK")
+        if (!is.null(BREAKIF) && BREAKIF(init)) {
+            message("BREAK condition encountered")
             break
+        }
     }
     init
 }
