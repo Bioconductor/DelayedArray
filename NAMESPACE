@@ -3,6 +3,7 @@ importFrom(stats, setNames, dlogis, plogis, qlogis)
 import(BiocGenerics)
 import(S4Vectors)
 import(IRanges)
+import(matrixStats)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -113,6 +114,7 @@ export(
     write_to_sink, close,
     matrixClass, subset_seed_as_array, type,
     pmax2, pmin2, apply,
+    rowMaxs, colMaxs,
     realize
 )
 
@@ -121,6 +123,7 @@ exportMethods(
     write_to_sink, close,
     matrixClass, subset_seed_as_array, type,
     pmax2, pmin2, apply,
+    rowMaxs, colMaxs,
     realize
 )
 
