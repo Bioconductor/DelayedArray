@@ -105,7 +105,7 @@ setMethod("realize", "ANY",
     {
         x <- DelayedArray(x)
         if (is.null(BACKEND))
-            return(as.array(x))
+            return(DelayedArray(as.array(x)))
         .load_BACKEND_package(BACKEND)
         ans <- as(x, BACKEND)
         ## Temporarily needed because coercion to HDF5Array currently drops
