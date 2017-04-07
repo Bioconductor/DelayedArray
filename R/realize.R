@@ -82,6 +82,17 @@ setRealizeBackend <- function(BACKEND=NULL)
     return(invisible(NULL))
 }
 
+get_realization_sink_constructor <- function()
+{
+    REALIZATION_SINK_CONSTRUCTOR <- try(get("REALIZATION_SINK_CONSTRUCTOR",
+                                            envir=.realize_backend_envir),
+                                        silent=TRUE)
+    if (is(REALIZATION_SINK_CONSTRUCTOR, "try-error"))
+        stop(wmsg("This operation requires a \"realize() backend\". ",
+                  "Please see '?setRealizeBackend' for how to set one."))
+    REALIZATION_SINK_CONSTRUCTOR
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### realize()
