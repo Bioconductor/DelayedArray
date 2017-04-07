@@ -7,10 +7,6 @@
 \alias{write_to_sink}
 \alias{close,RealizationSink-method}
 
-\alias{supportedRealizeBackends}
-\alias{setRealizeBackend}
-\alias{getRealizeBackend}
-
 \alias{RealizationSink}
 
 \title{RealizationSink objects}

@@ -125,6 +125,9 @@ DelayedArray(seed)  # constructor function
 
 \seealso{
   \itemize{
+    \item \code{\link{realize}} for realizing a DelayedArray object in memory
+          or on disk.
+
     \item \link{DelayedArray-utils} for common operations on DelayedArray
           objects.
 

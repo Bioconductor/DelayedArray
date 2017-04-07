@@ -115,6 +115,14 @@ setGeneric("colMaxs", signature="x")
 setMethod("rowMaxs", "DelayedMatrix", .DelayedMatrix_block_rowMaxs)
 setMethod("colMaxs", "DelayedMatrix", .DelayedMatrix_block_colMaxs)
 
+#.rowRanges.useAsDefault <- function(x, ...) matrixStats::rowRanges(x, ...)
+#setGeneric("rowRanges", signature="x",
+#    function(x, ...) standardGeneric("rowRanges"),
+#    useAsDefault=.rowRanges.useAsDefault
+#)
+#
+#setGeneric("colRanges", signature="x")
+
 
 ### TODO: Add more row/column summarization generics/methods.
 

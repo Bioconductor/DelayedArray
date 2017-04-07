@@ -325,7 +325,8 @@ block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
         if (get_verbose_block_processing())
             message("OK")
         if (!is.null(BREAKIF) && BREAKIF(init)) {
-            message("BREAK condition encountered")
+            if (get_verbose_block_processing())
+                message("BREAK condition encountered")
             break
         }
     }
