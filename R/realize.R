@@ -5,24 +5,25 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Get/set the "realize() backend"
+### Get/set the "realization backend"
 ###
 
-.SUPPORTED_REALIZE_BACKENDS <- data.frame(
+.SUPPORTED_REALIZATION_BACKENDS <- data.frame(
     BACKEND="HDF5Array",
     package="HDF5Array",
     realization_sink_class="HDF5RealizationSink",
     stringsAsFactors=FALSE
 )
 
-supportedRealizeBackends <- function()
-    .SUPPORTED_REALIZE_BACKENDS[ , c("BACKEND", "package")]
+supportedRealizationBackends <- function()
+    .SUPPORTED_REALIZATION_BACKENDS[ , c("BACKEND", "package")]
 
-.realize_backend_envir <- new.env(parent=emptyenv())
+.realization_backend_envir <- new.env(parent=emptyenv())
 
-getRealizeBackend <- function()
+getRealizationBackend <- function()
 {
-    BACKEND <- try(get("BACKEND", envir=.realize_backend_envir), silent=TRUE)
+    BACKEND <- try(get("BACKEND", envir=.realization_backend_envir),
+                   silent=TRUE)
     if (is(BACKEND, "try-error"))
         return(NULL)
     BACKEND
@@ -32,12 +33,12 @@ getRealizeBackend <- function()
 {
     if (!isSingleString(BACKEND))
         stop(wmsg("'BACKEND' must be a single string or NULL"))
-    backends <- .SUPPORTED_REALIZE_BACKENDS
+    backends <- .SUPPORTED_REALIZATION_BACKENDS
     m <- match(BACKEND, backends[ , "BACKEND"])
     if (is.na(m))
-        stop(wmsg("\"", BACKEND, "\" is not a supported backend. Please use ",
-                  "supportedRealizeBackends() to see the list of supported ",
-                  "\"realize() backends\"."))
+        stop(wmsg("\"", BACKEND, "\" is not a supported backend. Please ",
+                  "use supportedRealizationBackends() to get the list of ",
+                  "supported \"realization backends\"."))
     package <- backends[ , "package"][[m]]
     class_package <- attr(BACKEND, "package")
     if (is.null(class_package)) {
@@ -53,7 +54,7 @@ getRealizeBackend <- function()
 
 .get_REALIZATION_SINK_CONSTRUCTOR <- function(BACKEND)
 {
-    backends <- .SUPPORTED_REALIZE_BACKENDS
+    backends <- .SUPPORTED_REALIZATION_BACKENDS
     m <- match(BACKEND, backends[ , "BACKEND"])
     realization_sink_class <- backends[ , "realization_sink_class"][[m]]
     package <- backends[ , "package"][[m]]
@@ -66,30 +67,30 @@ getRealizeBackend <- function()
     REALIZATION_SINK_CONSTRUCTOR
 }
 
-setRealizeBackend <- function(BACKEND=NULL)
+setRealizationBackend <- function(BACKEND=NULL)
 {
     if (is.null(BACKEND)) {
-        remove(list=ls(envir=.realize_backend_envir),
-               envir=.realize_backend_envir)
+        remove(list=ls(envir=.realization_backend_envir),
+               envir=.realization_backend_envir)
         return(invisible(NULL))
     }
     .load_BACKEND_package(BACKEND)
     REALIZATION_SINK_CONSTRUCTOR <- .get_REALIZATION_SINK_CONSTRUCTOR(BACKEND)
     assign("BACKEND", BACKEND,
-           envir=.realize_backend_envir)
+           envir=.realization_backend_envir)
     assign("REALIZATION_SINK_CONSTRUCTOR", REALIZATION_SINK_CONSTRUCTOR,
-           envir=.realize_backend_envir)
+           envir=.realization_backend_envir)
     return(invisible(NULL))
 }
 
 get_realization_sink_constructor <- function()
 {
     REALIZATION_SINK_CONSTRUCTOR <- try(get("REALIZATION_SINK_CONSTRUCTOR",
-                                            envir=.realize_backend_envir),
+                                            envir=.realization_backend_envir),
                                         silent=TRUE)
     if (is(REALIZATION_SINK_CONSTRUCTOR, "try-error"))
-        stop(wmsg("This operation requires a \"realize() backend\". ",
-                  "Please see '?setRealizeBackend' for how to set one."))
+        stop(wmsg("This operation requires a \"realization backend\". ",
+                  "Please see '?setRealizationBackend' for how to set one."))
     REALIZATION_SINK_CONSTRUCTOR
 }
 
@@ -101,7 +102,7 @@ get_realization_sink_constructor <- function()
 setGeneric("realize", function(x, ...) standardGeneric("realize"))
 
 setMethod("realize", "ANY",
-    function(x, BACKEND=getRealizeBackend())
+    function(x, BACKEND=getRealizationBackend())
     {
         x <- DelayedArray(x)
         if (is.null(BACKEND))

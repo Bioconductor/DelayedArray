@@ -128,8 +128,8 @@
           \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
           for row/col summarization of an ordinary matrix.
 
-    \item \code{\link{setRealizeBackend}} for how to set a \emph{realize()
-          backend}.
+    \item \code{\link{setRealizationBackend}} for how to set a
+          \emph{realization backend}.
 
     \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
           package for writting an array-like object to an HDF5 file and other
@@ -169,10 +169,10 @@ M3
 ## ---------------------------------------------------------------------
 
 ## Matrix multiplication is not delayed: the output matrix is realized
-## block by block. The current "realize() backend" controls where
+## block by block. The current "realization backend" controls where
 ## realization happens e.g. in memory if set to NULL or in an HDF5 file
 ## if set to "HDF5Array". See '?realize' for more information about
-## "realize() backends".
+## "realization backends".
 ## The output matrix is returned as a DelayedMatrix object with no delayed
 ## operations on it. The exact class of the object depends on the backend
 ## e.g. it will be HDF5Matrix with "HDF5Array" backend.
@@ -180,12 +180,12 @@ M3
 m <- matrix(runif(50000), ncol=nrow(M1))
 
 ## Set backend to NULL for in-memory realization:
-setRealizeBackend()
+setRealizationBackend()
 P1 <- m \%*\% M1
 P1
 
 ## Set backend to HDF5Array for realization in HDF5 file:
-setRealizeBackend("HDF5Array")
+setRealizationBackend("HDF5Array")
 
 ## With the HDF5Array backend, the output matrix will be written to an
 ## automatic location on disk:

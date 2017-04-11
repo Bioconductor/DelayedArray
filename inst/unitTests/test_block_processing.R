@@ -1,4 +1,4 @@
-setRealizeBackend("HDF5Array")
+setRealizationBackend("HDF5Array")
 
 test_split_array_in_blocks <- function()
 {

@@ -112,7 +112,7 @@ setAs("arrayRealizationSink", "DelayedArray",
 
 RealizationSink <- function(dim, dimnames=NULL, type="double")
 {
-    if (is.null(getRealizeBackend())) {
+    if (is.null(getRealizationBackend())) {
         REALIZATION_SINK_CONSTRUCTOR <- arrayRealizationSink
     } else {
         REALIZATION_SINK_CONSTRUCTOR <- get_realization_sink_constructor()

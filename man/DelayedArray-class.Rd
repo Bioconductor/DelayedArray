@@ -206,11 +206,16 @@ as(B3, "HDF5Array")        # "realize" 'B3' on disk
 ## with B3 or replace it with its "realized" version:
 B3 <- as(B3, "HDF5Array")  # no more delayed operations on new 'B3'
 
-## For convenience, the backend used for realization can be set at the
-## session level and realize() used instead of explicit coercion:
+## For convenience, realize() can be used instead of explicit coercion.
+## The current "realization backend" controls where realization
+## happens e.g. in memory if set to NULL or in an HDF5 file if set
+## to "HDF5Array":
 D <- cbind(B3, exp(B3))
-setRealizeBackend("HDF5Array")
+D
+setRealizationBackend("HDF5Array")
 D <- realize(D)
+D
+## See '?realize' for more information about "realization backends".
 }
 \keyword{methods}
 \keyword{classes}

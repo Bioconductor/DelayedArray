@@ -1,4 +1,4 @@
-setRealizeBackend("HDF5Array")
+setRealizationBackend("HDF5Array")
 
 DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
 

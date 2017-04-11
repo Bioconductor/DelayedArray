@@ -102,7 +102,7 @@ exportMethods(
 export(
     ArrayBlocks,
     DelayedArray,
-    supportedRealizeBackends, getRealizeBackend, setRealizeBackend,
+    supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     RealizationSink, arrayRealizationSink
 )
 

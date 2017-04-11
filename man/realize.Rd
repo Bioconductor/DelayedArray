@@ -1,8 +1,8 @@
 \name{realize}
 
-\alias{supportedRealizeBackends}
-\alias{getRealizeBackend}
-\alias{setRealizeBackend}
+\alias{supportedRealizationBackends}
+\alias{getRealizationBackend}
+\alias{setRealizationBackend}
 
 \alias{realize}
 \alias{realize,ANY-method}
@@ -11,16 +11,18 @@
 
 \description{
   Realize a \link{DelayedArray} object in memory or on disk.
+  Get or set the \emph{realization backend} for the current session with
+  \code{getRealizationBackend} or \code{setRealizationBackend}.
 }
 
 \usage{
-supportedRealizeBackends()
-getRealizeBackend()
-setRealizeBackend(BACKEND=NULL)
+supportedRealizationBackends()
+getRealizationBackend()
+setRealizationBackend(BACKEND=NULL)
 
 realize(x, ...)
 
-\S4method{realize}{ANY}(x, BACKEND=getRealizeBackend())
+\S4method{realize}{ANY}(x, BACKEND=getRealizationBackend())
 }
 
 \arguments{
@@ -39,7 +41,8 @@ realize(x, ...)
 }
 
 \details{
-  Coming soon...
+  The \emph{realization backend} controls where realization happens e.g.
+  in memory if set to NULL or in an HDF5 file if set to \code{"HDF5Array"}.
 }
 
 \value{
@@ -68,14 +71,14 @@ M1 <- HDF5Array(toy_h5, "M1")
 M2 <- HDF5Array(toy_h5, "M2")
 M3 <- rbind(log(M1), t(M2))
 
-supportedRealizeBackends()
-getRealizeBackend()  # backend is set to NULL
+supportedRealizationBackends()
+getRealizationBackend()  # backend is set to NULL
 m3 <- realize(M3)    # in-memory realization
 class(m3)
 dim(m3)
 
-setRealizeBackend("HDF5Array")
-getRealizeBackend()  # backend is set to "HDF5Array"
+setRealizationBackend("HDF5Array")
+getRealizationBackend()  # backend is set to "HDF5Array"
 M3 <- realize(M3)    # realization in HDF5 file
 M3
 }
