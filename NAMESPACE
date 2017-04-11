@@ -11,9 +11,9 @@ import(matrixStats)
 ###
 
 exportClasses(
-    RealizationSink,
     ArrayBlocks,
-    DelayedArray, DelayedMatrix
+    DelayedArray, DelayedMatrix,
+    RealizationSink, arrayRealizationSink
 )
 
 
@@ -100,9 +100,10 @@ exportMethods(
 ###
 
 export(
-    ArrayBlocks, DelayedArray,
+    ArrayBlocks,
+    DelayedArray,
     supportedRealizeBackends, getRealizeBackend, setRealizeBackend,
-    RealizationSink
+    RealizationSink, arrayRealizationSink
 )
 
 
@@ -111,19 +112,19 @@ export(
 ###
 
 export(
-    write_to_sink, close,
     matrixClass, subset_seed_as_array, type,
+    realize,
+    write_to_sink, close,
     pmax2, pmin2, apply,
-    rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges,
-    realize
+    rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 
 ### Exactly the same list as above.
 exportMethods(
-    write_to_sink, close,
     matrixClass, subset_seed_as_array, type,
+    realize,
+    write_to_sink, close,
     pmax2, pmin2, apply,
-    rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges,
-    realize
+    rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 

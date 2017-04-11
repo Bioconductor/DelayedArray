@@ -1,6 +1,5 @@
-\name{block_processing}
-
-\alias{block_processing}
+\name{ArrayBlocks-class}
+\docType{class}
 
 \alias{class:ArrayBlocks}
 \alias{ArrayBlocks-class}
@@ -10,10 +9,11 @@
 \alias{getListElement,ArrayBlocks-method}
 \alias{show,ArrayBlocks-method}
 
-\title{Internal utilities for block processing an array}
+\title{ArrayBlocks objects}
 
 \description{
-  Internal utilities for block processing an array.
+  ArrayBlocks objects are used internally to support block processing of
+  array-like objects.
 }
 
 \keyword{internal}

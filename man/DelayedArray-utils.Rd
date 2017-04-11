@@ -168,29 +168,39 @@ M3
 ## MATRIX MULTIPLICATION
 ## ---------------------------------------------------------------------
 
-m <- matrix(runif(60), ncol=12)
-M <- DelayedArray(matrix(runif(240), nrow=12))
+## Matrix multiplication is not delayed: the output matrix is realized
+## block by block. The current "realize() backend" controls where
+## realization happens e.g. in memory if set to NULL or in an HDF5 file
+## if set to "HDF5Array". See '?realize' for more information about
+## "realize() backends".
+## The output matrix is returned as a DelayedMatrix object with no delayed
+## operations on it. The exact class of the object depends on the backend
+## e.g. it will be HDF5Matrix with "HDF5Array" backend.
 
-## Matrix multiplication is not delayed. It will realize the result and
-## thus one needs to set a "realize() backend" first if none is set yet.
+m <- matrix(runif(50000), ncol=nrow(M1))
+
+## Set backend to NULL for in-memory realization:
+setRealizeBackend()
+P1 <- m \%*\% M1
+P1
+
+## Set backend to HDF5Array for realization in HDF5 file:
 setRealizeBackend("HDF5Array")
 
-## The HDF5Array backend being set, matrix multiplication will write a
-## new HDF5 dataset to disk to an automatic location and return an
-## HDF5Matrix object that points to this new dataset.
-
-getHDF5DumpFile()  # HDF5 file where the new dataset will be written
+## With the HDF5Array backend, the output matrix will be written to an
+## automatic location on disk:
+getHDF5DumpFile()  # HDF5 file where the output matrix will be written
 lsHDF5DumpFile()
 
-P <- m \%*\% M
-P
+P2 <- m \%*\% M1
+P2
 
-getHDF5DumpFile()
 lsHDF5DumpFile()
 
-## You can use setHDF5DumpFile() and setHDF5DumpName() defined in the
-## HDF5Array package to control the location of automatically created
-## HDF5 datasets.
+## Use setHDF5DumpFile() and setHDF5DumpName() from the HDF5Array package
+## to control the location of automatically created HDF5 datasets.
+
+stopifnot(identical(as.array(P1), as.array(P2)))
 
 ## ---------------------------------------------------------------------
 ## MATRIX ROW/COL SUMMARIZATION

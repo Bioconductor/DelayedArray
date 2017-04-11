@@ -12,8 +12,6 @@
 ### DelayedMatrix objects is not supported.
 ###
 
-### Write a new HDF5 dataset to disk. Return an HDF5Matrix object that points
-### to this new dataset.
 .DelayedMatrix_block_mult_by_left_matrix <- function(x, y)
 {
     stopifnot(is.matrix(x),
@@ -25,7 +23,7 @@
     ans_type <- typeof(match.fun(type(x))(1) * match.fun(type(y))(1))
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
-    colblock_APPLY(y, function(submatrix) x %*% submatrix, sink=sink)
+    colblock_APPLY(y, function(submatrix) { x %*% submatrix }, sink=sink)
     as(sink, "DelayedArray")
 }
 

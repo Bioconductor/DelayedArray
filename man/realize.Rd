@@ -61,7 +61,23 @@ realize(x, ...)
 }
 
 \examples{
-## Coming soon...
+library(HDF5Array)
+toy_h5 <- system.file("extdata", "toy.h5", package="HDF5Array")
+h5ls(toy_h5)
+M1 <- HDF5Array(toy_h5, "M1")
+M2 <- HDF5Array(toy_h5, "M2")
+M3 <- rbind(log(M1), t(M2))
+
+supportedRealizeBackends()
+getRealizeBackend()  # backend is set to NULL
+m3 <- realize(M3)    # in-memory realization
+class(m3)
+dim(m3)
+
+setRealizeBackend("HDF5Array")
+getRealizeBackend()  # backend is set to "HDF5Array"
+M3 <- realize(M3)    # realization in HDF5 file
+M3
 }
 
 \keyword{methods}

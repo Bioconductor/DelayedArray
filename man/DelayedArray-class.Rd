@@ -57,9 +57,6 @@
 \alias{subset_seed_as_array,data.frame-method}
 \alias{subset_seed_as_array,DataFrame-method}
 
-\alias{write_to_sink,DelayedArray,RealizationSink-method}
-\alias{write_to_sink,ANY,RealizationSink-method}
-
 \title{DelayedArray objects}
 
 \description{

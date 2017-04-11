@@ -950,31 +950,3 @@ split.DelayedArray <- function(x, f, drop=FALSE, ...)
     splitAsList(x, f, drop=drop, ...)
 setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### write_to_sink()
-###
-
-setMethod("write_to_sink", c("DelayedArray", "RealizationSink"),
-    function(x, sink, offsets=NULL)
-    {
-        if (!is.null(offsets))
-            stop(wmsg("'offsets' must be NULL when the object to write ",
-                      "is a DelayedArray object"))
-        ## Semantically equivalent to 'write_to_sink(as.array(x), sink)'
-        ## but uses block-processing so the full DelayedArray object is
-        ## not realized at once in memory. Instead the object is first
-        ## split into blocks and the blocks are realized and written to
-        ## disk one at a time.
-        block_APPLY(x, identity, sink=sink)
-    }
-)
-
-setMethod("write_to_sink", c("ANY", "RealizationSink"),
-    function(x, sink, offsets=NULL)
-    {
-        x <- as(x, "DelayedArray")
-        write_to_sink(x, sink, offsets=offsets)
-    }
-)
-

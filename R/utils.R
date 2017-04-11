@@ -23,18 +23,19 @@ expand_RangeNSBS_subscripts <- function(subscripts)
 ### Return a "multidimensional subscript" i.e. a list with one subscript per
 ### dimension in the original array. Missing subscripts are represented by
 ### list elements of class "name".
-make_subscripts_from_ranges <- function(block_ranges, dim,
-                                        expand.RangeNSBS=FALSE)
+make_subscripts_from_block_ranges <- function(block_ranges, dim,
+                                              expand.RangeNSBS=FALSE)
 {
     stopifnot(is(block_ranges, "Ranges"),
-              is.integer(dim),
-              length(block_ranges) == length(dim))
+              is.integer(dim))
+    ndim <- length(dim)
     block_offsets <- start(block_ranges)
     block_dim <- width(block_ranges)
-    stopifnot(all(block_dim <= dim))
-    ndim <- length(dim)
+    stopifnot(length(block_ranges) == ndim,
+              all(block_offsets >= 1L),
+              all(block_offsets + block_dim - 1L <= dim))
     subscripts <- rep.int(alist(foo=), ndim)
-    is_not_missing <- block_dim != dim
+    is_not_missing <- block_dim < dim
     if (expand.RangeNSBS) {
         expand_idx <- which(is_not_missing)
     } else {

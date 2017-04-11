@@ -18,14 +18,15 @@ Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, BiocStyle
 License: Artistic-2.0
 Collate: utils.R
-	RealizationSink-class.R
-	block_processing.R
+	ArrayBlocks-class.R
 	show-utils.R
 	DelayedArray-class.R
 	cbind-methods.R
+	realize.R
+	RealizationSink-class.R
+	block_processing.R
 	DelayedArray-utils.R
 	DelayedMatrix-utils.R
 	DelayedArray-stats.R
 	DelayedMatrix-stats.R
-	realize.R
 	zzz.R
