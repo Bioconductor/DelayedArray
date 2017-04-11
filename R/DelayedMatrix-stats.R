@@ -6,12 +6,16 @@
 
 ### Raise an error if invalid input type. Otherwise return "integer",
 ### "numeric", "double", or "complex".
-.get_ans_type <- function(x)
+.get_ans_type <- function(x, must.be.numeric=FALSE)
 {
     x_type <- type(x)
-    switch(x_type, logical="integer",
-                   integer=, numeric=, double=, complex=x_type,
-                   stop(wmsg("unsupprted type: ", x_type)))
+    ans_type <- switch(x_type,
+        logical="integer",
+        integer=, numeric=, double=, complex=x_type,
+        stop(wmsg("operation not supported on matrices of type ", x_type)))
+    if (must.be.numeric && !is.numeric(get(ans_type)(0)))
+        stop(wmsg("operation not supported on matrices of type ", x_type))
+    ans_type
 }
 
 
@@ -107,6 +111,13 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
 ### row/colProds(), row/colAnys(), row/colAlls(), row/colMedians()
 ###
 
+.fix_type <- function(x, ans_type)
+{
+    if (ans_type == "integer" && !is.integer(x) && all(is.finite(x)))
+        storage.mode(x) <- ans_type
+    x
+}
+
 ### row/colMaxs()
 
 .DelayedMatrix_block_rowMaxs <- function(x, rows=NULL, cols=NULL,
@@ -116,10 +127,11 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
         return(.DelayedMatrix_block_colMaxs(t(x), rows=rows, cols=cols,
                                             na.rm=na.rm, dim.=dim.))
 
-    .get_ans_type(x)  # check input type
+    ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowMaxs(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced) pmax(init, reduced)
-    init <- rep.int(-Inf, nrow(x))
+    COMBINE <- function(i, m, init, reduced)
+        .fix_type(pmax(init, reduced), ans_type)
+    init <- .fix_type(rep.int(-Inf, nrow(x)), ans_type)
     ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
     setNames(ans, rownames(x))
 }
@@ -131,10 +143,10 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
         return(.DelayedMatrix_block_rowMaxs(t(x), rows=rows, cols=cols,
                                             na.rm=na.rm, dim.=dim.))
 
-    .get_ans_type(x)  # check input type
+    ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     colmaxs_list <- colblock_APPLY(x, colMaxs, na.rm=na.rm)
     if (length(colmaxs_list) == 0L)
-        return(rep.int(-Inf, ncol(x)))
+        return(.fix_type(rep.int(-Inf, ncol(x)), ans_type))
     unlist(colmaxs_list, recursive=FALSE)
 }
 
@@ -153,10 +165,11 @@ setMethod("colMaxs", "DelayedMatrix", .DelayedMatrix_block_colMaxs)
         return(.DelayedMatrix_block_colMins(t(x), rows=rows, cols=cols,
                                             na.rm=na.rm, dim.=dim.))
 
-    .get_ans_type(x)  # check input type
+    ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowMins(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced) pmin(init, reduced)
-    init <- rep.int(Inf, nrow(x))
+    COMBINE <- function(i, m, init, reduced)
+        .fix_type(pmin(init, reduced), ans_type)
+    init <- .fix_type(rep.int(Inf, nrow(x)), ans_type)
     ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
     setNames(ans, rownames(x))
 }
@@ -168,10 +181,10 @@ setMethod("colMaxs", "DelayedMatrix", .DelayedMatrix_block_colMaxs)
         return(.DelayedMatrix_block_rowMins(t(x), rows=rows, cols=cols,
                                             na.rm=na.rm, dim.=dim.))
 
-    .get_ans_type(x)  # check input type
+    ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     colmins_list <- colblock_APPLY(x, colMins, na.rm=na.rm)
     if (length(colmins_list) == 0L)
-        return(rep.int(Inf, ncol(x)))
+        return(.fix_type(rep.int(Inf, ncol(x)), ans_type))
     unlist(colmins_list, recursive=FALSE)
 }
 
@@ -190,12 +203,15 @@ setMethod("colMins", "DelayedMatrix", .DelayedMatrix_block_colMins)
         return(.DelayedMatrix_block_colRanges(t(x), rows=rows, cols=cols,
                                               na.rm=na.rm, dim.=dim.))
 
-    .get_ans_type(x)  # check input type
+    ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowRanges(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced)
-        cbind(pmin(init[ , 1L], reduced[ , 1L]),
-              pmax(init[ , 2L], reduced[ , 2L]))
-    init <- matrix(rep(c(Inf, -Inf), each=nrow(x)), ncol=2L)
+    COMBINE <- function(i, m, init, reduced) {
+        .fix_type(cbind(pmin(init[ , 1L], reduced[ , 1L]),
+                        pmax(init[ , 2L], reduced[ , 2L])),
+                  ans_type)
+    }
+    init <- .fix_type(matrix(rep(c(Inf, -Inf), each=nrow(x)), ncol=2L),
+                      ans_type)
     ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
     setNames(ans, rownames(x))
 }
@@ -207,10 +223,11 @@ setMethod("colMins", "DelayedMatrix", .DelayedMatrix_block_colMins)
         return(.DelayedMatrix_block_rowRanges(t(x), rows=rows, cols=cols,
                                               na.rm=na.rm, dim.=dim.))
 
-    .get_ans_type(x)  # check input type
+    ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     colranges_list <- colblock_APPLY(x, colRanges, na.rm=na.rm)
     if (length(colranges_list) == 0L)
-        return(matrix(rep(c(Inf, -Inf), each=ncol(x)), ncol=2L))
+        return(.fix_type(matrix(rep(c(Inf, -Inf), each=ncol(x)), ncol=2L),
+                         ans_type))
     do.call(rbind, colranges_list)
 }
 

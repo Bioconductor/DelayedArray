@@ -9,7 +9,7 @@ m2 <- matrix(runif(60), ncol=6)                          # numeric matrix
 block_sizes1 <- c(12L, 20L, 50L, 15000L)
 block_sizes2 <- 2L * block_sizes1
 
-test_DelayedMatrix_row_col_summary <- function()
+test_DelayedMatrix_row_col_summarization <- function()
 {
     test_row_col_summary <- function(FUN, m, M, block_sizes) {
         on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
@@ -36,11 +36,15 @@ test_DelayedMatrix_row_col_summary <- function()
         }
     }
 
+    FUNS <- c("rowSums", "colSums", "rowMeans", "colMeans",
+              "rowMaxs", "colMaxs", "rowMins", "colMins",
+              "rowRanges", "colRanges")
+
     ## on an integer matrix
     m <- a1[ , , 1]
     A1 <- realize(a1)
     M <- drop(A1[ , , 1])
-    for (FUN in c("rowSums", "colSums", "rowMeans", "colMeans")) {
+    for (FUN in FUNS) {
         test_row_col_summary(FUN, m, M, block_sizes2)
         test_row_col_summary(FUN, m[ , 0], M[ , 0], block_sizes2)
     }
@@ -51,7 +55,7 @@ test_DelayedMatrix_row_col_summary <- function()
     m[5, 4] <- Inf
     m[6, 3] <- -Inf
     M <- realize(m)
-    for (FUN in c("rowSums", "colSums", "rowMeans", "colMeans"))
+    for (FUN in FUNS)
         test_row_col_summary(FUN, m, M, block_sizes2)
 
     library(genefilter)
