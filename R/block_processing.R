@@ -2,7 +2,7 @@
 ### Internal utilities for block processing an array
 ### -------------------------------------------------------------------------
 ###
-### Nothing in this file is exported.
+### Unless stated otherwise, nothing in this file is exported.
 ###
 
 
@@ -199,4 +199,34 @@ colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
     block_len <- max(get_block_length(type(x)), x_dim[[1L]])
     block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, block_len=block_len)
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Block by block realization of an array-like object
+###
+
+### Exported!
+setMethod("write_to_sink", c("DelayedArray", "RealizationSink"),
+    function(x, sink, offsets=NULL)
+    {
+        if (!is.null(offsets))
+            stop(wmsg("'offsets' must be NULL when the object to write ",
+                      "is a DelayedArray object"))
+        ## Semantically equivalent to 'write_to_sink(as.array(x), sink)'
+        ## but uses block-processing so the full DelayedArray object is
+        ## not realized at once in memory. Instead the object is first
+        ## split into blocks and the blocks are realized and written to
+        ## disk one at a time.
+        block_APPLY(x, identity, sink=sink)
+    }
+)
+
+### Exported!
+setMethod("write_to_sink", c("ANY", "RealizationSink"),
+    function(x, sink, offsets=NULL)
+    {
+        x <- as(x, "DelayedArray")
+        write_to_sink(x, sink, offsets=offsets)
+    }
+)
 

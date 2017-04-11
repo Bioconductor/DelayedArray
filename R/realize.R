@@ -5,7 +5,90 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Get/set the "realization backend"
+### RealizationSink objects
+###
+
+### Virtual class with no slots. Intended to be extended by implementations
+### of DelayedArray backends. Concrete subclasses must implement:
+###   1) A constructor function that takes argument 'dim', 'dimnames', and
+###      'type'.
+###   2) A "write_to_sink" method that works on an ordinary array.
+###   3) A "close" method (optional).
+###   4) Coercion to DelayedArray.
+### See the arrayRealizationSink class below or the HDF5RealizationSink class
+### in the HDF5Array package for examples of concrete RealizationSink
+### subclasses.
+setClass("RealizationSink", representation("VIRTUAL"))
+
+### 'x' and 'sink' must have the same number of dimensions.
+### 'offsets' must be NULL or an integer vector with 1 offset per dimension
+### in 'x' (or in 'sink').
+### A default "write_to_sink" method is defined in DelayedArray-class.R.
+setGeneric("write_to_sink", signature=c("x", "sink"),
+    function(x, sink, offsets=NULL) standardGeneric("write_to_sink")
+)
+
+setGeneric("close")
+
+### The default "close" method for RealizationSink objects is a no-op.
+setMethod("close", "RealizationSink", function(con) invisible(NULL))
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### arrayRealizationSink objects
+###
+### The arrayRealizationSink class is a concrete RealizationSink subclass that
+### implements an in-memory realization sink.
+###
+
+setClass("arrayRealizationSink",
+    contains="RealizationSink",
+    representation(
+        result_envir="environment"
+    )
+)
+
+.get_arrayRealizationSink_result <- function(sink)
+{
+    get("result", envir=sink@result_envir)
+}
+
+arrayRealizationSink <- function(dim, dimnames=NULL, type="double")
+{
+    result <- array(get(type)(0), dim=dim, dimnames=dimnames)
+    result_envir <- new.env(parent=emptyenv())
+    assign("result", result, envir=result_envir)
+    new("arrayRealizationSink", result_envir=result_envir)
+}
+
+setMethod("write_to_sink", c("array", "arrayRealizationSink"),
+    function(x, sink, offsets=NULL)
+    {
+        x_dim <- dim(x)
+        result <- .get_arrayRealizationSink_result(sink)
+        sink_dim <- dim(result)
+        stopifnot(length(x_dim) == length(sink_dim))
+        if (is.null(offsets)) {
+            stopifnot(identical(x_dim, sink_dim))
+            result[] <- x
+        } else {
+            block_ranges <- IRanges(offsets, width=x_dim)
+            subscripts <- make_subscripts_from_block_ranges(
+                              block_ranges, sink_dim,
+                              expand.RangeNSBS=TRUE)
+            result <- do.call(`[<-`, c(list(result), subscripts, list(value=x)))
+        }
+        assign("result", result, envir=sink@result_envir)
+    }
+)
+
+setAs("arrayRealizationSink", "DelayedArray",
+    function(from) DelayedArray(.get_arrayRealizationSink_result(from))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Get/set the "realization backend" for the current session
 ###
 
 .SUPPORTED_REALIZATION_BACKENDS <- data.frame(
@@ -83,8 +166,10 @@ setRealizationBackend <- function(BACKEND=NULL)
     return(invisible(NULL))
 }
 
-get_realization_sink_constructor <- function()
+.get_realization_sink_constructor <- function()
 {
+    if (is.null(getRealizationBackend()))
+        return(arrayRealizationSink)
     REALIZATION_SINK_CONSTRUCTOR <- try(get("REALIZATION_SINK_CONSTRUCTOR",
                                             envir=.realization_backend_envir),
                                         silent=TRUE)
@@ -117,4 +202,14 @@ setMethod("realize", "ANY",
         ans
     }
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### RealizationSink constructor
+###
+
+RealizationSink <- function(dim, dimnames=NULL, type="double")
+{
+    .get_realization_sink_constructor()(dim, dimnames, type)
+}
 

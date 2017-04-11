@@ -23,7 +23,6 @@ Collate: utils.R
 	DelayedArray-class.R
 	cbind-methods.R
 	realize.R
-	RealizationSink-class.R
 	block_processing.R
 	DelayedArray-utils.R
 	DelayedMatrix-utils.R
