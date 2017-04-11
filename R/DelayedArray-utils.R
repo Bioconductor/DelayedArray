@@ -401,13 +401,13 @@ setMethod("signif", "DelayedArray",
 ### Used in unit tests!
 .DelayedArray_block_anyNA <- function(x, recursive=FALSE)
 {
-    REDUCE <- anyNA
+    APPLY <- anyNA
     COMBINE <- function(i, subarray, init, reduced) { init || reduced }
     init <- FALSE
     BREAKIF <- identity
 
     x <- .straighten(x, untranspose=TRUE, straighten.index=TRUE)
-    block_REDUCE_and_COMBINE(x, REDUCE, COMBINE, init, BREAKIF)
+    block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
 }
 
 setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
@@ -424,7 +424,7 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
         stop("'arr.ind' must be TRUE or FALSE")
     if (!isTRUEorFALSE(useNames))
         stop("'useNames' must be TRUE or FALSE")
-    REDUCE <- which
+    APPLY <- which
     COMBINE <- function(i, subarray, init, reduced) {
         if (length(reduced) != 0L) {
             reduced <- reduced + init$offset
@@ -436,7 +436,7 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
     }
     init <- list(parts=new.env(parent=emptyenv()), offset=0L)
 
-    res <- block_REDUCE_and_COMBINE(x, REDUCE, COMBINE, init)
+    res <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
     if (length(res$parts) == 0L) {
         ans <- integer(0)
     } else {
@@ -479,7 +479,7 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
     objects <- .collect_objects(x, ...)
 
     GENERIC <- match.fun(.Generic)
-    REDUCE <- function(subarray) {
+    APPLY <- function(subarray) {
         ## We get a warning if 'subarray' is empty (which can't happen, blocks
         ## can't be empty) or if 'na.rm' is TRUE and 'subarray' contains only
         ## NA's or NaN's.
@@ -513,7 +513,7 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
         } else {
             x <- .straighten(x, untranspose=TRUE, straighten.index=TRUE)
         }
-        init <- block_REDUCE_and_COMBINE(x, REDUCE, COMBINE, init, BREAKIF)
+        init <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
     }
     if (is.null(init))
         init <- GENERIC()
@@ -537,7 +537,7 @@ setMethod("Summary", "DelayedArray",
         stop("\"mean\" method for DelayedArray objects ",
              "does not support the 'trim' argument yet")
 
-    REDUCE <- function(subarray) {
+    APPLY <- function(subarray) {
         tmp <- as.vector(subarray, mode="numeric")
         subarray_sum <- sum(tmp, na.rm=na.rm)
         subarray_nval <- length(tmp)
@@ -550,7 +550,7 @@ setMethod("Summary", "DelayedArray",
     BREAKIF <- function(init) is.na(init[[1L]])
 
     x <- .straighten(x, untranspose=TRUE)
-    ans <- block_REDUCE_and_COMBINE(x, REDUCE, COMBINE, init, BREAKIF)
+    ans <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
     ans[[1L]] / ans[[2L]]
 }
 

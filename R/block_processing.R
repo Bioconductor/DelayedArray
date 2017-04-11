@@ -227,16 +227,13 @@ unsplit_array_from_blocks <- function(subarrays, x)
 }
 
 ### An lapply-like function.
-block_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL,
-                           block_len=NULL)
+block_APPLY <- function(x, APPLY, ..., sink=NULL, block_len=NULL)
 {
     APPLY <- match.fun(APPLY)
     if (is.null(block_len))
         block_len <- get_block_length(type(x))
     blocks <- ArrayBlocks(dim(x), block_len)
     nblock <- length(blocks)
-    if (nblock == 0L)
-        return(if_empty)
     lapply(seq_len(nblock),
         function(i) {
             if (get_verbose_block_processing())
@@ -259,8 +256,7 @@ block_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL,
 }
 
 ### A mapply-like function for conformable arrays.
-block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, sink=NULL,
-                         block_len=NULL)
+block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
 {
     MAPPLY <- match.fun(MAPPLY)
     dots <- unname(list(...))
@@ -274,8 +270,6 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, sink=NULL,
     }
     blocks <- ArrayBlocks(x_dim, block_len)
     nblock <- length(blocks)
-    if (nblock == 0L)
-        return(if_empty)
     lapply(seq_len(nblock),
         function(i) {
             if (get_verbose_block_processing())
@@ -302,10 +296,10 @@ block_MAPPLY <- function(MAPPLY, ..., if_empty=NULL, sink=NULL,
 }
 
 ### A Reduce-like function.
-block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
-                                        BREAKIF=NULL, block_len=NULL)
+block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
+                                       BREAKIF=NULL, block_len=NULL)
 {
-    REDUCE <- match.fun(REDUCE)
+    APPLY <- match.fun(APPLY)
     COMBINE <- match.fun(COMBINE)
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
@@ -320,7 +314,7 @@ block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
         subarray <- .extract_array_block(x, blocks, i)
         if (!is.array(subarray))
             subarray <- .as_array_or_matrix(subarray)
-        reduced <- REDUCE(subarray)
+        reduced <- APPLY(subarray)
         init <- COMBINE(i, subarray, init, reduced)
         if (get_verbose_block_processing())
             message("OK")
@@ -337,11 +331,11 @@ block_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init,
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Walking on the blocks of columns
 ###
-### 2 convenience wrappers around block_APPLY() and block_REDUCE_and_COMBINE()
+### 2 convenience wrappers around block_APPLY() and block_APPLY_and_COMBINE()
 ### to process a matrix-like object by block of columns.
 ###
 
-colblock_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL)
+colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -350,11 +344,10 @@ colblock_APPLY <- function(x, APPLY, ..., if_empty=NULL, sink=NULL)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
     block_len <- max(get_block_length(type(x)), x_dim[[1L]])
-    block_APPLY(x, APPLY, ..., if_empty=if_empty, sink=sink,
-                   block_len=block_len)
+    block_APPLY(x, APPLY, ..., sink=sink, block_len=block_len)
 }
 
-colblock_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init)
+colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -362,6 +355,6 @@ colblock_REDUCE_and_COMBINE <- function(x, REDUCE, COMBINE, init)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
     block_len <- max(get_block_length(type(x)), x_dim[[1L]])
-    block_REDUCE_and_COMBINE(x, REDUCE, COMBINE, init, block_len=block_len)
+    block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, block_len=block_len)
 }
 

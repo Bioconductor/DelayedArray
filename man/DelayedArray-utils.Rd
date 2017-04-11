@@ -45,19 +45,37 @@
 
 % DelayedMatrix utils
 
+\alias{\%*\%}
+\alias{\%*\%,DelayedMatrix,matrix-method}
+\alias{\%*\%,matrix,DelayedMatrix-method}
+\alias{\%*\%,DelayedMatrix,DelayedMatrix-method}
+
+% DelayedMatrix row/col summarization
+
 \alias{rowSums}
 \alias{rowSums,DelayedMatrix-method}
 \alias{colSums}
 \alias{colSums,DelayedMatrix-method}
+
 \alias{rowMeans}
 \alias{rowMeans,DelayedMatrix-method}
 \alias{colMeans}
 \alias{colMeans,DelayedMatrix-method}
 
-\alias{\%*\%}
-\alias{\%*\%,DelayedMatrix,matrix-method}
-\alias{\%*\%,matrix,DelayedMatrix-method}
-\alias{\%*\%,DelayedMatrix,DelayedMatrix-method}
+\alias{rowMaxs}
+\alias{rowMaxs,DelayedMatrix-method}
+\alias{colMaxs}
+\alias{colMaxs,DelayedMatrix-method}
+
+\alias{rowMins}
+\alias{rowMins,DelayedMatrix-method}
+\alias{colMins}
+\alias{colMins,DelayedMatrix-method}
+
+\alias{rowRanges}
+\alias{rowRanges,DelayedMatrix-method}
+\alias{colRanges}
+\alias{colRanges,DelayedMatrix-method}
 
 % Internal stuff
 
@@ -70,7 +88,7 @@
 }
 
 \details{
-  The operations currently supported by \link{DelayedArray} objects are:
+  The operations currently supported on \link{DelayedArray} objects are:
 
   Delayed operations:
   \itemize{
@@ -90,17 +108,25 @@
     \item all the members of the \code{\link[methods]{Summary}} group
     \item \code{mean}
     \item \code{apply}
-    \item \code{rowSums}, \code{colSums}, \code{rowMeans}, and
-          \code{colMeans} [\link{DelayedMatrix} objects only]
     \item matrix multiplication (\%*\%) of an ordinary matrix by a
           \link{DelayedMatrix} object
+    \item matrix row/col summarization [\link{DelayedMatrix} objects only]:
+          \code{rowSums}, \code{colSums}, \code{rowMeans}, \code{colMeans},
+          \code{rowMaxs}, \code{colMaxs}, \code{rowMins}, \code{colMins},
+          \code{rowRanges}, and \code{colRanges}
   }
 }
 
 \seealso{
   \itemize{
-    \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
-          for binding \link{DelayedArray} objects along their rows or columns.
+    \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
+          \code{\link[base]{mean}}, \code{\link[base]{apply}},
+          and \code{\link[base]{\%*\%}} in the \pkg{base} package for the
+          corresponding operations on ordinary arrays or matrices.
+
+    \item \code{\link[base]{rowSums}} in the \pkg{base} package and
+          \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
+          for row/col summarization of an ordinary matrix.
 
     \item \code{\link{setRealizeBackend}} for how to set a \emph{realize()
           backend}.
@@ -113,11 +139,6 @@
     \item \link{DelayedArray} objects.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
-
-    \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
-          \code{\link[base]{mean}}, \code{\link[base]{apply}},
-          \code{\link[base]{colSums}}, \code{\link[base]{\%*\%}} in the
-          \pkg{base} package for the corresponding operations.
 
     \item \code{\link[methods]{S4groupGeneric}} in the \pkg{methods} package
           for the members of the \code{\link[methods]{Ops}},
@@ -140,9 +161,8 @@ log(M1)
 M2 <- HDF5Array(toy_h5, "M2")
 pmax2(M2, 0)
 
-M <- rbind(M1, t(M2))
-M
-colMeans(M)
+M3 <- rbind(M1, t(M2))
+M3
 
 ## ---------------------------------------------------------------------
 ## MATRIX MULTIPLICATION
@@ -171,5 +191,27 @@ lsHDF5DumpFile()
 ## You can use setHDF5DumpFile() and setHDF5DumpName() defined in the
 ## HDF5Array package to control the location of automatically created
 ## HDF5 datasets.
+
+## ---------------------------------------------------------------------
+## MATRIX ROW/COL SUMMARIZATION
+## ---------------------------------------------------------------------
+
+rowSums(M1)
+colSums(M1)
+
+rowMeans(M1)
+colMeans(M1)
+
+rmaxs <- rowMaxs(M1)
+cmaxs <- colMaxs(M1)
+
+rmins <- rowMins(M1)
+cmins <- colMins(M1)
+
+rranges <- rowRanges(M1)
+cranges <- colRanges(M1)
+
+stopifnot(identical(cbind(rmins, rmaxs, deparse.level=0), rranges))
+stopifnot(identical(cbind(cmins, cmaxs, deparse.level=0), cranges))
 }
 \keyword{methods}
