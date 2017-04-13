@@ -23,9 +23,21 @@ exportClasses(
 
 S3method(as.array, DelayedArray)
 
+S3method(as.character, DelayedArray)
+
+S3method(as.complex, DelayedArray)
+
 S3method(as.data.frame, DelayedArray)
 
+S3method(as.integer, DelayedArray)
+
+S3method(as.logical, DelayedArray)
+
 S3method(as.matrix, DelayedArray)
+
+S3method(as.numeric, DelayedArray)
+
+S3method(as.raw, DelayedArray)
 
 S3method(as.vector, DelayedArray)
 
@@ -40,9 +52,21 @@ S3method(split, DelayedArray)
 export(
     as.array.DelayedArray,
 
+    as.character.DelayedArray,
+
+    as.complex.DelayedArray,
+
     as.data.frame.DelayedArray,
 
+    as.integer.DelayedArray,
+
+    as.logical.DelayedArray,
+
     as.matrix.DelayedArray,
+
+    as.numeric.DelayedArray,
+
+    as.raw.DelayedArray,
 
     as.vector.DelayedArray,
 

@@ -27,12 +27,24 @@
 
 \alias{as.array.DelayedArray}
 \alias{as.array,DelayedArray-method}
-\alias{as.vector.DelayedArray}
-\alias{as.vector,DelayedArray-method}
 \alias{as.matrix.DelayedArray}
 \alias{as.matrix,DelayedArray-method}
 \alias{as.data.frame.DelayedArray}
 \alias{as.data.frame,DelayedArray-method}
+\alias{as.vector.DelayedArray}
+\alias{as.vector,DelayedArray-method}
+\alias{as.logical.DelayedArray}
+\alias{as.logical,DelayedArray-method}
+\alias{as.integer.DelayedArray}
+\alias{as.integer,DelayedArray-method}
+\alias{as.numeric.DelayedArray}
+\alias{as.numeric,DelayedArray-method}
+\alias{as.complex.DelayedArray}
+\alias{as.complex,DelayedArray-method}
+\alias{as.character.DelayedArray}
+\alias{as.character,DelayedArray-method}
+\alias{as.raw.DelayedArray}
+\alias{as.raw,DelayedArray-method}
 
 \alias{type}
 \alias{type,array-method}

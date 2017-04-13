@@ -806,14 +806,6 @@ setMethod("as.array", "DelayedArray", .from_DelayedArray_to_array)
 ### Other coercions based on as.array()
 ###
 
-### S3/S4 combo for as.vector.DelayedArray
-as.vector.DelayedArray <- function(x, mode="any")
-{
-    ans <- as.array(x, drop=TRUE)
-    as.vector(ans, mode=mode)
-}
-setMethod("as.vector", "DelayedArray", as.vector.DelayedArray)
-
 slicing_tip <- c(
     "Consider reducing its number of effective dimensions by slicing it ",
     "first (e.g. x[8, 30, , 2, ]). Make sure that all the indices used for ",
@@ -846,6 +838,38 @@ as.data.frame.DelayedArray <- function(x, row.names=NULL, optional=FALSE, ...)
     as.data.frame(as.array(x, drop=TRUE),
                   row.names=row.names, optional=optional, ...)
 setMethod("as.data.frame", "DelayedArray", as.data.frame.DelayedArray)
+
+### S3/S4 combo for as.vector.DelayedArray
+as.vector.DelayedArray <- function(x, mode="any")
+{
+    ans <- as.array(x, drop=TRUE)
+    as.vector(ans, mode=mode)
+}
+setMethod("as.vector", "DelayedArray", as.vector.DelayedArray)
+
+### S3/S4 combo for as.logical.DelayedArray
+as.logical.DelayedArray <- function(x, ...) as.vector(x, mode="logical", ...)
+setMethod("as.logical", "DelayedArray", as.logical.DelayedArray)
+
+### S3/S4 combo for as.integer.DelayedArray
+as.integer.DelayedArray <- function(x, ...) as.vector(x, mode="integer", ...)
+setMethod("as.integer", "DelayedArray", as.integer.DelayedArray)
+
+### S3/S4 combo for as.numeric.DelayedArray
+as.numeric.DelayedArray <- function(x, ...) as.vector(x, mode="numeric", ...)
+setMethod("as.numeric", "DelayedArray", as.numeric.DelayedArray)
+
+### S3/S4 combo for as.complex.DelayedArray
+as.complex.DelayedArray <- function(x, ...) as.vector(x, mode="complex", ...)
+setMethod("as.complex", "DelayedArray", as.complex.DelayedArray)
+
+### S3/S4 combo for as.character.DelayedArray
+as.character.DelayedArray <- function(x, ...) as.vector(x, mode="character", ...)
+setMethod("as.character", "DelayedArray", as.character.DelayedArray)
+
+### S3/S4 combo for as.raw.DelayedArray
+as.raw.DelayedArray <- function(x) as.vector(x, mode="raw")
+setMethod("as.raw", "DelayedArray", as.raw.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
