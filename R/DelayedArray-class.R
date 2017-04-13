@@ -460,7 +460,8 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         ndim <- 0L
     if (ndim != 0L && ndim != x_ndim) {
         if (ndim == 1L)
-            stop("1D-style subsetting is not supported")
+            stop(wmsg("1D-style subsetting is not supported on DelayedArray ",
+                      "objects (yet)"))
         stop("incorrect number of dimensions")
     }
 
