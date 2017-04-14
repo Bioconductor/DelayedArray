@@ -3,13 +3,16 @@
 
 \alias{class:DelayedArray}
 \alias{DelayedArray-class}
-\alias{DelayedArray}
 
 \alias{class:DelayedMatrix}
 \alias{DelayedMatrix-class}
 \alias{DelayedMatrix}
 
 \alias{coerce,DelayedArray,DelayedMatrix-method}
+
+\alias{DelayedArray}
+\alias{DelayedArray,ANY-method}
+\alias{DelayedArray,DelayedArray-method}
 
 \alias{dim,DelayedArray-method}
 \alias{dim<-,DelayedArray-method}

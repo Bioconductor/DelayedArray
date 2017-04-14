@@ -125,7 +125,12 @@ new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
     new2(Class, seed=seed, index=index, metaindex=seq_along(index))
 }
 
-DelayedArray <- function(seed) new_DelayedArray(seed)
+setGeneric("DelayedArray", function(seed) standardGeneric("DelayedArray"))
+
+setMethod("DelayedArray", "ANY", function(seed) new_DelayedArray(seed))
+
+### Calling DelayedArray() on a DelayedArray object is a no-op.
+setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -777,9 +782,9 @@ setMethod("t", "DelayedArray",
 {
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
-    a <- subset_seed_as_array(x@seed, unname(x@index))
-    dim(a) <- .get_DelayedArray_dim_before_transpose(x)
-    ans <- .execute_delayed_ops(a, x@delayed_ops)
+    ans <- subset_seed_as_array(x@seed, unname(x@index))
+    dim(ans) <- .get_DelayedArray_dim_before_transpose(x)
+    ans <- .execute_delayed_ops(ans, x@delayed_ops)
     dimnames(ans) <- .get_DelayedArray_dimnames_before_transpose(x)
     if (drop)
         ans <- .reduce_array_dimensions(ans)

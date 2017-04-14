@@ -125,7 +125,6 @@ exportMethods(
 
 export(
     ArrayBlocks,
-    DelayedArray,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     RealizationSink, arrayRealizationSink
 )
@@ -136,7 +135,7 @@ export(
 ###
 
 export(
-    matrixClass, subset_seed_as_array, type,
+    matrixClass, DelayedArray, subset_seed_as_array, type,
     realize,
     write_to_sink, close,
     pmax2, pmin2, apply,
@@ -145,7 +144,7 @@ export(
 
 ### Exactly the same list as above.
 exportMethods(
-    matrixClass, subset_seed_as_array, type,
+    matrixClass, DelayedArray, subset_seed_as_array, type,
     realize,
     write_to_sink, close,
     pmax2, pmin2, apply,
