@@ -1,7 +1,7 @@
 test_DelayedArray_constructor <- function()
 {
     check_DelayedMatrix <- function(m, M) {
-        checkTrue(class(M) == "DelayedMatrix")
+        checkTrue(is(M, "DelayedMatrix"))
         checkTrue(validObject(M, complete=TRUE))
         checkIdentical(typeof(m), type(M))
         checkIdentical(typeof(m), type(M[ , -2]))

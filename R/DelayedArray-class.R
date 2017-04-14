@@ -43,8 +43,10 @@ setClass("DelayedMatrix",
     )
 )
 
-### Overwrite unsafe automatic coercion method that return invalid objects (it
-### doesn't validate them).
+### Automatic coercion method from DelayedArray to DelayedMatrix silently
+### returns a broken object (unfortunately these dummy automatic coercion
+### methods don't bother to validate the object they return). So we overwrite
+### it.
 setAs("DelayedArray", "DelayedMatrix",
     function(from) new("DelayedMatrix", from)
 )

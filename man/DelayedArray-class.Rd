@@ -146,10 +146,7 @@ DelayedArray(seed)  # constructor function
     \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
           for binding DelayedArray objects along their rows or columns.
 
-    \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
-          package for writting an array-like object to an HDF5 file and other
-          low-level utilities to control the location of automatically created 
-          HDF5 datasets.
+    \item \link{RleArray} objects.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
@@ -161,7 +158,7 @@ DelayedArray(seed)  # constructor function
 ## ---------------------------------------------------------------------
 ## WRAP AN ORDINARY ARRAY IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
-a <- array(runif(1500000), c(10000, 30, 5))
+a <- array(runif(1500000), dim=c(10000, 30, 5))
 A <- DelayedArray(a)
 A
 
@@ -170,8 +167,8 @@ b <- toto(a)
 head(b)
 
 B <- toto(A)  # very fast! (operations are delayed)
-B             # still 3 dimensions (subsetting a DelayedArray object
-              # never drops dimensions)
+B  # still 3 dimensions (subsetting a DelayedArray object never drops
+   # dimensions)
 B <- drop(B)
 B
 

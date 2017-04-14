@@ -13,7 +13,8 @@ import(matrixStats)
 exportClasses(
     ArrayBlocks,
     DelayedArray, DelayedMatrix,
-    RealizationSink, arrayRealizationSink
+    RealizationSink, arrayRealizationSink,
+    RleArray, RleMatrix
 )
 
 
@@ -126,7 +127,8 @@ exportMethods(
 export(
     ArrayBlocks,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
-    RealizationSink, arrayRealizationSink
+    RealizationSink, arrayRealizationSink,
+    RleArray
 )
 
 

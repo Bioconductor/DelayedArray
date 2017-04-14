@@ -28,4 +28,5 @@ Collate: utils.R
 	DelayedMatrix-utils.R
 	DelayedArray-stats.R
 	DelayedMatrix-stats.R
+	RleArray-class.R
 	zzz.R
