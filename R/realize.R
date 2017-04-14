@@ -91,16 +91,6 @@ setAs("arrayRealizationSink", "DelayedArray",
 ### Get/set the "realization backend" for the current session
 ###
 
-.SUPPORTED_REALIZATION_BACKENDS <- data.frame(
-    BACKEND=c("RleArray", "HDF5Array"),
-    package=c("DelayedArray", "HDF5Array"),
-    realization_sink_class=c("RleRealizationSink", "HDF5RealizationSink"),
-    stringsAsFactors=FALSE
-)
-
-supportedRealizationBackends <- function()
-    .SUPPORTED_REALIZATION_BACKENDS[ , c("BACKEND", "package")]
-
 .realization_backend_envir <- new.env(parent=emptyenv())
 
 getRealizationBackend <- function()
@@ -110,6 +100,24 @@ getRealizationBackend <- function()
     if (is(BACKEND, "try-error"))
         return(NULL)
     BACKEND
+}
+
+.SUPPORTED_REALIZATION_BACKENDS <- data.frame(
+    BACKEND=c("RleArray", "HDF5Array"),
+    package=c("DelayedArray", "HDF5Array"),
+    realization_sink_class=c("RleRealizationSink", "HDF5RealizationSink"),
+    stringsAsFactors=FALSE
+)
+
+supportedRealizationBackends <- function()
+{
+    ans <- .SUPPORTED_REALIZATION_BACKENDS[ , c("BACKEND", "package")]
+    backend <- getRealizationBackend()
+    Lcol <- ifelse(ans[ , "BACKEND"] %in% backend, "->", "")
+    Rcol <- ifelse(ans[ , "BACKEND"] %in% backend, "<-", "")
+    cbind(data.frame(` `=Lcol, check.names=FALSE),
+          ans,
+          data.frame(` `=Rcol, check.names=FALSE))
 }
 
 .load_BACKEND_package <- function(BACKEND)
