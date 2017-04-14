@@ -160,10 +160,87 @@ RleArray <- function(rle, dim, dimnames=NULL)
         if (!(missing(dim) && is.null(dimnames)))
             stop(wmsg("RleArray() must be called with a single argument ",
                       "when passed an RleArraySeed object"))
-        seed <- file
+        seed <- rle
     } else {
         seed <- RleArraySeed(rle, dim, dimnames=dimnames)
     }
     DelayedArray(seed)
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### RleRealizationSink objects
+###
+### The RleRealizationSink class is a concrete RealizationSink subclass that
+### implements realization of an array-like object as an RleArray object.
+###
+
+setClass("RleRealizationSink",
+    contains="RealizationSink",
+    representation(
+        dim="integer",
+        dimnames="list",
+        type="character",
+        dump="environment"
+    )
+)
+
+RleRealizationSink <- function(dim, dimnames=NULL, type="double")
+{
+    if (is.null(dimnames))
+        dimnames <- vector("list", length(dim))
+    dump <- new.env(parent=emptyenv())
+    new("RleRealizationSink", dim=dim, dimnames=dimnames, type=type, dump=dump)
+}
+
+setMethod("write_to_sink", c("array", "RleRealizationSink"),
+    function(x, sink, offsets=NULL)
+    {
+        x_dim <- dim(x)
+        sink_dim <- sink@dim
+        stopifnot(length(x_dim) == length(sink_dim))
+        if (is.null(offsets)) {
+            stopifnot(identical(x_dim, sink_dim))
+        } else {
+            stopifnot(length(x_dim) == length(sink_dim))
+        }
+        name <- sprintf("%09d", length(sink@dump))
+        stopifnot(nchar(name) == 9L)
+        assign(name, Rle(x), envir=sink@dump)
+    }
+)
+
+setAs("RleRealizationSink", "RleArraySeed",
+    function(from)
+    {
+        if (length(from@dump) == 0L) {
+            rle <- Rle(get(from@type)(0))
+        } else {
+            rle <- do.call("c", unname(as.list(from@dump, sorted=TRUE)))
+        }
+        RleArraySeed(rle, from@dim, from@dimnames)
+    }
+)
+
+setAs("RleRealizationSink", "RleArray",
+    function(from) RleArray(as(from, "RleArraySeed"))
+)
+
+setAs("RleRealizationSink", "DelayedArray",
+    function(from) RleArray(as(from, "RleArraySeed"))
+)
+
+.as_RleArray <- function(from)
+{
+    sink <- RleRealizationSink(dim(from), dimnames(from), type(from))
+    write_to_sink(from, sink)
+    as(sink, "RleArray")
+}
+
+setAs("ANY", "RleArray", .as_RleArray)
+
+### Automatic coercion method from DelayedArray to RleArray silently returns
+### a broken object (unfortunately these dummy automatic coercion methods
+### don't bother to validate the object they return). So we overwrite it.
+setAs("DelayedArray", "RleArray", .as_RleArray)
 

@@ -67,11 +67,11 @@ setMethod("write_to_sink", c("array", "arrayRealizationSink"),
         x_dim <- dim(x)
         result <- .get_arrayRealizationSink_result(sink)
         sink_dim <- dim(result)
-        stopifnot(length(x_dim) == length(sink_dim))
         if (is.null(offsets)) {
             stopifnot(identical(x_dim, sink_dim))
             result[] <- x
         } else {
+            stopifnot(length(x_dim) == length(sink_dim))
             block_ranges <- IRanges(offsets, width=x_dim)
             subscripts <- make_subscripts_from_block_ranges(
                               block_ranges, sink_dim,
@@ -92,9 +92,9 @@ setAs("arrayRealizationSink", "DelayedArray",
 ###
 
 .SUPPORTED_REALIZATION_BACKENDS <- data.frame(
-    BACKEND="HDF5Array",
-    package="HDF5Array",
-    realization_sink_class="HDF5RealizationSink",
+    BACKEND=c("RleArray", "HDF5Array"),
+    package=c("DelayedArray", "HDF5Array"),
+    realization_sink_class=c("RleRealizationSink", "HDF5RealizationSink"),
     stringsAsFactors=FALSE
 )
 

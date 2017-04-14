@@ -14,7 +14,7 @@ exportClasses(
     ArrayBlocks,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
-    RleArray, RleMatrix
+    RleArray, RleMatrix, RleRealizationSink
 )
 
 
@@ -128,7 +128,7 @@ export(
     ArrayBlocks,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     RealizationSink, arrayRealizationSink,
-    RleArray
+    RleArray, RleRealizationSink
 )
 
 

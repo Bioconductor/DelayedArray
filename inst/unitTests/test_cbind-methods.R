@@ -1,4 +1,5 @@
-setRealizationBackend("HDF5Array")
+#setRealizationBackend("RleArray")
+#setRealizationBackend("HDF5Array")
 
 .TEST_matrices <- list(
     matrix(1:15, nrow=3, ncol=5,

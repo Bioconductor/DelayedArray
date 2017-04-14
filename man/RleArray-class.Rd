@@ -21,11 +21,24 @@
 \alias{DelayedArray,RleArraySeed-method}
 \alias{RleArray}
 
+\alias{class:RleRealizationSink}
+\alias{RleRealizationSink-class}
+\alias{RleRealizationSink}
+
+\alias{write_to_sink,array,RleRealizationSink-method}
+
+\alias{coerce,RleRealizationSink,RleArraySeed-method}
+\alias{coerce,RleRealizationSink,RleArray-method}
+\alias{coerce,RleRealizationSink,DelayedArray-method}
+\alias{coerce,ANY,RleArray-method}
+\alias{coerce,DelayedArray,RleArray-method}
+
 \title{RleArray objects}
 
 \description{
   The RleArray class is an array-like container where the values are stored
-  in a run-length encoding format.
+  in a run-length encoding format. RleArray objects support delayed operations
+  and block processing.
 }
 
 \usage{
