@@ -59,8 +59,9 @@ realize(x, ...)
 }
 
 \details{
-  The \emph{realization backend} controls where realization happens e.g.
-  in memory if set to NULL or in an HDF5 file if set to \code{"HDF5Array"}.
+  The \emph{realization backend} controls where/how realization happens e.g.
+  as an ordinary array if set to \code{NULL}, as an \link{RleArray} object
+  if set to \code{"RleArray"}, or in an HDF5 file if set to \code{"HDF5Array"}.
 }
 
 \value{
@@ -74,6 +75,8 @@ realize(x, ...)
 \seealso{
   \itemize{
     \item \link{DelayedArray} objects.
+
+    \item \link{RleArray} objects.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
@@ -91,14 +94,15 @@ M3 <- rbind(log(M1), t(M2))
 
 supportedRealizationBackends()
 getRealizationBackend()  # backend is set to NULL
-m3 <- realize(M3)    # in-memory realization
-class(m3)
-dim(m3)
+realize(M3)  # realization as ordinary array
+
+setRealizationBackend("RleArray")
+getRealizationBackend()  # backend is set to "RleArray"
+realize(M3)  # realization as RleArray object
 
 setRealizationBackend("HDF5Array")
 getRealizationBackend()  # backend is set to "HDF5Array"
-M3 <- realize(M3)    # realization in HDF5 file
-M3
+realize(M3)  # realization in HDF5 file
 }
 
 \keyword{methods}
