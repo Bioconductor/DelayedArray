@@ -382,7 +382,7 @@ setMethod("signif", "DelayedArray",
     x_seed_dim <- dim(x@seed)
     for (N in x@metaindex) {
         i <- x_index[[N]]
-        if (missing(i))
+        if (is.null(i))
             i <- seq_len(x_seed_dim[[N]])  # expand 'i'
         if (isStrictlySorted(i))
             next
@@ -626,9 +626,9 @@ setGeneric("apply", signature="X")
     ans_names <-  dimnames(X)[[MARGIN]]
     ans <- lapply(setNames(seq_len(X_dim[[MARGIN]]), ans_names),
         function(i) {
-            subscripts <- rep.int(alist(foo=), length(X_dim))
-            subscripts[[MARGIN]] <- i
-            slice <- subset_by_subscripts(X, subscripts, drop=TRUE)
+            index <- vector(mode="list", length=length(X_dim))
+            index[[MARGIN]] <- i
+            slice <- subset_by_index(X, index, drop=TRUE)
             dim(slice) <- dim(slice)[-MARGIN]
             FUN(slice, ...)
         })

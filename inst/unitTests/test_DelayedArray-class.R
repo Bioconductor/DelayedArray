@@ -139,3 +139,73 @@ test_DelayedArray_constructor <- function()
     checkIdentical(m6, as.array(M6c))
 }
 
+test_DelayedArray_subsetting <- function()
+{
+    a <- array(runif(130000), dim=c(1000, 26, 5),
+                              dimnames=list(NULL, LETTERS, letters[1:5]))
+    A <- DelayedArray(a)
+    checkIdentical(A, A[ , , ])
+    checkIdentical(a, as.array(A[ , , ]))
+
+    target <- a[0, , ]
+    checkIdentical(target, as.array(A[0, , ]))
+    checkIdentical(target, as.array(A[integer(0), , ]))
+    checkIdentical(target, as.array(A[NULL, , ]))
+
+    target <- a[ , 0, ]
+    checkIdentical(target, as.array(A[ , 0, ]))
+    checkIdentical(target, as.array(A[ , integer(0), ]))
+    checkIdentical(target, as.array(A[ , NULL, ]))
+
+    target <- a[ , , 0]
+    checkIdentical(target, as.array(A[ , , 0]))
+    checkIdentical(target, as.array(A[ , , integer(0)]))
+    checkIdentical(target, as.array(A[ , , NULL]))
+
+    target <- a[ , 0, 0]
+    checkIdentical(target, as.array(A[ , 0, 0]))
+    checkIdentical(target, as.array(A[ , integer(0), integer(0)]))
+    checkIdentical(target, as.array(A[ , NULL, NULL]))
+
+    target <- a[0, , 0]
+    checkIdentical(target, as.array(A[0, , 0]))
+    checkIdentical(target, as.array(A[integer(0), , integer(0)]))
+    checkIdentical(target, as.array(A[NULL, , NULL]))
+
+    target <- a[0, 0, ]
+    checkIdentical(target, as.array(A[0, 0, ]))
+    checkIdentical(target, as.array(A[integer(0), integer(0), ]))
+    checkIdentical(target, as.array(A[NULL, NULL, ]))
+
+    target <- a[0, 0, 0]
+    checkIdentical(target, as.array(A[0, 0, 0]))
+    checkIdentical(target, as.array(A[integer(0), integer(0), integer(0)]))
+    checkIdentical(target, as.array(A[NULL, NULL, NULL]))
+
+    j <- c(20:5, 11:22)
+    target <- a[0, j, ]
+    checkIdentical(target, as.array(A[0, j, ]))
+    checkIdentical(target, as.array(A[integer(0), j, ]))
+    checkIdentical(target, as.array(A[NULL, j, ]))
+    target <- a[0, j, 0]
+    checkIdentical(target, as.array(A[0, j, 0]))
+    checkIdentical(target, as.array(A[integer(0), j, integer(0)]))
+    checkIdentical(target, as.array(A[NULL, j, NULL]))
+    target <- a[99:9, j, ]
+    checkIdentical(target, as.array(A[99:9, j, ]))
+    k <- c("e", "b", "b", "d", "e", "c")
+    target <- a[99:9, j, k]
+    checkIdentical(target, as.array(A[99:9, j, k]))
+    target <- a[-3, j, k]
+    checkIdentical(target, as.array(A[-3, j, k]))
+    target <- a[-3, -j, k]
+    checkIdentical(target, as.array(A[-3, -j, k]))
+    target <- a[-3, -j, ]
+    checkIdentical(target, as.array(A[-3, -j, ]))
+    target <- a[-3, -j, -555555]
+    checkIdentical(target, as.array(A[-3, -j, -555555]))
+
+    checkException(A[ , 27, ], silent=TRUE)
+    checkException(A[ , , "f"], silent=TRUE)
+}
+

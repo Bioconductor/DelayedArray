@@ -69,7 +69,7 @@ setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
 {
     i <- index[[seed@along]]
 
-    if (missing(i)) {
+    if (is.null(i)) {
         ## This is the easy situation.
         tmp <- lapply(seed@seeds, subset_seed_as_array, index)
         ## Bind the ordinary arrays in 'tmp'.
@@ -92,9 +92,9 @@ setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
     ans <- do.call(IRanges:::simple_abind, c(tmp, list(along=seed@along)))
 
     ## Reorder the rows or columns in 'ans'.
-    subscripts <- rep.int(alist(foo=), length(index))
-    subscripts[[seed@along]] <- get_rev_index(part_idx)
-    subset_by_subscripts(ans, subscripts)
+    index <- vector(mode="list", length=length(index))
+    index[[seed@along]] <- get_rev_index(part_idx)
+    subset_by_index(ans, index)
 }
 
 setMethod("subset_seed_as_array", "SeedBinder", .subset_SeedBinder_as_array)

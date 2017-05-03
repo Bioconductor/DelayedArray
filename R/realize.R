@@ -73,10 +73,10 @@ setMethod("write_to_sink", c("array", "arrayRealizationSink"),
         } else {
             stopifnot(length(x_dim) == length(sink_dim))
             block_ranges <- IRanges(offsets, width=x_dim)
-            subscripts <- make_subscripts_from_block_ranges(
-                              block_ranges, sink_dim,
-                              expand.RangeNSBS=TRUE)
-            result <- do.call(`[<-`, c(list(result), subscripts, list(value=x)))
+            index <- make_index_from_block_ranges(
+                          block_ranges, sink_dim,
+                          expand.RangeNSBS=TRUE)
+            result <- replace_by_index(result, index, x)
         }
         assign("result", result, envir=sink@result_envir)
     }
