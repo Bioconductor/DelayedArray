@@ -85,6 +85,17 @@ get_index_lengths <- function(index, dim)
     ans
 }
 
+### 'dimnames' must be NULL or a list of the same length as 'index'.
+### 'along' must be an integer >= 1 and <= length(index).
+get_index_names_along <- function(index, dimnames, along)
+{
+    stopifnot(is.list(index))
+    i <- index[[along]]
+    if (is.null(i))
+        return(dimnames[[along]])
+    names(i)
+}
+
 ### Used in HDF5Array!
 ### Return a "multidimensional subsetting index".
 make_index_from_block_ranges <- function(block_ranges, dim,

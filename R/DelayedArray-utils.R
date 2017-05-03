@@ -382,9 +382,7 @@ setMethod("signif", "DelayedArray",
     x_seed_dim <- dim(x@seed)
     for (N in x@metaindex) {
         i <- x_index[[N]]
-        if (is.null(i))
-            i <- seq_len(x_seed_dim[[N]])  # expand 'i'
-        if (isStrictlySorted(i))
+        if (is.null(i) || isStrictlySorted(i))
             next
         x_index[[N]] <- .straighten_index(i)
     }

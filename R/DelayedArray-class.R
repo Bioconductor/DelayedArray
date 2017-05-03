@@ -109,21 +109,10 @@ setValidity2("DelayedMatrix", .validate_DelayedMatrix)
 new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
 {
     seed <- remove_pristine_DelayedArray_wrapping(seed)
-    seed_dim <- dim(seed)
-    seed_ndim <- length(seed_dim)
+    seed_ndim <- length(dim(seed))
     if (seed_ndim == 2L)
         Class <- matrixClass(new(Class))
     index <- vector(mode="list", length=seed_ndim)
-    seed_dimnames <- dimnames(seed)
-    ## If 'seed' has dimnames, then we put them on 'index'.
-    if (!is.null(seed_dimnames)) {
-        expand_idx <- which(!S4Vectors:::sapply_isNULL(seed_dimnames))
-        index[expand_idx] <- mapply(
-            function(d, names) setNames(seq_len(d), names),
-            seed_dim[expand_idx], seed_dimnames[expand_idx],
-            SIMPLIFY=FALSE, USE.NAMES=FALSE
-        )
-    }
     new2(Class, seed=seed, index=index, metaindex=seq_along(index))
 }
 
@@ -306,7 +295,11 @@ setMethod("drop", "DelayedArray",
 
 .get_DelayedArray_dimnames_before_transpose <- function(x)
 {
-    ans <- lapply(x@metaindex, function(N) names(x@index[[N]]))
+    x_seed_dimnames <- dimnames(x@seed)
+    ans <- lapply(x@metaindex,
+                  get_index_names_along,
+                    index=x@index,
+                    dimnames=x_seed_dimnames)
     if (all(S4Vectors:::sapply_isNULL(ans)))
         return(NULL)
     ans
@@ -346,8 +339,13 @@ setMethod("dimnames", "DelayedArray", .get_DelayedArray_dimnames)
     ## We quickly identify a no-op situation. While doing so, we are careful to
     ## not trigger a copy of the "index" slot (which can be big). The goal is
     ## to make a no-op like 'dimnames(x) <- dimnames(x)' as fast as possible.
+    x_seed_dimnames <- dimnames(x@seed)
     touched_midx <- which(mapply(
-        function(N, names) !identical(names(x@index[[N]]), names),
+        function(N, names)
+            !identical(
+                get_index_names_along(x@index, x_seed_dimnames, N),
+                names
+            ),
         x@metaindex, value,
         USE.NAMES=FALSE
     ))
@@ -411,6 +409,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     x_index <- x@index
     x_ndim <- length(x@metaindex)
     x_seed_dim <- dim(x@seed)
+    x_seed_dimnames <- dimnames(x@seed)
     x_delayed_ops <- x@delayed_ops
     for (n in seq_along(user_index)) {
         subscript <- user_index[[n]]
@@ -419,8 +418,10 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         n0 <- if (x@is_transposed) x_ndim - n + 1L else n
         N <- x@metaindex[[n0]]
         i <- x_index[[N]]
-        if (is.null(i))
-            i <- seq_len(x_seed_dim[[N]])  # expend 'i'
+        if (is.null(i)) {
+            i <- seq_len(x_seed_dim[[N]])  # expand 'i'
+            names(i) <- get_index_names_along(x_index, x_seed_dimnames, N)
+        }
         subscript <- normalizeSingleBracketSubscript(subscript, i,
                                                      as.NSBS=TRUE)
         x_index[[N]] <- extractROWS(i, subscript)
