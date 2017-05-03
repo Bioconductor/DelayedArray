@@ -206,21 +206,18 @@ test_DelayedArray_subsetting <- function()
     checkIdentical(target, as.array(A[i, NULL, ]))
 
     k <- c(TRUE, FALSE)
-    ## Can't do this at the moment because of bug in "[" method for
-    ## DelayedArray objects caused by "substitute() + eval()" hack.
-    ## See R/DelayedArray-class.R for the details.
-    #target <- a[ , , k]
-    #checkIdentical(target, as.array(A[ , , k]))
-    #target <- a[0, , k]
-    #checkIdentical(target, as.array(A[0, , k]))
-    #checkIdentical(target, as.array(A[integer(0), , k]))
-    #checkIdentical(target, as.array(A[NULL, , k]))
-    #target <- a[i, , k]
-    #checkIdentical(target, as.array(A[i, , k]))
-    #target <- a[i, 0, k]
-    #checkIdentical(target, as.array(A[i, 0, k]))
-    #checkIdentical(target, as.array(A[i, integer(0), k]))
-    #checkIdentical(target, as.array(A[i, NULL, k]))
+    target <- a[ , , k]
+    checkIdentical(target, as.array(A[ , , k]))
+    target <- a[0, , k]
+    checkIdentical(target, as.array(A[0, , k]))
+    checkIdentical(target, as.array(A[integer(0), , k]))
+    checkIdentical(target, as.array(A[NULL, , k]))
+    target <- a[i, , k]
+    checkIdentical(target, as.array(A[i, , k]))
+    target <- a[i, 0, k]
+    checkIdentical(target, as.array(A[i, 0, k]))
+    checkIdentical(target, as.array(A[i, integer(0), k]))
+    checkIdentical(target, as.array(A[i, NULL, k]))
 
     j <- c(20:5, 11:22)
     target <- a[0, j, ]
@@ -235,53 +232,47 @@ test_DelayedArray_subsetting <- function()
     checkIdentical(target, as.array(A[99:9, j, ]))
 
     k <- c("e", "b", "b", "d", "e", "c")
-    ## Can't do this at the moment because of bug in "[" method for
-    ## DelayedArray objects caused by "substitute() + eval()" hack.
-    ## See R/DelayedArray-class.R for the details.
-    #target <- a[-3, j, k]
-    #checkIdentical(target, as.array(A[-3, j, k]))
-    #target <- a[-3, -j, k]
-    #checkIdentical(target, as.array(A[-3, -j, k]))
+    target <- a[-3, j, k]
+    checkIdentical(target, as.array(A[-3, j, k]))
+    target <- a[-3, -j, k]
+    checkIdentical(target, as.array(A[-3, -j, k]))
 
     target <- a[-3, -j, ]
     checkIdentical(target, as.array(A[-3, -j, ]))
     target <- a[-3, -j, -555555]
     checkIdentical(target, as.array(A[-3, -j, -555555]))
 
-    ## Can't do this at the moment because of bug in "[" method for
-    ## DelayedArray objects caused by "substitute() + eval()" hack.
-    ## See R/DelayedArray-class.R for the details.
-    #target <- a[99:9, j, k]
-    #checkIdentical(target, as.array(A[99:9, j, k]))
-    #i <- c(150:111, 88:90, 75:90)
-    #target <- a[i, j, k]
-    #checkIdentical(target, as.array(A[i, j, k]))
+    target <- a[99:9, j, k]
+    checkIdentical(target, as.array(A[99:9, j, k]))
+    i <- c(150:111, 88:90, 75:90)
+    target <- a[i, j, k]
+    checkIdentical(target, as.array(A[i, j, k]))
 
-    #target1 <- a[99, j, k]
-    #checkIdentical(target1, as.matrix(A[99, j, k]))
-    #B1 <- drop(A[99, j, k])
-    #checkIdentical(target1, as.array(B1))
-    #target <- target1[15:8, c("c", "b")]
-    #checkIdentical(target, as.array(B1[15:8, c("c", "b")]))
-    #target <- target1[0, ]
-    #checkIdentical(target, as.array(B1[0, ]))
-    #target <- target1[ , 0]
-    #checkIdentical(target, as.array(B1[ , 0]))
-    #target <- target1[0, 0]
-    #checkIdentical(target, as.array(B1[0, 0]))
+    target1 <- a[99, j, k]
+    checkIdentical(target1, as.matrix(A[99, j, k]))
+    B1 <- drop(A[99, j, k])
+    checkIdentical(target1, as.array(B1))
+    target <- target1[15:8, c("c", "b")]
+    checkIdentical(target, as.array(B1[15:8, c("c", "b")]))
+    target <- target1[0, ]
+    checkIdentical(target, as.array(B1[0, ]))
+    target <- target1[ , 0]
+    checkIdentical(target, as.array(B1[ , 0]))
+    target <- target1[0, 0]
+    checkIdentical(target, as.array(B1[0, 0]))
 
-    #target2 <- a[i, 22, k]
-    #checkIdentical(target2, as.matrix(A[i, 22, k]))
-    #B2 <- drop(A[i, 22, k])
-    #checkIdentical(target2, as.array(B2))
-    #target <- target2[15:8, c("c", "b")]
-    #checkIdentical(target, as.array(B2[15:8, c("c", "b")]))
-    #target <- target2[0, ]
-    #checkIdentical(target, as.array(B2[0, ]))
-    #target <- target2[ , 0]
-    #checkIdentical(target, as.array(B2[ , 0]))
-    #target <- target2[0, 0]
-    #checkIdentical(target, as.array(B2[0, 0]))
+    target2 <- a[i, 22, k]
+    checkIdentical(target2, as.matrix(A[i, 22, k]))
+    B2 <- drop(A[i, 22, k])
+    checkIdentical(target2, as.array(B2))
+    target <- target2[15:8, c("c", "b")]
+    checkIdentical(target, as.array(B2[15:8, c("c", "b")]))
+    target <- target2[0, ]
+    checkIdentical(target, as.array(B2[0, ]))
+    target <- target2[ , 0]
+    checkIdentical(target, as.array(B2[ , 0]))
+    target <- target2[0, 0]
+    checkIdentical(target, as.array(B2[0, 0]))
 
     target3 <- a[i, j, 5]
     checkIdentical(target3, as.matrix(A[i, j, 5]))

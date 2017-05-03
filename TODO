@@ -5,9 +5,6 @@
 
 - Make DelayedArray contain Annotated from S4Vectors.
 
-- Fix bug in "[" method for DelayedArray objects caused by "substitute() +
-  eval()" hack. See R/DelayedArray-class.R for the details.
-
 - Add more examples to the man pages (using the toy dataset).
 
 - Add unit tests for round() and signif() (Math2 group).

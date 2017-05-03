@@ -440,20 +440,6 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     x
 }
 
-### WARNING: This function uses the ugly "substitute() + eval()" hack! One
-### problem with this hack is that it seems to be causing the following bug:
-###
-###     library(DelayedArray)
-###     toto <- function(a, z) a[ , , z]
-###     a <- array(1:60, c(3, 5, 4))
-###     A <- DelayedArray(a)
-###     toto(a, 4L)
-###     toto(A, 4L)
-###     # Error in eval(expr, envir, enclos) : object 'z' not found
-###
-### This is probably due to the somewhat arbitrary use of
-### 'envir=parent.frame(2L)' in the call to eval().
-### FIXME: The above bug needs to be fixed!
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
 {
     if (missing(x))
@@ -481,12 +467,12 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         user_index[[1L]] <- if (is.null(i)) integer(0) else i
     if (!missing(j))
         user_index[[2L]] <- if (is.null(j)) integer(0) else j
-    ## Ugly "substitute() + eval()" hack! See above.
-    dots <- substitute(...())  # list of non-evaluated args
+    dots <- match.call(expand.dots=FALSE)$...  # list of non-evaluated args
+    eframe <- parent.frame()
     for (n2 in seq_along(dots)) {
         k <- dots[[n2]]
         if (!missing(k)) {
-            k <- eval(k, envir=parent.frame(2L))
+            k <- eval(k, envir=eframe, enclos=eframe)
             user_index[[2L + n2]] <- if (is.null(k)) integer(0) else k
         }
     }
