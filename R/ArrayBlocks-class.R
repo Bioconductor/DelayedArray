@@ -101,9 +101,9 @@ get_block_ranges <- function(blocks, i)
     ans
 }
 
-get_array_block_index <- function(blocks, i)
+get_array_block_Nindex <- function(blocks, i)
 {
-    make_index_from_block_ranges(get_block_ranges(blocks, i), blocks@dim)
+    make_Nindex_from_block_ranges(get_block_ranges(blocks, i), blocks@dim)
 }
 
 setMethod("getListElement", "ArrayBlocks",
@@ -111,7 +111,7 @@ setMethod("getListElement", "ArrayBlocks",
     {
         i <- normalizeDoubleBracketSubscript(i, x, exact=exact, 
                                              error.if.nomatch=TRUE)
-        get_array_block_index(x, i)
+        get_array_block_Nindex(x, i)
     }
 )
 
@@ -123,8 +123,8 @@ setMethod("show", "ArrayBlocks",
             "of length <= ", object@max_block_len, " on a ",
             dim_in1string, " array:\n", sep="")
         for (i in seq_along(object)) {
-            index <- object[[i]]
-            cat("[[", i, "]]: [", index_as_string(index), "]\n",
+            Nindex <- object[[i]]
+            cat("[[", i, "]]: [", Nindex_as_string(Nindex), "]\n",
                 sep="")
         }
     }
@@ -132,8 +132,8 @@ setMethod("show", "ArrayBlocks",
 
 extract_array_block <- function(x, blocks, i)
 {
-    index <- get_array_block_index(blocks, i)
-    subset_by_index(x, index)
+    Nindex <- get_array_block_Nindex(blocks, i)
+    subset_by_Nindex(x, Nindex)
 }
 
 ### NOT exported but used in unit tests.
