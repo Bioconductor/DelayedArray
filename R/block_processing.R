@@ -80,9 +80,8 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_len=NULL)
                 message("Processing block ", i, "/", nblock, " ... ",
                         appendLF=FALSE)
             block_ranges <- get_block_ranges(blocks, i)
-            subscripts <- make_subscripts_from_block_ranges(block_ranges,
-                                                            blocks@dim)
-            subarray <- subset_by_subscripts(x, subscripts)
+            index <- make_index_from_block_ranges(block_ranges, blocks@dim)
+            subarray <- subset_by_index(x, index)
             if (!is.array(subarray))
                 subarray <- .as_array_or_matrix(subarray)
             block_ans <- APPLY(subarray, ...)
@@ -117,11 +116,10 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
                 message("Processing block ", i, "/", nblock, " ... ",
                         appendLF=FALSE)
             block_ranges <- get_block_ranges(blocks, i)
-            subscripts <- make_subscripts_from_block_ranges(block_ranges,
-                                                            blocks@dim)
+            index <- make_index_from_block_ranges(block_ranges, blocks@dim)
             subarrays <- lapply(dots,
                 function(x) {
-                    subarray <- subset_by_subscripts(x, subscripts)
+                    subarray <- subset_by_index(x, index)
                     if (!is.array(subarray))
                         subarray <- .as_array_or_matrix(subarray)
                     subarray

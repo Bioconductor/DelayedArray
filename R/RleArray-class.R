@@ -69,29 +69,12 @@ setMethod("dimnames", "RleArraySeed",
 ### subset_seed_as_array()
 ###
 
-### Convert "multidimensional index" to "linear index".
-### TODO: Move it to DelayedArray/R/utils.R
-.linear_index <- function(index, dim)
-{
-    stopifnot(is.list(index), is.integer(dim), length(index) == length(dim))
-    i <- p <- 1L
-    for (n in seq_along(index)) {
-        idx <- index[[n]]
-        d <- dim[[n]]
-        if (missing(idx))
-            idx <- seq_len(d)
-        i <- rep((idx - 1L) * p, each=length(i)) + i
-        p <- p * d
-    }
-    i
-}
-
 .subset_RleArraySeed_as_array <- function(seed, index)
 {
     seed_dim <- dim(seed)
-    i <- .linear_index(index, seed_dim)
+    i <- to_linear_index(index, seed_dim)
     ans <- decode(seed@rle[i])
-    dim(ans) <- get_subscripts_lengths(index, seed_dim)
+    dim(ans) <- get_index_lengths(index, seed_dim)
     ans
 }
 
