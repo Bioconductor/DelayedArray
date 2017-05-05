@@ -117,20 +117,33 @@ DelayedArray(seed)  # constructor function
 }
 
 \section{Subsetting}{
-  A DelayedArray object can be subsetted like an ordinary object but with
-  the following differences:
+  A DelayedArray object can be subsetted with \code{[} like an ordinary array
+  but with the following differences:
   \itemize{
+    \item \emph{Multi-dimensional single bracket subsetting} (i.e. subsetting
+          of the form \code{x[i_1, i_2, ..., i_n]} with one (possibly missing)
+          subscript per dimension) returns a DelayedArray object where the
+          subsetting is actually delayed. So it's a very light operation.
+
     \item The \code{drop} argument of the \code{[} operator is ignored i.e.
           subsetting a DelayedArray object always returns a DelayedArray
-          object with the same number of dimensions. You need to call
-          \code{drop()} on the subsetted object to actually drop its
-          ineffective dimensions (i.e. the dimensions equal to 1).
+          object with the same number of dimensions as the original object.
+          You need to call \code{drop()} on the subsetted object to actually
+          drop its ineffective dimensions (i.e. the dimensions equal to 1).
+          \code{drop()} is also a delayed operation so is very light.
 
-    \item Linear subsetting (a.k.a. 1D-style subsetting, that is, subsetting
-          with a single subscript \code{i}) is not supported.
+    \item \emph{Linear single bracket subsetting} (a.k.a. 1D-style subsetting,
+          that is, subsetting of the form \code{x[i]}) only works if subscript
+          \code{i} is a numeric vector at the moment. Furthermore, \code{i}
+          cannot contain NAs and all the indices in it must be >= 1 and <=
+          \code{length(x)} for now. It returns an atomic vector so this is
+          NOT a delayed operation.
   }
 
-  Subsetting with \code{[[} is supported but only the linear form of it.
+  Subsetting with \code{[[} is supported but only the \emph{linear} form
+  of it at the moment i.e. the \code{x[[i]]} form where \code{i} is a
+  \emph{single} numeric value >= 1 and <= \code{length(x)}. It is equivalent
+  to \code{x[i]}.
 
   DelayedArray objects don't support subassignment (\code{[<-} or \code{[[<-}).
 }
@@ -162,6 +175,17 @@ a <- array(runif(1500000), dim=c(10000, 30, 5))
 A <- DelayedArray(a)
 A
 
+## Multi-dimensional single bracket subsetting:
+m <- a[11:20 , 5, ]        # a matrix
+A[11:20 , 5, ]             # not a DelayedMatrix (still 3 dimensions)
+M <- drop(A[11:20 , 5, ])  # a DelayedMatrix object
+stopifnot(identical(m, as.array(M)))
+
+## Linear single bracket subsetting:
+A[11:20]
+A[which(A <= 1e-5)]
+
+## Other operations:
 toto <- function(x) (5 * x[ , , 1] ^ 3 + 1L) * log(x[, , 2])
 b <- toto(a)
 head(b)

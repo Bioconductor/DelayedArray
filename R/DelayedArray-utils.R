@@ -400,7 +400,7 @@ setMethod("signif", "DelayedArray",
 .DelayedArray_block_anyNA <- function(x, recursive=FALSE)
 {
     APPLY <- anyNA
-    COMBINE <- function(i, subarray, init, reduced) { init || reduced }
+    COMBINE <- function(b, subarray, init, reduced) { init || reduced }
     init <- FALSE
     BREAKIF <- identity
 
@@ -423,10 +423,10 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
     if (!isTRUEorFALSE(useNames))
         stop("'useNames' must be TRUE or FALSE")
     APPLY <- which
-    COMBINE <- function(i, subarray, init, reduced) {
+    COMBINE <- function(b, subarray, init, reduced) {
         if (length(reduced) != 0L) {
             reduced <- reduced + init$offset
-            part_number <- sprintf("%010d", i)
+            part_number <- sprintf("%010d", b)
             assign(part_number, reduced, envir=init$parts)
         }
         init$offset <- init$offset + length(subarray)
@@ -486,7 +486,7 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
             return(NULL)
         reduced
     }
-    COMBINE <- function(i, subarray, init, reduced) {
+    COMBINE <- function(b, subarray, init, reduced) {
         if (is.null(init) && is.null(reduced))
             return(NULL)
         GENERIC(init, reduced)
@@ -543,7 +543,7 @@ setMethod("Summary", "DelayedArray",
             subarray_nval <- subarray_nval - sum(is.na(tmp))
         c(subarray_sum, subarray_nval)
     }
-    COMBINE <- function(i, subarray, init, reduced) { init + reduced }
+    COMBINE <- function(b, subarray, init, reduced) { init + reduced }
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])
 

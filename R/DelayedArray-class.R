@@ -400,6 +400,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ### [
 ###
 
+### Return an object of the same class as 'x' (endomorphism).
 ### 'user_Nindex' must be a "multidimensional subsetting Nindex" i.e. a
 ### list with one subscript per dimension in 'x'. Missing subscripts are
 ### represented by NULLs.
@@ -441,6 +442,56 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     x
 }
 
+### Return an atomic vector.
+.subset_DelayedArray_by_1Dindex <- function(x, i)
+{
+    if (!is.numeric(i))
+        stop(wmsg("1D-style subsetting of a DelayedArray object only ",
+                  "accepts a numeric subscript at the moment"))
+    if (length(i) == 0L) {
+        user_Nindex <- as.list(integer(length(dim(x))))
+        ## x0 <- x[0, ..., 0]
+        x0 <- .subset_DelayedArray_by_Nindex(x, user_Nindex)
+        return(as.vector(x0))
+    }
+    if (anyNA(i))
+        stop(wmsg("1D-style subsetting of a DelayedArray object does ",
+                  "not support NA indices yet"))
+    if (min(i) < 1L)
+        stop(wmsg("1D-style subsetting of a DelayedArray object only ",
+                  "supports positive indices at the moment"))
+    if (max(i) > length(x))
+        stop(wmsg("subscript contains out-of-bounds indices"))
+    if (length(i) == 1L)
+        return(.get_DelayedArray_element(x, i))
+
+    ## We want to walk only on the blocks that we actually need to visit so we
+    ## don't use block_APPLY() or family because they walk on all the blocks.
+
+    block_len <- get_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), block_len)
+    nblock <- length(blocks)
+
+    breakpoints <- cumsum(get_block_lengths(blocks))
+    part_idx <- get_part_index(i, breakpoints)
+    split_part_idx <- split_part_index(part_idx, length(breakpoints))
+    block_idx <- which(lengths(split_part_idx) != 0L)  # blocks to visit
+    res <- lapply(block_idx, function(b) {
+            if (get_verbose_block_processing())
+                message("Visiting block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            Nindex <- get_array_block_Nindex(blocks, b)
+            subarray <- subset_by_Nindex(x, Nindex)
+            if (!is.array(subarray))
+                subarray <- as.array(subarray)
+            block_ans <- subarray[split_part_idx[[b]]]
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
+    })
+    unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
+}
+
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
 {
     if (missing(x))
@@ -456,10 +507,9 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     if (ndim == 1L && missing(i))
         ndim <- 0L
     if (ndim != 0L && ndim != x_ndim) {
-        if (ndim == 1L)
-            stop(wmsg("1D-style subsetting is not supported on DelayedArray ",
-                      "objects (yet)"))
-        stop("incorrect number of dimensions")
+        if (ndim != 1L)
+            stop("incorrect number of dimensions")
+        return(.subset_DelayedArray_by_1Dindex(x, i))
     }
 
     ## Prepare the "multidimensional subsetting index".

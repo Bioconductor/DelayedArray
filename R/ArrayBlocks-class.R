@@ -36,24 +36,24 @@ ArrayBlocks <- function(dim, max_block_len)
     new("ArrayBlocks", dim=dim, max_block_len=max_block_len, N=N, by=by)
 }
 
-.get_ArrayBlocks_inner_length <- function(x)
+.get_ArrayBlocks_inner_length <- function(blocks)
 {
-    ndim <- length(x@dim)
-    if (x@N > ndim)
-        return(if (any(x@dim == 0L)) 0L else 1L)
-    inner_len <- x@dim[[x@N]] %/% x@by
-    last_inner_block_len <- x@dim[[x@N]] %% x@by
-    if (last_inner_block_len != 0L)
+    ndim <- length(blocks@dim)
+    if (blocks@N > ndim)
+        return(if (any(blocks@dim == 0L)) 0L else 1L)
+    inner_len <- blocks@dim[[blocks@N]] %/% blocks@by
+    by2 <- blocks@dim[[blocks@N]] %% blocks@by
+    if (by2 != 0L)  # 'blocks' contains truncated blocks
         inner_len <- inner_len + 1L
     inner_len
 }
 
-.get_ArrayBlocks_outer_length <- function(x)
+.get_ArrayBlocks_outer_length <- function(blocks)
 {
-    ndim <- length(x@dim)
-    if (x@N >= ndim)
+    ndim <- length(blocks@dim)
+    if (blocks@N >= ndim)
         return(1L)
-    outer_dim <- x@dim[(x@N + 1L):ndim]
+    outer_dim <- blocks@dim[(blocks@N + 1L):ndim]
     prod(outer_dim)
 }
 
@@ -62,6 +62,22 @@ setMethod("length", "ArrayBlocks",
     function(x)
         .get_ArrayBlocks_inner_length(x) * .get_ArrayBlocks_outer_length(x)
 )
+
+get_block_lengths <- function(blocks)
+{
+    p <- prod(blocks@dim[seq_len(blocks@N - 1L)])
+    ndim <- length(blocks@dim)
+    if (blocks@N > ndim)
+        return(p)
+    fb_len <- p * blocks@by  # full block length
+    lens <- rep.int(fb_len, blocks@dim[[blocks@N]] %/% blocks@by)
+    by2 <- blocks@dim[[blocks@N]] %% blocks@by
+    if (by2 != 0L) {         # 'blocks' contains truncated blocks
+        tb_len <- p * by2    # truncated block length
+        lens <- c(lens, tb_len)
+    }
+    rep.int(lens, .get_ArrayBlocks_outer_length(blocks))
+}
 
 ### Return an IRanges object with 1 range per dimension.
 get_block_ranges <- function(blocks, i)

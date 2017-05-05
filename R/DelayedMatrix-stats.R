@@ -40,7 +40,7 @@
 
     .get_ans_type(x)  # check input type
     APPLY <- function(m) rowSums(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced) { init + reduced }
+    COMBINE <- function(b, m, init, reduced) { init + reduced }
     init <- numeric(nrow(x))
     ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
     setNames(ans, rownames(x))
@@ -78,7 +78,7 @@ setMethod("colSums", "DelayedMatrix", .DelayedMatrix_block_colSums)
             m_nvals <- m_nvals - rowSums(is.na(m))
         cbind(m_sums, m_nvals)
     }
-    COMBINE <- function(i, m, init, reduced) { init + reduced }
+    COMBINE <- function(b, m, init, reduced) { init + reduced }
     init <- cbind(
         numeric(nrow(x)),  # sums
         numeric(nrow(x))   # nvals
@@ -129,7 +129,7 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
 
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowMaxs(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced)
+    COMBINE <- function(b, m, init, reduced)
         .fix_type(pmax(init, reduced), ans_type)
     init <- .fix_type(rep.int(-Inf, nrow(x)), ans_type)
     ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
@@ -167,7 +167,7 @@ setMethod("colMaxs", "DelayedMatrix", .DelayedMatrix_block_colMaxs)
 
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowMins(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced)
+    COMBINE <- function(b, m, init, reduced)
         .fix_type(pmin(init, reduced), ans_type)
     init <- .fix_type(rep.int(Inf, nrow(x)), ans_type)
     ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
@@ -205,7 +205,7 @@ setMethod("colMins", "DelayedMatrix", .DelayedMatrix_block_colMins)
 
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowRanges(m, na.rm=na.rm)
-    COMBINE <- function(i, m, init, reduced) {
+    COMBINE <- function(b, m, init, reduced) {
         .fix_type(cbind(pmin(init[ , 1L], reduced[ , 1L]),
                         pmax(init[ , 2L], reduced[ , 2L])),
                   ans_type)

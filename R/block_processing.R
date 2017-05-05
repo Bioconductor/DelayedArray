@@ -75,11 +75,11 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_len=NULL)
     blocks <- ArrayBlocks(dim(x), block_len)
     nblock <- length(blocks)
     lapply(seq_len(nblock),
-        function(i) {
+        function(b) {
             if (get_verbose_block_processing())
-                message("Processing block ", i, "/", nblock, " ... ",
+                message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block_ranges <- get_block_ranges(blocks, i)
+            block_ranges <- get_block_ranges(blocks, b)
             Nindex <- make_Nindex_from_block_ranges(block_ranges, blocks@dim)
             subarray <- subset_by_Nindex(x, Nindex)
             if (!is.array(subarray))
@@ -111,11 +111,11 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
     blocks <- ArrayBlocks(x_dim, block_len)
     nblock <- length(blocks)
     lapply(seq_len(nblock),
-        function(i) {
+        function(b) {
             if (get_verbose_block_processing())
-                message("Processing block ", i, "/", nblock, " ... ",
+                message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block_ranges <- get_block_ranges(blocks, i)
+            block_ranges <- get_block_ranges(blocks, b)
             Nindex <- make_Nindex_from_block_ranges(block_ranges, blocks@dim)
             subarrays <- lapply(dots,
                 function(x) {
@@ -147,15 +147,15 @@ block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
         block_len <- get_block_length(type(x))
     blocks <- ArrayBlocks(dim(x), block_len)
     nblock <- length(blocks)
-    for (i in seq_len(nblock)) {
+    for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
-            message("Processing block ", i, "/", nblock, " ... ",
+            message("Processing block ", b, "/", nblock, " ... ",
                     appendLF=FALSE)
-        subarray <- extract_array_block(x, blocks, i)
+        subarray <- extract_array_block(x, blocks, b)
         if (!is.array(subarray))
             subarray <- .as_array_or_matrix(subarray)
         reduced <- APPLY(subarray)
-        init <- COMBINE(i, subarray, init, reduced)
+        init <- COMBINE(b, subarray, init, reduced)
         if (get_verbose_block_processing())
             message("OK")
         if (!is.null(BREAKIF) && BREAKIF(init)) {

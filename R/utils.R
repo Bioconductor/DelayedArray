@@ -173,7 +173,7 @@ to_linear_index <- function(Nindex, dim)
 ### propagated to the 1st vector.
 get_part_index <- function(idx, breakpoints)
 {
-    part_idx <- findInterval(idx - 1L, breakpoints) + 1L
+    part_idx <- findInterval(idx, breakpoints + 1L) + 1L
     names(part_idx) <- names(breakpoints)[part_idx]
     rel_idx <- idx - .breakpoints2offsets(unname(breakpoints))[part_idx]
     list(part_idx, rel_idx)
