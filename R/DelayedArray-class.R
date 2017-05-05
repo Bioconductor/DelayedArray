@@ -922,6 +922,24 @@ setMethod("as.raw", "DelayedArray", as.raw.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion to sparse matrix (requires the Matrix package)
+###
+
+.from_DelayedMatrix_to_dgCMatrix <- function(from)
+{
+    idx <- which(from != 0L)
+    array_ind <- arrayInd(idx, dim(from))
+    i <- array_ind[ , 1L]
+    j <- array_ind[ , 2L]
+    x <- from[idx]
+    Matrix::sparseMatrix(i, j, x=x, dims=dim(from), dimnames=dimnames(from))
+}
+
+setAs("DelayedMatrix", "dgCMatrix", .from_DelayedMatrix_to_dgCMatrix)
+setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### type()
 ###
 ### For internal use only.

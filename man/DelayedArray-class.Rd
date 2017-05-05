@@ -49,6 +49,9 @@
 \alias{as.raw.DelayedArray}
 \alias{as.raw,DelayedArray-method}
 
+\alias{coerce,DelayedMatrix,dgCMatrix-method}
+\alias{coerce,DelayedMatrix,sparseMatrix-method}
+
 \alias{type}
 \alias{type,array-method}
 \alias{type,DelayedArray-method}
@@ -136,8 +139,8 @@ DelayedArray(seed)  # constructor function
           that is, subsetting of the form \code{x[i]}) only works if subscript
           \code{i} is a numeric vector at the moment. Furthermore, \code{i}
           cannot contain NAs and all the indices in it must be >= 1 and <=
-          \code{length(x)} for now. It returns an atomic vector so this is
-          NOT a delayed operation.
+          \code{length(x)} for now. It returns an atomic vector of the same
+          length as \code{i}. This is NOT a delayed operation.
   }
 
   Subsetting with \code{[[} is supported but only the \emph{linear} form
@@ -169,7 +172,7 @@ DelayedArray(seed)  # constructor function
 
 \examples{
 ## ---------------------------------------------------------------------
-## WRAP AN ORDINARY ARRAY IN A DelayedArray OBJECT
+## A. WRAP AN ORDINARY ARRAY IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 a <- array(runif(1500000), dim=c(10000, 30, 5))
 A <- DelayedArray(a)
@@ -201,7 +204,7 @@ CS <- colSums(B)
 stopifnot(identical(cs, CS))
 
 ## ---------------------------------------------------------------------
-## WRAP A DataFrame OBJECT IN A DelayedArray OBJECT
+## B. WRAP A DataFrame OBJECT IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 
 ## Generate random coverage and score along an imaginary chromosome:
@@ -217,7 +220,7 @@ t(A2)  # delayed transpose is very fast and very memory efficient because
 colSums(A2)
 
 ## ---------------------------------------------------------------------
-## A HDF5Array OBJECT IS A (PARTICULAR KIND OF) DelayedArray OBJECT
+## C. A HDF5Array OBJECT IS A (PARTICULAR KIND OF) DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 library(HDF5Array)
 A3 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file
@@ -234,7 +237,7 @@ CS3 <- colSums(B3)
 stopifnot(identical(cs, CS3))
 
 ## ---------------------------------------------------------------------
-## PERFORM THE DELAYED OPERATIONS
+## D. PERFORM THE DELAYED OPERATIONS
 ## ---------------------------------------------------------------------
 as(B3, "HDF5Array")        # "realize" 'B3' on disk
 
@@ -252,6 +255,60 @@ setRealizationBackend("HDF5Array")
 D <- realize(D)
 D
 ## See '?realize' for more information about "realization backends".
+
+## ---------------------------------------------------------------------
+## E. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
+## ---------------------------------------------------------------------
+\dontrun{
+library(Matrix)
+M <- 75000L
+N <- 1800L
+p <- sparseMatrix(sample(M, 9000000, replace=TRUE),
+                  sample(N, 9000000, replace=TRUE),
+                  x=runif(9000000), dims=c(M, N))
+P <- DelayedArray(p)
+P
+p2 <- as(P, "sparseMatrix")
+stopifnot(identical(p, p2))
+
+## The following is based on the following post by Murat Tasan on the
+## R-help mailing list:
+##   https://stat.ethz.ch/pipermail/r-help/2017-May/446702.html
+
+## As pointed out by Murat, the straight-forward row normalization
+## directly on sparse matrix 'p' would consume too much memory:
+row_normalized_p <- p / rowSums(p^2)  # consumes too much memory
+## because the rowSums() result is being recycled (appropriately) into a
+## *dense* matrix with dimensions equal to dim(p).
+
+## Murat came up with the following solution that is very fast and memory
+## efficient:
+row_normalized_p1 <- Diagonal(x=1/sqrt(Matrix::rowSums(p^2))) %*% p
+
+## With a DelayedArray object, the straight-forward approach uses a
+## block processing strategy behind the scene so it doesn't consume
+## too much memory.
+
+## First, let's see the block processing in action:
+DelayedArray:::set_verbose_block_processing(TRUE)
+## and set block size to a bigger value than the default:
+getOption("DelayedArray.block.size")
+options(DelayedArray.block.size=80e6)
+
+row_normalized_P <- P / sqrt(DelayedArray::rowSums(P^2))
+
+## Increasing the block size increases the speed but also memory usage:
+options(DelayedArray.block.size=200e6)
+row_normalized_P2 <- P / sqrt(DelayedArray::rowSums(P^2))
+stopifnot(all.equal(row_normalized_P, row_normalized_P2))
+
+## Back to sparse representation:
+DelayedArray:::set_verbose_block_processing(FALSE)
+row_normalized_p2 <- as(row_normalized_P, "sparseMatrix")
+stopifnot(all.equal(row_normalized_p1, row_normalized_p2))
+
+options(DelayedArray.block.size=10e6)
+}
 }
 \keyword{methods}
 \keyword{classes}
