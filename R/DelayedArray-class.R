@@ -60,30 +60,38 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 ### Validity
 ###
 
+.wmsg2 <- function(...)
+    paste0("\n    ",
+           paste0(strwrap(paste0(c(...), collapse="")), collapse="\n    "))
+
 .validate_DelayedArray <- function(x)
 {
     x_dim <- dim(x@seed)
     x_ndim <- length(x_dim)
     ## 'seed' slot.
     if (x_ndim == 0L)
-        return(wmsg("'x@seed' must have dimensions"))
+        return(.wmsg2("'x@seed' must have dimensions"))
     ## 'index' slot.
     if (length(x@index) != x_ndim)
-        return(wmsg("'x@index' must have one element per dimension ",
-                    "in 'x@seed'"))
+        return(.wmsg2("'x@index' must have one list element per dimension ",
+                      "in 'x@seed'"))
+    if (!all(S4Vectors:::sapply_isNULL(x@index) |
+             vapply(x@index, is.integer, logical(1), USE.NAMES=FALSE)))
+        return(.wmsg2("every list element in 'x@index' must be either NULL ",
+                      "or an integer vector"))
     ## 'metaindex' slot.
     if (length(x@metaindex) == 0L)
-        return(wmsg("'x@metaindex' cannot be empty"))
+        return(.wmsg2("'x@metaindex' cannot be empty"))
     if (S4Vectors:::anyMissingOrOutside(x@metaindex, 1L, x_ndim))
-        return(wmsg("all values in 'x@metaindex' must be >= 1 ",
-                    "and <= 'length(x@index)'"))
+        return(.wmsg2("all values in 'x@metaindex' must be >= 1 ",
+                      "and <= 'length(x@index)'"))
     if (!isStrictlySorted(x@metaindex))
-        return(wmsg("'x@metaindex' must be strictly sorted"))
-    if (!all(get_index_lengths(x@index, x_dim)[-x@metaindex] == 1L))
-        return(wmsg("all the dropped dimensions in 'x' must be equal to 1"))
+        return(.wmsg2("'x@metaindex' must be strictly sorted"))
+    if (!all(get_Nindex_lengths(x@index, x_dim)[-x@metaindex] == 1L))
+        return(.wmsg2("all the dropped dimensions in 'x' must be equal to 1"))
     ## 'is_transposed' slot.
     if (!isTRUEorFALSE(x@is_transposed))
-        return(wmsg("'x@is_transposed' must be TRUE or FALSE"))
+        return(.wmsg2("'x@is_transposed' must be TRUE or FALSE"))
     TRUE
 }
 
@@ -172,7 +180,7 @@ downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 
 .get_DelayedArray_dim_before_transpose <- function(x)
 {
-    get_index_lengths(x@index, dim(x@seed))[x@metaindex]
+    get_Nindex_lengths(x@index, dim(x@seed))[x@metaindex]
 }
 .get_DelayedArray_dim <- function(x)
 {
@@ -297,8 +305,8 @@ setMethod("drop", "DelayedArray",
 {
     x_seed_dimnames <- dimnames(x@seed)
     ans <- lapply(x@metaindex,
-                  get_index_names_along,
-                    index=x@index,
+                  get_Nindex_names_along,
+                    Nindex=x@index,
                     dimnames=x_seed_dimnames)
     if (all(S4Vectors:::sapply_isNULL(ans)))
         return(NULL)
@@ -343,7 +351,7 @@ setMethod("dimnames", "DelayedArray", .get_DelayedArray_dimnames)
     touched_midx <- which(mapply(
         function(N, names)
             !identical(
-                get_index_names_along(x@index, x_seed_dimnames, N),
+                get_Nindex_names_along(x@index, x_seed_dimnames, N),
                 names
             ),
         x@metaindex, value,
@@ -400,19 +408,20 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ### [
 ###
 
-### 'user_index' must be a "multidimensional subsetting index" i.e. a list
-### with one subscript per dimension in 'x'. Missing subscripts are
+### Return an object of the same class as 'x' (endomorphism).
+### 'user_Nindex' must be a "multidimensional subsetting Nindex" i.e. a
+### list with one subscript per dimension in 'x'. Missing subscripts are
 ### represented by NULLs.
-.subset_DelayedArray_by_index <- function(x, user_index)
+.subset_DelayedArray_by_Nindex <- function(x, user_Nindex)
 {
-    stopifnot(is.list(user_index))
+    stopifnot(is.list(user_Nindex))
     x_index <- x@index
     x_ndim <- length(x@metaindex)
     x_seed_dim <- dim(x@seed)
     x_seed_dimnames <- dimnames(x@seed)
     x_delayed_ops <- x@delayed_ops
-    for (n in seq_along(user_index)) {
-        subscript <- user_index[[n]]
+    for (n in seq_along(user_Nindex)) {
+        subscript <- user_Nindex[[n]]
         if (is.null(subscript))
             next
         n0 <- if (x@is_transposed) x_ndim - n + 1L else n
@@ -420,7 +429,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         i <- x_index[[N]]
         if (is.null(i)) {
             i <- seq_len(x_seed_dim[[N]])  # expand 'i'
-            names(i) <- get_index_names_along(x_index, x_seed_dimnames, N)
+            names(i) <- get_Nindex_names_along(x_index, x_seed_dimnames, N)
         }
         subscript <- normalizeSingleBracketSubscript(subscript, i,
                                                      as.NSBS=TRUE)
@@ -441,6 +450,56 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     x
 }
 
+### Return an atomic vector.
+.subset_DelayedArray_by_1Dindex <- function(x, i)
+{
+    if (!is.numeric(i))
+        stop(wmsg("1D-style subsetting of a DelayedArray object only ",
+                  "accepts a numeric subscript at the moment"))
+    if (length(i) == 0L) {
+        user_Nindex <- as.list(integer(length(dim(x))))
+        ## x0 <- x[0, ..., 0]
+        x0 <- .subset_DelayedArray_by_Nindex(x, user_Nindex)
+        return(as.vector(x0))
+    }
+    if (anyNA(i))
+        stop(wmsg("1D-style subsetting of a DelayedArray object does ",
+                  "not support NA indices yet"))
+    if (min(i) < 1L)
+        stop(wmsg("1D-style subsetting of a DelayedArray object only ",
+                  "supports positive indices at the moment"))
+    if (max(i) > length(x))
+        stop(wmsg("subscript contains out-of-bounds indices"))
+    if (length(i) == 1L)
+        return(.get_DelayedArray_element(x, i))
+
+    ## We want to walk only on the blocks that we actually need to visit so we
+    ## don't use block_APPLY() or family because they walk on all the blocks.
+
+    block_len <- get_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), block_len)
+    nblock <- length(blocks)
+
+    breakpoints <- cumsum(get_block_lengths(blocks))
+    part_idx <- get_part_index(i, breakpoints)
+    split_part_idx <- split_part_index(part_idx, length(breakpoints))
+    block_idx <- which(lengths(split_part_idx) != 0L)  # blocks to visit
+    res <- lapply(block_idx, function(b) {
+            if (get_verbose_block_processing())
+                message("Visiting block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            Nindex <- get_array_block_Nindex(blocks, b)
+            subarray <- subset_by_Nindex(x, Nindex)
+            if (!is.array(subarray))
+                subarray <- as.array(subarray)
+            block_ans <- subarray[split_part_idx[[b]]]
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
+    })
+    unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
+}
+
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
 {
     if (missing(x))
@@ -456,30 +515,29 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     if (ndim == 1L && missing(i))
         ndim <- 0L
     if (ndim != 0L && ndim != x_ndim) {
-        if (ndim == 1L)
-            stop(wmsg("1D-style subsetting is not supported on DelayedArray ",
-                      "objects (yet)"))
-        stop("incorrect number of dimensions")
+        if (ndim != 1L)
+            stop("incorrect number of dimensions")
+        return(.subset_DelayedArray_by_1Dindex(x, i))
     }
 
     ## Prepare the "multidimensional subsetting index".
-    user_index <- vector(mode="list", length=x_ndim)
+    user_Nindex <- vector(mode="list", length=x_ndim)
     if (!missing(i))
-        user_index[[1L]] <- if (is.null(i)) integer(0) else i
+        user_Nindex[[1L]] <- if (is.null(i)) integer(0) else i
     if (!missing(j))
-        user_index[[2L]] <- if (is.null(j)) integer(0) else j
+        user_Nindex[[2L]] <- if (is.null(j)) integer(0) else j
     dots <- match.call(expand.dots=FALSE)$...  # list of non-evaluated args
     eframe <- parent.frame()
     for (n2 in seq_along(dots)) {
         k <- dots[[n2]]
         if (!missing(k)) {
             k <- eval(k, envir=eframe, enclos=eframe)
-            user_index[[2L + n2]] <- if (is.null(k)) integer(0) else k
+            user_Nindex[[2L + n2]] <- if (is.null(k)) integer(0) else k
         }
     }
 
     ## Perform the subsetting.
-    .subset_DelayedArray_by_index(x, user_index)
+    .subset_DelayedArray_by_Nindex(x, user_Nindex)
 }
 
 setMethod("[", "DelayedArray", .subset_DelayedArray)
@@ -492,13 +550,13 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 ### Return the slice as a list.
 .extract_data_frame_slice <- function(x, index)
 {
-    slice <- subset_by_index(x, index)
+    slice <- subset_by_Nindex(x, index)
     ## Turn into a list and replace factors with character vectors.
     lapply(slice, as.vector)
 }
 .extract_DataFrame_slice <- function(x, index)
 {
-    slice <- subset_by_index(x, index)
+    slice <- subset_by_Nindex(x, index)
     slice <- as.data.frame(slice)
     ## Turn into a list and replace factors with character vectors.
     lapply(slice, as.vector)
@@ -557,19 +615,19 @@ setGeneric("subset_seed_as_array", signature="seed",
 setMethod("subset_seed_as_array", "ANY",
     function(seed, index)
     {
-        slice <- subset_by_index(seed, index)
+        slice <- subset_by_Nindex(seed, index)
         as.array(slice)
     }
 )
 
 setMethod("subset_seed_as_array", "array",
     function(seed, index)
-        subset_by_index(seed, index)
+        subset_by_Nindex(seed, index)
 )
 
 ### Equivalent to
 ###
-###     subset_by_index(as.matrix(x), index)
+###     subset_by_Nindex(as.matrix(x), index)
 ###
 ### but avoids the cost of turning the full data frame 'x' into a matrix so
 ### memory footprint stays small when 'index' is small.
@@ -580,13 +638,13 @@ setMethod("subset_seed_as_array", "data.frame",
         slice0 <- .extract_data_frame_slice0(seed)
         slice <- .extract_data_frame_slice(seed, index)
         data <- unlist(c(slice0, slice), use.names=FALSE)
-        array(data, dim=get_index_lengths(index, dim(seed)))
+        array(data, dim=get_Nindex_lengths(index, dim(seed)))
     }
 )
 
 ### Equivalent to
 ###
-###     subset_by_index(as.matrix(as.data.frame(x)), index)
+###     subset_by_Nindex(as.matrix(as.data.frame(x)), index)
 ###
 ### but avoids the cost of turning the full DataFrame 'x' first into a data
 ### frame then into a matrix so memory footprint stays small when 'index' is
@@ -598,7 +656,7 @@ setMethod("subset_seed_as_array", "DataFrame",
         slice0 <- .extract_DataFrame_slice0(seed)
         slice <- .extract_DataFrame_slice(seed, index)
         data <- unlist(c(slice0, slice), use.names=FALSE)
-        array(data, dim=get_index_lengths(index, dim(seed)))
+        array(data, dim=get_Nindex_lengths(index, dim(seed)))
     }
 )
 
@@ -872,6 +930,24 @@ setMethod("as.raw", "DelayedArray", as.raw.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion to sparse matrix (requires the Matrix package)
+###
+
+.from_DelayedMatrix_to_dgCMatrix <- function(from)
+{
+    idx <- which(from != 0L)
+    array_ind <- arrayInd(idx, dim(from))
+    i <- array_ind[ , 1L]
+    j <- array_ind[ , 2L]
+    x <- from[idx]
+    Matrix::sparseMatrix(i, j, x=x, dims=dim(from), dimnames=dimnames(from))
+}
+
+setAs("DelayedMatrix", "dgCMatrix", .from_DelayedMatrix_to_dgCMatrix)
+setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### type()
 ###
 ### For internal use only.
@@ -886,9 +962,9 @@ setMethod("type", "array", function(x) typeof(x))
 setMethod("type", "DelayedArray",
     function(x)
     {
-        user_index <- as.list(integer(length(dim(x))))
+        user_Nindex <- as.list(integer(length(dim(x))))
         ## x0 <- x[0, ..., 0]
-        x0 <- .subset_DelayedArray_by_index(x, user_index)
+        x0 <- .subset_DelayedArray_by_Nindex(x, user_Nindex)
         typeof(as.array(x0, drop=TRUE))
     }
 )
@@ -901,8 +977,8 @@ setMethod("type", "DelayedArray",
 .get_DelayedArray_element <- function(x, i)
 {
     i <- normalizeDoubleBracketSubscript(i, x)
-    user_index <- as.list(arrayInd(i, dim(x)))
-    as.vector(.subset_DelayedArray_by_index(x, user_index))
+    user_Nindex <- as.list(arrayInd(i, dim(x)))
+    as.vector(.subset_DelayedArray_by_Nindex(x, user_Nindex))
 }
 
 ### Only support linear subscripting at the moment.

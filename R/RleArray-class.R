@@ -74,7 +74,7 @@ setMethod("dimnames", "RleArraySeed",
     seed_dim <- dim(seed)
     i <- to_linear_index(index, seed_dim)
     ans <- decode(seed@rle[i])
-    dim(ans) <- get_index_lengths(index, seed_dim)
+    dim(ans) <- get_Nindex_lengths(index, seed_dim)
     ans
 }
 

@@ -92,9 +92,9 @@ setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
     ans <- do.call(IRanges:::simple_abind, c(tmp, list(along=seed@along)))
 
     ## Reorder the rows or columns in 'ans'.
-    index <- vector(mode="list", length=length(index))
-    index[[seed@along]] <- get_rev_index(part_idx)
-    subset_by_index(ans, index)
+    Nindex <- vector(mode="list", length=length(index))
+    Nindex[[seed@along]] <- get_rev_index(part_idx)
+    subset_by_Nindex(ans, Nindex)
 }
 
 setMethod("subset_seed_as_array", "SeedBinder", .subset_SeedBinder_as_array)

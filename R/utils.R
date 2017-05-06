@@ -7,99 +7,99 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Using a "multidimensional subsetting index"
+### Manipulating an Nindex
 ###
-### A "multidimensional subsetting index" is a list with one subscript per
-### dimension in the object to subset. Missing subscripts are represented
-### by NULLs. Before it can actually be used to subset an array-like object,
-### the NULLs must be replaced with elements of class "name".
+### An Nindex is a "multidimensional subsetting index" is a list with one
+### subscript per dimension in the object to subset. Missing subscripts are
+### represented by NULLs. Before it can be used to actually subset an
+### array-like object, the NULLs must be replaced with elements of class "name".
 
 ### Used in HDF5Array!
-expand_RangeNSBS_index <- function(index)
+expand_Nindex_RangeNSBS <- function(Nindex)
 {
-    stopifnot(is.list(index))
-    RangeNSBS_idx <- which(vapply(index, is, logical(1), "RangeNSBS"))
-    index[RangeNSBS_idx] <- lapply(index[RangeNSBS_idx], as.integer)
-    index
+    stopifnot(is.list(Nindex))
+    RangeNSBS_idx <- which(vapply(Nindex, is, logical(1), "RangeNSBS"))
+    Nindex[RangeNSBS_idx] <- lapply(Nindex[RangeNSBS_idx], as.integer)
+    Nindex
 }
 
-.index2subscripts <- function(index, x)
+.Nindex2subscripts <- function(Nindex, x)
 {
-    stopifnot(is.list(index), length(index) == length(dim(x)))
+    stopifnot(is.list(Nindex), length(Nindex) == length(dim(x)))
 
     if (is.array(x))
-        index <- expand_RangeNSBS_index(index)
+        Nindex <- expand_Nindex_RangeNSBS(Nindex)
 
     ## Replace NULLs with list elements of class "name".
-    subscripts <- rep.int(alist(foo=), length(index))
-    names(subscripts ) <- names(index)
-    not_missing_idx <- which(!S4Vectors:::sapply_isNULL(index))
-    subscripts[not_missing_idx] <- index[not_missing_idx]
+    subscripts <- rep.int(alist(foo=), length(Nindex))
+    names(subscripts ) <- names(Nindex)
+    not_missing_idx <- which(!S4Vectors:::sapply_isNULL(Nindex))
+    subscripts[not_missing_idx] <- Nindex[not_missing_idx]
 
     subscripts
 }
 
-subset_by_index <- function(x, index, drop=FALSE)
+subset_by_Nindex <- function(x, Nindex, drop=FALSE)
 {
-    index <- .index2subscripts(index, x)
-    do.call(`[`, c(list(x), index, list(drop=drop)))
+    Nindex <- .Nindex2subscripts(Nindex, x)
+    do.call(`[`, c(list(x), Nindex, list(drop=drop)))
 }
 
-replace_by_index <- function(x, index, value)
+replace_by_Nindex <- function(x, Nindex, value)
 {
-    index <- .index2subscripts(index, x)
-    do.call(`[<-`, c(list(x), index, list(value=value)))
+    Nindex <- .Nindex2subscripts(Nindex, x)
+    do.call(`[<-`, c(list(x), Nindex, list(value=value)))
 }
 
-index_as_string <- function(index, dimnames=NULL)
+Nindex_as_string <- function(Nindex, dimnames=NULL)
 {
-    stopifnot(is.list(index))
-    missing_idx <- which(S4Vectors:::sapply_isNULL(index))
-    index[missing_idx] <- ""
-    s <- as.character(index)
-    RangeNSBS_idx <- which(vapply(index, is, logical(1), "RangeNSBS"))
-    s[RangeNSBS_idx] <- lapply(index[RangeNSBS_idx],
+    stopifnot(is.list(Nindex))
+    missing_idx <- which(S4Vectors:::sapply_isNULL(Nindex))
+    Nindex[missing_idx] <- ""
+    s <- as.character(Nindex)
+    RangeNSBS_idx <- which(vapply(Nindex, is, logical(1), "RangeNSBS"))
+    s[RangeNSBS_idx] <- lapply(Nindex[RangeNSBS_idx],
         function(i) paste0(i@subscript, collapse=":")
     )
     if (!is.null(dimnames)) {
-        stopifnot(is.list(dimnames), length(index) == length(dimnames))
+        stopifnot(is.list(dimnames), length(Nindex) == length(dimnames))
         usename_idx <- which(nzchar(s) &
-                             lengths(index) == 1L &
+                             lengths(Nindex) == 1L &
                              lengths(dimnames) != 0L)
         s[usename_idx] <- mapply(`[`, dimnames[usename_idx],
-                                      index[usename_idx],
+                                      Nindex[usename_idx],
                                       SIMPLIFY=FALSE)
     }
     paste0(s, collapse=", ")
 }
 
 ### Used in HDF5Array!
-### Return the lengths of the subscripts in 'index'. The length of a
+### Return the lengths of the subscripts in 'Nindex'. The length of a
 ### missing subscript is the length it would have after expansion.
-get_index_lengths <- function(index, dim)
+get_Nindex_lengths <- function(Nindex, dim)
 {
-    stopifnot(is.list(index), length(index) == length(dim))
-    ans <- lengths(index)
-    missing_idx <- which(S4Vectors:::sapply_isNULL(index))
+    stopifnot(is.list(Nindex), length(Nindex) == length(dim))
+    ans <- lengths(Nindex)
+    missing_idx <- which(S4Vectors:::sapply_isNULL(Nindex))
     ans[missing_idx] <- dim[missing_idx]
     ans
 }
 
-### 'dimnames' must be NULL or a list of the same length as 'index'.
-### 'along' must be an integer >= 1 and <= length(index).
-get_index_names_along <- function(index, dimnames, along)
+### 'dimnames' must be NULL or a list of the same length as 'Nindex'.
+### 'along' must be an integer >= 1 and <= length(Nindex).
+get_Nindex_names_along <- function(Nindex, dimnames, along)
 {
-    stopifnot(is.list(index))
-    i <- index[[along]]
+    stopifnot(is.list(Nindex))
+    i <- Nindex[[along]]
     if (is.null(i))
         return(dimnames[[along]])
     names(i)
 }
 
 ### Used in HDF5Array!
-### Return a "multidimensional subsetting index".
-make_index_from_block_ranges <- function(block_ranges, dim,
-                                         expand.RangeNSBS=FALSE)
+### Return an Nindex ("multidimensional subsetting index").
+make_Nindex_from_block_ranges <- function(block_ranges, dim,
+                                          expand.RangeNSBS=FALSE)
 {
     stopifnot(is(block_ranges, "Ranges"),
               is.integer(dim))
@@ -109,7 +109,7 @@ make_index_from_block_ranges <- function(block_ranges, dim,
     stopifnot(length(block_ranges) == ndim,
               all(block_offsets >= 1L),
               all(block_offsets + block_dim - 1L <= dim))
-    index <- vector(mode="list", length=ndim)
+    Nindex <- vector(mode="list", length=ndim)
     is_not_missing <- block_dim < dim
     if (expand.RangeNSBS) {
         expand_idx <- which(is_not_missing)
@@ -117,7 +117,7 @@ make_index_from_block_ranges <- function(block_ranges, dim,
         is_width1 <- block_dim == 1L
         expand_idx <- which(is_not_missing & is_width1)
         RangeNSBS_idx <- which(is_not_missing & !is_width1)
-        index[RangeNSBS_idx] <- lapply(RangeNSBS_idx,
+        Nindex[RangeNSBS_idx] <- lapply(RangeNSBS_idx,
             function(i) {
                 start <- block_offsets[[i]]
                 end <- start + block_dim[[i]] - 1L
@@ -128,17 +128,17 @@ make_index_from_block_ranges <- function(block_ranges, dim,
             }
         )
     }
-    index[expand_idx] <- as.list(block_ranges[expand_idx])
-    index
+    Nindex[expand_idx] <- as.list(block_ranges[expand_idx])
+    Nindex
 }
 
-### Convert "multidimensional subsetting index" to "linear index".
-to_linear_index <- function(index, dim)
+### Convert 'Nindex' to a "linear index".
+to_linear_index <- function(Nindex, dim)
 {
-    stopifnot(is.list(index), is.integer(dim), length(index) == length(dim))
+    stopifnot(is.list(Nindex), is.integer(dim), length(Nindex) == length(dim))
     i <- p <- 1L
-    for (n in seq_along(index)) {
-        idx <- index[[n]]
+    for (n in seq_along(Nindex)) {
+        idx <- Nindex[[n]]
         d <- dim[[n]]
         if (is.null(idx))
             idx <- seq_len(d)
@@ -173,7 +173,7 @@ to_linear_index <- function(index, dim)
 ### propagated to the 1st vector.
 get_part_index <- function(idx, breakpoints)
 {
-    part_idx <- findInterval(idx - 1L, breakpoints) + 1L
+    part_idx <- findInterval(idx, breakpoints + 1L) + 1L
     names(part_idx) <- names(breakpoints)[part_idx]
     rel_idx <- idx - .breakpoints2offsets(unname(breakpoints))[part_idx]
     list(part_idx, rel_idx)
