@@ -118,8 +118,8 @@ setMethod("matrixClass", "RleArray", function(x) "RleMatrix")
 
 .validate_RleArray <- function(x)
 {
-    if (!is(x@seed, "RleArraySeed"))
-        return(wmsg("'x@seed' must be an RleArraySeed object"))
+    if (!is(seed(x), "RleArraySeed"))
+        return(wmsg("'seed(x)' must be an RleArraySeed object"))
     if (!is_pristine(x))
         return(wmsg("'x' carries delayed operations on it"))
     TRUE

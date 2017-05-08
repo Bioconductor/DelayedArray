@@ -133,6 +133,15 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### seed()
+###
+
+setGeneric("seed", function(x) standardGeneric("seed"))
+
+setMethod("seed", "DelayedArray", function(x) x@seed)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Pristine objects
 ###
 ### A pristine DelayedArray object is an object that does not carry any
@@ -147,7 +156,7 @@ is_pristine <- function(x)
 {
     ## 'x' should not carry any delayed operation on it, that is, all the
     ## DelayedArray slots must be in their original state.
-    x2 <- new_DelayedArray(x@seed)
+    x2 <- new_DelayedArray(seed(x))
     class(x) <- class(x2) <- "DelayedArray"
     identical(x, x2)
 }
@@ -158,7 +167,7 @@ remove_pristine_DelayedArray_wrapping <- function(x)
 {
     if (!(is(x, "DelayedArray") && is_pristine(x)))
         return(x)
-    remove_pristine_DelayedArray_wrapping(x@seed)
+    remove_pristine_DelayedArray_wrapping(seed(x))
 }
 
 ### When a pristine DelayedArray derived object (i.e. an HDF5Array object) is
@@ -180,7 +189,7 @@ downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 
 .get_DelayedArray_dim_before_transpose <- function(x)
 {
-    get_Nindex_lengths(x@index, dim(x@seed))[x@metaindex]
+    get_Nindex_lengths(x@index, dim(seed(x)))[x@metaindex]
 }
 .get_DelayedArray_dim <- function(x)
 {
@@ -303,7 +312,7 @@ setMethod("drop", "DelayedArray",
 
 .get_DelayedArray_dimnames_before_transpose <- function(x)
 {
-    x_seed_dimnames <- dimnames(x@seed)
+    x_seed_dimnames <- dimnames(seed(x))
     ans <- lapply(x@metaindex,
                   get_Nindex_names_along,
                     Nindex=x@index,
@@ -347,7 +356,7 @@ setMethod("dimnames", "DelayedArray", .get_DelayedArray_dimnames)
     ## We quickly identify a no-op situation. While doing so, we are careful to
     ## not trigger a copy of the "index" slot (which can be big). The goal is
     ## to make a no-op like 'dimnames(x) <- dimnames(x)' as fast as possible.
-    x_seed_dimnames <- dimnames(x@seed)
+    x_seed_dimnames <- dimnames(seed(x))
     touched_midx <- which(mapply(
         function(N, names)
             !identical(
@@ -362,7 +371,7 @@ setMethod("dimnames", "DelayedArray", .get_DelayedArray_dimnames)
 
     x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
     touched_idx <- x@metaindex[touched_midx]
-    x_seed_dim <- dim(x@seed)
+    x_seed_dim <- dim(seed(x))
     x@index[touched_idx] <- mapply(
         function(N, names) {
             i <- x@index[[N]]
@@ -417,8 +426,8 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     stopifnot(is.list(user_Nindex))
     x_index <- x@index
     x_ndim <- length(x@metaindex)
-    x_seed_dim <- dim(x@seed)
-    x_seed_dimnames <- dimnames(x@seed)
+    x_seed_dim <- dim(seed(x))
+    x_seed_dimnames <- dimnames(seed(x))
     x_delayed_ops <- x@delayed_ops
     for (n in seq_along(user_Nindex)) {
         subscript <- user_Nindex[[n]]
@@ -834,7 +843,7 @@ setMethod("t", "DelayedArray",
 {
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
-    ans <- subset_seed_as_array(x@seed, unname(x@index))
+    ans <- subset_seed_as_array(seed(x), unname(x@index))
     dim(ans) <- .get_DelayedArray_dim_before_transpose(x)
     ans <- .execute_delayed_ops(ans, x@delayed_ops)
     dimnames(ans) <- .get_DelayedArray_dimnames_before_transpose(x)

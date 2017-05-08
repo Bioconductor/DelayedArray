@@ -137,7 +137,7 @@ export(
 ###
 
 export(
-    matrixClass, DelayedArray, subset_seed_as_array, type,
+    matrixClass, DelayedArray, seed, subset_seed_as_array, type,
     realize,
     write_to_sink, close,
     pmax2, pmin2, apply,
@@ -146,7 +146,7 @@ export(
 
 ### Exactly the same list as above.
 exportMethods(
-    matrixClass, DelayedArray, subset_seed_as_array, type,
+    matrixClass, DelayedArray, seed, subset_seed_as_array, type,
     realize,
     write_to_sink, close,
     pmax2, pmin2, apply,
