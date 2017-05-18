@@ -14,6 +14,9 @@
 \alias{DelayedArray,ANY-method}
 \alias{DelayedArray,DelayedArray-method}
 
+\alias{seed}
+\alias{seed,DelayedArray-method}
+
 \alias{dim,DelayedArray-method}
 \alias{dim<-,DelayedArray-method}
 \alias{length,DelayedArray-method}
@@ -87,11 +90,15 @@
 
 \usage{
 DelayedArray(seed)  # constructor function
+seed(x)             # seed getter
 }
 
 \arguments{
   \item{seed}{
     An array-like object.
+  }
+  \item{x}{
+    A DelayedArray object.
   }
 }
 
@@ -177,12 +184,16 @@ DelayedArray(seed)  # constructor function
 a <- array(runif(1500000), dim=c(10000, 30, 5))
 A <- DelayedArray(a)
 A
+## The seed of A is treated as a "read-only" object so won't change when
+## we start operating on A:
+stopifnot(identical(a, seed(A)))
 
 ## Multi-dimensional single bracket subsetting:
 m <- a[11:20 , 5, ]        # a matrix
 A[11:20 , 5, ]             # not a DelayedMatrix (still 3 dimensions)
 M <- drop(A[11:20 , 5, ])  # a DelayedMatrix object
 stopifnot(identical(m, as.array(M)))
+stopifnot(identical(a, seed(M)))
 
 ## Linear single bracket subsetting:
 A[11:20]
@@ -214,9 +225,11 @@ score <- Rle(sample(100, nrun(cov), replace=TRUE), runLength(cov))
 DF <- DataFrame(cov, score)
 A2 <- DelayedArray(DF)
 A2
+seed(A2)  # 'DF'
 
 t(A2)  # delayed transpose is very fast and very memory efficient because
        # the matrix data is not copied
+stopifnot(identical(DF, seed(t(A2))))
 colSums(A2)
 
 ## ---------------------------------------------------------------------
@@ -226,6 +239,7 @@ library(HDF5Array)
 A3 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file
 A3
 is(A3, "DelayedArray")     # TRUE
+seed(A3)                   # a HDF5ArraySeed object
 
 B3 <- toto(A3)             # very fast! (operations are delayed)
 
@@ -244,6 +258,7 @@ as(B3, "HDF5Array")        # "realize" 'B3' on disk
 ## If this is just an intermediate result, you can either keep going
 ## with B3 or replace it with its "realized" version:
 B3 <- as(B3, "HDF5Array")  # no more delayed operations on new 'B3'
+seed(B3)
 
 ## For convenience, realize() can be used instead of explicit coercion.
 ## The current "realization backend" controls where realization
