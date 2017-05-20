@@ -91,6 +91,7 @@
 \usage{
 DelayedArray(seed)  # constructor function
 seed(x)             # seed getter
+type(x)
 }
 
 \arguments{
@@ -98,7 +99,8 @@ seed(x)             # seed getter
     An array-like object.
   }
   \item{x}{
-    A DelayedArray object.
+    A DelayedArray object. (Can also be an ordinary array in case of
+    \code{type}.)
   }
 }
 
@@ -122,6 +124,10 @@ seed(x)             # seed getter
 \section{Accessors}{
   DelayedArray objects support the same set of getters as ordinary arrays
   i.e. \code{dim()}, \code{length()}, and \code{dimnames()}.
+  In addition, they support \code{type()}, which is the DelayedArray
+  equivalent of \code{typeof()} or \code{storage.mode()} for ordinary
+  arrays. Note that, for convenience and consistency, \code{type()} also
+  works on ordinary arrays.
 
   Only \code{dimnames()} is supported as a setter.
 }
@@ -187,6 +193,7 @@ A
 ## The seed of A is treated as a "read-only" object so won't change when
 ## we start operating on A:
 stopifnot(identical(a, seed(A)))
+type(A)
 
 ## Multi-dimensional single bracket subsetting:
 m <- a[11:20 , 5, ]        # a matrix
