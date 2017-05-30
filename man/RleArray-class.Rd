@@ -32,6 +32,12 @@
 \alias{coerce,RleRealizationSink,DelayedArray-method}
 \alias{coerce,ANY,RleArray-method}
 \alias{coerce,DelayedArray,RleArray-method}
+\alias{coerce,DelayedMatrix,RleMatrix-method}
+
+\alias{coerce,DataFrame,RleMatrix-method}
+\alias{coerce,DataFrame,RleArray-method}
+\alias{coerce,RleMatrix,DataFrame-method}
+\alias{coerce,DelayedMatrix,DataFrame-method}
 
 \title{RleArray objects}
 
@@ -79,6 +85,8 @@ RleArray(rle, dim, dimnames=NULL)  # constructor function
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
+    \item \link[S4Vectors]{DataFrame} objects in the \pkg{S4Vectors} package.
+
     \item \link[base]{array} objects in base R.
   }
 }
@@ -111,6 +119,10 @@ stopifnot(identical(b, as.array(B)))
 cs <- colSums(b)
 CS <- colSums(B)
 stopifnot(identical(cs, CS))
+
+## Coercion of a DelayedMatrix object to DataFrame produces a DataFrame
+## object with Rle columns:
+as(B, "DataFrame")
 }
 \keyword{methods}
 \keyword{classes}
