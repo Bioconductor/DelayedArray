@@ -179,6 +179,8 @@ type(x)
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
+    \item \link[S4Vectors]{DataFrame} objects in the \pkg{S4Vectors} package.
+
     \item \link[base]{array} objects in base R.
   }
 }
@@ -234,9 +236,14 @@ A2 <- DelayedArray(DF)
 A2
 seed(A2)  # 'DF'
 
-t(A2)  # delayed transpose is very fast and very memory efficient because
-       # the matrix data is not copied
-stopifnot(identical(DF, seed(t(A2))))
+## Coercion of a DelayedMatrix object to DataFrame produces a DataFrame
+## object with Rle columns:
+as(A2, "DataFrame")
+stopifnot(identical(DF, as(A2, "DataFrame")))
+
+t(A2)  # transposition is delayed so is very fast and very memory
+       # efficient
+stopifnot(identical(DF, seed(t(A2))))  # the "seed" is still the same
 colSums(A2)
 
 ## ---------------------------------------------------------------------

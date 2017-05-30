@@ -222,8 +222,44 @@ setAs("RleRealizationSink", "DelayedArray",
 
 setAs("ANY", "RleArray", .as_RleArray)
 
-### Automatic coercion method from DelayedArray to RleArray silently returns
-### a broken object (unfortunately these dummy automatic coercion methods
-### don't bother to validate the object they return). So we overwrite it.
+### Automatic coercion methods from DelayedArray to RleArray and from
+### DelayedMatrix to RleMatrix silently return broken objects (unfortunately
+### these dummy automatic coercion methods don't bother to validate the object
+### they return). So we overwrite them.
 setAs("DelayedArray", "RleArray", .as_RleArray)
+setAs("DelayedMatrix", "RleMatrix", .as_RleArray)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Switching between DataFrame and RleMatrix representation
+###
+
+### From DataFrame to RleMatrix.
+.from_DataFrame_to_RleMatrix <- function(from)
+{
+    as(DelayedArray(from), "RleMatrix")
+}
+
+setAs("DataFrame", "RleMatrix", .from_DataFrame_to_RleMatrix)
+setAs("DataFrame", "RleArray", .from_DataFrame_to_RleMatrix)
+
+### From RleMatrix to DataFrame.
+.from_RleMatrix_to_DataFrame <- function(from)
+{
+    ## We mangle the colnames exactly like as.data.frame() would do.
+    ans_colnames <- colnames(as.data.frame(from[0L, ]))
+    partitioning <- PartitioningByEnd(nrow(from) * seq_len(ncol(from)),
+                                      names=ans_colnames)
+    listData <- as.list(relist(seed(from)@rle, partitioning))
+    new("DataFrame", listData=listData,
+                     nrows=nrow(from),
+                     rownames=rownames(from))
+}
+
+setAs("RleMatrix", "DataFrame", .from_RleMatrix_to_DataFrame)
+
+### From DelayedMatrix to DataFrame.
+setAs("DelayedMatrix", "DataFrame",
+    function(from) as(as(from, "RleMatrix"), "DataFrame")
+)
 
