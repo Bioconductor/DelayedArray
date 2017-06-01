@@ -124,7 +124,8 @@
         s1 <- x_colnames[idx1]
         s2 <- x_colnames[idx2]
     }
-    format(c(s1, ".", s2), justify=justify)
+    ans <- format(c(s1, s2), justify=justify)
+    c(head(ans, n=length(s1)), "...", tail(ans, n=length(s2)))
 }
 
 .rsplit_2D_array_data <- function(x, m1, m2, justify)
@@ -179,6 +180,24 @@
 
 .prepare_2D_array_sample <- function(x, m1, m2, n1, n2, justify)
 {
+    ## An attempt at reducing the nb of columns to display when 'x' has
+    ## dimnames so the object fits in getOption("width"). Won't necessarily
+    ## pick up the optimal nb of columns so should be revisited at some point.
+    x_rownames <- rownames(x)
+    if (is.null(x_rownames)) {
+        rownames_width <- 6L
+    } else {
+        rownames_width <- nchar(x_rownames[[1L]])
+    }
+    half_width <- (getOption("width") - rownames_width) / 2
+    x_colnames <- colnames(x)
+    if (!is.null(x_colnames)) {
+        colnames1 <- head(x_colnames, n=n1)
+        colnames2 <- tail(x_colnames, n=n2)
+        n1 <- pmax(sum(cumsum(nchar(colnames1) + 1L) < half_width), 1L)
+        n2 <- pmax(sum(cumsum(nchar(colnames2) + 1L) < half_width), 1L)
+    }
+
     x_nrow <- nrow(x)
     x_ncol <- ncol(x)
     if (x_nrow <= m1 + m2 + 1L) {
