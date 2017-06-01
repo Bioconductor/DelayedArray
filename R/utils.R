@@ -133,19 +133,25 @@ make_Nindex_from_block_ranges <- function(block_ranges, dim,
 }
 
 ### Convert 'Nindex' to a "linear index".
+### Return the "linear index" as an integer vector if prod(dim) <=
+### .Machine$integer.max, otherwise as a vector of doubles.
 to_linear_index <- function(Nindex, dim)
 {
     stopifnot(is.list(Nindex), is.integer(dim), length(Nindex) == length(dim))
-    i <- p <- 1L
-    for (n in seq_along(Nindex)) {
-        idx <- Nindex[[n]]
-        d <- dim[[n]]
-        if (is.null(idx))
-            idx <- seq_len(d)
-        i <- rep((idx - 1L) * p, each=length(i)) + i
+    if (prod(dim) <= .Machine$integer.max) {
+        ans <- p <- 1L
+    } else {
+        ans <- p <- 1
+    }
+    for (along in seq_along(Nindex)) {
+        d <- dim[[along]]
+        i <- Nindex[[along]]
+        if (is.null(i))
+            i <- seq_len(d)
+        ans <- rep((i - 1L) * p, each=length(ans)) + ans
         p <- p * d
     }
-    i
+    ans
 }
 
 
