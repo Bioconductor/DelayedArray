@@ -422,6 +422,7 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
         stop("'arr.ind' must be TRUE or FALSE")
     if (!isTRUEorFALSE(useNames))
         stop("'useNames' must be TRUE or FALSE")
+    x_dim <- dim(x)
     APPLY <- which
     COMBINE <- function(b, subarray, init, reduced) {
         if (length(reduced) != 0L) {
@@ -432,17 +433,22 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
         init$offset <- init$offset + length(subarray)
         init
     }
-    init <- list(parts=new.env(parent=emptyenv()), offset=0L)
+    offset <- 0L
+    ## If the array is longer than 2^31, we use an offset of type double to
+    ## avoid integer overflow.
+    if (prod(x_dim) > .Machine$integer.max)
+        offset <- as.double(offset)
+    init <- list(parts=new.env(parent=emptyenv()), offset=offset)
 
     res <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
     if (length(res$parts) == 0L) {
-        ans <- integer(0)
+        ans <- if (is.integer(offset)) integer(0) else numeric(0)
     } else {
         ans <- unlist(as.list(res$parts, sorted=TRUE),
                       recursive=FALSE, use.names=FALSE)
     }
     if (arr.ind)
-        ans <- arrayInd(ans, dim(x), dimnames(x), useNames=useNames)
+        ans <- arrayInd(ans, x_dim, dimnames(x), useNames=useNames)
     ans
 }
 
