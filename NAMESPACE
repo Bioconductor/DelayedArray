@@ -14,7 +14,8 @@ exportClasses(
     ArrayBlocks,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
-    RleArray, RleMatrix, RleRealizationSink
+    RleArraySeed, SolidRleArraySeed, RleRealizationSink, ChunkedRleArraySeed,
+    RleArray, RleMatrix
 )
 
 
@@ -127,8 +128,7 @@ exportMethods(
 export(
     ArrayBlocks,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
-    RealizationSink, arrayRealizationSink,
-    RleArray, RleRealizationSink
+    RleArray
 )
 
 

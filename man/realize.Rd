@@ -11,7 +11,6 @@
 
 \alias{class:arrayRealizationSink}
 \alias{arrayRealizationSink-class}
-\alias{arrayRealizationSink}
 
 \alias{write_to_sink,array,arrayRealizationSink-method}
 \alias{coerce,arrayRealizationSink,DelayedArray-method}
@@ -22,8 +21,6 @@
 
 \alias{realize}
 \alias{realize,ANY-method}
-
-\alias{RealizationSink}
 
 \title{Realize a DelayedArray object}
 

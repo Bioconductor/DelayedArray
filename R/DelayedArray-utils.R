@@ -47,17 +47,17 @@ setClass("ConformableSeedCombiner",
 {
     ## 'seeds' slot.
     if (length(x@seeds) == 0L)
-        return(wmsg("'x@seeds' cannot be empty"))
+        return(wmsg2("'x@seeds' cannot be empty"))
     if (!.objects_are_conformable_arrays(x@seeds))
-        return(wmsg("'x@seeds' must be a list of conformable ",
-                    "array-like objects"))
+        return(wmsg2("'x@seeds' must be a list of conformable ",
+                     "array-like objects"))
     ## 'COMBINING_OP' slot.
     if (!isSingleString(x@COMBINING_OP))
-        return(wmsg("'x@COMBINING_OP' must be a single string"))
+        return(wmsg2("'x@COMBINING_OP' must be a single string"))
     OP <- try(match.fun(x@COMBINING_OP), silent=TRUE)
     if (is(OP, "try-error"))
-        return(wmsg("the name in 'x@COMBINING_OP' (\"", x@COMBINING_OP,
-                    "\") must refer to a known n-ary operator"))
+        return(wmsg2("the name in 'x@COMBINING_OP' (\"", x@COMBINING_OP,
+                     "\") must refer to a known n-ary operator"))
     TRUE
 }
 

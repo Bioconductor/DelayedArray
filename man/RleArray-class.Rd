@@ -1,11 +1,28 @@
 \name{RleArray-class}
 \docType{class}
 
+\alias{class:RleArraySeed}
+\alias{RleArraySeed-class}
+\alias{class:SolidRleArraySeed}
+\alias{SolidRleArraySeed-class}
+\alias{class:RleRealizationSink}
+\alias{RleRealizationSink-class}
+\alias{class:ChunkedRleArraySeed}
+\alias{ChunkedRleArraySeed-class}
+
 \alias{dim,RleArraySeed-method}
 \alias{length,RleArraySeed-method}
 \alias{dimnames,RleArraySeed-method}
 
-\alias{subset_seed_as_array,RleArraySeed-method}
+\alias{coerce,SolidRleArraySeed,Rle-method}
+\alias{coerce,RleRealizationSink,Rle-method}
+
+\alias{subset_seed_as_array,SolidRleArraySeed-method}
+\alias{subset_seed_as_array,ChunkedRleArraySeed-method}
+
+\alias{write_to_sink,Rle,RleRealizationSink-method}
+\alias{coerce,RleRealizationSink,ChunkedRleArraySeed-method}
+\alias{coerce,ChunkedRleArraySeed,SolidRleArraySeed-method}
 
 \alias{class:RleArray}
 \alias{RleArray-class}
@@ -21,13 +38,7 @@
 \alias{DelayedArray,RleArraySeed-method}
 \alias{RleArray}
 
-\alias{class:RleRealizationSink}
-\alias{RleRealizationSink-class}
-\alias{RleRealizationSink}
-
 \alias{write_to_sink,array,RleRealizationSink-method}
-
-\alias{coerce,RleRealizationSink,RleArraySeed-method}
 \alias{coerce,RleRealizationSink,RleArray-method}
 \alias{coerce,RleRealizationSink,DelayedArray-method}
 \alias{coerce,ANY,RleArray-method}
@@ -48,7 +59,7 @@
 }
 
 \usage{
-RleArray(rle, dim, dimnames=NULL)  # constructor function
+RleArray(rle, dim, dimnames=NULL, chunksize=NULL)  # constructor function
 }
 
 \arguments{
@@ -63,6 +74,9 @@ RleArray(rle, dim, dimnames=NULL)  # constructor function
     Either \code{NULL} or the names for the dimensions. This must a list of
     length the number of dimensions. Each list element must be either
     \code{NULL} or a character vector along the corresponding dimension.
+  }
+  \item{chunksize}{
+    Experimental. Don't use!
   }
 }
 

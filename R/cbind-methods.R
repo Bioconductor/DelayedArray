@@ -29,12 +29,12 @@ setClass("SeedBinder",
 .validate_SeedBinder <- function(x)
 {
     if (length(x@seeds) == 0L)
-        return(wmsg("'x@seeds' cannot be empty"))
+        return(wmsg2("'x@seeds' cannot be empty"))
     if (!(isSingleInteger(x@along) && x@along > 0L))
-        return(wmsg("'x@along' must be a single positive integer"))
+        return(wmsg2("'x@along' must be a single positive integer"))
     dims <- IRanges:::get_dims_to_bind(x@seeds, x@along)
     if (is.character(dims))
-        return(wmsg(dims))
+        return(wmsg2(dims))
     TRUE
 }
 
