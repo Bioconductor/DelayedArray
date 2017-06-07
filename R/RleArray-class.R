@@ -178,9 +178,11 @@ setAs("SolidRleArraySeed", "Rle", function(from) from@rle)
 setAs("RleRealizationSink", "Rle",
     function(from)
     {
+        ans <- Rle(match.fun(from@type)(0))
         if (length(from@chunks) == 0L)
-            return(Rle(match.fun(get(from@type))(0)))
-        do.call("c", unname(as.list(from@chunks, sorted=TRUE)))
+            return(ans)
+        list_of_Rles <- c(list(ans), unname(as.list(from@chunks, sorted=TRUE)))
+        do.call("c", list_of_Rles)
     }
 )
 
@@ -243,9 +245,8 @@ setMethod("subset_seed_as_array", "SolidRleArraySeed",
 {
     seed_dim <- dim(seed)
     i <- to_linear_index(index, seed_dim)
-    if (length(i) == 0L) {
-        ans <- match.fun(seed@type)(0)
-    } else {
+    ans <- match.fun(seed@type)(0)
+    if (length(i) != 0L) {
         part_idx <- get_part_index(i, seed@breakpoints)
         split_part_idx <- split_part_index(part_idx, length(seed@breakpoints))
         chunk_idx <- which(lengths(split_part_idx) != 0L)  # chunks to visit
@@ -257,6 +258,7 @@ setMethod("subset_seed_as_array", "SolidRleArraySeed",
             i2 <- as.integer(split_part_idx[[i1]])
             S4Vectors:::extract_positions_from_Rle(chunk, i2, decoded=TRUE)
         })
+        res <- c(list(ans), res)
         ans <- unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
     }
     dim(ans) <- get_Nindex_lengths(index, seed_dim)
@@ -283,7 +285,17 @@ RleRealizationSink <- function(dim, dimnames=NULL, type="double")
 
 ### Ignores 'offsets'.
 setMethod("write_to_sink", c("Rle", "RleRealizationSink"),
-    function(x, sink, offsets=NULL) .append_chunk(sink@chunks, x)
+    function(x, sink, offsets=NULL)
+    {
+        if (sink@type == "integer") {
+            run_values <- runValue(x)
+            ## Replace integer-Rle with raw-Rle if this doesn't loose
+            ## information.
+            if (!S4Vectors:::anyMissingOrOutside(run_values, 0L, 255L))
+                runValue(x) <- as.raw(run_values)
+        }
+        .append_chunk(sink@chunks, x)
+    }
 )
 
 ### This coercion is used by the RleArraySeed() constructor and by the
