@@ -79,55 +79,44 @@ get_block_lengths <- function(blocks)
     rep.int(lens, .get_ArrayBlocks_outer_length(blocks))
 }
 
-### Return an IRanges object with 1 range per dimension.
-get_block_ranges <- function(blocks, i)
-{
-    nblock <- length(blocks)
-    stopifnot(isSingleInteger(i), i >= 1L, i <= nblock)
-
-    ndim <- length(blocks@dim)
-    ans <- IRanges(rep.int(1L, ndim), blocks@dim)
-
-    if (blocks@N > ndim)
-        return(ans)
-
-    i <- i - 1L
-    if (blocks@N < ndim) {
-        inner_len <- .get_ArrayBlocks_inner_length(blocks)
-        i1 <- i %% inner_len
-        i2 <- i %/% inner_len
-    } else {
-        i1 <- i
-    }
-
-    k1 <- i1 * blocks@by
-    k2 <- k1 + blocks@by
-    k1 <- k1 + 1L
-    upper_bound <- blocks@dim[[blocks@N]]
-    if (k2 > upper_bound)
-        k2 <- upper_bound
-    start(ans)[[blocks@N]] <- k1
-    end(ans)[[blocks@N]] <- k2
-
-    if (blocks@N < ndim) {
-        outer_dim <- blocks@dim[(blocks@N + 1L):ndim]
-        subindex <- arrayInd(i2 + 1L, outer_dim)
-        ans[(blocks@N + 1L):ndim] <- IRanges(subindex, width=1L)
-    }
-    ans
-}
-
-get_array_block_Nindex <- function(blocks, i)
-{
-    make_Nindex_from_block_ranges(get_block_ranges(blocks, i), blocks@dim)
-}
-
+### Return an ArrayBlock object.
 setMethod("getListElement", "ArrayBlocks",
     function(x, i, exact=TRUE)
     {
         i <- normalizeDoubleBracketSubscript(i, x, exact=exact, 
                                              error.if.nomatch=TRUE)
-        get_array_block_Nindex(x, i)
+
+        ## We start with a block that covers the whole array.
+        ans <- ArrayBlock(x@dim)
+
+        ndim <- length(x@dim)
+        if (x@N > ndim)
+            return(ans)
+
+        i <- i - 1L
+        if (x@N < ndim) {
+            inner_len <- .get_ArrayBlocks_inner_length(x)
+            i1 <- i %% inner_len
+            i2 <- i %/% inner_len
+        } else {
+            i1 <- i
+        }
+
+        k1 <- i1 * x@by
+        k2 <- k1 + x@by
+        k1 <- k1 + 1L
+        upper_bound <- x@dim[[x@N]]
+        if (k2 > upper_bound)
+            k2 <- upper_bound
+        start(ans@ranges)[[x@N]] <- k1
+        end(ans@ranges)[[x@N]] <- k2
+
+        if (x@N < ndim) {
+            outer_dim <- x@dim[(x@N + 1L):ndim]
+            subindex <- arrayInd(i2 + 1L, outer_dim)
+            ans@ranges[(x@N + 1L):ndim] <- IRanges(subindex, width=1L)
+        }
+        ans
     }
 )
 
@@ -139,16 +128,15 @@ setMethod("show", "ArrayBlocks",
             "of length <= ", object@max_block_len, " on a ",
             dim_in1string, " array:\n", sep="")
         for (i in seq_along(object)) {
-            Nindex <- object[[i]]
-            cat("[[", i, "]]: [", Nindex_as_string(Nindex), "]\n",
-                sep="")
+            s <- make_string_from_ArrayBlock(object[[i]], with.brackets=TRUE)
+            cat("[[", i, "]]: ", s, "\n", sep="")
         }
     }
 )
 
 extract_array_block <- function(x, blocks, i)
 {
-    Nindex <- get_array_block_Nindex(blocks, i)
+    Nindex <- makeNindexFromArrayBlock(blocks[[i]])
     subset_by_Nindex(x, Nindex)
 }
 

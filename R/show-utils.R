@@ -252,8 +252,10 @@
 {
     x_dimnames <- dimnames(x)
     for (i in idx) {
-        Nindex <- get_array_block_Nindex(blocks, i)
-        cat(Nindex_as_string(Nindex, x_dimnames), "\n", sep="")
+        block <- blocks[[i]]
+        s <- make_string_from_ArrayBlock(block, dimnames=x_dimnames)
+        cat(s, "\n", sep="")
+        Nindex <- makeNindexFromArrayBlock(block)
         slice <- subset_by_Nindex(x, Nindex)
         dim(slice) <- dim(slice)[1:2]
         .print_2D_array_data(slice, m1, m2, n1, n2)

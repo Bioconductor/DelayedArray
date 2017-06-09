@@ -481,8 +481,8 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     ## We want to walk only on the blocks that we actually need to visit so we
     ## don't use block_APPLY() or family because they walk on all the blocks.
 
-    block_len <- get_block_length(type(x))
-    blocks <- ArrayBlocks(dim(x), block_len)
+    max_block_len <- get_max_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), max_block_len)
     nblock <- length(blocks)
 
     breakpoints <- cumsum(get_block_lengths(blocks))
@@ -493,7 +493,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
             if (get_verbose_block_processing())
                 message("Visiting block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            Nindex <- get_array_block_Nindex(blocks, b)
+            Nindex <- makeNindexFromArrayBlock(blocks[[b]])
             subarray <- subset_by_Nindex(x, Nindex)
             if (!is.array(subarray))
                 subarray <- as.array(subarray)

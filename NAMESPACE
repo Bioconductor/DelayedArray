@@ -11,7 +11,7 @@ import(matrixStats)
 ###
 
 exportClasses(
-    ArrayBlocks,
+    ArrayBlock, ArrayBlocks,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
     RleArraySeed, SolidRleArraySeed, RleRealizationSink, ChunkedRleArraySeed,
@@ -126,6 +126,7 @@ exportMethods(
 ###
 
 export(
+    ArrayBlock, makeNindexFromArrayBlock,
     ArrayBlocks,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     RleArray

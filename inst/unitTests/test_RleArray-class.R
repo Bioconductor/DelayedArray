@@ -1,3 +1,4 @@
+DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
 
 test_RleArray <- function()
 {
@@ -5,6 +6,7 @@ test_RleArray <- function()
     A1 <- RleArray(rle, c(62500, 400))
     A2 <- RleArray(rle, c(62500, 400), chunksize=1e8)
 
+    on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
     options(DelayedArray.block.size=10e6)
     rs1 <- rowSums(A1)
     rs2 <- rowSums(A2)

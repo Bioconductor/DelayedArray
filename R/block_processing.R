@@ -22,7 +22,7 @@ DEFAULT_BLOCK_SIZE <- 4500000L  # 4.5 Mb
 )
 
 ### Used in HDF5Array!
-get_block_length <- function(type)
+get_max_block_length <- function(type)
 {
     type_size <- .TYPE_SIZES[type]
     idx <- which(is.na(type_size))
@@ -67,26 +67,26 @@ set_verbose_block_processing <- function(verbose)
 }
 
 ### An lapply-like function.
-block_APPLY <- function(x, APPLY, ..., sink=NULL, block_len=NULL)
+block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
 {
     APPLY <- match.fun(APPLY)
-    if (is.null(block_len))
-        block_len <- get_block_length(type(x))
-    blocks <- ArrayBlocks(dim(x), block_len)
+    if (is.null(max_block_len))
+        max_block_len <- get_max_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), max_block_len)
     nblock <- length(blocks)
     lapply(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block_ranges <- get_block_ranges(blocks, b)
-            Nindex <- make_Nindex_from_block_ranges(block_ranges, blocks@dim)
+            block <- blocks[[b]]
+            Nindex <- makeNindexFromArrayBlock(block)
             subarray <- subset_by_Nindex(x, Nindex)
             if (!is.array(subarray))
                 subarray <- .as_array_or_matrix(subarray)
             block_ans <- APPLY(subarray, ...)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, offsets=start(block_ranges))
+                write_to_sink(block_ans, sink, offsets=start(block@ranges))
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -96,7 +96,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_len=NULL)
 }
 
 ### A mapply-like function for conformable arrays.
-block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
+block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
 {
     MAPPLY <- match.fun(MAPPLY)
     dots <- unname(list(...))
@@ -104,19 +104,19 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
     x_dim <- dims[ , 1L]
     if (!all(dims == x_dim))
         stop("non-conformable arrays")
-    if (is.null(block_len)) {
+    if (is.null(max_block_len)) {
         types <- unlist(lapply(dots, type))
-        block_len <- min(get_block_length(types))
+        max_block_len <- min(get_max_block_length(types))
     }
-    blocks <- ArrayBlocks(x_dim, block_len)
+    blocks <- ArrayBlocks(x_dim, max_block_len)
     nblock <- length(blocks)
     lapply(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block_ranges <- get_block_ranges(blocks, b)
-            Nindex <- make_Nindex_from_block_ranges(block_ranges, blocks@dim)
+            block <- blocks[[b]]
+            Nindex <- makeNindexFromArrayBlock(block)
             subarrays <- lapply(dots,
                 function(x) {
                     subarray <- subset_by_Nindex(x, Nindex)
@@ -126,7 +126,7 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
                 })
             block_ans <- do.call(MAPPLY, subarrays)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, offsets=start(block_ranges))
+                write_to_sink(block_ans, sink, offsets=start(block@ranges))
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -137,15 +137,15 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, block_len=NULL)
 
 ### A Reduce-like function.
 block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
-                                       BREAKIF=NULL, block_len=NULL)
+                                       BREAKIF=NULL, max_block_len=NULL)
 {
     APPLY <- match.fun(APPLY)
     COMBINE <- match.fun(COMBINE)
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
-    if (is.null(block_len))
-        block_len <- get_block_length(type(x))
-    blocks <- ArrayBlocks(dim(x), block_len)
+    if (is.null(max_block_len))
+        max_block_len <- get_max_block_length(type(x))
+    blocks <- ArrayBlocks(dim(x), max_block_len)
     nblock <- length(blocks)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
@@ -183,8 +183,8 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
     APPLY <- match.fun(APPLY)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
-    block_len <- max(get_block_length(type(x)), x_dim[[1L]])
-    block_APPLY(x, APPLY, ..., sink=sink, block_len=block_len)
+    max_block_len <- max(get_max_block_length(type(x)), x_dim[[1L]])
+    block_APPLY(x, APPLY, ..., sink=sink, max_block_len=max_block_len)
 }
 
 colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
@@ -194,8 +194,9 @@ colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
         stop("'x' must be a matrix-like object")
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
-    block_len <- max(get_block_length(type(x)), x_dim[[1L]])
-    block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, block_len=block_len)
+    max_block_len <- max(get_max_block_length(type(x)), x_dim[[1L]])
+    block_APPLY_and_COMBINE(x, APPLY, COMBINE, init,
+                            max_block_len=max_block_len)
 }
 
 

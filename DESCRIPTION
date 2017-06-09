@@ -8,16 +8,18 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, and ordinary arrays and
 	data frames.
-Version: 0.3.10
+Version: 0.3.11
 Encoding: UTF-8
 Author: Hervé Pagès
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
-Depends: R (>= 3.4), methods, BiocGenerics, S4Vectors (>= 0.15.3), IRanges, matrixStats
+Depends: R (>= 3.4), methods, matrixStats, BiocGenerics,
+	S4Vectors (>= 0.15.3), IRanges (>= 2.11.5)
 Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, BiocStyle
 License: Artistic-2.0
 Collate: utils.R
+	ArrayBlock-class.R
 	ArrayBlocks-class.R
 	show-utils.R
 	DelayedArray-class.R

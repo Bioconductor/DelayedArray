@@ -62,28 +62,6 @@ replace_by_Nindex <- function(x, Nindex, value)
     do.call(`[<-`, c(list(x), Nindex, list(value=value)))
 }
 
-Nindex_as_string <- function(Nindex, dimnames=NULL)
-{
-    stopifnot(is.list(Nindex))
-    missing_idx <- which(S4Vectors:::sapply_isNULL(Nindex))
-    Nindex[missing_idx] <- ""
-    s <- as.character(Nindex)
-    RangeNSBS_idx <- which(vapply(Nindex, is, logical(1), "RangeNSBS"))
-    s[RangeNSBS_idx] <- lapply(Nindex[RangeNSBS_idx],
-        function(i) paste0(i@subscript, collapse=":")
-    )
-    if (!is.null(dimnames)) {
-        stopifnot(is.list(dimnames), length(Nindex) == length(dimnames))
-        usename_idx <- which(nzchar(s) &
-                             lengths(Nindex) == 1L &
-                             lengths(dimnames) != 0L)
-        s[usename_idx] <- mapply(`[`, dimnames[usename_idx],
-                                      Nindex[usename_idx],
-                                      SIMPLIFY=FALSE)
-    }
-    paste0(s, collapse=", ")
-}
-
 ### Used in HDF5Array!
 ### Return the lengths of the subscripts in 'Nindex'. The length of a
 ### missing subscript is the length it would have after expansion.
@@ -105,42 +83,6 @@ get_Nindex_names_along <- function(Nindex, dimnames, along)
     if (is.null(i))
         return(dimnames[[along]])
     names(i)
-}
-
-### Used in HDF5Array!
-### Return an Nindex ("multidimensional subsetting index").
-make_Nindex_from_block_ranges <- function(block_ranges, dim,
-                                          expand.RangeNSBS=FALSE)
-{
-    stopifnot(is(block_ranges, "Ranges"),
-              is.integer(dim))
-    ndim <- length(dim)
-    block_offsets <- start(block_ranges)
-    block_dim <- width(block_ranges)
-    stopifnot(length(block_ranges) == ndim,
-              all(block_offsets >= 1L),
-              all(block_offsets + block_dim - 1L <= dim))
-    Nindex <- vector(mode="list", length=ndim)
-    is_not_missing <- block_dim < dim
-    if (expand.RangeNSBS) {
-        expand_idx <- which(is_not_missing)
-    } else {
-        is_width1 <- block_dim == 1L
-        expand_idx <- which(is_not_missing & is_width1)
-        RangeNSBS_idx <- which(is_not_missing & !is_width1)
-        Nindex[RangeNSBS_idx] <- lapply(RangeNSBS_idx,
-            function(i) {
-                start <- block_offsets[[i]]
-                end <- start + block_dim[[i]] - 1L
-                upper_bound <- dim[[i]]
-                new2("RangeNSBS", subscript=c(start, end),
-                                  upper_bound=upper_bound,
-                                  check=FALSE)
-            }
-        )
-    }
-    Nindex[expand_idx] <- as.list(block_ranges[expand_idx])
-    Nindex
 }
 
 ### Convert 'Nindex' to a "linear index".
