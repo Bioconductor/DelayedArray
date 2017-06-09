@@ -160,10 +160,10 @@ makeNindexFromArrayBlock <- function(block, expand.RangeNSBS=FALSE)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### BlockGrid objects
+### GridOfBlocks objects
 ###
 
-setClass("BlockGrid",
+setClass("GridOfBlocks",
     contains="List",
     representation(
         DIM="integer",       # Dimensions of the array the grid is on.
@@ -172,7 +172,7 @@ setClass("BlockGrid",
     prototype(elementType="ArrayBlock")
 )
 
-.validate_BlockGrid <- function(x)
+.validate_GridOfBlocks <- function(x)
 {
     msg <- .validate_DIM_slot(x)
     if (!isTRUE(msg))
@@ -191,12 +191,12 @@ setClass("BlockGrid",
     TRUE
 }
 
-setValidity2("BlockGrid", .validate_BlockGrid)
+setValidity2("GridOfBlocks", .validate_GridOfBlocks)
 
 ### If 'block_dim' is omitted, returns a grid made of only block covering the
 ### whole array the grid is on.
-BlockGrid <- function(dim, block_dim=dim)
-    new("BlockGrid", DIM=dim, block_dim=block_dim)
+GridOfBlocks <- function(dim, block_dim=dim)
+    new("GridOfBlocks", DIM=dim, block_dim=block_dim)
 
 ### Return the number of blocks along each dimension.
 .get_max_steps_along_each_dim <- function(x)
@@ -208,7 +208,7 @@ BlockGrid <- function(dim, block_dim=dim)
            x@DIM, x@block_dim)
 }
 
-setMethod("length", "BlockGrid",
+setMethod("length", "GridOfBlocks",
     function(x)
     {
         if (any(x@DIM == 0L))
@@ -229,7 +229,7 @@ setMethod("length", "BlockGrid",
 }
 
 ### Return an ArrayBlock object.
-setMethod("getListElement", "BlockGrid",
+setMethod("getListElement", "GridOfBlocks",
     function(x, i, exact=TRUE)
     {
         i <- normalizeDoubleBracketSubscript(i, x, exact=exact,
@@ -242,7 +242,7 @@ setMethod("getListElement", "BlockGrid",
     }
 )
 
-setMethod("show", "BlockGrid",
+setMethod("show", "GridOfBlocks",
     function(object)
     {
         DIM_in1string <- paste0(object@DIM, collapse=" x ")

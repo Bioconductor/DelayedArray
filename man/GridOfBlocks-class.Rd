@@ -1,4 +1,4 @@
-\name{ArrayBlock-class}
+\name{GridOfBlocks-class}
 \docType{class}
 
 \alias{class:ArrayBlock}
@@ -11,17 +11,17 @@
 
 \alias{makeNindexFromArrayBlock}
 
-\alias{class:BlockGrid}
-\alias{BlockGrid-class}
-\alias{BlockGrid}
+\alias{class:GridOfBlocks}
+\alias{GridOfBlocks-class}
+\alias{GridOfBlocks}
 
-\alias{length,BlockGrid-method}
-\alias{show,BlockGrid-method}
+\alias{length,GridOfBlocks-method}
+\alias{show,GridOfBlocks-method}
 
-\title{ArrayBlock and BlockGrid objects}
+\title{GridOfBlocks and ArrayBlock objects}
 
 \description{
-  ArrayBlock and BlockGrid objects are used internally to support block
+  GridOfBlocks and ArrayBlock objects are used internally to support block
   processing of array-like objects.
 }
 

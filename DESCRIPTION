@@ -19,7 +19,7 @@ Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, BiocStyle
 License: Artistic-2.0
 Collate: utils.R
-	ArrayBlock-class.R
+	GridOfBlocks-class.R
 	ArrayBlocks-class.R
 	show-utils.R
 	DelayedArray-class.R
