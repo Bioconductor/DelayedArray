@@ -1,14 +1,15 @@
 ### =========================================================================
-### ArrayBlock objects
+### ArrayViewport objects
 ### -------------------------------------------------------------------------
 
 
 ### We don't extend the IRanges class because we don't want to inherit the
 ### full Ranges API (most operations in that API would do the wrong thing on
-### ArrayBlock objects).
-setClass("ArrayBlock",
+### ArrayViewport objects).
+setClass("ArrayViewport",
     representation(
-        DIM="integer",    # Dimensions of the array this block belongs to.
+        DIM="integer",    # Dimensions of the "reference array" i.e. the
+                          # array the viewport belongs to.
         ranges="IRanges"  # Must be parallel to the 'DIM' slot.
     )
 )
@@ -36,21 +37,21 @@ setClass("ArrayBlock",
     if (length(x@ranges) != length(x@DIM))
         return(wmsg2("'DIM' and 'ranges' slots must have the same length"))
 
-    ## Check that the block is contained in the array it belongs to.
+    ## Check that the viewport is contained in the reference array.
     x_start <- start(x@ranges)
     x_end <- end(x@ranges)
     if (!(all(x_start >= 1L) && all(x_end <= x@DIM)))
-        return(wmsg2("object represents a block that is not ",
-                     "contained in the array it belongs to"))
+        return(wmsg2("object represents a viewport that is not ",
+                     "withing the bounds of the reference array"))
 
-    ## A block cannot be empty.
+    ## A viewport cannot be empty.
     x_width <- width(x@ranges)
     if (any(x_width == 0L))
-        return(wmsg2("a block cannot be empty"))
+        return(wmsg2("a viewport cannot be empty"))
     TRUE
 }
 
-.validate_ArrayBlock <- function(x)
+.validate_ArrayViewport <- function(x)
 {
     msg <- .validate_DIM_slot(x)
     if (!isTRUE(msg))
@@ -61,28 +62,29 @@ setClass("ArrayBlock",
     TRUE
 }
 
-setValidity2("ArrayBlock", .validate_ArrayBlock)
+setValidity2("ArrayViewport", .validate_ArrayViewport)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters
 ###
 
-setMethod("dim", "ArrayBlock", function(x) width(x@ranges))
+setMethod("dim", "ArrayViewport", function(x) width(x@ranges))
 
-setMethod("length", "ArrayBlock", function(x) prod(dim(x)))
+setMethod("length", "ArrayViewport", function(x) prod(dim(x)))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
 
-### If 'ranges' is omitted, return a block that covers the whole array.
-ArrayBlock <- function(dim, ranges=NULL)
+### If 'ranges' is omitted, return a viewport that covers the whole
+### reference array.
+ArrayViewport <- function(dim, ranges=NULL)
 {
     if (is.null(ranges))
         ranges <- IRanges(rep.int(1L, length(dim)), dim)
-    new("ArrayBlock", DIM=dim, ranges=ranges)
+    new("ArrayViewport", DIM=dim, ranges=ranges)
 }
 
 
@@ -90,19 +92,19 @@ ArrayBlock <- function(dim, ranges=NULL)
 ### Show
 ###
 
-make_string_from_ArrayBlock <- function(block, dimnames=NULL,
-                                        with.brackets=FALSE)
+make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
+                                           with.brackets=FALSE)
 {
-    block_dim <- dim(block)
-    ans <- as.character(block@ranges)
-    ans[block_dim == block@DIM] <- ""
+    viewport_dim <- dim(viewport)
+    ans <- as.character(viewport@ranges)
+    ans[viewport_dim == viewport@DIM] <- ""
     if (!is.null(dimnames)) {
-        stopifnot(is.list(dimnames), length(block_dim) == length(dimnames))
-        usename_idx <- which(block_dim == 1L &
-                             block@DIM != 1L &
+        stopifnot(is.list(dimnames), length(viewport_dim) == length(dimnames))
+        usename_idx <- which(viewport_dim == 1L &
+                             viewport@DIM != 1L &
                              lengths(dimnames) != 0L)
         ans[usename_idx] <- mapply(`[`, dimnames[usename_idx],
-                                        start(block@ranges)[usename_idx],
+                                        start(viewport@ranges)[usename_idx],
                                         SIMPLIFY=FALSE)
     }
     if (ans[[1L]] == "" && with.brackets)
@@ -113,109 +115,109 @@ make_string_from_ArrayBlock <- function(block, dimnames=NULL,
     ans
 }
 
-setMethod("show", "ArrayBlock",
+setMethod("show", "ArrayViewport",
     function(object)
     {
         DIM_in1string <- paste0(object@DIM, collapse=" x ")
         cat(class(object), " object on a ", DIM_in1string, " array: ", sep="")
-        s <- make_string_from_ArrayBlock(object, with.brackets=TRUE)
+        s <- make_string_from_ArrayViewport(object, with.brackets=TRUE)
         cat(s, "\n", sep="")
     }
 )
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### makeNindexFromArrayBlock()
+### makeNindexFromArrayViewport()
 ###
 
 ### Used in HDF5Array!
-makeNindexFromArrayBlock <- function(block, expand.RangeNSBS=FALSE)
+makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
 {
-    block_dim <- dim(block)
-    ndim <- length(block_dim)
+    viewport_dim <- dim(viewport)
+    ndim <- length(viewport_dim)
     Nindex <- vector(mode="list", length=ndim)
-    is_not_missing <- block_dim < block@DIM
+    is_not_missing <- viewport_dim < viewport@DIM
     if (expand.RangeNSBS) {
         expand_idx <- which(is_not_missing)
     } else {
-        block_starts <- start(block@ranges)
-        block_ends <- end(block@ranges)
-        is_width1 <- block_dim == 1L
+        viewport_starts <- start(viewport@ranges)
+        viewport_ends <- end(viewport@ranges)
+        is_width1 <- viewport_dim == 1L
         expand_idx <- which(is_not_missing & is_width1)
         RangeNSBS_idx <- which(is_not_missing & !is_width1)
         Nindex[RangeNSBS_idx] <- lapply(RangeNSBS_idx,
             function(i) {
-                range_start <- block_starts[[i]]
-                range_end <- block_ends[[i]]
-                upper_bound <- block@DIM[[i]]
+                range_start <- viewport_starts[[i]]
+                range_end <- viewport_ends[[i]]
+                upper_bound <- viewport@DIM[[i]]
                 new2("RangeNSBS", subscript=c(range_start, range_end),
                                   upper_bound=upper_bound,
                                   check=FALSE)
             }
         )
     }
-    Nindex[expand_idx] <- as.list(block@ranges[expand_idx])
+    Nindex[expand_idx] <- as.list(viewport@ranges[expand_idx])
     Nindex
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### GridOfBlocks objects
+### ArrayGrid objects
 ###
 
-setClass("GridOfBlocks",
+setClass("ArrayGrid",
     contains="List",
     representation(
         DIM="integer",       # Dimensions of the array the grid is on.
-        block_dim="integer"  # Dimensions of the first block in the grid.
+        viewport_dim="integer"  # Dimensions of the first viewport in the grid.
     ),
-    prototype(elementType="ArrayBlock")
+    prototype(elementType="ArrayViewport")
 )
 
-.validate_GridOfBlocks <- function(x)
+.validate_ArrayGrid <- function(x)
 {
     msg <- .validate_DIM_slot(x)
     if (!isTRUE(msg))
         return(msg)
-    msg <- .validate_DIM_slot(x, "block_dim")
+    msg <- .validate_DIM_slot(x, "viewport_dim")
     if (!isTRUE(msg))
         return(msg)
-    if (length(x@DIM) != length(x@block_dim))
-        return(wmsg2("'DIM' and 'block_dim' slots must have the same length"))
-    if (!all(x@block_dim <= x@DIM))
-        return(wmsg2("first block in the grid does not fit in the array ",
-                     "the grid is on"))
-    if (!any(x@DIM == 0L) && any(x@block_dim == 0L))
-        return(wmsg2("first block in the grid cannot be empty unless",
-                     "the grid is on an empty array"))
+    if (length(x@DIM) != length(x@viewport_dim))
+        return(wmsg2("'DIM' and 'viewport_dim' slots must have ",
+                     "the same length"))
+    if (!all(x@viewport_dim <= x@DIM))
+        return(wmsg2("first viewport in the grid does not fit in the ",
+                     "reference array"))
+    if (any(x@DIM != 0L & x@viewport_dim == 0L))
+        return(wmsg2("first viewport in the grid cannot have any of its ",
+                     "dimensions set to 0 unless the corresponding ",
+                     "dimension in the reference array is set to 0"))
     TRUE
 }
 
-setValidity2("GridOfBlocks", .validate_GridOfBlocks)
+setValidity2("ArrayGrid", .validate_ArrayGrid)
 
-### If 'block_dim' is omitted, returns a grid made of only block covering the
-### whole array the grid is on.
-GridOfBlocks <- function(dim, block_dim=dim)
-    new("GridOfBlocks", DIM=dim, block_dim=block_dim)
+### If 'viewport_dim' is omitted, return a grid made of a single viewport
+### covering the whole reference array.
+ArrayGrid <- function(dim, viewport_dim=dim)
+    new("ArrayGrid", DIM=dim, viewport_dim=viewport_dim)
 
-### Return the number of blocks along each dimension.
-.get_max_steps_along_each_dim <- function(x)
-{
-    mapply(function(D, d) {
-               q <- D %/% d
-               if (D %% d == 0L) q else q + 1L
-           },
-           x@DIM, x@block_dim)
-}
-
-setMethod("length", "GridOfBlocks",
+### Return the number of viewports along each dimension of the reference
+### array.
+setMethod("dim", "ArrayGrid",
     function(x)
     {
-        if (any(x@DIM == 0L))
-            return(0L)
-        prod(.get_max_steps_along_each_dim(x))
+        mapply(function(D, d) {
+                   if (d <= 0L) return(0L)
+                   q <- D %/% d
+                   if (D %% d == 0L) q else q + 1L
+               },
+               x@DIM,
+               x@viewport_dim)
     }
 )
+
+setMethod("length", "ArrayGrid", function(x) prod(dim(x)))
 
 .to_array_index <- function(i, dim)
 {
@@ -228,28 +230,27 @@ setMethod("length", "GridOfBlocks",
     ans
 }
 
-### Return an ArrayBlock object.
-setMethod("getListElement", "GridOfBlocks",
+### Return an ArrayViewport object.
+setMethod("getListElement", "ArrayGrid",
     function(x, i, exact=TRUE)
     {
         i <- normalizeDoubleBracketSubscript(i, x, exact=exact,
                                              error.if.nomatch=TRUE)
-        max_steps_along_each_dim <- .get_max_steps_along_each_dim(x)
-        block_offsets <- .to_array_index(i - 1L, max_steps_along_each_dim)
-        block_offsets <- block_offsets * x@block_dim
-        block_end <- pmin(x@DIM, block_offsets + x@block_dim)
-        ArrayBlock(x@DIM, IRanges(block_offsets + 1L, block_end))
+        viewport_offsets <- .to_array_index(i - 1L, dim(x))
+        viewport_offsets <- viewport_offsets * x@viewport_dim
+        viewport_ends <- pmin(x@DIM, viewport_offsets + x@viewport_dim)
+        ArrayViewport(x@DIM, IRanges(viewport_offsets + 1L, viewport_ends))
     }
 )
 
-setMethod("show", "GridOfBlocks",
+setMethod("show", "ArrayGrid",
     function(object)
     {
         DIM_in1string <- paste0(object@DIM, collapse=" x ")
-        cat(class(object), " object with ", length(object), " blocks ",
+        cat(class(object), " object with ", length(object), " viewports ",
             "on a ", DIM_in1string, " array:\n", sep="")
         for (i in seq_along(object)) {
-            s <- make_string_from_ArrayBlock(object[[i]], with.brackets=TRUE)
+            s <- make_string_from_ArrayViewport(object[[i]], with.brackets=TRUE)
             cat("[[", i, "]]: ", s, "\n", sep="")
         }
     }

@@ -10,12 +10,12 @@ test_split_array_in_blocks <- function()
     A1 <- realize(a1)
 
     for (max_block_len in c(1:7, 29:31, 39:40, 59:60, 119:120)) {
-        subarrays <- split_array_in_blocks(a1, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, a1)
+        blocks <- split_array_in_blocks(a1, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, a1)
         checkIdentical(a1, current)
 
-        subarrays <- split_array_in_blocks(A1, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, A1)
+        blocks <- split_array_in_blocks(A1, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, A1)
         checkIdentical(a1, current)
     }
 }
@@ -43,28 +43,28 @@ test_split_matrix_in_blocks <- function()
     checkIdentical(tm1, as.matrix(tM1b))
 
     for (max_block_len in seq_len(length(m1) * 2L)) {
-        subarrays <- split_array_in_blocks(m1, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, m1)
+        blocks <- split_array_in_blocks(m1, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, m1)
         checkIdentical(m1, current)
 
-        subarrays <- split_array_in_blocks(M1a, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, M1a)
+        blocks <- split_array_in_blocks(M1a, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, M1a)
         checkIdentical(m1, current)
 
-        subarrays <- split_array_in_blocks(M1b, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, M1b)
+        blocks <- split_array_in_blocks(M1b, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, M1b)
         checkIdentical(m1, current)
 
-        subarrays <- split_array_in_blocks(tm1, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, tm1)
+        blocks <- split_array_in_blocks(tm1, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, tm1)
         checkIdentical(tm1, current)
 
-        subarrays <- split_array_in_blocks(tM1a, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, tM1a)
+        blocks <- split_array_in_blocks(tM1a, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, tM1a)
         checkIdentical(tm1, current)
 
-        subarrays <- split_array_in_blocks(tM1b, max_block_len)
-        current <- unsplit_array_from_blocks(subarrays, tM1b)
+        blocks <- split_array_in_blocks(tM1b, max_block_len)
+        current <- unsplit_array_from_blocks(blocks, tM1b)
         checkIdentical(tm1, current)
     }
 }

@@ -72,21 +72,21 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
     APPLY <- match.fun(APPLY)
     if (is.null(max_block_len))
         max_block_len <- get_max_block_length(type(x))
-    blocks <- ArrayBlocks(dim(x), max_block_len)
-    nblock <- length(blocks)
+    grid <- ArrayBlocks(dim(x), max_block_len)
+    nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block <- blocks[[b]]
-            Nindex <- makeNindexFromArrayBlock(block)
-            subarray <- subset_by_Nindex(x, Nindex)
-            if (!is.array(subarray))
-                subarray <- .as_array_or_matrix(subarray)
-            block_ans <- APPLY(subarray, ...)
+            viewport <- grid[[b]]
+            Nindex <- makeNindexFromArrayViewport(viewport)
+            block <- subset_by_Nindex(x, Nindex)
+            if (!is.array(block))
+                block <- .as_array_or_matrix(block)
+            block_ans <- APPLY(block, ...)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, offsets=start(block@ranges))
+                write_to_sink(block_ans, sink, offsets=start(viewport@ranges))
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -108,25 +108,25 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
         types <- unlist(lapply(dots, type))
         max_block_len <- min(get_max_block_length(types))
     }
-    blocks <- ArrayBlocks(x_dim, max_block_len)
-    nblock <- length(blocks)
+    grid <- ArrayBlocks(x_dim, max_block_len)
+    nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block <- blocks[[b]]
-            Nindex <- makeNindexFromArrayBlock(block)
-            subarrays <- lapply(dots,
+            viewport <- grid[[b]]
+            Nindex <- makeNindexFromArrayViewport(viewport)
+            blocks <- lapply(dots,
                 function(x) {
-                    subarray <- subset_by_Nindex(x, Nindex)
-                    if (!is.array(subarray))
-                        subarray <- .as_array_or_matrix(subarray)
-                    subarray
+                    block <- subset_by_Nindex(x, Nindex)
+                    if (!is.array(block))
+                        block <- .as_array_or_matrix(block)
+                    block
                 })
-            block_ans <- do.call(MAPPLY, subarrays)
+            block_ans <- do.call(MAPPLY, blocks)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, offsets=start(block@ranges))
+                write_to_sink(block_ans, sink, offsets=start(viewport@ranges))
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -145,17 +145,17 @@ block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
         BREAKIF <- match.fun(BREAKIF)
     if (is.null(max_block_len))
         max_block_len <- get_max_block_length(type(x))
-    blocks <- ArrayBlocks(dim(x), max_block_len)
-    nblock <- length(blocks)
+    grid <- ArrayBlocks(dim(x), max_block_len)
+    nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
             message("Processing block ", b, "/", nblock, " ... ",
                     appendLF=FALSE)
-        subarray <- extract_array_block(x, blocks, b)
-        if (!is.array(subarray))
-            subarray <- .as_array_or_matrix(subarray)
-        reduced <- APPLY(subarray)
-        init <- COMBINE(b, subarray, init, reduced)
+        block <- extract_array_block(x, grid, b)
+        if (!is.array(block))
+            block <- .as_array_or_matrix(block)
+        reduced <- APPLY(block)
+        init <- COMBINE(b, block, init, reduced)
         if (get_verbose_block_processing())
             message("OK")
         if (!is.null(BREAKIF) && BREAKIF(init)) {

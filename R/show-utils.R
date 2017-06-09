@@ -248,14 +248,14 @@
 ### Array of arbitrary dimensions
 ###
 
-.print_2D_slices <- function(x, m1, m2, n1, n2, blocks, idx)
+.print_2D_slices <- function(x, m1, m2, n1, n2, grid, idx)
 {
     x_dimnames <- dimnames(x)
     for (i in idx) {
-        block <- blocks[[i]]
-        s <- make_string_from_ArrayBlock(block, dimnames=x_dimnames)
+        viewport <- grid[[i]]
+        s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames)
         cat(s, "\n", sep="")
-        Nindex <- makeNindexFromArrayBlock(block)
+        Nindex <- makeNindexFromArrayViewport(viewport)
         slice <- subset_by_Nindex(x, Nindex)
         dim(slice) <- dim(slice)[1:2]
         .print_2D_array_data(slice, m1, m2, n1, n2)
@@ -285,17 +285,17 @@
             z1 <- z2 <- 1L  # print only first and last slices
         }
     }
-    blocks <- new("ArrayBlocks", dim=x_dim, N=3L, by=1L)
-    nblock <- length(blocks)
+    grid <- new("ArrayBlocks", dim=x_dim, N=3L, by=1L)
+    nblock <- length(grid)
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)
-        .print_2D_slices(x, m1, m2, n1, n2, blocks, idx)
+        .print_2D_slices(x, m1, m2, n1, n2, grid, idx)
     } else {
         idx1 <- seq_len(z1)
         idx2 <- seq(to=nblock, by=1L, length.out=z2)
-        .print_2D_slices(x, m1, m2, n1, n2, blocks, idx1)
+        .print_2D_slices(x, m1, m2, n1, n2, grid, idx1)
         cat("...\n\n")
-        .print_2D_slices(x, m1, m2, n1, n2, blocks, idx2)
+        .print_2D_slices(x, m1, m2, n1, n2, grid, idx2)
     }
 }
 

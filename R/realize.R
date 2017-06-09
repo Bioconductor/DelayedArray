@@ -72,8 +72,9 @@ setMethod("write_to_sink", c("array", "arrayRealizationSink"),
             result[] <- x
         } else {
             stopifnot(length(x_dim) == length(sink_dim))
-            block <- ArrayBlock(sink_dim, IRanges(offsets, width=x_dim))
-            Nindex <- makeNindexFromArrayBlock(block, expand.RangeNSBS=TRUE)
+            viewport <- ArrayViewport(sink_dim, IRanges(offsets, width=x_dim))
+            Nindex <- makeNindexFromArrayViewport(viewport,
+                                                  expand.RangeNSBS=TRUE)
             result <- replace_by_Nindex(result, Nindex, x)
         }
         assign("result", result, envir=sink@result_envir)

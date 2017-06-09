@@ -400,7 +400,7 @@ setMethod("signif", "DelayedArray",
 .DelayedArray_block_anyNA <- function(x, recursive=FALSE)
 {
     APPLY <- anyNA
-    COMBINE <- function(b, subarray, init, reduced) { init || reduced }
+    COMBINE <- function(b, block, init, reduced) { init || reduced }
     init <- FALSE
     BREAKIF <- identity
 
@@ -423,13 +423,13 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
     if (!isTRUEorFALSE(useNames))
         stop("'useNames' must be TRUE or FALSE")
     APPLY <- base::which
-    COMBINE <- function(b, subarray, init, reduced) {
+    COMBINE <- function(b, block, init, reduced) {
         if (length(reduced) != 0L) {
             reduced <- reduced + init[["offset"]]
             part_number <- sprintf("%010d", b)
             init[[part_number]] <- reduced
         }
-        init[["offset"]] <- init[["offset"]] + length(subarray)
+        init[["offset"]] <- init[["offset"]] + length(block)
         init
     }
     offset <- 0L
@@ -487,16 +487,16 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
     objects <- .collect_objects(x, ...)
 
     GENERIC <- match.fun(.Generic)
-    APPLY <- function(subarray) {
-        ## We get a warning if 'subarray' is empty (which can't happen, blocks
-        ## can't be empty) or if 'na.rm' is TRUE and 'subarray' contains only
+    APPLY <- function(block) {
+        ## We get a warning if 'block' is empty (which can't happen, blocks
+        ## can't be empty) or if 'na.rm' is TRUE and 'block' contains only
         ## NA's or NaN's.
-        reduced <- tryCatch(GENERIC(subarray, na.rm=na.rm), warning=identity)
+        reduced <- tryCatch(GENERIC(block, na.rm=na.rm), warning=identity)
         if (is(reduced, "warning"))
             return(NULL)
         reduced
     }
-    COMBINE <- function(b, subarray, init, reduced) {
+    COMBINE <- function(b, block, init, reduced) {
         if (is.null(init) && is.null(reduced))
             return(NULL)
         GENERIC(init, reduced)
@@ -545,15 +545,15 @@ setMethod("Summary", "DelayedArray",
         stop("\"mean\" method for DelayedArray objects ",
              "does not support the 'trim' argument yet")
 
-    APPLY <- function(subarray) {
-        tmp <- as.vector(subarray, mode="numeric")
-        subarray_sum <- sum(tmp, na.rm=na.rm)
-        subarray_nval <- length(tmp)
+    APPLY <- function(block) {
+        tmp <- as.vector(block, mode="numeric")
+        block_sum <- sum(tmp, na.rm=na.rm)
+        block_nval <- length(tmp)
         if (na.rm)
-            subarray_nval <- subarray_nval - sum(is.na(tmp))
-        c(subarray_sum, subarray_nval)
+            block_nval <- block_nval - sum(is.na(tmp))
+        c(block_sum, block_nval)
     }
-    COMBINE <- function(b, subarray, init, reduced) { init + reduced }
+    COMBINE <- function(b, block, init, reduced) { init + reduced }
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])
 

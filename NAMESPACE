@@ -11,7 +11,7 @@ import(matrixStats)
 ###
 
 exportClasses(
-    ArrayBlock, GridOfBlocks,
+    ArrayViewport, ArrayGrid,
     ArrayBlocks,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
@@ -127,7 +127,7 @@ exportMethods(
 ###
 
 export(
-    ArrayBlock, makeNindexFromArrayBlock, GridOfBlocks,
+    ArrayViewport, makeNindexFromArrayViewport, ArrayGrid,
     ArrayBlocks,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     RleArray
