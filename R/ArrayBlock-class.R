@@ -18,22 +18,23 @@ setClass("ArrayBlock",
 ### Validity
 ###
 
-.validate_DIM_slot <- function(x)
+.validate_DIM_slot <- function(x, slot_name="DIM")
 {
-    if (!is.integer(x@DIM))
-        return(wmsg2("'x@DIM' must be an integer vector"))
-    x_ndim <- length(x@DIM)
-    if (x_ndim == 0L)
-        return(wmsg2("'x@DIM' cannot be empty"))
-    if (S4Vectors:::anyMissingOrOutside(x@DIM, 0L))
-        return(wmsg2("'x@DIM' cannot contain negative or NA values"))
+    DIM <- slot(x, slot_name)
+    if (!is.integer(DIM))
+        return(wmsg2(sprintf("'%s' slot must be an integer vector", slot_name)))
+    if (length(DIM) == 0L)
+        return(wmsg2(sprintf("'%s' slot cannot be empty", slot_name)))
+    if (S4Vectors:::anyMissingOrOutside(DIM, 0L))
+        return(wmsg2(sprintf("'%s' slot cannot contain negative or NA values",
+                             slot_name)))
     TRUE
 }
 
 .validate_ranges_slot <- function(x)
 {
     if (length(x@ranges) != length(x@DIM))
-        return(wmsg2("'x@ranges' and 'x@DIM' must have the same length"))
+        return(wmsg2("'DIM' and 'ranges' slots must have the same length"))
 
     ## Check that the block is contained in the array it belongs to.
     x_start <- start(x@ranges)
@@ -115,8 +116,8 @@ make_string_from_ArrayBlock <- function(block, dimnames=NULL,
 setMethod("show", "ArrayBlock",
     function(object)
     {
-        dim_in1string <- paste0(object@DIM, collapse=" x ")
-        cat(class(object), " object on a ", dim_in1string, " array: ", sep="")
+        DIM_in1string <- paste0(object@DIM, collapse=" x ")
+        cat(class(object), " object on a ", DIM_in1string, " array: ", sep="")
         s <- make_string_from_ArrayBlock(object, with.brackets=TRUE)
         cat(s, "\n", sep="")
     }
@@ -156,4 +157,101 @@ makeNindexFromArrayBlock <- function(block, expand.RangeNSBS=FALSE)
     Nindex[expand_idx] <- as.list(block@ranges[expand_idx])
     Nindex
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### BlockGrid objects
+###
+
+setClass("BlockGrid",
+    contains="List",
+    representation(
+        DIM="integer",       # Dimensions of the array the grid is on.
+        block_dim="integer"  # Dimensions of the first block in the grid.
+    ),
+    prototype(elementType="ArrayBlock")
+)
+
+.validate_BlockGrid <- function(x)
+{
+    msg <- .validate_DIM_slot(x)
+    if (!isTRUE(msg))
+        return(msg)
+    msg <- .validate_DIM_slot(x, "block_dim")
+    if (!isTRUE(msg))
+        return(msg)
+    if (length(x@DIM) != length(x@block_dim))
+        return(wmsg2("'DIM' and 'block_dim' slots must have the same length"))
+    if (!all(x@block_dim <= x@DIM))
+        return(wmsg2("first block in the grid does not fit in the array ",
+                     "the grid is on"))
+    if (!any(x@DIM == 0L) && any(x@block_dim == 0L))
+        return(wmsg2("first block in the grid cannot be empty unless",
+                     "the grid is on an empty array"))
+    TRUE
+}
+
+setValidity2("BlockGrid", .validate_BlockGrid)
+
+### If 'block_dim' is omitted, returns a grid made of only block covering the
+### whole array the grid is on.
+BlockGrid <- function(dim, block_dim=dim)
+    new("BlockGrid", DIM=dim, block_dim=block_dim)
+
+### Return the number of blocks along each dimension.
+.get_max_steps_along_each_dim <- function(x)
+{
+    mapply(function(D, d) {
+               q <- D %/% d
+               if (D %% d == 0L) q else q + 1L
+           },
+           x@DIM, x@block_dim)
+}
+
+setMethod("length", "BlockGrid",
+    function(x)
+    {
+        if (any(x@DIM == 0L))
+            return(0L)
+        prod(.get_max_steps_along_each_dim(x))
+    }
+)
+
+.to_array_index <- function(i, dim)
+{
+    ans <- integer(length(dim))
+    for (along in seq_along(dim)) {
+        d <- dim[[along]]
+        ans[[along]] <- offset <- i %% d
+        i <- (i - offset) %/% d
+    }
+    ans
+}
+
+### Return an ArrayBlock object.
+setMethod("getListElement", "BlockGrid",
+    function(x, i, exact=TRUE)
+    {
+        i <- normalizeDoubleBracketSubscript(i, x, exact=exact,
+                                             error.if.nomatch=TRUE)
+        max_steps_along_each_dim <- .get_max_steps_along_each_dim(x)
+        block_offsets <- .to_array_index(i - 1L, max_steps_along_each_dim)
+        block_offsets <- block_offsets * x@block_dim
+        block_end <- pmin(x@DIM, block_offsets + x@block_dim)
+        ArrayBlock(x@DIM, IRanges(block_offsets + 1L, block_end))
+    }
+)
+
+setMethod("show", "BlockGrid",
+    function(object)
+    {
+        DIM_in1string <- paste0(object@DIM, collapse=" x ")
+        cat(class(object), " object with ", length(object), " blocks ",
+            "on a ", DIM_in1string, " array:\n", sep="")
+        for (i in seq_along(object)) {
+            s <- make_string_from_ArrayBlock(object[[i]], with.brackets=TRUE)
+            cat("[[", i, "]]: ", s, "\n", sep="")
+        }
+    }
+)
 
