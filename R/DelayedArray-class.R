@@ -509,42 +509,15 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 {
     if (missing(x))
         stop("'x' is missing")
-
-    ## Check the dimensionality of the user call i.e whether the function was
-    ## called with 1D-style, or 2D-style, or 3D-style etc... subsetting.
-    ndim <- nargs() - 1L
-    x_dim <- dim(x)
-    x_ndim <- length(x_dim)
-    if (!missing(drop))
-        ndim <- ndim - 1L
-    if (ndim == 1L && missing(i))
-        ndim <- 0L
-    if (ndim != 0L && ndim != x_ndim) {
-        if (ndim != 1L)
-            stop("incorrect number of dimensions")
-        return(.subset_DelayedArray_by_1Dindex(x, i))
+    user_Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
+    nsubscript <- length(user_Nindex)
+    if (nsubscript != 0L && nsubscript != length(dim(x))) {
+        if (nsubscript != 1L)
+            stop("incorrect number of subscripts")
+        return(.subset_DelayedArray_by_1Dindex(x, user_Nindex[[1L]]))
     }
-
-    ## Prepare the "multidimensional subsetting index".
-    user_Nindex <- vector(mode="list", length=x_ndim)
-    if (!missing(i))
-        user_Nindex[[1L]] <- if (is.null(i)) integer(0) else i
-    if (!missing(j))
-        user_Nindex[[2L]] <- if (is.null(j)) integer(0) else j
-    dots <- match.call(expand.dots=FALSE)$...  # list of non-evaluated args
-    eframe <- parent.frame()
-    for (n2 in seq_along(dots)) {
-        k <- dots[[n2]]
-        if (!missing(k)) {
-            k <- eval(k, envir=eframe, enclos=eframe)
-            user_Nindex[[2L + n2]] <- if (is.null(k)) integer(0) else k
-        }
-    }
-
-    ## Perform the subsetting.
     .subset_DelayedArray_by_Nindex(x, user_Nindex)
 }
-
 setMethod("[", "DelayedArray", .subset_DelayedArray)
 
 

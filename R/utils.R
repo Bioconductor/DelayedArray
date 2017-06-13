@@ -34,7 +34,7 @@ expand_Nindex_RangeNSBS <- function(Nindex)
     Nindex
 }
 
-.Nindex2subscripts <- function(Nindex, x)
+.make_subscripts_from_Nindex <- function(Nindex, x)
 {
     stopifnot(is.list(Nindex), length(Nindex) == length(dim(x)))
 
@@ -52,14 +52,14 @@ expand_Nindex_RangeNSBS <- function(Nindex)
 
 subset_by_Nindex <- function(x, Nindex, drop=FALSE)
 {
-    Nindex <- .Nindex2subscripts(Nindex, x)
-    do.call(`[`, c(list(x), Nindex, list(drop=drop)))
+    subscripts <- .make_subscripts_from_Nindex(Nindex, x)
+    do.call(`[`, c(list(x), subscripts, list(drop=drop)))
 }
 
 replace_by_Nindex <- function(x, Nindex, value)
 {
-    Nindex <- .Nindex2subscripts(Nindex, x)
-    do.call(`[<-`, c(list(x), Nindex, list(value=value)))
+    subscripts <- .make_subscripts_from_Nindex(Nindex, x)
+    do.call(`[<-`, c(list(x), subscripts, list(value=value)))
 }
 
 ### Used in HDF5Array!
@@ -105,6 +105,30 @@ to_linear_index <- function(Nindex, dim)
         p <- p * d
     }
     ans
+}
+
+### For use in "[" or "[[" methods to extract the user supplied subscripts as
+### an Nindex. NULL subscripts are replace with integer(0). Missing subscripts
+### are set to NULL.
+extract_Nindex_from_syscall <- function(call, eframe)
+{
+    Nindex <- lapply(seq_len(length(call) - 2L),
+        function(i) {
+            subscript <- call[[2L + i]]
+            if (missing(subscript))
+                return(NULL)
+            subscript <- eval(subscript, envir=eframe, enclos=eframe)
+            if (is.null(subscript))
+                return(integer(0))
+            subscript
+        }
+    )
+    argnames <- tail(names(call), n=-2L)
+    if (!is.null(argnames))
+        Nindex <- Nindex[!(argnames %in% c("drop", "exact"))]
+    if (length(Nindex) == 1L && is.null(Nindex[[1L]]))
+        Nindex <- Nindex[0L]
+    Nindex
 }
 
 
