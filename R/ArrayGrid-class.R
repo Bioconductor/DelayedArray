@@ -1,51 +1,55 @@
 ### =========================================================================
-### ArrayViewport objects
+### ArrayViewport and ArrayGrid objects
 ### -------------------------------------------------------------------------
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### ArrayViewport objects
+###
 
 ### We don't extend the IRanges class because we don't want to inherit the
 ### full Ranges API (most operations in that API would do the wrong thing on
 ### ArrayViewport objects).
 setClass("ArrayViewport",
     representation(
-        DIM="integer",    # Dimensions of the "reference array" i.e. the
-                          # array the viewport belongs to.
-        ranges="IRanges"  # Must be parallel to the 'DIM' slot.
+        refdim="integer",  # Dimensions of "the reference array" i.e. the
+                           # array on top of which the viewport is defined
+                           # (a.k.a. "the underlying array").
+        ranges="IRanges"   # Must be parallel to the 'refdim' slot.
     )
 )
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
-###
 
-.validate_DIM_slot <- function(x, slot_name="DIM")
+.validate_refdim_slot <- function(x, slotname="refdim")
 {
-    DIM <- slot(x, slot_name)
-    if (!is.integer(DIM))
-        return(wmsg2(sprintf("'%s' slot must be an integer vector", slot_name)))
-    if (length(DIM) == 0L)
-        return(wmsg2(sprintf("'%s' slot cannot be empty", slot_name)))
-    if (S4Vectors:::anyMissingOrOutside(DIM, 0L))
+    x_refdim <- slot(x, slotname)
+    if (!is.integer(x_refdim))
+        return(wmsg2(sprintf("'%s' slot must be an integer vector", slotname)))
+    if (length(x_refdim) == 0L)
+        return(wmsg2(sprintf("'%s' slot cannot be empty", slotname)))
+    if (S4Vectors:::anyMissingOrOutside(x_refdim, 0L))
         return(wmsg2(sprintf("'%s' slot cannot contain negative or NA values",
-                             slot_name)))
+                             slotname)))
     TRUE
 }
 
 .validate_ranges_slot <- function(x)
 {
-    if (length(x@ranges) != length(x@DIM))
-        return(wmsg2("'DIM' and 'ranges' slots must have the same length"))
+    x_ranges <- x@ranges
+    x_refdim <- x@refdim
+    if (length(x_ranges) != length(x_refdim))
+        return(wmsg2("'ranges' and 'refdim' slots must have the same length"))
 
     ## Check that the viewport is contained in the reference array.
-    x_start <- start(x@ranges)
-    x_end <- end(x@ranges)
-    if (!(all(x_start >= 1L) && all(x_end <= x@DIM)))
+    x_start <- start(x_ranges)
+    x_end <- end(x_ranges)
+    if (!(all(x_start >= 1L) && all(x_end <= x_refdim)))
         return(wmsg2("object represents a viewport that is not ",
                      "withing the bounds of the reference array"))
 
     ## A viewport cannot be empty.
-    x_width <- width(x@ranges)
+    x_width <- width(x_ranges)
     if (any(x_width == 0L))
         return(wmsg2("a viewport cannot be empty"))
     TRUE
@@ -53,7 +57,7 @@ setClass("ArrayViewport",
 
 .validate_ArrayViewport <- function(x)
 {
-    msg <- .validate_DIM_slot(x)
+    msg <- .validate_refdim_slot(x)
     if (!isTRUE(msg))
         return(msg)
     msg <- .validate_ranges_slot(x)
@@ -64,47 +68,54 @@ setClass("ArrayViewport",
 
 setValidity2("ArrayViewport", .validate_ArrayViewport)
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters
-###
 
-setMethod("dim", "ArrayViewport", function(x) width(x@ranges))
+setGeneric("refdim", function(x) standardGeneric("refdim"))
+
+setMethod("refdim", "ArrayViewport", function(x) x@refdim)
+
+setMethod("ranges", "ArrayViewport", function(x) x@ranges)
+
+setMethod("start", "ArrayViewport", function(x) start(ranges(x)))
+
+setMethod("width", "ArrayViewport", function(x) width(ranges(x)))
+
+setMethod("end", "ArrayViewport", function(x) end(ranges(x)))
+
+setMethod("dim", "ArrayViewport", function(x) width(ranges(x)))
 
 setMethod("length", "ArrayViewport", function(x) prod(dim(x)))
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
-###
 
 ### If 'ranges' is omitted, return a viewport that covers the whole
 ### reference array.
-ArrayViewport <- function(dim, ranges=NULL)
+ArrayViewport <- function(refdim, ranges=NULL)
 {
     if (is.null(ranges))
-        ranges <- IRanges(rep.int(1L, length(dim)), dim)
-    new("ArrayViewport", DIM=dim, ranges=ranges)
+        ranges <- IRanges(rep.int(1L, length(refdim)), refdim)
+    new("ArrayViewport", refdim=refdim, ranges=ranges)
 }
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Show
-###
 
 make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
                                            with.brackets=FALSE)
 {
+    if (!isTRUEorFALSE(with.brackets))
+        stop("'with.brackets' must be TRUE or FALSE")
+    viewport_ranges <- ranges(viewport)
     viewport_dim <- dim(viewport)
-    ans <- as.character(viewport@ranges)
-    ans[viewport_dim == viewport@DIM] <- ""
+    viewport_refdim <- refdim(viewport)
+    ans <- as.character(viewport_ranges)
+    ans[viewport_dim == viewport_refdim] <- ""
     if (!is.null(dimnames)) {
         stopifnot(is.list(dimnames), length(viewport_dim) == length(dimnames))
         usename_idx <- which(viewport_dim == 1L &
-                             viewport@DIM != 1L &
+                             viewport_refdim != 1L &
                              lengths(dimnames) != 0L)
         ans[usename_idx] <- mapply(`[`, dimnames[usename_idx],
-                                        start(viewport@ranges)[usename_idx],
+                                        start(viewport_ranges)[usename_idx],
                                         SIMPLIFY=FALSE)
     }
     if (ans[[1L]] == "" && with.brackets)
@@ -118,30 +129,30 @@ make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
 setMethod("show", "ArrayViewport",
     function(object)
     {
-        DIM_in1string <- paste0(object@DIM, collapse=" x ")
-        cat(class(object), " object on a ", DIM_in1string, " array: ", sep="")
+        refdim_in1string <- paste0(refdim(object), collapse=" x ")
+        cat(class(object), " object on a ", refdim_in1string, " array: ",
+            sep="")
         s <- make_string_from_ArrayViewport(object, with.brackets=TRUE)
         cat(s, "\n", sep="")
     }
 )
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### makeNindexFromArrayViewport()
-###
 
 ### Used in HDF5Array!
 makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
 {
+    viewport_ranges <- ranges(viewport)
     viewport_dim <- dim(viewport)
+    viewport_refdim <- refdim(viewport)
     ndim <- length(viewport_dim)
     Nindex <- vector(mode="list", length=ndim)
-    is_not_missing <- viewport_dim < viewport@DIM
+    is_not_missing <- viewport_dim < viewport_refdim
     if (expand.RangeNSBS) {
         expand_idx <- which(is_not_missing)
     } else {
-        viewport_starts <- start(viewport@ranges)
-        viewport_ends <- end(viewport@ranges)
+        viewport_starts <- start(viewport_ranges)
+        viewport_ends <- end(viewport_ranges)
         is_width1 <- viewport_dim == 1L
         expand_idx <- which(is_not_missing & is_width1)
         RangeNSBS_idx <- which(is_not_missing & !is_width1)
@@ -149,14 +160,14 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
             function(i) {
                 range_start <- viewport_starts[[i]]
                 range_end <- viewport_ends[[i]]
-                upper_bound <- viewport@DIM[[i]]
+                upper_bound <- viewport_refdim[[i]]
                 new2("RangeNSBS", subscript=c(range_start, range_end),
                                   upper_bound=upper_bound,
                                   check=FALSE)
             }
         )
     }
-    Nindex[expand_idx] <- as.list(viewport@ranges[expand_idx])
+    Nindex[expand_idx] <- as.list(viewport_ranges[expand_idx])
     Nindex
 }
 
@@ -164,95 +175,247 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### ArrayGrid objects
 ###
+### An ArrayGrid object represents a grid on top of an array (called "the
+### reference array" or "the underlying array"). The ArrayGrid class is a
+### virtual class with 2 concrete subclasses, ArrayArbitraryGrid and
+### ArrayRegularGrid, for representing an arbitrarily-spaced or a
+### regularly-spaced grid, respectively. The API we implement on these objects
+### is divided into 3 groups of methods:
+###   1) One special method:
+###      - refdim(x): Return the dimensions of the reference array.
+###   2) Methods from the array API (an ArrayGrid object can be seen as an
+###      array of ArrayViewport objects that cover the reference array without
+###      overlapping with each others):
+###      - dim(x): Return the number of grid elements (i.e. viewports) along
+###        each dimension of the reference array.
+###      - x[[i_1, i_2, ..., i_n]]: Multi-dimensional double bracket
+###        subsetting. Return an ArrayViewport object.
+###   3) Methods from the list API:
+###      - length(): Return the total number of grid elements.
+###      - x[[i]]: Linear double bracket subsetting. Return an ArrayViewport
+###        object.
+###
 
 setClass("ArrayGrid",
     contains="List",
-    representation(
-        DIM="integer",       # Dimensions of the array the grid is on.
-        viewport_dim="integer"  # Dimensions of the first viewport in the grid.
-    ),
+    representation("VIRTUAL"),
     prototype(elementType="ArrayViewport")
 )
 
-.validate_ArrayGrid <- function(x)
+setClass("ArrayArbitraryGrid",
+    contains="ArrayGrid",
+    representation(
+        tickmarks="list"      # A list of integer vectors, one along each
+                              # dimension of the reference array,
+                              # representing the tickmarks along that
+                              # dimension. Each integer vector must be sorted
+                              # in strictly ascending order.
+    )
+)
+
+setClass("ArrayRegularGrid",
+    contains="ArrayGrid",
+    representation(
+        refdim="integer",     # Dimensions of the reference array.
+        spacings="integer"    # Dimensions of the first viewport in the grid.
+    )
+)
+
+### Validity
+
+.validate_tickmarks <- function(tm)
 {
-    msg <- .validate_DIM_slot(x)
+    is.integer(tm) &&
+        !S4Vectors:::anyMissingOrOutside(tm, 1L) &&
+        isStrictlySorted(tm)
+}
+.validate_ArrayArbitraryGrid <- function(x)
+{
+    if (!is.list(x@tickmarks))
+        return(wmsg2("'tickmarks' slot must be a list"))
+    ok <- vapply(x@tickmarks, .validate_tickmarks, logical(1), USE.NAMES=FALSE)
+    if (!all(ok))
+        return(wmsg2("each list element in 'tickmarks' slot must be an ",
+                     "integer vector of strictly ascending positive values"))
+    TRUE
+}
+setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
+
+.validate_ArrayRegularGrid <- function(x)
+{
+    msg <- .validate_refdim_slot(x)
     if (!isTRUE(msg))
         return(msg)
-    msg <- .validate_DIM_slot(x, "viewport_dim")
+    msg <- .validate_refdim_slot(x, "spacings")
     if (!isTRUE(msg))
         return(msg)
-    if (length(x@DIM) != length(x@viewport_dim))
-        return(wmsg2("'DIM' and 'viewport_dim' slots must have ",
+    x_spacings <- x@spacings
+    x_refdim <- x@refdim
+    if (length(x_spacings) != length(x_refdim))
+        return(wmsg2("'spacings' and 'refdim' slots must have ",
                      "the same length"))
-    if (!all(x@viewport_dim <= x@DIM))
+    if (!all(x_spacings <= x_refdim))
         return(wmsg2("first viewport in the grid does not fit in the ",
                      "reference array"))
-    if (any(x@DIM != 0L & x@viewport_dim == 0L))
+    if (any(x_spacings == 0L & x_refdim != 0L))
         return(wmsg2("first viewport in the grid cannot have any of its ",
                      "dimensions set to 0 unless the corresponding ",
                      "dimension in the reference array is set to 0"))
     TRUE
 }
+setValidity2("ArrayRegularGrid", .validate_ArrayRegularGrid)
 
-setValidity2("ArrayGrid", .validate_ArrayGrid)
+### Getters
 
-### If 'viewport_dim' is omitted, return a grid made of a single viewport
-### covering the whole reference array.
-ArrayGrid <- function(dim, viewport_dim=dim)
-    new("ArrayGrid", DIM=dim, viewport_dim=viewport_dim)
-
-### Return the number of viewports along each dimension of the reference
-### array.
-setMethod("dim", "ArrayGrid",
+setMethod("refdim", "ArrayArbitraryGrid",
     function(x)
     {
-        mapply(function(D, d) {
-                   if (d <= 0L) return(0L)
-                   q <- D %/% d
-                   if (D %% d == 0L) q else q + 1L
+        mapply(function(tm, tm_len) {
+                   if (tm_len == 0L) 0L else tm[[tm_len]]
                },
-               x@DIM,
-               x@viewport_dim)
+               x@tickmarks,
+               lengths(x@tickmarks),
+               USE.NAMES=FALSE)
+    }
+)
+
+setMethod("refdim", "ArrayRegularGrid", function(x) x@refdim)
+
+setMethod("dim", "ArrayArbitraryGrid", function(x) lengths(x@tickmarks))
+
+setMethod("dim", "ArrayRegularGrid",
+    function(x)
+    {
+        mapply(function(D, spacing) {
+                   if (spacing <= 0L) return(0L)
+                   q <- D %/% spacing
+                   if (D %% spacing == 0L) q else q + 1L
+               },
+               refdim(x),
+               x@spacings,
+               USE.NAMES=FALSE)
     }
 )
 
 setMethod("length", "ArrayGrid", function(x) prod(dim(x)))
 
-.to_array_index <- function(i, dim)
-{
-    ans <- integer(length(dim))
-    for (along in seq_along(dim)) {
-        d <- dim[[along]]
-        ans[[along]] <- offset <- i %% d
-        i <- (i - offset) %/% d
-    }
-    ans
-}
+### Constructors
 
-### Return an ArrayViewport object.
-setMethod("getListElement", "ArrayGrid",
-    function(x, i, exact=TRUE)
+ArrayArbitraryGrid <- function(tickmarks)
+    new("ArrayArbitraryGrid", tickmarks=tickmarks)
+
+### If 'spacings' is omitted, return a grid made of a single viewport covering
+### the whole reference array.
+ArrayRegularGrid <- function(refdim, spacings=refdim)
+    new("ArrayRegularGrid", refdim=refdim, spacings=spacings)
+
+### [[
+
+### Implement multi-dimensional double bracket subsetting.
+### 'subscripts' is assumed to be an integer vector parallel to 'dim(x)' and
+### with no out-of-bounds subscripts (i.e. 'all(subscripts >= 1)' and
+### 'all(subscripts <= dim(x))').
+### NOT exported for now but should probably be at some point (like
+### S4Vectors::getListElement() is).
+setGeneric("getArrayElement", signature="x",
+    function(x, subscripts) standardGeneric("getArrayElement")
+)
+
+setMethod("getArrayElement", "ArrayArbitraryGrid",
+    function(x, subscripts)
     {
-        i <- normalizeDoubleBracketSubscript(i, x, exact=exact,
-                                             error.if.nomatch=TRUE)
-        viewport_offsets <- .to_array_index(i - 1L, dim(x))
-        viewport_offsets <- viewport_offsets * x@viewport_dim
-        viewport_ends <- pmin(x@DIM, viewport_offsets + x@viewport_dim)
-        ArrayViewport(x@DIM, IRanges(viewport_offsets + 1L, viewport_ends))
+        x_refdim <- refdim(x)
+        ans_end <- mapply(`[[`, x@tickmarks, subscripts)
+        ans_width <- mapply(function(tm, i) {
+                                S4Vectors:::diffWithInitialZero(tm)[[i]]
+                            },
+                            x@tickmarks,
+                            subscripts)
+        ans_ranges <- IRanges(end=ans_end, width=ans_width)
+        ArrayViewport(x_refdim, ans_ranges)
     }
 )
+
+setMethod("getArrayElement", "ArrayRegularGrid",
+    function(x, subscripts)
+    {
+        x_refdim <- refdim(x)
+        ans_offset <- (subscripts - 1L) * x@spacings
+        ans_end <- pmin(ans_offset + x@spacings, refdim(x))
+        ans_ranges <- IRanges(start=ans_offset + 1L, end=ans_end)
+        ArrayViewport(x_refdim, ans_ranges)
+    }
+)
+
+### Return an integer vector parallel to 'dim' and guaranteed to contain no
+### out-of-bounds subscripts.
+.from_linear_to_multi_subscript <- function(i, dim)
+{
+    stopifnot(isSingleInteger(i))
+    if (i < 1L || i > prod(dim))
+        stop("subscript is out of bounds")
+    i <- i - 1L
+    subscripts <- integer(length(dim))
+    for (along in seq_along(dim)) {
+        d <- dim[[along]]
+        subscripts[[along]] <- offset <- i %% d
+        i <- (i - offset) %/% d
+    }
+    subscripts + 1L
+}
+
+### Support multi-dimensional and linear subsetting.
+setMethod("[[", "ArrayGrid",
+    function(x, i, j, ...)
+    {
+        if (missing(x))
+            stop("'x' is missing")
+        Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
+        nsubscript <- length(Nindex)
+        x_dim <- dim(x)
+        x_ndim <- length(x_dim)
+        if (!(nsubscript == 1L || nsubscript == x_ndim))
+            stop("incorrect number of subscripts")
+        ok <- vapply(Nindex, isSingleInteger, logical(1), USE.NAMES=FALSE)
+        if (!all(ok))
+            stop(wmsg("each subscript must be a single integer ",
+                      "when subsetting an ArrayGrid object with [["))
+        subscripts <- unlist(Nindex, use.names=FALSE)
+        if (nsubscript != x_ndim) {
+            ## Translate linear subsetting into multi-dimensional subsetting.
+            subscripts <- .from_linear_to_multi_subscript(subscripts, x_dim)
+        } else if (!(all(subscripts >= 1L) && all(subscripts <= x_dim))) {
+            stop("some subscripts are out of bounds")
+        }
+        getArrayElement(x, subscripts)
+    }
+)
+
+### Show
+
+### S3/S4 combo for as.character.ArrayGrid
+.as.character.ArrayGrid <- function(x, with.brackets=FALSE)
+{
+    data <- vapply(x,
+        function(viewport)
+            make_string_from_ArrayViewport(viewport,
+                                           with.brackets=with.brackets),
+        character(1)
+    )
+    array(data, dim(x))
+}
+as.character.ArrayGrid <- function(x, ...) .as.character.ArrayGrid(x, ...)
+setMethod("as.character", "ArrayGrid", .as.character.ArrayGrid)
 
 setMethod("show", "ArrayGrid",
     function(object)
     {
-        DIM_in1string <- paste0(object@DIM, collapse=" x ")
-        cat(class(object), " object with ", length(object), " viewports ",
-            "on a ", DIM_in1string, " array:\n", sep="")
-        for (i in seq_along(object)) {
-            s <- make_string_from_ArrayViewport(object[[i]], with.brackets=TRUE)
-            cat("[[", i, "]]: ", s, "\n", sep="")
-        }
+        dim_in1string <- paste0(dim(object), collapse=" x ")
+        refdim_in1string <- paste0(refdim(object), collapse=" x ")
+        cat(dim_in1string, " ", class(object), " object ",
+            "on a ", refdim_in1string, " array:\n", sep="")
+        ## Turn 'object' into a character array.
+        print(as.character(object, TRUE), quote=FALSE)
     }
 )
 

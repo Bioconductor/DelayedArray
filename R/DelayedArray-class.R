@@ -398,8 +398,8 @@ setMethod("names", "DelayedArray", .get_DelayedArray_names)
 {
     if (length(dim(x)) != 1L) {
         if (!is.null(value))
-            stop("setting the names of a ", class(x), " object with more ",
-                 "than 1 dimension is not supported")
+            stop(wmsg("setting the names of a ", class(x), " object ",
+                      "with more than 1 dimension is not supported"))
         return(x)
     }
     dimnames(x)[[1L]] <- value
@@ -1007,8 +1007,8 @@ setMethod("c", "DelayedArray",
     function (x, ..., recursive=FALSE)
     {
         if (!identical(recursive, FALSE))
-            stop("\"c\" method for DelayedArray objects ",
-                 "does not support the 'recursive' argument")
+            stop(wmsg("\"c\" method for DelayedArray objects ",
+                      "does not support the 'recursive' argument"))
         if (missing(x)) {
             objects <- list(...)
         } else {

@@ -22,15 +22,15 @@ wmsg2 <- function(...)
 ###
 ### An Nindex is a "multidimensional subsetting index". It's represented as a
 ### list with one subscript per dimension in the array-like object to subset.
-### NULLs in it are interpreted as missing subscripts, that is, as subscripts
-### that run along the full extend of the dimension that they run along. Before
-### an Nindex can be used in a call to `[` or `[[`, the NULLs in it must be
-### replaced with elements of class "name".
+### NULL list elements in it are interpreted as missing subscripts, that is, as
+### subscripts that run along the full extend of the corresponding dimension.
+### Before an Nindex can be used in a call to `[`, `[<-`, `[[` or `[[<-`, the
+### NULL list elements must be replaced with object of class "name".
 ###
 
-### For use in "[" or "[[" methods to extract the user supplied subscripts as
-### an Nindex. NULL subscripts are replace with integer(0). Missing subscripts
-### are set to NULL.
+### For use in "[", "[<-", "[[", or "[[<-" methods to extract the user
+### supplied subscripts as an Nindex. NULL subscripts are replace with
+### integer(0). Missing subscripts are set to NULL.
 extract_Nindex_from_syscall <- function(call, eframe)
 {
     Nindex <- lapply(seq_len(length(call) - 2L),

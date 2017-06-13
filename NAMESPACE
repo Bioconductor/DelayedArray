@@ -11,7 +11,7 @@ import(matrixStats)
 ###
 
 exportClasses(
-    ArrayViewport, ArrayGrid,
+    ArrayViewport, ArrayGrid, ArrayArbitraryGrid, ArrayRegularGrid,
     ArrayBlocks,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
@@ -26,6 +26,7 @@ exportClasses(
 
 S3method(as.array, DelayedArray)
 
+S3method(as.character, ArrayGrid)
 S3method(as.character, DelayedArray)
 
 S3method(as.complex, DelayedArray)
@@ -55,6 +56,7 @@ S3method(split, DelayedArray)
 export(
     as.array.DelayedArray,
 
+    as.character.ArrayGrid,
     as.character.DelayedArray,
 
     as.complex.DelayedArray,
@@ -87,7 +89,8 @@ exportMethods(
     ## Methods for generics defined in the base package:
     length, names, "names<-",
     dim, "dim<-", dimnames, "dimnames<-",
-    as.array, as.vector, as.matrix, as.data.frame,
+    as.array, as.matrix, as.data.frame, as.vector,
+    as.logical, as.integer, as.numeric, as.complex, as.character, as.raw,
     "[", "[[",
     drop,
     t,
@@ -117,6 +120,7 @@ exportMethods(
     isEmpty,
 
     ## Methods for generics defined in the IRanges package:
+    ranges, start, end, width,
     splitAsList,
     arbind, acbind
 )
@@ -127,7 +131,8 @@ exportMethods(
 ###
 
 export(
-    ArrayViewport, makeNindexFromArrayViewport, ArrayGrid,
+    ArrayViewport, makeNindexFromArrayViewport,
+    ArrayArbitraryGrid, ArrayRegularGrid,
     ArrayBlocks,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     RleArray
@@ -139,6 +144,7 @@ export(
 ###
 
 export(
+    refdim,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
     realize,
     write_to_sink, close,
@@ -148,6 +154,7 @@ export(
 
 ### Exactly the same list as above.
 exportMethods(
+    refdim,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
     realize,
     write_to_sink, close,

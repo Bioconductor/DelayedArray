@@ -285,7 +285,8 @@
             z1 <- z2 <- 1L  # print only first and last slices
         }
     }
-    grid <- new("ArrayBlocks", dim=x_dim, N=3L, by=1L)
+    spacings <- c(x_dim[1:2], rep.int(1L, length(x_dim)-2L))
+    grid <- ArrayRegularGrid(x_dim, spacings=spacings)
     nblock <- length(grid)
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)
