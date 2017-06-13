@@ -20,10 +20,37 @@ wmsg2 <- function(...)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Manipulating an Nindex
 ###
-### An Nindex is a "multidimensional subsetting index" is a list with one
-### subscript per dimension in the object to subset. Missing subscripts are
-### represented by NULLs. Before it can be used to actually subset an
-### array-like object, the NULLs must be replaced with elements of class "name".
+### An Nindex is a "multidimensional subsetting index". It's represented as a
+### list with one subscript per dimension in the array-like object to subset.
+### NULLs in it are interpreted as missing subscripts, that is, as subscripts
+### that run along the full extend of the dimension that they run along. Before
+### an Nindex can be used in a call to `[` or `[[`, the NULLs in it must be
+### replaced with elements of class "name".
+###
+
+### For use in "[" or "[[" methods to extract the user supplied subscripts as
+### an Nindex. NULL subscripts are replace with integer(0). Missing subscripts
+### are set to NULL.
+extract_Nindex_from_syscall <- function(call, eframe)
+{
+    Nindex <- lapply(seq_len(length(call) - 2L),
+        function(i) {
+            subscript <- call[[2L + i]]
+            if (missing(subscript))
+                return(NULL)
+            subscript <- eval(subscript, envir=eframe, enclos=eframe)
+            if (is.null(subscript))
+                return(integer(0))
+            subscript
+        }
+    )
+    argnames <- tail(names(call), n=-2L)
+    if (!is.null(argnames))
+        Nindex <- Nindex[!(argnames %in% c("drop", "exact"))]
+    if (length(Nindex) == 1L && is.null(Nindex[[1L]]))
+        Nindex <- Nindex[0L]
+    Nindex
+}
 
 ### Used in HDF5Array!
 expand_Nindex_RangeNSBS <- function(Nindex)
@@ -105,30 +132,6 @@ to_linear_index <- function(Nindex, dim)
         p <- p * d
     }
     ans
-}
-
-### For use in "[" or "[[" methods to extract the user supplied subscripts as
-### an Nindex. NULL subscripts are replace with integer(0). Missing subscripts
-### are set to NULL.
-extract_Nindex_from_syscall <- function(call, eframe)
-{
-    Nindex <- lapply(seq_len(length(call) - 2L),
-        function(i) {
-            subscript <- call[[2L + i]]
-            if (missing(subscript))
-                return(NULL)
-            subscript <- eval(subscript, envir=eframe, enclos=eframe)
-            if (is.null(subscript))
-                return(integer(0))
-            subscript
-        }
-    )
-    argnames <- tail(names(call), n=-2L)
-    if (!is.null(argnames))
-        Nindex <- Nindex[!(argnames %in% c("drop", "exact"))]
-    if (length(Nindex) == 1L && is.null(Nindex[[1L]]))
-        Nindex <- Nindex[0L]
-    Nindex
 }
 
 
