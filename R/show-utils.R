@@ -6,20 +6,20 @@
 ###
 
 
-.format_as_character_vector <- function(x, justify)
+.format_as_character_vector <- function(x, justify, quote=TRUE)
 {
     x_names <- names(x)
     x <- as.vector(x)
-    if (typeof(x) == "character" && length(x) != 0L)
+    if (quote && typeof(x) == "character" && length(x) != 0L)
         x <- paste0("\"", x, "\"")
     names(x) <- x_names
     format(x, justify=justify)
 }
 
-.format_as_character_matrix <- function(x, justify)
+.format_as_character_matrix <- function(x, justify, quote=TRUE)
 {
     x <- as.matrix(x)
-    if (typeof(x) == "character" && length(x) != 0L) {
+    if (quote && typeof(x) == "character" && length(x) != 0L) {
         x_dim <- dim(x)
         x_dimnames <- dimnames(x)
         x <- paste0("\"", x, "\"")
@@ -51,32 +51,32 @@
     format(c(s1, ".", s2), justify=justify)
 }
 
-.prepare_1D_array_sample <- function(x, n1, n2, justify)
+.prepare_1D_array_sample <- function(x, n1, n2, justify, quote=TRUE)
 {
     x_len <- length(x)
     x_names <- names(x)
     if (x_len <= n1 + n2 + 1L) {
-        ans <- .format_as_character_vector(x, justify)
+        ans <- .format_as_character_vector(x, justify, quote=quote)
         idx1 <- seq_len(x_len)
         idx2 <- integer(0)
         names(ans) <- .split_1D_array_names(x_names, idx1, idx2, justify)[idx1]
     } else {
         idx1 <- seq_len(n1)
         idx2 <- seq(to=x_len, by=1L, length.out=n2)
-        ans1 <- .format_as_character_vector(x[idx1], justify)
-        ans2 <- .format_as_character_vector(x[idx2], justify)
+        ans1 <- .format_as_character_vector(x[idx1], justify, quote=quote)
+        ans2 <- .format_as_character_vector(x[idx2], justify, quote=quote)
         ans <- c(ans1, ".", ans2)
         names(ans) <- .split_1D_array_names(x_names, idx1, idx2, justify)
     }
     ans
 }
 
-.print_1D_array_data <- function(x, n1, n2)
+.print_1D_array_data <- function(x, n1, n2, quote=TRUE)
 {
     stopifnot(length(dim(x)) == 1L)
     right <- type(x) != "character"
     justify <- if (right) "right" else "left"
-    out <- .prepare_1D_array_sample(x, n1, n2, justify)
+    out <- .prepare_1D_array_sample(x, n1, n2, justify, quote=quote)
     print(out, quote=FALSE, right=right, max=length(out))
 }
 
@@ -128,15 +128,17 @@
     c(head(ans, n=length(s1)), "...", tail(ans, n=length(s2)))
 }
 
-.rsplit_2D_array_data <- function(x, m1, m2, justify)
+.rsplit_2D_array_data <- function(x, m1, m2, justify, quote=TRUE)
 {
     x_nrow <- nrow(x)
     x_rownames <- rownames(x)
     idx1 <- seq_len(m1)
     idx2 <- seq(to=x_nrow, by=1L, length.out=m2)
 
-    ans1 <- .format_as_character_matrix(x[idx1, , drop=FALSE], justify)
-    ans2 <- .format_as_character_matrix(x[idx2, , drop=FALSE], justify)
+    ans1 <- .format_as_character_matrix(x[idx1, , drop=FALSE], justify,
+                                        quote=quote)
+    ans2 <- .format_as_character_matrix(x[idx2, , drop=FALSE], justify,
+                                        quote=quote)
     dots <- rep.int(".", ncol(ans1))
     ans <- rbind(ans1, matrix(dots, nrow=1L), ans2)
 
@@ -144,15 +146,17 @@
     ans
 }
 
-.csplit_2D_array_data <- function(x, n1, n2, justify)
+.csplit_2D_array_data <- function(x, n1, n2, justify, quote=TRUE)
 {
     x_ncol <- ncol(x)
     x_colnames <- colnames(x)
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
 
-    ans1 <- .format_as_character_matrix(x[ , idx1, drop=FALSE], justify)
-    ans2 <- .format_as_character_matrix(x[ , idx2, drop=FALSE], justify)
+    ans1 <- .format_as_character_matrix(x[ , idx1, drop=FALSE], justify,
+                                        quote=quote)
+    ans2 <- .format_as_character_matrix(x[ , idx2, drop=FALSE], justify,
+                                        quote=quote)
     dots <- rep.int(".", nrow(ans1))
     ans <- cbind(ans1, matrix(dots, ncol=1L), ans2)
 
@@ -160,7 +164,7 @@
     ans
 }
 
-.split_2D_array_data <- function(x, m1, m2, n1, n2, justify)
+.split_2D_array_data <- function(x, m1, m2, n1, n2, justify, quote=TRUE)
 {
     x_ncol <- ncol(x)
     x_colnames <- colnames(x)
@@ -169,8 +173,8 @@
 
     x1 <- x[ , idx1, drop=FALSE]
     x2 <- x[ , idx2, drop=FALSE]
-    ans1 <- .rsplit_2D_array_data(x1, m1, m2, justify)
-    ans2 <- .rsplit_2D_array_data(x2, m1, m2, justify)
+    ans1 <- .rsplit_2D_array_data(x1, m1, m2, justify, quote=quote)
+    ans2 <- .rsplit_2D_array_data(x2, m1, m2, justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
     ans <- cbind(ans1, matrix(dots, ncol=1L), ans2)
 
@@ -178,7 +182,7 @@
     ans
 }
 
-.prepare_2D_array_sample <- function(x, m1, m2, n1, n2, justify)
+.prepare_2D_array_sample <- function(x, m1, m2, n1, n2, justify, quote=TRUE)
 {
     ## An attempt at reducing the nb of columns to display when 'x' has
     ## dimnames so the object fits in getOption("width"). Won't necessarily
@@ -202,7 +206,7 @@
     x_ncol <- ncol(x)
     if (x_nrow <= m1 + m2 + 1L) {
         if (x_ncol <= n1 + n2 + 1L) {
-            ans <- .format_as_character_matrix(x, justify)
+            ans <- .format_as_character_matrix(x, justify, quote=quote)
             ## Only needed because of this bug in base::print.default:
             ##   https://stat.ethz.ch/pipermail/r-devel/2016-March/072479.html
             ## TODO: Remove when the bug is fixed.
@@ -213,11 +217,11 @@
                                                  justify)[idx1]
             }
         } else {
-            ans <- .csplit_2D_array_data(x, n1, n2, justify)
+            ans <- .csplit_2D_array_data(x, n1, n2, justify, quote=quote)
         }
     } else {
         if (x_ncol <= n1 + n2 + 1L) {
-            ans <- .rsplit_2D_array_data(x, m1, m2, justify)
+            ans <- .rsplit_2D_array_data(x, m1, m2, justify, quote=quote)
             ## Only needed because of this bug in base::print.default:
             ##   https://stat.ethz.ch/pipermail/r-devel/2016-March/072479.html
             ## TODO: Remove when the bug is fixed.
@@ -228,18 +232,18 @@
                                                  justify)[idx1]
             }
         } else {
-            ans <- .split_2D_array_data(x, m1, m2, n1, n2, justify)
+            ans <- .split_2D_array_data(x, m1, m2, n1, n2, justify, quote=quote)
         }
     }
     ans
 }
 
-.print_2D_array_data <- function(x, m1, m2, n1, n2)
+.print_2D_array_data <- function(x, m1, m2, n1, n2, quote=TRUE)
 {
     stopifnot(length(dim(x)) == 2L)
     right <- type(x) != "character"
     justify <- if (right) "right" else "left"
-    out <- .prepare_2D_array_sample(x, m1, m2, n1, n2, justify)
+    out <- .prepare_2D_array_sample(x, m1, m2, n1, n2, justify, quote=quote)
     print(out, quote=FALSE, right=right, max=length(out))
 }
 
@@ -248,7 +252,7 @@
 ### Array of arbitrary dimensions
 ###
 
-.print_2D_slices <- function(x, m1, m2, n1, n2, grid, idx)
+.print_2D_slices <- function(x, m1, m2, n1, n2, grid, idx, quote=TRUE)
 {
     x_dimnames <- dimnames(x)
     for (i in idx) {
@@ -258,12 +262,12 @@
         Nindex <- makeNindexFromArrayViewport(viewport)
         slice <- subset_by_Nindex(x, Nindex)
         dim(slice) <- dim(slice)[1:2]
-        .print_2D_array_data(slice, m1, m2, n1, n2)
+        .print_2D_array_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")
     }
 }
 
-.print_nD_array_data <- function(x, n1, n2)
+.print_nD_array_data <- function(x, n1, n2, quote=TRUE)
 {
     x_dim <- dim(x)
     x_nrow <- x_dim[[1L]]
@@ -290,13 +294,13 @@
     nblock <- length(grid)
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)
-        .print_2D_slices(x, m1, m2, n1, n2, grid, idx)
+        .print_2D_slices(x, m1, m2, n1, n2, grid, idx, quote=quote)
     } else {
         idx1 <- seq_len(z1)
         idx2 <- seq(to=nblock, by=1L, length.out=z2)
-        .print_2D_slices(x, m1, m2, n1, n2, grid, idx1)
+        .print_2D_slices(x, m1, m2, n1, n2, grid, idx1, quote=quote)
         cat("...\n\n")
-        .print_2D_slices(x, m1, m2, n1, n2, grid, idx2)
+        .print_2D_slices(x, m1, m2, n1, n2, grid, idx2, quote=quote)
     }
 }
 
@@ -305,17 +309,17 @@
 ### show_compact_array()
 ###
 
-.print_array_data <- function(x, n1, n2)
+.print_array_data <- function(x, n1, n2, quote=TRUE)
 {
     x_dim <- dim(x)
     if (length(x_dim) == 1L)
-        return(.print_1D_array_data(x, n1, n2))
+        return(.print_1D_array_data(x, n1, n2, quote=quote))
     if (length(x_dim) == 2L) {
         nhead <- get_showHeadLines()
         ntail <- get_showTailLines()
-        return(.print_2D_array_data(x, nhead, ntail, n1, n2))
+        return(.print_2D_array_data(x, nhead, ntail, n1, n2, quote=quote))
     }
-    .print_nD_array_data(x, n1, n2)
+    .print_nD_array_data(x, n1, n2, quote=quote)
 }
 
 show_compact_array <- function(object)

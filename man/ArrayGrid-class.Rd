@@ -48,4 +48,15 @@
   processing of array-like objects.
 }
 
+\examples{
+grid <- ArrayRegularGrid(c(2700L, 100L, 33L), c(250L, 100L, 10L))
+## Number of grid elements along each dimension of the reference array:
+dim(grid)
+## Total number of grid elements:
+length(grid)
+## First element in the grid:
+grid[[1L]]            # same as grid[[1L, 1L, 1L]]
+## Last element in the grid:
+grid[[length(grid)]]  # same as grid[[11L, 1L, 4L]]
+}
 \keyword{internal}
