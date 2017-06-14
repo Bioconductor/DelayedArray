@@ -510,6 +510,7 @@ extract_array_block <- function(x, grid, b)
 ###    spacings <- get_max_spacings_for_hypercube_blocks(dim(x), max_block_len)
 ###    grid <- ArrayRegularGrid(dim(x), spacings)
 ###
+### NOT exported but used in HDF5Array!
 get_max_spacings_for_hypercube_blocks <- function(refdim, max_block_len)
 {
     if (!isSingleNumber(max_block_len))
