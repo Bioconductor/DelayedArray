@@ -487,3 +487,67 @@ setMethod("show", "ArrayGrid",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### A convenience helper.
+###
+
+extract_array_block <- function(x, grid, b)
+{
+    Nindex <- makeNindexFromArrayViewport(grid[[b]])
+    subset_by_Nindex(x, Nindex)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### ArrayLinearGrid()
+###
+
+### Create a regular grid with the following properties:
+###   (a) All the grid elements have a length <= 'max_block_len'.
+###   (b) All the blocks obtained by dividing the reference array according
+###       the grid are "linear blocks", i.e. they would be made of array
+###       elements that are contiguous in memory if the reference array was
+###       an ordinary R array.
+ArrayLinearGrid <- function(refdim, max_block_len)
+{
+    p <- cumprod(refdim)
+    w <- which(p <= max_block_len)
+    N <- if (length(w) == 0L) 1L else w[[length(w)]] + 1L
+    if (N > length(refdim)) {
+        spacings <- refdim
+    } else {
+        if (N == 1L) {
+            by <- max_block_len
+        } else {
+            by <- max_block_len %/% as.integer(p[[N - 1L]])
+        }
+        spacings <- c(head(refdim, n=N-1L), by, rep.int(1L, length(refdim)-N))
+    }
+    ArrayRegularGrid(refdim, spacings)
+}
+
+### NOT exported but used in unit tests.
+split_array_in_linear_blocks <- function(x, max_block_len)
+{
+    grid <- ArrayLinearGrid(dim(x), max_block_len)
+    lapply(seq_along(grid),
+           function(b) extract_array_block(x, grid, b))
+}
+
+### NOT exported but used in unit tests.
+### Rebuild the original array from the blocks obtained by
+### split_array_in_linear_blocks() as an *ordinary* array.
+### So if 'x' is an ordinary array, then:
+###
+###   blocks <- split_array_in_linear_blocks(x, max_block_len)
+###   unsplit_array_from_linear_blocks(blocks, x)
+###
+### should be a no-op for any 'max_block_len' < 'length(x)'.
+unsplit_array_from_linear_blocks <- function(blocks, x)
+{
+    ans <- combine_array_objects(blocks)
+    dim(ans) <- dim(x)
+    ans
+}
+

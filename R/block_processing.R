@@ -72,7 +72,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
     APPLY <- match.fun(APPLY)
     if (is.null(max_block_len))
         max_block_len <- get_max_block_length(type(x))
-    grid <- ArrayBlocks(dim(x), max_block_len)
+    grid <- ArrayLinearGrid(dim(x), max_block_len)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -108,7 +108,7 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
         types <- unlist(lapply(dots, type))
         max_block_len <- min(get_max_block_length(types))
     }
-    grid <- ArrayBlocks(x_dim, max_block_len)
+    grid <- ArrayLinearGrid(x_dim, max_block_len)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -145,7 +145,7 @@ block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
         BREAKIF <- match.fun(BREAKIF)
     if (is.null(max_block_len))
         max_block_len <- get_max_block_length(type(x))
-    grid <- ArrayBlocks(dim(x), max_block_len)
+    grid <- ArrayLinearGrid(dim(x), max_block_len)
     nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())

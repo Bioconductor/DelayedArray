@@ -482,10 +482,10 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     ## don't use block_APPLY() or family because they walk on all the blocks.
 
     max_block_len <- get_max_block_length(type(x))
-    grid <- ArrayBlocks(dim(x), max_block_len)
+    grid <- ArrayLinearGrid(dim(x), max_block_len)
     nblock <- length(grid)
 
-    breakpoints <- cumsum(get_block_lengths(grid))
+    breakpoints <- cumsum(lengths(grid))
     part_idx <- get_part_index(i, breakpoints)
     split_part_idx <- split_part_index(part_idx, length(breakpoints))
     block_idx <- which(lengths(split_part_idx) != 0L)  # blocks to visit
@@ -493,8 +493,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
             if (get_verbose_block_processing())
                 message("Visiting block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            Nindex <- makeNindexFromArrayViewport(grid[[b]])
-            block <- subset_by_Nindex(x, Nindex)
+            block <- extract_array_block(x, grid, b)
             if (!is.array(block))
                 block <- as.array(block)
             block_ans <- block[split_part_idx[[b]]]
