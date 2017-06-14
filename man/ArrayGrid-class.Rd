@@ -41,7 +41,7 @@
 \alias{lengths,ArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
-\alias{isLinear-method}
+\alias{isLinear}
 \alias{isLinear,ArrayViewport-method}
 \alias{isLinear,ArrayGrid-method}
 

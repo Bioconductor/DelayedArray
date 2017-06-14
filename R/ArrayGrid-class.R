@@ -240,8 +240,15 @@ setClass("ArrayRegularGrid",
 {
     vapply(seq_along(x@tickmarks),
            function(along)
-               max(.get_ArrayArbitraryGrid_spacings_along(x, along)),
+               max(0L, .get_ArrayArbitraryGrid_spacings_along(x, along)),
            integer(1))
+}
+
+.get_ArrayRegularGrid_dim <- function(refdim, spacings)
+{
+    ans <- refdim %/% spacings + (refdim %% spacings != 0L)
+    ans[is.na(ans)] <- 0L
+    ans
 }
 
 .get_ArrayRegularGrid_spacings_along <- function(x, along)
@@ -312,9 +319,7 @@ setValidity2("ArrayRegularGrid", .validate_ArrayRegularGrid)
 setMethod("refdim", "ArrayArbitraryGrid",
     function(x)
     {
-        mapply(function(tm, tm_len) {
-                   if (tm_len == 0L) 0L else tm[[tm_len]]
-               },
+        mapply(function(tm, tm_len) if (tm_len == 0L) 0L else tm[[tm_len]],
                x@tickmarks,
                lengths(x@tickmarks),
                USE.NAMES=FALSE)
@@ -326,17 +331,7 @@ setMethod("refdim", "ArrayRegularGrid", function(x) x@refdim)
 setMethod("dim", "ArrayArbitraryGrid", function(x) lengths(x@tickmarks))
 
 setMethod("dim", "ArrayRegularGrid",
-    function(x)
-    {
-        mapply(function(D, spacing) {
-                   if (spacing <= 0L) return(0L)
-                   q <- D %/% spacing
-                   if (D %% spacing == 0L) q else q + 1L
-               },
-               refdim(x),
-               x@spacings,
-               USE.NAMES=FALSE)
-    }
+    function(x) .get_ArrayRegularGrid_dim(refdim(x), x@spacings)
 )
 
 setMethod("length", "ArrayGrid", function(x) prod(dim(x)))
@@ -504,6 +499,57 @@ extract_array_block <- function(x, grid, b)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### get_max_spacings_for_hypercube_blocks()
+###
+
+### Typically used to create a grid that divides the reference array 'x' into
+### blocks that have a shape that is as close as possible to an hypercube
+### (while having their length <= 'max_block_len'):
+###
+###    max_block_len <- get_max_block_length(type(x))
+###    spacings <- get_max_spacings_for_hypercube_blocks(dim(x), max_block_len)
+###    grid <- ArrayRegularGrid(dim(x), spacings)
+###
+get_max_spacings_for_hypercube_blocks <- function(refdim, max_block_len)
+{
+    if (!isSingleNumber(max_block_len))
+        stop("'max_block_len' must be a single number")
+    p <- prod(refdim)
+    if (p <= max_block_len)
+        return(refdim)
+
+    spacings <- refdim
+    L <- max(spacings)
+    while (TRUE) {
+        is_max <- spacings == L
+        not_max_spacings <- spacings[!is_max]
+        L <- (max_block_len / prod(not_max_spacings)) ^ (1 / sum(is_max))
+        if (length(not_max_spacings) == 0L)
+            break
+        L2 <- max(not_max_spacings)
+        if (L >= L2)
+            break
+        L <- L2
+        spacings[is_max] <- L
+    }
+    spacings[is_max] <- as.integer(L)
+    q <- .get_ArrayRegularGrid_dim(refdim, spacings + 1L) /
+         .get_ArrayRegularGrid_dim(refdim, spacings)
+    for (along in which(is_max)[order(q[is_max])]) {
+        spacings[[along]] <- spacings[[along]] + 1L
+        p <- prod(spacings)
+        if (p == max_block_len)
+            break
+        if (p > max_block_len) {
+            spacings[[along]] <- spacings[[along]] - 1L
+            break
+        }
+    }
+    spacings
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Grids with "linear grid elements"
 ###
 ### The grid elements are said to be "linear" if they divide the reference
@@ -535,8 +581,14 @@ setMethod("isLinear", "ArrayGrid",
     }
 )
 
-### Use to create a regular grid with "linear grid elements" where all the
-### grid elements have a length <= 'max_block_len'.
+### Typically used to create a regular grid with "linear grid elements" i.e.
+### a grid that divides the reference array 'x' into "linear blocks":
+###
+###    max_block_len <- get_max_block_length(type(x))
+###    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
+###    grid <- ArrayRegularGrid(dim(x), spacings)
+###
+### All the grid elements are guaranteed to have a length <= 'max_block_len'.
 ### NOT exported but used in HDF5Array!
 get_max_spacings_for_linear_blocks <- function(refdim, max_block_len)
 {
