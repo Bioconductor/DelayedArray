@@ -38,6 +38,7 @@
 \alias{[[,ArrayGrid-method}
 \alias{as.character.ArrayGrid}
 \alias{as.character,ArrayGrid-method}
+\alias{lengths,ArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
 \title{ArrayGrid and ArrayViewport objects}

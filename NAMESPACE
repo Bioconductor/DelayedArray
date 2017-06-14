@@ -89,13 +89,12 @@ exportMethods(
     ## Methods for generics defined in the base package:
     length, names, "names<-",
     dim, "dim<-", dimnames, "dimnames<-",
+    "[", "[[",
+    lengths,
     as.array, as.matrix, as.data.frame, as.vector,
     as.logical, as.integer, as.numeric, as.complex, as.character, as.raw,
-    "[", "[[",
-    drop,
-    t,
-    c,
-    split,
+    c, split,
+    drop, t,
     is.na, is.finite, is.infinite, is.nan,
     "!",
     #"+", "-", "*", "/", "^", "%%", "%/%",  # "Arith" group generic

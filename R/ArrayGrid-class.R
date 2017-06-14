@@ -82,8 +82,10 @@ setMethod("width", "ArrayViewport", function(x) width(ranges(x)))
 
 setMethod("end", "ArrayViewport", function(x) end(ranges(x)))
 
+### 'width(x)' and 'dim(x)' are synonyms.
 setMethod("dim", "ArrayViewport", function(x) width(ranges(x)))
 
+### This is the hyper-volume of the viewport.
 setMethod("length", "ArrayViewport", function(x) prod(dim(x)))
 
 ### Constructor
@@ -194,6 +196,10 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
 ###      - length(): Return the total number of grid elements.
 ###      - x[[i]]: Linear double bracket subsetting. Return an ArrayViewport
 ###        object.
+### Groups 2) and 3) give these objects 2 semantics: array-like and list-like.
+### Note that length() and "linear double bracket subsetting" are consistent
+### with dim() and "multi-dimensional double bracket subsetting", respectively.
+### So the array-like and list-like semantics are compatible.
 ###
 
 setClass("ArrayGrid",
@@ -221,6 +227,30 @@ setClass("ArrayRegularGrid",
     )
 )
 
+### Low-level helpers
+
+.get_ArrayArbitraryGrid_spacings_along <- function(x, along)
+    S4Vectors:::diffWithInitialZero(x@tickmarks[[along]])
+
+.get_ArrayArbitraryGrid_max_spacings <- function(x)
+{
+    vapply(seq_along(x@tickmarks),
+           function(along)
+               max(.get_ArrayArbitraryGrid_spacings_along(x, along)),
+           integer(1))
+}
+
+.get_ArrayRegularGrid_spacings_along <- function(x, along)
+{
+    D <- x@refdim[[along]]
+    spacing <- x@spacings[[along]]
+    ans <- rep.int(spacing, D %/% spacing)
+    r <- D %% spacing
+    if (r != 0L)
+        ans <- c(ans, r)
+    ans
+}
+
 ### Validity
 
 .validate_tickmarks <- function(tm)
@@ -231,12 +261,17 @@ setClass("ArrayRegularGrid",
 }
 .validate_ArrayArbitraryGrid <- function(x)
 {
-    if (!is.list(x@tickmarks))
+    x_tickmarks <- x@tickmarks
+    if (!is.list(x_tickmarks))
         return(wmsg2("'tickmarks' slot must be a list"))
-    ok <- vapply(x@tickmarks, .validate_tickmarks, logical(1), USE.NAMES=FALSE)
+    ok <- vapply(x_tickmarks, .validate_tickmarks, logical(1), USE.NAMES=FALSE)
     if (!all(ok))
         return(wmsg2("each list element in 'tickmarks' slot must be an ",
                      "integer vector of strictly ascending positive values"))
+    max_spacings <- .get_ArrayArbitraryGrid_max_spacings(x)
+    if (prod(max_spacings) > .Machine$integer.max)
+        return(wmsg2("grid is too coarse (all grid elements must have a ",
+                     "length <= .Machine$integer.max)"))
     TRUE
 }
 setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
@@ -261,6 +296,9 @@ setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
         return(wmsg2("first viewport in the grid cannot have any of its ",
                      "dimensions set to 0 unless the corresponding ",
                      "dimension in the reference array is set to 0"))
+    if (prod(x_spacings) > .Machine$integer.max)
+        return(wmsg2("grid is too coarse (all grid elements must have a ",
+                     "length <= .Machine$integer.max)"))
     TRUE
 }
 setValidity2("ArrayRegularGrid", .validate_ArrayRegularGrid)
@@ -326,11 +364,11 @@ setMethod("getArrayElement", "ArrayArbitraryGrid",
     {
         x_refdim <- refdim(x)
         ans_end <- mapply(`[[`, x@tickmarks, subscripts)
-        ans_width <- mapply(function(tm, i) {
-                                S4Vectors:::diffWithInitialZero(tm)[[i]]
-                            },
-                            x@tickmarks,
-                            subscripts)
+        ans_width <- mapply(
+            function(along, i)
+                .get_ArrayArbitraryGrid_spacings_along(x, along)[[i]],
+            seq_along(x_refdim),
+            subscripts)
         ans_ranges <- IRanges(end=ans_end, width=ans_width)
         ArrayViewport(x_refdim, ans_ranges)
     }
@@ -388,6 +426,36 @@ setMethod("[[", "ArrayGrid",
             stop("some subscripts are out of bounds")
         }
         getArrayElement(x, subscripts)
+    }
+)
+
+### lengths()
+
+### NOT exported.
+setGeneric("get_spacings_along", signature="x",
+    function(x, along) standardGeneric("get_spacings_along")
+)
+setMethod("get_spacings_along", "ArrayArbitraryGrid",
+    .get_ArrayArbitraryGrid_spacings_along
+)
+setMethod("get_spacings_along", "ArrayRegularGrid",
+    .get_ArrayRegularGrid_spacings_along
+)
+
+### Equivalent to 'vapply(x, length, integer(1))' but faster.
+### The sum of the hyper-volumes of all the grid elements should be equal
+### to the hyper-volume of the reference array.
+### More concisely: sum(lengths(x)) should be equal to 'prod(refdim(x))'.
+setMethod("lengths", "ArrayGrid",
+    function (x, use.names=TRUE)
+    {
+        ans <- get_spacings_along(x, 1L)
+        x_ndim <- length(refdim(x))
+        if (x_ndim >= 2L) {
+            for (along in 2:x_ndim)
+              ans <- ans * rep(get_spacings_along(x, along), each=length(ans))
+        }
+        ans
     }
 )
 
