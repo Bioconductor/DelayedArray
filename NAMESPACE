@@ -141,7 +141,7 @@ export(
 ###
 
 export(
-    refdim,
+    refdim, isLinear,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
     realize,
     write_to_sink, close,
@@ -151,7 +151,7 @@ export(
 
 ### Exactly the same list as above.
 exportMethods(
-    refdim,
+    refdim, isLinear,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
     realize,
     write_to_sink, close,

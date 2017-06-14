@@ -52,6 +52,10 @@ setClass("ArrayViewport",
     x_width <- width(x_ranges)
     if (any(x_width == 0L))
         return(wmsg2("a viewport cannot be empty"))
+
+    ## A viewport cannot be longer than 2^31-1.
+    if (prod(x_width) > .Machine$integer.max)
+        return(wmsg2("a vewport cannot be longer than .Machine$integer.max"))
     TRUE
 }
 
@@ -500,37 +504,64 @@ extract_array_block <- function(x, grid, b)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### ArrayLinearGrid()
+### Grids with "linear grid elements"
+###
+### The grid elements are said to be "linear" if they divide the reference
+### array in "linear blocks", i.e. in blocks that would be made of array
+### elements contiguous in memory if the reference array was an ordinary R
+### array (where the fastest changing dimension is the first one).
+### Note that if the 1st grid element is linear, then they all are.
 ###
 
-### Create a regular grid with the following properties:
-###   (a) All the grid elements have a length <= 'max_block_len'.
-###   (b) All the blocks obtained by dividing the reference array according
-###       the grid are "linear blocks", i.e. they would be made of array
-###       elements that are contiguous in memory if the reference array was
-###       an ordinary R array.
-ArrayLinearGrid <- function(refdim, max_block_len)
+setGeneric("isLinear", function(x) standardGeneric("isLinear"))
+
+setMethod("isLinear", "ArrayViewport",
+    function(x)
+    {
+        x_width <- width(x)
+        idx <- which(x_width != refdim(x))
+        if (length(idx) == 0L)
+            return(TRUE)
+        all(tail(x_width, n=-idx[[1L]]) == 1L)
+    }
+)
+
+setMethod("isLinear", "ArrayGrid",
+    function(x)
+    {
+        if (length(x) == 0L)
+            return(TRUE)
+        isLinear(x[[1L]])
+    }
+)
+
+### Use to create a regular grid with "linear grid elements" where all the
+### grid elements have a length <= 'max_block_len'.
+### NOT exported but used in HDF5Array!
+get_max_spacings_for_linear_blocks <- function(refdim, max_block_len)
 {
+    if (!isSingleNumber(max_block_len))
+        stop("'max_block_len' must be a single number")
+    if (!is.integer(max_block_len))
+        max_block_len <- as.integer(max_block_len)
     p <- cumprod(refdim)
     w <- which(p <= max_block_len)
     N <- if (length(w) == 0L) 1L else w[[length(w)]] + 1L
-    if (N > length(refdim)) {
-        spacings <- refdim
+    if (N > length(refdim))
+        return(refdim)
+    if (N == 1L) {
+        by <- max_block_len
     } else {
-        if (N == 1L) {
-            by <- max_block_len
-        } else {
-            by <- max_block_len %/% as.integer(p[[N - 1L]])
-        }
-        spacings <- c(head(refdim, n=N-1L), by, rep.int(1L, length(refdim)-N))
+        by <- max_block_len %/% as.integer(p[[N - 1L]])
     }
-    ArrayRegularGrid(refdim, spacings)
+    c(head(refdim, n=N-1L), by, rep.int(1L, length(refdim)-N))
 }
 
 ### NOT exported but used in unit tests.
 split_array_in_linear_blocks <- function(x, max_block_len)
 {
-    grid <- ArrayLinearGrid(dim(x), max_block_len)
+    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
+    grid <- ArrayRegularGrid(dim(x), spacings)
     lapply(seq_along(grid),
            function(b) extract_array_block(x, grid, b))
 }

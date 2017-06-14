@@ -482,7 +482,8 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     ## don't use block_APPLY() or family because they walk on all the blocks.
 
     max_block_len <- get_max_block_length(type(x))
-    grid <- ArrayLinearGrid(dim(x), max_block_len)
+    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
+    grid <- ArrayRegularGrid(dim(x), spacings)
     nblock <- length(grid)
 
     breakpoints <- cumsum(lengths(grid))
