@@ -35,12 +35,8 @@ setClass("ArrayViewport",
         return(wmsg2("object represents a viewport that is not ",
                      "within the bounds of the reference array"))
 
-    x_dim <- width(x_ranges)
-    if (any(x_dim == 0L & x_refdim != 0L))
-        return(wmsg2("viewport dimensions cannot be set to 0 unless the ",
-                     "corresponding dimensions in the reference array are 0"))
-
     ## A viewport cannot be longer than 2^31-1.
+    x_dim <- width(x_ranges)
     if (prod(x_dim) > .Machine$integer.max)
         return(wmsg2("a viewport cannot be longer than .Machine$integer.max"))
     TRUE
@@ -224,7 +220,7 @@ setClass("ArrayArbitraryGrid",
                               # dimension of the reference array,
                               # representing the tickmarks along that
                               # dimension. Each integer vector must be sorted
-                              # in strictly ascending order.
+                              # in ascending order.
     )
 )
 
@@ -252,13 +248,15 @@ setClass("ArrayRegularGrid",
 .get_ArrayRegularGrid_dim <- function(refdim, spacings)
 {
     ans <- refdim %/% spacings + (refdim %% spacings != 0L)
-    ans[is.na(ans)] <- 0L
+    ans[is.na(ans)] <- 1L
     ans
 }
 
 .get_ArrayRegularGrid_spacings_along <- function(x, along)
 {
     D <- x@refdim[[along]]
+    if (D == 0L)
+        return(0L)
     spacing <- x@spacings[[along]]
     ans <- rep.int(spacing, D %/% spacing)
     r <- D %% spacing
@@ -269,21 +267,19 @@ setClass("ArrayRegularGrid",
 
 ### Validity
 
-.validate_tickmarks <- function(tm)
+.valid_tickmarks <- function(tm)
 {
-    is.integer(tm) &&
-        !S4Vectors:::anyMissingOrOutside(tm, 1L) &&
-        isStrictlySorted(tm)
+    is.integer(tm) && !S4Vectors:::anyMissingOrOutside(tm, 0L) && isSorted(tm)
 }
 .validate_ArrayArbitraryGrid <- function(x)
 {
     x_tickmarks <- x@tickmarks
     if (!is.list(x_tickmarks))
         return(wmsg2("'tickmarks' slot must be a list"))
-    ok <- vapply(x_tickmarks, .validate_tickmarks, logical(1), USE.NAMES=FALSE)
+    ok <- vapply(x_tickmarks, .valid_tickmarks, logical(1), USE.NAMES=FALSE)
     if (!all(ok))
-        return(wmsg2("each list element in 'tickmarks' slot must be an ",
-                     "integer vector of strictly ascending positive values"))
+        return(wmsg2("each list element in 'tickmarks' slot must be a ",
+                     "sorted integer vector of non-negative values"))
     max_spacings <- .get_ArrayArbitraryGrid_max_spacings(x)
     if (prod(max_spacings) > .Machine$integer.max)
         return(wmsg2("grid is too coarse (all grid elements must have a ",
@@ -345,8 +341,15 @@ setMethod("length", "ArrayGrid", function(x) prod(dim(x)))
 ArrayArbitraryGrid <- function(tickmarks)
     new("ArrayArbitraryGrid", tickmarks=tickmarks)
 
-### If 'spacings' is omitted, return a grid made of a single viewport covering
-### the whole reference array.
+### Note that none of the dimensions of an ArrayRegularGrid object can be 0,
+### even when some dimensions of the reference array are 0 (in which case,
+### the corresponding dimensions of the grid object are set to 1). As a
+### consequence, an ArrayRegularGrid object always contains at least 1 grid
+### element. Each dimension of the first grid element is always equal to the
+### spacing along that dimension i.e. for any ArrayRegularGrid object,
+### 'dim(grid[[1]])' is identical to 'spacings'.
+### If 'spacings' is omitted, return a grid with a single grid element
+### covering the whole reference array.
 ArrayRegularGrid <- function(refdim, spacings=refdim)
     new("ArrayRegularGrid", refdim=refdim, spacings=spacings)
 

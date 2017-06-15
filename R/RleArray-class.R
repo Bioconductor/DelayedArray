@@ -269,6 +269,8 @@ RleRealizationSink <- function(dim, dimnames=NULL, type="double")
 setMethod("write_to_sink", c("Rle", "RleRealizationSink"),
     function(x, sink, viewport)
     {
+        if (length(x) == 0L)
+            return()  # nothing to do
         if (sink@type == "integer") {
             run_values <- runValue(x)
             ## Replace integer-Rle with raw-Rle if this doesn't loose
