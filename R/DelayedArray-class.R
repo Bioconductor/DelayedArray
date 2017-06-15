@@ -494,7 +494,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
             if (get_verbose_block_processing())
                 message("Visiting block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block <- extract_array_block(x, grid, b)
+            block <- extract_block(x, grid[[b]])
             if (!is.array(block))
                 block <- as.array(block)
             block_ans <- block[split_part_idx[[b]]]

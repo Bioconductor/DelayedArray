@@ -81,8 +81,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
             viewport <- grid[[b]]
-            Nindex <- makeNindexFromArrayViewport(viewport)
-            block <- subset_by_Nindex(x, Nindex)
+            block <- extract_block(x, viewport)
             if (!is.array(block))
                 block <- .as_array_or_matrix(block)
             block_ans <- APPLY(block, ...)
@@ -118,10 +117,9 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
             viewport <- grid[[b]]
-            Nindex <- makeNindexFromArrayViewport(viewport)
             blocks <- lapply(dots,
                 function(x) {
-                    block <- subset_by_Nindex(x, Nindex)
+                    block <- extract_block(x, viewport)
                     if (!is.array(block))
                         block <- .as_array_or_matrix(block)
                     block
@@ -154,7 +152,7 @@ block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
         if (get_verbose_block_processing())
             message("Processing block ", b, "/", nblock, " ... ",
                     appendLF=FALSE)
-        block <- extract_array_block(x, grid, b)
+        block <- extract_block(x, grid[[b]])
         if (!is.array(block))
             block <- .as_array_or_matrix(block)
         reduced <- APPLY(block)

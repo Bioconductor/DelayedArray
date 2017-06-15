@@ -13,9 +13,9 @@ setClass("RleArraySeed",
     )
 )
 
-### We don't support long SolidRleArraySeed objects yet! This would require
-### that S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a numeric
-### vector.
+### We don't support long SolidRleArraySeed objects yet! This would first
+### require that S4Vectors:::extract_positions_from_Rle() accepts 'pos' as
+### a numeric vector.
 setClass("SolidRleArraySeed",
     contains="RleArraySeed",
     representation(
@@ -24,8 +24,9 @@ setClass("SolidRleArraySeed",
 )
 
 ### The RleRealizationSink class is a concrete RealizationSink subclass that
-### implements realization of an array-like object as an RleArray object with
-### a ChunkedRleArraySeed seed.
+### implements realization of an array-like object as an RleArray object that
+### will have a ChunkedRleArraySeed seed (once writting to the sink is
+### complete).
 setClass("RleRealizationSink",
     contains=c("RleArraySeed", "RealizationSink"),
     representation(

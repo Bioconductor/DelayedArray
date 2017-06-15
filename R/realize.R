@@ -53,6 +53,11 @@ setClass("arrayRealizationSink",
     get("result", envir=sink@result_envir)
 }
 
+.set_arrayRealizationSink_result <- function(sink, result)
+{
+    assign("result", result, envir=sink@result_envir)
+}
+
 arrayRealizationSink <- function(dim, dimnames=NULL, type="double")
 {
     result <- array(get(type)(0), dim=dim, dimnames=dimnames)
@@ -73,11 +78,9 @@ setMethod("write_to_sink", c("array", "arrayRealizationSink"),
         } else {
             stopifnot(length(x_dim) == length(sink_dim))
             viewport <- ArrayViewport(sink_dim, IRanges(offsets, width=x_dim))
-            Nindex <- makeNindexFromArrayViewport(viewport,
-                                                  expand.RangeNSBS=TRUE)
-            result <- replace_by_Nindex(result, Nindex, x)
+            result <- replace_block(result, viewport, x)
         }
-        assign("result", result, envir=sink@result_envir)
+        .set_arrayRealizationSink_result(sink, result)
     }
 )
 

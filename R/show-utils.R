@@ -259,8 +259,7 @@
         viewport <- grid[[i]]
         s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames)
         cat(s, "\n", sep="")
-        Nindex <- makeNindexFromArrayViewport(viewport)
-        slice <- subset_by_Nindex(x, Nindex)
+        slice <- extract_block(x, viewport)
         dim(slice) <- dim(slice)[1:2]
         .print_2D_array_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")

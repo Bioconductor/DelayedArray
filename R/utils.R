@@ -83,6 +83,7 @@ subset_by_Nindex <- function(x, Nindex, drop=FALSE)
     do.call(`[`, c(list(x), subscripts, list(drop=drop)))
 }
 
+### Return the modified array.
 replace_by_Nindex <- function(x, Nindex, value)
 {
     subscripts <- .make_subscripts_from_Nindex(Nindex, x)

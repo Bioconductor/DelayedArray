@@ -177,6 +177,24 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
     Nindex
 }
 
+### 2 utilities for extracting/replacing blocks from/in an array-like object
+
+extract_block <- function(x, viewport)
+{
+    stopifnot(identical(dim(x), refdim(viewport)))
+    Nindex <- makeNindexFromArrayViewport(viewport)
+    subset_by_Nindex(x, Nindex)
+}
+
+### Return the modified array.
+replace_block <- function(x, viewport, block)
+{
+    stopifnot(identical(dim(x), refdim(viewport)),
+              identical(dim(viewport), dim(block)))
+    Nindex <- makeNindexFromArrayViewport(viewport)
+    replace_by_Nindex(x, Nindex, block)
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### ArrayGrid objects
@@ -488,17 +506,6 @@ setMethod("show", "ArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### A convenience helper.
-###
-
-extract_array_block <- function(x, grid, b)
-{
-    Nindex <- makeNindexFromArrayViewport(grid[[b]])
-    subset_by_Nindex(x, Nindex)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### get_max_spacings_for_hypercube_blocks()
 ###
 
@@ -615,8 +622,7 @@ split_array_in_linear_blocks <- function(x, max_block_len)
 {
     spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
     grid <- ArrayRegularGrid(dim(x), spacings)
-    lapply(seq_along(grid),
-           function(b) extract_array_block(x, grid, b))
+    lapply(grid, function(viewport) extract_block(x, viewport))
 }
 
 ### NOT exported but used in unit tests.
