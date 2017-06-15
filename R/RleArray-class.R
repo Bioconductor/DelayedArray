@@ -54,31 +54,12 @@ setClass("ChunkedRleArraySeed",
 
 .validate_RleArraySeed <- function(x)
 {
-    ## 'DIM' slot.
-    if (!is.integer(x@DIM))
-        return(wmsg2("'x@DIM' must be an integer vector"))
-    x_ndim <- length(x@DIM)
-    if (x_ndim == 0L)
-        return(wmsg2("'x@DIM' cannot be empty"))
-    if (S4Vectors:::anyMissingOrOutside(x@DIM, 0L))
-        return(wmsg2("'x@DIM' cannot contain negative or NA values"))
-
-    ## 'DIMNAMES' slot.
-    if (!is.list(x@DIMNAMES))
-        return(wmsg2("'x@DIMNAMES' must be a list of length"))
-    if (length(x@DIMNAMES) != x_ndim)
-        return(wmsg2("length of 'x@DIMNAMES' must match that of 'x@DIM'"))
-    if (!all(vapply(seq_len(x_ndim),
-                    function(along) {
-                      dn <- x@DIMNAMES[[along]]
-                      if (is.null(dn))
-                          return(TRUE)
-                      is.character(dn) && length(dn) == x@DIM[[along]]
-                    },
-                    logical(1),
-                    USE.NAMES=FALSE)))
-        return(wmsg2("every list element in 'x@DIMNAMES' must be NULL or ",
-                     "a character vector along the corresponding dimension"))
+    msg <- validate_dim_slot(x, "DIM")
+    if (!isTRUE(msg))
+        return(msg)
+    msg <- validate_dimnames_slot(x, x@DIM, "DIMNAMES")
+    if (!isTRUE(msg))
+        return(msg)
     TRUE
 }
 setValidity2("RleArraySeed", .validate_RleArraySeed)

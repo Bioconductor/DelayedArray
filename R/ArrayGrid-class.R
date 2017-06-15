@@ -21,19 +21,6 @@ setClass("ArrayViewport",
 
 ### Validity
 
-.validate_refdim_slot <- function(x, slotname="refdim")
-{
-    x_refdim <- slot(x, slotname)
-    if (!is.integer(x_refdim))
-        return(wmsg2(sprintf("'%s' slot must be an integer vector", slotname)))
-    if (length(x_refdim) == 0L)
-        return(wmsg2(sprintf("'%s' slot cannot be empty", slotname)))
-    if (S4Vectors:::anyMissingOrOutside(x_refdim, 0L))
-        return(wmsg2(sprintf("'%s' slot cannot contain negative or NA values",
-                             slotname)))
-    TRUE
-}
-
 .validate_ranges_slot <- function(x)
 {
     x_ranges <- x@ranges
@@ -61,7 +48,7 @@ setClass("ArrayViewport",
 
 .validate_ArrayViewport <- function(x)
 {
-    msg <- .validate_refdim_slot(x)
+    msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
         return(msg)
     msg <- .validate_ranges_slot(x)
@@ -307,10 +294,10 @@ setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
 
 .validate_ArrayRegularGrid <- function(x)
 {
-    msg <- .validate_refdim_slot(x)
+    msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
         return(msg)
-    msg <- .validate_refdim_slot(x, "spacings")
+    msg <- validate_dim_slot(x, "spacings")
     if (!isTRUE(msg))
         return(msg)
     x_spacings <- x@spacings
