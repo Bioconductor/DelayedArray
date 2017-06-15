@@ -12,6 +12,7 @@
 \alias{class:arrayRealizationSink}
 \alias{arrayRealizationSink-class}
 
+\alias{dim,arrayRealizationSink-method}
 \alias{write_to_sink,array,arrayRealizationSink-method}
 \alias{coerce,arrayRealizationSink,DelayedArray-method}
 

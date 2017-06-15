@@ -284,9 +284,9 @@ RleRealizationSink <- function(dim, dimnames=NULL, type="double")
                                type=type, chunks=chunks)
 }
 
-### Ignores 'offsets'.
+### Ignores 'viewport'.
 setMethod("write_to_sink", c("Rle", "RleRealizationSink"),
-    function(x, sink, offsets=NULL)
+    function(x, sink, viewport)
     {
         if (sink@type == "integer") {
             run_values <- runValue(x)
@@ -394,16 +394,10 @@ RleArray <- function(rle, dim, dimnames=NULL, chunksize=NULL)
 ###
 
 setMethod("write_to_sink", c("array", "RleRealizationSink"),
-    function(x, sink, offsets=NULL)
+    function(x, sink, viewport)
     {
-        x_dim <- dim(x)
-        sink_dim <- dim(sink)
-        stopifnot(length(x_dim) == length(sink_dim))
-        if (is.null(offsets)) {
-            stopifnot(identical(x_dim, sink_dim))
-        } else {
-            stopifnot(length(x_dim) == length(sink_dim))
-        }
+        stopifnot(identical(dim(sink), refdim(viewport)),
+                  identical(dim(viewport), dim(x)))
         write_to_sink(Rle(x), sink)
     }
 )
@@ -417,7 +411,7 @@ setAs("RleRealizationSink", "DelayedArray", function(from) as(from, "RleArray"))
 .as_RleArray <- function(from)
 {
     sink <- RleRealizationSink(dim(from), dimnames(from), type(from))
-    write_to_sink(from, sink)
+    write_to_sink(from, sink, ArrayViewport(dim(sink)))
     as(sink, "RleArray")
 }
 

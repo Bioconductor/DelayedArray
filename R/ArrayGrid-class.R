@@ -46,16 +46,16 @@ setClass("ArrayViewport",
     x_end <- end(x_ranges)
     if (!(all(x_start >= 1L) && all(x_end <= x_refdim)))
         return(wmsg2("object represents a viewport that is not ",
-                     "withing the bounds of the reference array"))
+                     "within the bounds of the reference array"))
 
-    ## A viewport cannot be empty.
-    x_width <- width(x_ranges)
-    if (any(x_width == 0L))
-        return(wmsg2("a viewport cannot be empty"))
+    x_dim <- width(x_ranges)
+    if (any(x_dim == 0L & x_refdim != 0L))
+        return(wmsg2("viewport dimensions cannot be set to 0 unless the ",
+                     "corresponding dimensions in the reference array are 0"))
 
     ## A viewport cannot be longer than 2^31-1.
-    if (prod(x_width) > .Machine$integer.max)
-        return(wmsg2("a vewport cannot be longer than .Machine$integer.max"))
+    if (prod(x_dim) > .Machine$integer.max)
+        return(wmsg2("a viewport cannot be longer than .Machine$integer.max"))
     TRUE
 }
 
@@ -245,7 +245,7 @@ setClass("ArrayRegularGrid",
     contains="ArrayGrid",
     representation(
         refdim="integer",     # Dimensions of the reference array.
-        spacings="integer"    # Dimensions of the first viewport in the grid.
+        spacings="integer"    # Grid spacing along each dimension.
     )
 )
 
@@ -319,12 +319,11 @@ setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
         return(wmsg2("'spacings' and 'refdim' slots must have ",
                      "the same length"))
     if (!all(x_spacings <= x_refdim))
-        return(wmsg2("first viewport in the grid does not fit in the ",
-                     "reference array"))
+        return(wmsg2("values in 'spacings' slot must be <= the ",
+                     "corresponding values in 'refdim' slot"))
     if (any(x_spacings == 0L & x_refdim != 0L))
-        return(wmsg2("first viewport in the grid cannot have any of its ",
-                     "dimensions set to 0 unless the corresponding ",
-                     "dimension in the reference array is set to 0"))
+        return(wmsg2("values in 'spacings' slot cannot be 0 unless the ",
+                     "corresponding values in 'refdim' slot are 0"))
     if (prod(x_spacings) > .Machine$integer.max)
         return(wmsg2("grid is too coarse (all grid elements must have a ",
                      "length <= .Machine$integer.max)"))

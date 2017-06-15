@@ -86,7 +86,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
                 block <- .as_array_or_matrix(block)
             block_ans <- APPLY(block, ...)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, offsets=start(viewport@ranges))
+                write_to_sink(block_ans, sink, viewport)
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -126,7 +126,7 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
                 })
             block_ans <- do.call(MAPPLY, blocks)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, offsets=start(viewport@ranges))
+                write_to_sink(block_ans, sink, viewport)
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -206,27 +206,30 @@ colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
 ###
 
 ### Exported!
+### This method expects DelayedArray object 'x' to have the dimensions
+### of the sink (and so the viewport must cover the whole sink).
+### Semantically equivalent to:
+###
+###   write_to_sink(as.array(x), sink, ArrayViewport(dim(sink)))
+###
+### but uses block-processing so the full DelayedArray object is not realized
+### at once in memory. Instead the object is split into blocks and the blocks
+### are realized and written to disk one at a time.
 setMethod("write_to_sink", c("DelayedArray", "RealizationSink"),
-    function(x, sink, offsets=NULL)
+    function(x, sink, viewport)
     {
-        if (!is.null(offsets))
-            stop(wmsg("'offsets' must be NULL when the object to write ",
-                      "is a DelayedArray object"))
-        ## Semantically equivalent to 'write_to_sink(as.array(x), sink)'
-        ## but uses block-processing so the full DelayedArray object is
-        ## not realized at once in memory. Instead the object is first
-        ## split into blocks and the blocks are realized and written to
-        ## disk one at a time.
+        stopifnot(identical(dim(sink), refdim(viewport)),
+                  identical(dim(viewport), dim(x)),
+                  identical(dim(x), dim(sink)))
         block_APPLY(x, identity, sink=sink)
     }
 )
 
 ### Exported!
 setMethod("write_to_sink", c("ANY", "RealizationSink"),
-    function(x, sink, offsets=NULL)
+    function(x, sink, viewport)
     {
-        x <- as(x, "DelayedArray")
-        write_to_sink(x, sink, offsets=offsets)
+        write_to_sink(DelayedArray(x), sink, viewport)
     }
 )
 

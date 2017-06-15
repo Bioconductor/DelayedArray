@@ -20,12 +20,15 @@
 ### subclasses.
 setClass("RealizationSink", representation("VIRTUAL"))
 
-### 'x' and 'sink' must have the same number of dimensions.
-### 'offsets' must be NULL or an integer vector with 1 offset per dimension
-### in 'x' (or in 'sink').
-### A default "write_to_sink" method is defined in DelayedArray-class.R.
-setGeneric("write_to_sink", signature=c("x", "sink"),
-    function(x, sink, offsets=NULL) standardGeneric("write_to_sink")
+### Just to be safe, methods should:
+###
+###   stopifnot(identical(dim(sink), refdim(viewport)))  <- at least
+###   stopifnot(identical(dim(viewport), dim(x)))  <- if 'x' is array-like
+###   stopifnot(identical(length(viewport), length(x)))  <- if not array-like
+###
+### A default "write_to_sink" method is defined in block_processing.R.
+setGeneric("write_to_sink", signature=c("x", 'sink'),
+    function(x, sink, viewport) standardGeneric("write_to_sink")
 )
 
 setGeneric("close")
@@ -58,28 +61,26 @@ setClass("arrayRealizationSink",
     assign("result", result, envir=sink@result_envir)
 }
 
+setMethod("dim", "arrayRealizationSink",
+    function(x) dim(.get_arrayRealizationSink_result(x))
+)
+
 arrayRealizationSink <- function(dim, dimnames=NULL, type="double")
 {
     result <- array(get(type)(0), dim=dim, dimnames=dimnames)
     result_envir <- new.env(parent=emptyenv())
-    assign("result", result, envir=result_envir)
-    new("arrayRealizationSink", result_envir=result_envir)
+    sink <- new("arrayRealizationSink", result_envir=result_envir)
+    .set_arrayRealizationSink_result(sink, result)
+    sink
 }
 
 setMethod("write_to_sink", c("array", "arrayRealizationSink"),
-    function(x, sink, offsets=NULL)
+    function(x, sink, viewport)
     {
-        x_dim <- dim(x)
+        stopifnot(identical(dim(sink), refdim(viewport)),
+                  identical(dim(viewport), dim(x)))
         result <- .get_arrayRealizationSink_result(sink)
-        sink_dim <- dim(result)
-        if (is.null(offsets)) {
-            stopifnot(identical(x_dim, sink_dim))
-            result[] <- x
-        } else {
-            stopifnot(length(x_dim) == length(sink_dim))
-            viewport <- ArrayViewport(sink_dim, IRanges(offsets, width=x_dim))
-            result <- replace_block(result, viewport, x)
-        }
+        result <- replace_block(result, viewport, x)
         .set_arrayRealizationSink_result(sink, result)
     }
 )

@@ -23,7 +23,26 @@
     ans_type <- typeof(match.fun(type(x))(1) * match.fun(type(y))(1))
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
-    colblock_APPLY(y, function(submatrix) { x %*% submatrix }, sink=sink)
+
+    ## We're going to walk along the columns so need to increase the block
+    ## length so that each block is made of at least one column.
+    max_block_len <- max(get_max_block_length(type(y)), nrow(y))
+    spacings <- get_max_spacings_for_linear_blocks(dim(y), max_block_len)
+    y_grid <- ArrayRegularGrid(dim(y), spacings)
+    spacings[[1L]] <- ans_dim[[1L]]
+    ans_grid <- ArrayRegularGrid(ans_dim, spacings)  # parallel to 'y_grid'
+    nblock <- length(y_grid)  # same as 'length(ans_grid)'
+    for (b in seq_along(y_grid)) {
+        if (get_verbose_block_processing())
+            message("Processing block ", b, "/", nblock, " ... ",
+                    appendLF=FALSE)
+        y_viewport <- y_grid[[b]]
+        block <- as.matrix(extract_block(y, y_viewport))
+        block_ans <- x %*% block
+        write_to_sink(block_ans, sink, ans_grid[[b]])
+        if (get_verbose_block_processing())
+            message("OK")
+    }
     as(sink, "DelayedArray")
 }
 
