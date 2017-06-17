@@ -207,7 +207,7 @@ colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
 
 ### Exported!
 ### This method expects DelayedArray object 'x' to have the dimensions
-### of the sink (and so the viewport must cover the whole sink).
+### of the sink and 'viewport' to be set to NULL.
 ### Semantically equivalent to:
 ###
 ###   write_to_sink(as.array(x), sink, ArrayViewport(dim(sink)))
@@ -218,8 +218,7 @@ colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
 setMethod("write_to_sink", c("DelayedArray", "RealizationSink"),
     function(x, sink, viewport)
     {
-        stopifnot(identical(dim(sink), refdim(viewport)),
-                  identical(dim(viewport), dim(x)),
+        stopifnot(is.null(viewport),
                   identical(dim(x), dim(sink)))
         block_APPLY(x, identity, sink=sink)
     }
