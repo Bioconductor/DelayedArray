@@ -12,7 +12,6 @@
 \alias{width,ArrayViewport-method}
 \alias{end,ArrayViewport-method}
 \alias{dim,ArrayViewport-method}
-\alias{length,ArrayViewport-method}
 
 \alias{show,ArrayViewport-method}
 
@@ -34,8 +33,6 @@
 \alias{refdim,ArrayRegularGrid-method}
 \alias{dim,ArrayArbitraryGrid-method}
 \alias{dim,ArrayRegularGrid-method}
-\alias{length,ArrayGrid-method}
-\alias{[[,ArrayGrid-method}
 \alias{as.character.ArrayGrid}
 \alias{as.character,ArrayGrid-method}
 \alias{lengths,ArrayGrid-method}

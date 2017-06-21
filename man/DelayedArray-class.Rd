@@ -19,7 +19,6 @@
 
 \alias{dim,DelayedArray-method}
 \alias{dim<-,DelayedArray-method}
-\alias{length,DelayedArray-method}
 \alias{isEmpty,DelayedArray-method}
 \alias{dimnames,DelayedArray-method}
 \alias{dimnames<-,DelayedArray-method}

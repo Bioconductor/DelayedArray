@@ -11,7 +11,6 @@
 \alias{ChunkedRleArraySeed-class}
 
 \alias{dim,RleArraySeed-method}
-\alias{length,RleArraySeed-method}
 \alias{dimnames,RleArraySeed-method}
 
 \alias{coerce,SolidRleArraySeed,Rle-method}

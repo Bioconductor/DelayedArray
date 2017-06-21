@@ -4,6 +4,7 @@
 
 
 setClass("DelayedArray",
+    contains="Array",
     representation(
         seed="ANY",              # An array-like object expected to satisfy
                                  # the "seed contract" i.e. to support dim(),
@@ -196,11 +197,6 @@ downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 }
 
 setMethod("dim", "DelayedArray", .get_DelayedArray_dim)
-
-### Even though prod() always returns a double, it seems that the length()
-### primitive function automatically turns this double into an integer if
-### it's <= .Machine$integer.max
-setMethod("length", "DelayedArray", function(x) prod(dim(x)))
 
 setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
 

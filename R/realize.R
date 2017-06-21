@@ -15,9 +15,9 @@
 ###   2) A "write_to_sink" method that works on an ordinary array.
 ###   3) A "close" method (optional).
 ###   4) Coercion to DelayedArray.
-### See the arrayRealizationSink class below or the HDF5RealizationSink class
-### in the HDF5Array package for examples of concrete RealizationSink
-### subclasses.
+### See the arrayRealizationSink class below, or the RleRealizationSink class
+### in RleArray-class.R, or the HDF5RealizationSink class in the HDF5Array
+### package for examples of concrete RealizationSink subclasses.
 setClass("RealizationSink", representation("VIRTUAL"))
 
 ### Just to be safe, methods should:

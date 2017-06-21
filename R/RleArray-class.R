@@ -4,6 +4,7 @@
 
 
 setClass("RleArraySeed",
+    contains="Array",
     representation(
         "VIRTUAL",
         ## Must use upper case or won't be able to extend the class.
@@ -134,8 +135,6 @@ setValidity2("ChunkedRleArraySeed", .validate_ChunkedRleArraySeed)
 ###
 
 setMethod("dim", "RleArraySeed", function(x) x@DIM)
-
-setMethod("length", "RleArraySeed", function(x) prod(dim(x)))
 
 setMethod("dimnames", "RleArraySeed",
     function(x)
