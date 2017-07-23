@@ -39,7 +39,7 @@
         y_viewport <- y_grid[[b]]
         block <- as.matrix(extract_block(y, y_viewport))
         block_ans <- x %*% block
-        write_to_sink(block_ans, sink, ans_grid[[b]])
+        write_block_to_sink(block_ans, sink, ans_grid[[b]])
         if (get_verbose_block_processing())
             message("OK")
     }

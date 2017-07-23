@@ -12,7 +12,7 @@
 ### of DelayedArray backends. Concrete subclasses must implement:
 ###   1) A constructor function that takes argument 'dim', 'dimnames', and
 ###      'type'.
-###   2) A "write_to_sink" method that works on an ordinary array.
+###   2) A "write_block_to_sink" method.
 ###   3) A "close" method (optional).
 ###   4) Coercion to DelayedArray.
 ### See the arrayRealizationSink class below, or the RleRealizationSink class
@@ -20,15 +20,15 @@
 ### package for examples of concrete RealizationSink subclasses.
 setClass("RealizationSink", representation("VIRTUAL"))
 
-### Just to be safe, methods should:
+### 'block', 'sink', and 'viewport' are expected to be an ordinary array, a
+### RealizationSink, and a Viewport object, respectively. They must satisfy:
 ###
-###   stopifnot(identical(dim(sink), refdim(viewport)))  <- at least
-###   stopifnot(identical(dim(viewport), dim(x)))  <- if 'x' is array-like
-###   stopifnot(identical(length(viewport), length(x)))  <- if not array-like
+###    stopifnot(identical(dim(sink), refdim(viewport)),
+###              identical(dim(block), dim(viewport)))
 ###
-### A default "write_to_sink" method is defined in block_processing.R.
-setGeneric("write_to_sink", signature=c("x", 'sink'),
-    function(x, sink, viewport) standardGeneric("write_to_sink")
+### Just to be safe, methods should perform this sanity check.
+setGeneric("write_block_to_sink", signature="sink",
+    function(block, sink, viewport) standardGeneric("write_block_to_sink")
 )
 
 setGeneric("close")
@@ -74,13 +74,13 @@ arrayRealizationSink <- function(dim, dimnames=NULL, type="double")
     sink
 }
 
-setMethod("write_to_sink", c("array", "arrayRealizationSink"),
-    function(x, sink, viewport)
+setMethod("write_block_to_sink", "arrayRealizationSink",
+    function(block, sink, viewport)
     {
         stopifnot(identical(dim(sink), refdim(viewport)),
-                  identical(dim(viewport), dim(x)))
+                  identical(dim(block), dim(viewport)))
         result <- .get_arrayRealizationSink_result(sink)
-        result <- replace_block(result, viewport, x)
+        result <- replace_block(result, viewport, block)
         .set_arrayRealizationSink_result(sink, result)
     }
 )

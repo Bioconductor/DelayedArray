@@ -19,7 +19,6 @@
 \alias{subset_seed_as_array,SolidRleArraySeed-method}
 \alias{subset_seed_as_array,ChunkedRleArraySeed-method}
 
-\alias{write_to_sink,Rle,RleRealizationSink-method}
 \alias{coerce,RleRealizationSink,ChunkedRleArraySeed-method}
 \alias{coerce,ChunkedRleArraySeed,SolidRleArraySeed-method}
 
@@ -37,7 +36,7 @@
 \alias{DelayedArray,RleArraySeed-method}
 \alias{RleArray}
 
-\alias{write_to_sink,array,RleRealizationSink-method}
+\alias{write_block_to_sink,RleRealizationSink-method}
 \alias{coerce,RleRealizationSink,RleArray-method}
 \alias{coerce,RleRealizationSink,DelayedArray-method}
 \alias{coerce,ANY,RleArray-method}

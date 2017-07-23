@@ -132,6 +132,7 @@ export(
     ArrayViewport, makeNindexFromArrayViewport,
     ArrayArbitraryGrid, ArrayRegularGrid,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
+    write_array_to_sink,
     RleArray
 )
 
@@ -143,8 +144,8 @@ export(
 export(
     refdim, isLinear,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
+    write_block_to_sink, close,
     realize,
-    write_to_sink, close,
     pmax2, pmin2, apply,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
@@ -153,8 +154,8 @@ export(
 exportMethods(
     refdim, isLinear,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
+    write_block_to_sink, close,
     realize,
-    write_to_sink, close,
     pmax2, pmin2, apply,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )

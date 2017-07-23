@@ -24,16 +24,17 @@ test_long_RleArray <- function()
     ## the RleArray() constructor function. So we use the low-level RleArray
     ## construction API to do this:
     RleRealizationSink <- DelayedArray:::RleRealizationSink
+    append_Rle_to_sink <- DelayedArray:::.append_Rle_to_sink
     sink <- RleRealizationSink(c(30000L, 75000L), type="integer")
     #rle1 <- Rle(1:500000, 2000)
     rle1 <- Rle(1:5000, 200000)
-    write_to_sink(rle1, sink)
+    append_Rle_to_sink(rle1, sink)
     #rle2 <- Rle(1:2000000, 125)
     rle2 <- Rle(1:20000, 12500)
-    write_to_sink(rle2, sink)
+    append_Rle_to_sink(rle2, sink)
     #rle3 <- Rle(1:5000000, 200)
     rle3 <- Rle(1:50000, 20000)
-    write_to_sink(rle3, sink)
+    append_Rle_to_sink(rle3, sink)
     A <- as(sink, "RleArray")
 
     checkTrue(validObject(A, complete=TRUE))

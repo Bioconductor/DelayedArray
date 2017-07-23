@@ -3,9 +3,7 @@
 \alias{class:RealizationSink}
 \alias{RealizationSink-class}
 
-\alias{write_to_sink}
-\alias{write_to_sink,DelayedArray,RealizationSink-method}
-\alias{write_to_sink,ANY,RealizationSink-method}
+\alias{write_block_to_sink}
 
 \alias{close,RealizationSink-method}
 
@@ -13,7 +11,7 @@
 \alias{arrayRealizationSink-class}
 
 \alias{dim,arrayRealizationSink-method}
-\alias{write_to_sink,array,arrayRealizationSink-method}
+\alias{write_block_to_sink,arrayRealizationSink-method}
 \alias{coerce,arrayRealizationSink,DelayedArray-method}
 
 \alias{supportedRealizationBackends}

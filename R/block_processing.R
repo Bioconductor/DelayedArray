@@ -86,7 +86,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
                 block <- .as_array_or_matrix(block)
             block_ans <- APPLY(block, ...)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, viewport)
+                write_block_to_sink(block_ans, sink, viewport)
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -126,7 +126,7 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
                 })
             block_ans <- do.call(MAPPLY, blocks)
             if (!is.null(sink)) {
-                write_to_sink(block_ans, sink, viewport)
+                write_block_to_sink(block_ans, sink, viewport)
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
@@ -206,29 +206,11 @@ colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
 ###
 
 ### Exported!
-### This method expects DelayedArray object 'x' to have the dimensions
-### of the sink and 'viewport' to be set to NULL.
-### Semantically equivalent to:
-###
-###   write_to_sink(as.array(x), sink, ArrayViewport(dim(sink)))
-###
-### but uses block-processing so the full DelayedArray object is not realized
-### at once in memory. Instead the object is split into blocks and the blocks
-### are realized and written to disk one at a time.
-setMethod("write_to_sink", c("DelayedArray", "RealizationSink"),
-    function(x, sink, viewport)
-    {
-        stopifnot(is.null(viewport),
-                  identical(dim(x), dim(sink)))
-        block_APPLY(x, identity, sink=sink)
-    }
-)
-
-### Exported!
-setMethod("write_to_sink", c("ANY", "RealizationSink"),
-    function(x, sink, viewport)
-    {
-        write_to_sink(DelayedArray(x), sink, viewport)
-    }
-)
+### Split the array-like object into blocks, then realize and write one block
+### at a time to disk.
+write_array_to_sink <- function(x, sink)
+{
+    stopifnot(identical(dim(x), dim(sink)))
+    block_APPLY(DelayedArray(x), identity, sink=sink)
+}
 

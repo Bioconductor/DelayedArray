@@ -264,22 +264,20 @@ RleRealizationSink <- function(dim, dimnames=NULL, type="double")
                                type=type, chunks=chunks)
 }
 
-### Ignores 'viewport'.
-setMethod("write_to_sink", c("Rle", "RleRealizationSink"),
-    function(x, sink, viewport)
-    {
-        if (length(x) == 0L)
-            return()  # nothing to do
-        if (sink@type == "integer") {
-            run_values <- runValue(x)
-            ## Replace integer-Rle with raw-Rle if this doesn't loose
-            ## information.
-            if (!S4Vectors:::anyMissingOrOutside(run_values, 0L, 255L))
-                runValue(x) <- as.raw(run_values)
-        }
-        .append_chunk(sink@chunks, x)
+.append_Rle_to_sink <- function(x, sink)
+{
+    stopifnot(is(x, "Rle"))
+    if (length(x) == 0L)
+        return()  # nothing to do
+    if (sink@type == "integer") {
+        run_values <- runValue(x)
+        ## Replace integer-Rle with raw-Rle if this doesn't loose
+        ## information.
+        if (!S4Vectors:::anyMissingOrOutside(run_values, 0L, 255L))
+            runValue(x) <- as.raw(run_values)
     }
-)
+    .append_chunk(sink@chunks, x)
+}
 
 ### This coercion is used by the RleArraySeed() constructor and by the
 ### coercion method from RleRealizationSink to RleArray.
@@ -311,7 +309,7 @@ RleArraySeed <- function(rle, dim, dimnames=NULL, chunksize=NULL)
     partitioning <- breakInChunks(length(rle), chunksize)
     rle_list <- relist(rle, partitioning)
     for (k in seq_along(rle_list))
-        write_to_sink(rle_list[[k]], sink)
+        .append_Rle_to_sink(rle_list[[k]], sink)
     as(sink, "ChunkedRleArraySeed")
 }
 
@@ -375,17 +373,13 @@ RleArray <- function(rle, dim, dimnames=NULL, chunksize=NULL)
 ### Realization as an RleArray object
 ###
 
-setMethod("write_to_sink", c("array", "RleRealizationSink"),
-    function(x, sink, viewport)
+setMethod("write_block_to_sink", "RleRealizationSink",
+    function(block, sink, viewport)
     {
-        if (is.null(viewport)) {
-            stopifnot(identical(dim(x), dim(sink)))
-        } else {
-            stopifnot(identical(dim(x), dim(viewport)),
-                      identical(dim(sink), refdim(viewport)))
-        }
+        stopifnot(identical(dim(sink), refdim(viewport)),
+                  identical(dim(block), dim(viewport)))
         ## 'viewport' is ignored!
-        write_to_sink(Rle(x), sink)
+        .append_Rle_to_sink(Rle(block), sink)
     }
 )
 
@@ -398,7 +392,7 @@ setAs("RleRealizationSink", "DelayedArray", function(from) as(from, "RleArray"))
 .as_RleArray <- function(from)
 {
     sink <- RleRealizationSink(dim(from), dimnames(from), type(from))
-    write_to_sink(from, sink, NULL)
+    write_array_to_sink(from, sink)
     as(sink, "RleArray")
 }
 
