@@ -53,6 +53,49 @@ setClass("ChunkedRleArraySeed",
     )
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Low-level chunk accessors
+###
+
+.get_chunk <- function(envir, k)
+{
+    name <- sprintf("%06d", k)
+    stopifnot(nchar(name) == 6L)
+    get(name, envir=envir, inherits=FALSE)
+}
+
+.get_chunk_lens <- function(envir)
+{
+    ## Too bad we can't just do 'lengths(envir)' for this.
+    ## Also would have been nice to be able to just do
+    ## 'unlist(eapply(envir, length))' but the list returned by eapply()
+    ## is not guaranteed to be sorted and eapply() does not have a 'sorted'
+    ## argument. So would need to manually sort it.
+    ## Another possibility would be to vapply() on the sorted symbols returned
+    ## by 'ls(envir, sorted=TRUE)'.
+    vapply(seq_len(length(envir)),
+           function(k) length(.get_chunk(envir, k)),
+           numeric(1))
+}
+
+.set_chunk <- function(envir, k, chunk)
+{
+    name <- sprintf("%06d", k)
+    stopifnot(nchar(name) == 6L)
+    assign(name, chunk, envir=envir)
+}
+
+.append_chunk <- function(envir, chunk)
+{
+    .set_chunk(envir, length(envir) + 1L, chunk)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Validity
+###
+
 .validate_RleArraySeed <- function(x)
 {
     msg <- validate_dim_slot(x, "DIM")
@@ -69,7 +112,7 @@ setValidity2("RleArraySeed", .validate_RleArraySeed)
 {
     ## 'rle' slot.
     if (!is(x@rle, "Rle"))
-        return(wmsg2("'x@rle' must be an Rle object"))
+        return(wmsg2("'rle' slot must be an Rle object"))
     x_len <- length(x)
     data_len <- length(x@rle)
     if (x_len != data_len)
@@ -87,10 +130,10 @@ setValidity2("SolidRleArraySeed", .validate_SolidRleArraySeed)
 {
     ## 'type' slot.
     if (!isSingleString(x@type))
-        return(wmsg2("'x@type' must be a single string"))
+        return(wmsg2("'type' slot must be a single string"))
     ## 'chunks' slot.
     if (!is.environment(x@chunks))
-        return(wmsg2("'x@chunks' must be an environment"))
+        return(wmsg2("'chunks' slot must be an environment"))
     # TODO: Validate the content of 'chunks'.
     TRUE
 }
@@ -153,9 +196,9 @@ setMethod("dimnames", "RleArraySeed",
 
 setAs("SolidRleArraySeed", "Rle", function(from) from@rle)
 
-### In practice this coercion is used on a *ChunkedRleArraySeed* object
-### by the coercion method from ChunkedRleArraySeed to SolidRleArraySeed
-### defined in this file below.
+### In practice this coercion is not used on a RleRealizationSink instance
+### but on a *ChunkedRleArraySeed* instance (by the coercion method from
+### ChunkedRleArraySeed to SolidRleArraySeed defined below in this file).
 setAs("RleRealizationSink", "Rle",
     function(from)
     {
@@ -166,44 +209,6 @@ setAs("RleRealizationSink", "Rle",
         do.call("c", list_of_Rles)
     }
 )
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Low-level chunk accessors
-###
-
-.get_chunk <- function(envir, k)
-{
-    name <- sprintf("%06d", k)
-    stopifnot(nchar(name) == 6L)
-    get(name, envir=envir, inherits=FALSE)
-}
-
-.get_chunk_lens <- function(envir)
-{
-    ## Too bad we can't just do 'lengths(envir)' for this.
-    ## Also would have been nice to be able to just do
-    ## 'unlist(eapply(envir, length))' but the list returned by eapply()
-    ## is not guaranteed to be sorted and eapply() does not have a 'sorted'
-    ## argument. So would need to manually sort it.
-    ## Another possibility would be to vapply() on the sorted symbols returned
-    ## by 'ls(envir, sorted=TRUE)'.
-    vapply(seq_len(length(envir)),
-           function(k) length(.get_chunk(envir, k)),
-           numeric(1))
-}
-
-.set_chunk <- function(envir, k, chunk)
-{
-    name <- sprintf("%06d", k)
-    stopifnot(nchar(name) == 6L)
-    assign(name, chunk, envir=envir)
-}
-
-.append_chunk <- function(envir, chunk)
-{
-    .set_chunk(envir, length(envir) + 1L, chunk)
-}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
