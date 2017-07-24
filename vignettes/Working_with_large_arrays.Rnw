@@ -1,0 +1,109 @@
+%\VignetteIndexEntry{Working with large arrays in R}
+%\VignetteDepends{DelayedArray, HDF5Array, SummarizedExperiment}
+
+\SweaveOpts{keep.source=TRUE, eps=FALSE, width=9, height=3}
+
+\documentclass[9pt]{beamer}
+
+\usepackage{slides}
+\renewcommand\Rclass[1]{{\texttt{#1}\index{#1 (class)}}}
+
+\title{Working with large arrays in R}
+
+\author{Herv\'e Pag\`es\\
+        \href{mailto:hpages@fredhutch.org}{hpages@fredhutch.org}}
+
+\date{July 2017}
+
+\begin{document}
+
+<<setup, echo=FALSE, results=hide>>=
+options(width=80)
+library(HDF5Array)
+library(SummarizedExperiment)
+@
+
+\maketitle
+
+\frame{\tableofcontents}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Motivation and challenges}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \begin{block}{}
+    \begin{itemize}
+      \item single cell experiments: 30,000 genes x 1.3 million cells
+      \item ==> 36.5 billion values
+      \item as ordinary integer matrix ==> 136G in memory!
+      \item need for alternative representations
+      \item but at the same time, should be (almost) as easy to manipulate as
+            an ordinary matrix ==> standard R matrix API (\Rcode{dim},
+            \Rcode{dimnames}, \Rcode{t}, \Rcode{is.na}, \Rcode{==}, \Rcode{+},
+            \Rcode{log}, \Rcode{cbind}, \Rcode{max}, \Rcode{sum},
+            \Rcode{colSums}, etc...)
+      \item not limited to 2 dimensions ==> support arrays
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{{\em In-memory data} vs {\em on-disk data}}
+  \begin{block}{}
+    {\bf In-memory data}
+    \begin{itemize}
+      \item a 30k x 1.3M matrix might still fit in memory if the data can
+            be efficiently compressed
+      \item example: sparse data (small percentage of non-zero values) ==>
+            {\em sparse representation} (storage of non-zero values only)
+      \item example: data with long runs of identical values ==> {\em RLE
+            compression (Run Length Encoding)}
+      \item choose the {\em best type} to store the values: raw < integer <
+            double
+      \item if using {\em RLE compression}:
+            \begin{itemize}
+              \item choose the {\em best orientation} to store the values:
+                    {\em by row} or {\em by column} (one might give better
+                    compression than the other)
+              \item store the data by chunk ==> opportunity to pick up
+                    {\em best type} and {\em best orientation} on a chunk
+                    basis (instead of for the whole data)
+            \end{itemize}
+      \item size of 30k x 1.3M matrix in memory can be reduced from 136G
+            to 16G!
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{{\em In-memory data} vs {\em on-disk data}}
+  \begin{block}{}
+    {\bf On-disk data}
+    \begin{itemize}
+      \item if data is too big to fit in memory (even after compression) ==>
+            use on-disk representation
+      \item challenge: should still be (almost) as easy to manipulate as
+            an ordinary matrix!
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{What's available}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
+
