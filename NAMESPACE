@@ -144,7 +144,7 @@ export(
 export(
     refdim, isLinear,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
-    write_block_to_sink, close,
+    chunk_dim, write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
@@ -154,7 +154,7 @@ export(
 exportMethods(
     refdim, isLinear,
     matrixClass, DelayedArray, seed, subset_seed_as_array, type,
-    write_block_to_sink, close,
+    chunk_dim, write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges

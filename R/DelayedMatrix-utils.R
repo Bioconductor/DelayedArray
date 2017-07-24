@@ -32,7 +32,7 @@
     spacings[[1L]] <- ans_dim[[1L]]
     ans_grid <- ArrayRegularGrid(ans_dim, spacings)  # parallel to 'y_grid'
     nblock <- length(y_grid)  # same as 'length(ans_grid)'
-    for (b in seq_along(y_grid)) {
+    for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
             message("Processing block ", b, "/", nblock, " ... ",
                     appendLF=FALSE)
