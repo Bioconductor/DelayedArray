@@ -16,7 +16,8 @@ biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 Depends: R (>= 3.4), methods, matrixStats, BiocGenerics,
 	S4Vectors (>= 0.15.3), IRanges (>= 2.11.5)
 Imports: stats
-Suggests: Matrix, HDF5Array, genefilter, BiocStyle
+Suggests: Matrix, HDF5Array, genefilter, SummarizedExperiment, airway, pryr,
+	BiocStyle
 License: Artistic-2.0
 Collate: utils.R
 	Array-class.R

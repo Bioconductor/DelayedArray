@@ -1,12 +1,24 @@
 %\VignetteIndexEntry{Working with large arrays in R}
-%\VignetteDepends{DelayedArray, HDF5Array, SummarizedExperiment}
+%\VignetteDepends{Matrix, DelayedArray, HDF5Array, SummarizedExperiment, airway, pryr}
 
 \SweaveOpts{keep.source=TRUE, eps=FALSE, width=9, height=3}
 
 \documentclass[9pt]{beamer}
 
+\mode<presentation> {
+\usetheme{Madrid}
+\usecolortheme{whale}
+}
+
 \usepackage{slides}
 \renewcommand\Rclass[1]{{\texttt{#1}\index{#1 (class)}}}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \tableofcontents[currentsection]
+  \end{frame}
+}
 
 \title{Working with large arrays in R}
 
@@ -19,8 +31,12 @@
 
 <<setup, echo=FALSE, results=hide>>=
 options(width=80)
+library(Matrix)
+library(DelayedArray)
 library(HDF5Array)
 library(SummarizedExperiment)
+library(airway)
+library(pryr)
 @
 
 \maketitle
@@ -63,8 +79,8 @@ library(SummarizedExperiment)
             {\em sparse representation} (storage of non-zero values only)
       \item example: data with long runs of identical values ==> {\em RLE
             compression (Run Length Encoding)}
-      \item choose the {\em best type} to store the values: raw < integer <
-            double
+      \item choose the {\em best type} to store the values: raw (1 byte) <
+            integer (4 bytes) < double (8 bytes)
       \item if using {\em RLE compression}:
             \begin{itemize}
               \item choose the {\em best orientation} to store the values:
@@ -85,12 +101,19 @@ library(SummarizedExperiment)
   \begin{block}{}
     {\bf Examples of in-memory containers}
     \begin{itemize}
-      \item {\bf dgCMatrix} objects from the Matrix package: sparse integer
-            matrix representation
-      \item {\bf RleArray} and {\bf RleMatrix} objects from the DelayedArray
-            package: uses RLE compression; arbitrary number of dimensions;
-            supports integer, double, logical, complex, character, and raw
-            types
+      \item {\bf dgCMatrix} container from the \Biocpkg{Matrix} package:
+            \begin{itemize}
+              \item sparse matrix representation
+              \item type of values: double
+            \end{itemize}
+      \item {\bf RleArray} and {\bf RleMatrix} containers from the
+            \Biocpkg{DelayedArray} package:
+            \begin{itemize}
+              \item uses RLE compression
+              \item arbitrary number of dimensions
+              \item type of values: any R atomic type (integer, double,
+                    logical, complex, character, and raw)
+            \end{itemize}
     \end{itemize}
   \end{block}
 \end{frame}
@@ -114,10 +137,10 @@ library(SummarizedExperiment)
     {\bf Examples of on-disk containers}
     \begin{itemize}
       \item {\bf HDF5 files}: direct manipulation via low-level API provided
-            by the rhdf5 package
-      \item {\bf HDF5Array} and {\bf HDF5Matrix} objects from the HDF5Array
-            package: high level containers that provide most of the standard
-            R matrix/array API 
+            by the \Biocpkg{rhdf5} package
+      \item {\bf HDF5Array} and {\bf HDF5Matrix} containers from the
+            \Biocpkg{HDF5Array} package: high level containers that provide
+            most of the standard R matrix/array API 
     \end{itemize}
   \end{block}
 \end{frame}
@@ -125,37 +148,46 @@ library(SummarizedExperiment)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{dgCMatrix objects}
+\section{Memory footprint}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-  \begin{block}{}
-  \end{block}
+  \frametitle{The {\em airway} dataset}
+  \begin{exampleblock}{}
+{\small
+<<>>=
+library(airway)
+data(airway)
+m <- unname(assay(airway))
+dim(m)
+head(m, n=4)
+tail(m, n=4)
+sum(m != 0) / length(m)
+typeof(m)
+@
+}
+  \end{exampleblock}
 \end{frame}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{HDF5Array and HDF5Matrix objects}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{frame}[fragile]
-  \begin{block}{}
-  \end{block}
-\end{frame}
+  \frametitle{{\bf dgCMatrix} vs {\bf RleMatrix} vs {\bf HDF5Atrix}}
+  \begin{exampleblock}{}
+<<>>=
+library(pryr)  # for object_size()
+object_size(m)
 
+library(Matrix)
+object_size(as(m, "dgCMatrix"))
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{RleArray and RleMatrix objects}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+library(DelayedArray)
+object_size(as(m, "RleMatrix"))
+object_size(as(t(m), "RleMatrix"))
 
-\begin{frame}[fragile]
-  \begin{block}{}
-  \end{block}
+library(HDF5Array)
+object_size(as(m, "HDF5Matrix"))
+@
+  \end{exampleblock}
 \end{frame}
 
 
