@@ -352,7 +352,7 @@ seed(M3)
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  \Rcode{cbind} / \Rcode{rbind} are delayed:
+  \Rcode{cbind()} / \Rcode{rbind()} are delayed:
 
   \begin{columns}[t]
     \begin{column}{0.44\textwidth}
@@ -638,7 +638,7 @@ colSums(M)
   \end{block}
 
   \begin{block}{}
-    3. Wrap it in an HDF5Matrix object: (1) using \Rcode{writeHDF5Array};
+    3. Wrap it in an HDF5Matrix object: (1) using \Rcode{writeHDF5Array()};
        then (2) using coercion.
   \end{block}
 
@@ -657,7 +657,7 @@ colSums(M)
   \frametitle{Hands-on}
 
   \begin{block}{}
-    6. Use \Rcode{showHDF5DumpLog} to see all the HDF5 datasets written to
+    6. Use \Rcode{showHDF5DumpLog()} to see all the HDF5 datasets written to
        disk during the current session.
   \end{block}
 
@@ -671,8 +671,8 @@ colSums(M)
   \bigskip
 
   \begin{block}{}
-    8. Use \Rcode{DelayedArray:::set\_verbose\_block\_processing} to see
-       block processing in action.
+    8. Use \Rcode{DelayedArray:::set\_verbose\_block\_processing(TRUE)}
+       to see block processing in action.
   \end{block}
 
   \bigskip
@@ -731,7 +731,7 @@ colSums(M)
   \end{block}
 
   \begin{block}{}
-    Expose it: \Rcode{blockApply}
+    Expose it: \Rcode{blockApply()}
   \end{block}
 \end{frame}
 
@@ -751,7 +751,7 @@ colSums(M)
 
   \begin{block}{}
     Block processing should take advantage of the chunk geometry (e.g.
-    \Rcode{realize} should use blocks that are clusters of chunks)
+    \Rcode{realize()} should use blocks that are clusters of chunks)
   \end{block}
 
   \begin{block}{}
