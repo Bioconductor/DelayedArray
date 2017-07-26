@@ -20,7 +20,9 @@
   \end{frame}
 }
 
-\title{Working with large arrays in R}
+\title{Working with large arrays in R
+       ---
+       A look at HDF5Array/RleArray/DelayedArray objects}
 
 \author{Herv\'e Pag\`es\\
         \href{mailto:hpages@fredhutch.org}{hpages@fredhutch.org}}
