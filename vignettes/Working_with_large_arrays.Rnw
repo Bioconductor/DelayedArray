@@ -60,6 +60,8 @@ library(pryr)
     \end{itemize}
   \end{block}
 
+  \bigskip
+
   Need for alternative containers:
   \begin{block}{}
     \begin{itemize}
@@ -72,6 +74,8 @@ library(pryr)
             number of dimensions
     \end{itemize}
   \end{block}
+
+  \bigskip
 
   2 approaches: {\bf in-memory data} vs {\bf on-disk data}
 \end{frame}
@@ -87,8 +91,8 @@ library(pryr)
             {\em sparse representation} (storage of non-zero values only)
       \item example: data with long runs of identical values ==> {\em RLE
             compression (Run Length Encoding)}
-      \item choose the {\em best type} to store the values: raw (1 byte) <
-            integer (4 bytes) < double (8 bytes)
+      \item choose the {\em smallest type} to store the values: \Rcode{raw}
+            (1 byte) < \Rcode{integer} (4 bytes) < \Rcode{double} (8 bytes)
       \item if using {\em RLE compression}:
             \begin{itemize}
               \item choose the {\em best orientation} to store the values:
@@ -105,49 +109,62 @@ library(pryr)
 \end{frame}
 
 \begin{frame}[fragile]
-  Examples of {\bf in-memory containers}
+  {\bf Examples of in-memory containers}
+
+  \bigskip
+
+  {\bf dgCMatrix} container from the \Biocpkg{Matrix} package:
   \begin{block}{}
     \begin{itemize}
-      \item {\bf dgCMatrix} container from the \Biocpkg{Matrix} package:
-            \begin{itemize}
-              \item sparse matrix representation
-              \item type of values: double
-            \end{itemize}
-      \item {\bf RleArray} and {\bf RleMatrix} containers from the
-            \Biocpkg{DelayedArray} package:
-            \begin{itemize}
-              \item uses RLE compression
-              \item arbitrary number of dimensions
-              \item type of values: any R atomic type (integer, double,
-                    logical, complex, character, and raw)
-            \end{itemize}
+      \item sparse matrix representation
+      \item non-zero values stored as \Rcode{double}
+    \end{itemize}
+  \end{block}
+
+  \bigskip
+
+  {\bf RleArray} and {\bf RleMatrix} containers from the
+  \Biocpkg{DelayedArray} package:
+  \begin{block}{}
+    \begin{itemize}
+      \item use RLE compression
+      \item arbitrary number of dimensions
+      \item type of values: any R atomic type (\Rcode{integer},
+            \Rcode{double}, \Rcode{logical}, \Rcode{complex},
+            \Rcode{character}, and \Rcode{raw})
     \end{itemize}
   \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
   {\bf On-disk data}
-  \begin{block}{}
-    \begin{itemize}
-      \item if data is too big to fit in memory (even after compression) ==>
-            use {\em on-disk representation}
-      \item challenge: should still be (almost) as easy to manipulate as
-            an ordinary matrix! ({\em standard R matrix/array API})
-    \end{itemize}
-  \end{block}
+
+  \bigskip
+
+  However...
+  \begin{itemize}
+    \item if data is too big to fit in memory (even after compression) ==>
+          must use {\em on-disk representation}
+    \item challenge: should still be (almost) as easy to manipulate as
+          an ordinary matrix! ({\em standard R matrix/array API})
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-  Examples of {\bf on-disk containers}
+  {\bf Examples of on-disk containers}
+
+  \bigskip
+
+  Direct manipulation of an {\bf HDF5 dataset} via the
+  \Biocpkg{rhdf5} API. Low level API!
+
+  \bigskip
+
+  {\bf HDF5Array} and {\bf HDF5Matrix} containers from the
+  \Biocpkg{HDF5Array} package:
   \begin{block}{}
-    \begin{itemize}
-      \item Direct manipulation of an {\bf HDF5 dataset} via the
-            \Biocpkg{rhdf5} API. Low level API!
-      \item {\bf HDF5Array} and {\bf HDF5Matrix} containers from the
-            \Biocpkg{HDF5Array} package: provide access to the HDF5 dataset
-            via an API that mimics as much as possible the standard
-            R matrix/array API 
-    \end{itemize}
+    Provide access to the HDF5 dataset via an API that mimics the standard
+    R matrix/array API
   \end{block}
 \end{frame}
 
@@ -177,7 +194,7 @@ typeof(m)
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{{\bf dgCMatrix} vs {\bf RleMatrix} vs {\bf HDF5Atrix}}
+  \frametitle{{\bf dgCMatrix} vs {\bf RleMatrix} vs {\bf HDF5Matrix}}
   \begin{exampleblock}{}
 <<>>=
 library(pryr)  # for object_size()
@@ -201,10 +218,10 @@ object_size(as(m, "HDF5Matrix"))
   package:
   \begin{block}{}
     \begin{itemize}
-      \item Non-zero values always stored as double, the most memory consuming
-            type.
-      \item Number of non-zero values must be $< 2^31$.
-      \item Limited to 2 dimensions: no support for arrays of arbitrary number
+      \item non-zero values always stored as \Rcode{double}, the most memory
+            consuming type
+      \item number of non-zero values must be $< 2^{31}$
+      \item limited to 2 dimensions: no support for arrays of arbitrary number
             of dimensions
     \end{itemize}
   \end{block}
@@ -213,11 +230,58 @@ object_size(as(m, "HDF5Matrix"))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Delayed operations}
+\section{RleArray and HDF5Array objects}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
+  RleMatrix/RleArray and HDF5Matrix/HDF5Array provide:
+  \begin{block}{}
+    \begin{itemize}
+      \item support all R atomic types
+      \item no limits in size (but each dimension must be $< 2^{31}$)
+      \item arbitrary number of dimensions
+    \end{itemize}
+  \end{block}
+
+  \bigskip
+
+  And also:
+  \begin{block}{}
+    \begin{itemize}
+      \item {\bf delayed operations}
+      \item {\bf block-processing} (behind the scene)
+      \item TODO: multicore block-processing (sequential only at the moment)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf Delayed operations}
+  \begin{block}{}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf Realization}
+  \begin{block}{}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf Controlling where HDF5 datasets are realized}
+  \begin{block}{}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf Block processing}
+  \begin{block}{}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf Controlling the block size}
   \begin{block}{}
   \end{block}
 \end{frame}
@@ -225,12 +289,48 @@ object_size(as(m, "HDF5Matrix"))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Block processing}
+\section{DelayedArray/HDF5Array: Future developments}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
+  {\bf Block processing improvements}
   \begin{block}{}
+    Block genometry: (1) better by default, (2) let the user have more
+    control on it
+
+    Support multicore
+
+    Expose it: \Rcode{blockApply}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf HDF5Array improvements}
+  \begin{block}{}
+    Store the dimnames in the HDF5 file (in {\em HDF5 Dimension Scale
+    datasets})
+
+    Use better default chunk geometry when realizing an HDF5Array object
+
+    Block processing should take advantage of the chunk geometry (e.g.
+    \Rcode{realize} should use blocks that are clusters of chunks)
+
+    Unfortunately: not possible to support multicore realization at the
+    moment (HDF5 does not support concurrent writing to a dataset yet)
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  {\bf RleArray improvements}
+  \begin{block}{}
+    Let the user have more control on the chunk geometry when
+    constructing/realizing an RleArray object
+
+    Like for HDF5Array objects, block processing should take advantage
+    of the chunk geometry
+
+    Support multicore realization
   \end{block}
 \end{frame}
 
