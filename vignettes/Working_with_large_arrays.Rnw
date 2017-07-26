@@ -289,6 +289,93 @@ object_size(as(m, "HDF5Matrix"))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Try it}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  {\bf Try it}
+
+  \begin{block}{}
+    1. Load the "airway" dataset.
+  \end{block}
+
+  \begin{block}{}
+    2. It's wrapped in a SummarizedExperiment. Get the count data as an
+       ordinary matrix.
+  \end{block}
+
+  \begin{block}{}
+    3. Wrap it in an HDF5Matrix object: (1) using \Rcode{writeHDF5Array};
+       then (2) using coercion.
+  \end{block}
+
+  \begin{block}{}
+    4. When using coercion, where has the data been written on disk?
+  \end{block}
+
+  \begin{block}{}
+    5. See \Rcode{?setHDF5DumpFile} for how to control the location of
+       "automatic" HDF5 datasets. Try to control the destination of the
+       data when coercing.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \begin{block}{}
+    6. Use \Rcode{showHDF5DumpLog} to see all the HDF5 datasets written to
+       disk during the current session.
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    7. Try some operations on the HDF5Matrix object: (1) some delayed ones;
+       (2) some non-delayed ones (block processing).
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    8. Use \Rcode{DelayedArray:::set\_verbose\_block\_processing} to see
+       block processing in action.
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    9. Control the block size via \Rcode{DelayedArray.block.size} global
+       option.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \begin{block}{}
+    10. Stick the HDF5Matrix object back in the SummarizedExperiment object.
+        The resulting object is an "HDF5-backed SummarizedExperiment object".
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    11. The HDF5-backed SummarizedExperiment object can be manipulated
+        (almost) like an in-memory SummarizedExperiment object.
+        Try \Rcode{[}, \Rcode{cbind}, \Rcode{rbind} on it.
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    12. The \Biocpkg{SummarizedExperiment} package provides
+        \Rcode{saveHDF5SummarizedExperiment} to save a SummarizedExperiment
+        object (HDF5-backed or not) as an HDF5-backed SummarizedExperiment
+        object. Try it.
+  \end{block}
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{DelayedArray/HDF5Array: Future developments}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -298,9 +385,13 @@ object_size(as(m, "HDF5Matrix"))
   \begin{block}{}
     Block genometry: (1) better by default, (2) let the user have more
     control on it
+  \end{block}
 
+  \begin{block}{}
     Support multicore
+  \end{block}
 
+  \begin{block}{}
     Expose it: \Rcode{blockApply}
   \end{block}
 \end{frame}
@@ -308,14 +399,20 @@ object_size(as(m, "HDF5Matrix"))
 \begin{frame}[fragile]
   {\bf HDF5Array improvements}
   \begin{block}{}
-    Store the dimnames in the HDF5 file (in {\em HDF5 Dimension Scale
-    datasets})
+    Store the \Rcode{dimnames} in the HDF5 file (in {\em HDF5 Dimension Scale
+    datasets} - \url{https://www.hdfgroup.org/HDF5/Tutor/h5dimscale.html})
+  \end{block}
 
+  \begin{block}{}
     Use better default chunk geometry when realizing an HDF5Array object
+  \end{block}
 
+  \begin{block}{}
     Block processing should take advantage of the chunk geometry (e.g.
     \Rcode{realize} should use blocks that are clusters of chunks)
+  \end{block}
 
+  \begin{block}{}
     Unfortunately: not possible to support multicore realization at the
     moment (HDF5 does not support concurrent writing to a dataset yet)
   \end{block}
@@ -326,11 +423,20 @@ object_size(as(m, "HDF5Matrix"))
   \begin{block}{}
     Let the user have more control on the chunk geometry when
     constructing/realizing an RleArray object
+  \end{block}
 
+  \begin{block}{}
     Like for HDF5Array objects, block processing should take advantage
     of the chunk geometry
+  \end{block}
 
+  \begin{block}{}
     Support multicore realization
+  \end{block}
+
+  \begin{block}{}
+    Provide C/C++ low-level API for direct row/column access from C/C++ code
+    (e.g. from the \Biocpkg{beachmat} package)
   \end{block}
 \end{frame}
 
