@@ -51,6 +51,8 @@ library(pryr)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
+  \frametitle{Motivation and challenges}
+
   R ordinary {\bf matrix} or {\bf array} is not suitable for big datasets:
   \begin{block}{}
     \begin{itemize}
@@ -82,7 +84,10 @@ library(pryr)
 
 
 \begin{frame}[fragile]
-  {\bf In-memory data}
+  \frametitle{Motivation and challenges}
+
+  \centerline{\bf In-memory data}
+
   \begin{block}{}
     \begin{itemize}
       \item a 30k x 1.3M matrix might still fit in memory if the data can
@@ -109,7 +114,9 @@ library(pryr)
 \end{frame}
 
 \begin{frame}[fragile]
-  {\bf Examples of in-memory containers}
+  \frametitle{Motivation and challenges}
+
+  \centerline{\bf Examples of in-memory containers}
 
   \bigskip
 
@@ -137,7 +144,9 @@ library(pryr)
 \end{frame}
 
 \begin{frame}[fragile]
-  {\bf On-disk data}
+  \frametitle{Motivation and challenges}
+
+  \centerline{\bf On-disk data}
 
   \bigskip
 
@@ -151,7 +160,9 @@ library(pryr)
 \end{frame}
 
 \begin{frame}[fragile]
-  {\bf Examples of on-disk containers}
+  \frametitle{Motivation and challenges}
+
+  \centerline{\bf Examples of on-disk containers}
 
   \bigskip
 
@@ -176,7 +187,10 @@ library(pryr)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-  {\bf The "airway" dataset}
+  \frametitle{Memory footprint}
+
+  \centerline{\bf The "airway" dataset}
+
   \begin{exampleblock}{}
 {\scriptsize
 <<>>=
@@ -194,7 +208,10 @@ typeof(m)
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{{\bf dgCMatrix} vs {\bf RleMatrix} vs {\bf HDF5Matrix}}
+  \frametitle{Memory footprint}
+
+  \centerline{{\bf dgCMatrix} vs {\bf RleMatrix} vs {\bf HDF5Matrix}}
+
   \begin{exampleblock}{}
 <<>>=
 library(pryr)  # for object_size()
@@ -214,8 +231,11 @@ object_size(as(m, "HDF5Matrix"))
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{Memory footprint}
+
   Some limitations of the sparse matrix implementation in the \Biocpkg{Matrix}
   package:
+
   \begin{block}{}
     \begin{itemize}
       \item non-zero values always stored as \Rcode{double}, the most memory
@@ -235,6 +255,8 @@ object_size(as(m, "HDF5Matrix"))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
   RleMatrix/RleArray and HDF5Matrix/HDF5Array provide:
   \begin{block}{}
     \begin{itemize}
@@ -257,31 +279,46 @@ object_size(as(m, "HDF5Matrix"))
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
   {\bf Delayed operations}
+
   \begin{block}{}
   \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
   {\bf Realization}
+
   \begin{block}{}
   \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
   {\bf Controlling where HDF5 datasets are realized}
+
   \begin{block}{}
   \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
   {\bf Block processing}
+
   \begin{block}{}
   \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
   {\bf Controlling the block size}
+
   \begin{block}{}
   \end{block}
 \end{frame}
@@ -289,20 +326,20 @@ object_size(as(m, "HDF5Matrix"))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Try it}
+\section{Hands-on}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-  {\bf Try it}
+  \frametitle{Hands-on}
 
   \begin{block}{}
     1. Load the "airway" dataset.
   \end{block}
 
   \begin{block}{}
-    2. It's wrapped in a SummarizedExperiment. Get the count data as an
-       ordinary matrix.
+    2. It's wrapped in a SummarizedExperiment object. Get the count data as
+       an ordinary matrix.
   \end{block}
 
   \begin{block}{}
@@ -322,6 +359,8 @@ object_size(as(m, "HDF5Matrix"))
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{Hands-on}
+
   \begin{block}{}
     6. Use \Rcode{showHDF5DumpLog} to see all the HDF5 datasets written to
        disk during the current session.
@@ -350,6 +389,8 @@ object_size(as(m, "HDF5Matrix"))
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{Hands-on}
+
   \begin{block}{}
     10. Stick the HDF5Matrix object back in the SummarizedExperiment object.
         The resulting object is an "HDF5-backed SummarizedExperiment object".
@@ -381,7 +422,10 @@ object_size(as(m, "HDF5Matrix"))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-  {\bf Block processing improvements}
+  \frametitle{Future developments}
+
+  \centerline{\bf Block processing improvements}
+
   \begin{block}{}
     Block genometry: (1) better by default, (2) let the user have more
     control on it
@@ -397,7 +441,10 @@ object_size(as(m, "HDF5Matrix"))
 \end{frame}
 
 \begin{frame}[fragile]
-  {\bf HDF5Array improvements}
+  \frametitle{Future developments}
+
+  \centerline{\bf HDF5Array improvements}
+
   \begin{block}{}
     Store the \Rcode{dimnames} in the HDF5 file (in {\em HDF5 Dimension Scale
     datasets} - \url{https://www.hdfgroup.org/HDF5/Tutor/h5dimscale.html})
@@ -419,7 +466,10 @@ object_size(as(m, "HDF5Matrix"))
 \end{frame}
 
 \begin{frame}[fragile]
-  {\bf RleArray improvements}
+  \frametitle{Future developments}
+
+  \centerline{\bf RleArray improvements}
+
   \begin{block}{}
     Let the user have more control on the chunk geometry when
     constructing/realizing an RleArray object
