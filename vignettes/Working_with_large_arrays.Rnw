@@ -417,7 +417,7 @@ seed(M5)
       \begin{exampleblock}{}
 {\scriptsize
 <<>>=
-M6 <- M[11:20, ] / M[1:10, ]
+M6 <- round(M[11:15, ] / M[1:5, ], digits=3)
 M6
 @
 }
