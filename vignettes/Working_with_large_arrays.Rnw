@@ -380,11 +380,14 @@ seed(M4)
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  All the members of the \Rcode{Arith} (\Rcode{+}, \Rcode{-}, ...),
-  \Rcode{Compare} (\Rcode{==}, \Rcode{<}, ...),
-  \Rcode{Logic} (\Rcode{\&}, \Rcode{|}),
-  \Rcode{Math} (\Rcode{log}, \Rcode{sqrt}), and \Rcode{Math2} groups
-  are delayed:
+  All the operations in the following groups are delayed:
+  \begin{itemize}
+    \item \Rcode{Arith} (\Rcode{+}, \Rcode{-}, ...)
+    \item \Rcode{Compare} (\Rcode{==}, \Rcode{<}, ...)
+    \item \Rcode{Logic} (\Rcode{\&}, \Rcode{|})
+    \item \Rcode{Math} (\Rcode{log}, \Rcode{sqrt})
+    \item and more ...
+  \end{itemize}
 
   \begin{columns}[t]
     \begin{column}{0.44\textwidth}
@@ -440,8 +443,62 @@ seed(M6)
 
   \centerline{\bf Realization}
 
-  \begin{block}{}
-  \end{block}
+  \bigskip
+
+  Delayed operations can be {\bf realized} by coercing the DelayedMatrix
+  object to HDF5Array:
+
+  \begin{columns}[t]
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+M6a <- as(M6, "HDF5Array")
+M6a
+@
+}
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+seed(M6a)
+@
+}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  \bigskip
+
+  ... or by coercing it to RleArray:
+
+  \begin{columns}[t]
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+M6b <- as(M6, "RleArray")
+M6b
+@
+}
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+seed(M6b)
+@
+}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -449,8 +506,46 @@ seed(M6)
 
   \centerline{\bf Controlling where HDF5 datasets are realized}
 
-  \begin{block}{}
-  \end{block}
+  {\em HDF5 dump management utilities}: a set of utilities to control where
+  HDF5 datasets are written to disk.
+
+  \begin{columns}[t]
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+setHDF5DumpFile("~/mydata/M6c.h5")
+setHDF5DumpName("M6c")
+M6c <- as(M6, "HDF5Array")
+@
+}
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+seed(M6c)
+h5ls("~/mydata/M6c.h5")
+@
+}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  \centerline{\Rcode{showHDF5DumpLog()}}
+
+  \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+(showHDF5DumpLog())
+@
+}
+  \end{exampleblock}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -458,17 +553,69 @@ seed(M6)
 
   \centerline{\bf Block processing}
 
-  \begin{block}{}
-  \end{block}
+  \bigskip
+
+  The following operations are NOT delayed. They are implemented via a
+  {\em block processing} mechanism that loads and processes one block
+  at a time:
+  \begin{itemize}
+    \item operations in the \Rcode{Summary} group (\Rcode{max}, \Rcode{min},
+          \Rcode{sum}, \Rcode{any}, \Rcode{all})
+    \item \Rcode{mean}
+    \item Matrix row/col summarization operations (\Rcode{col/rowSums},
+          \Rcode{col/rowMeans}, ...)
+    \item \Rcode{anyNA}, \Rcode{which}
+    \item \Rcode{apply}
+    \item and more ...
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  \centerline{\bf Controlling the block size}
+  \begin{exampleblock}{}
+{\small
+<<results=hide>>=
+DelayedArray:::set_verbose_block_processing(TRUE)
+colSums(M)
+@
+\begin{verbatim}
+Processing block 1/1 ... OK
+\end{verbatim}
+<<echo=FALSE>>=
+colSums(M)
+@
+}
+  \end{exampleblock}
 
-  \begin{block}{}
-  \end{block}
+  \bigskip
+
+  Control the block size:
+
+  \begin{exampleblock}{}
+{\small
+<<>>=
+getOption("DelayedArray.block.size")
+options(DelayedArray.block.size=1e6)
+@
+}
+  \end{exampleblock}
+
+  \begin{exampleblock}{}
+{\small
+<<results=hide>>=
+colSums(M)
+@
+\begin{verbatim}
+Processing block 1/3 ... OK
+Processing block 2/3 ... OK
+Processing block 3/3 ... OK
+\end{verbatim}
+<<echo=FALSE>>=
+colSums(M)
+@ 
+}
+  \end{exampleblock}
 \end{frame}
 
 
