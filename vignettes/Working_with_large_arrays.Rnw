@@ -281,7 +281,89 @@ object_size(as(m, "HDF5Matrix"))
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  {\bf Delayed operations}
+  \centerline{\bf Delayed operations}
+
+  \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+M <- as(m, "HDF5Matrix")
+M
+@
+}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  Subsetting is delayed:
+
+  \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+M2 <- M[10:12, 1:5]
+M2
+seed(M2)
+@
+}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  Transposing is delayed:
+
+  \begin{exampleblock}{}
+{\scriptsize
+<<>>=
+M3 <- t(M2)
+M3
+seed(M3)
+@
+}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  \Rcode{cbind} / \Rcode{rbind} are delayed:
+
+  \begin{exampleblock}{}
+{\tiny
+<<>>=
+M4 <- cbind(M3, M[1:5, 6:8])
+M4
+seed(M4)
+@
+}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  All the members of the \Rcode{Arith}, \Rcode{Compare} (\Rcode{==},
+  \Rcode{<}, ...), \Rcode{Logic} (\Rcode{\&}, \Rcode{|}),
+  \Rcode{Math} (\Rcode{log}, \Rcode{sqrt}), and \Rcode{Math2} groups
+  are delayed:
+
+  \begin{exampleblock}{}
+{\tiny
+<<>>=
+M5 <- M == 0
+M5
+seed(M5)
+@
+}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{RleArray and HDF5Array objects}
+
+  \centerline{\bf Realization}
 
   \begin{block}{}
   \end{block}
@@ -290,7 +372,7 @@ object_size(as(m, "HDF5Matrix"))
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  {\bf Realization}
+  \centerline{\bf Controlling where HDF5 datasets are realized}
 
   \begin{block}{}
   \end{block}
@@ -299,7 +381,7 @@ object_size(as(m, "HDF5Matrix"))
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  {\bf Controlling where HDF5 datasets are realized}
+  \centerline{\bf Block processing}
 
   \begin{block}{}
   \end{block}
@@ -308,16 +390,7 @@ object_size(as(m, "HDF5Matrix"))
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  {\bf Block processing}
-
-  \begin{block}{}
-  \end{block}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{RleArray and HDF5Array objects}
-
-  {\bf Controlling the block size}
+  \centerline{\bf Controlling the block size}
 
   \begin{block}{}
   \end{block}
