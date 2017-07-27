@@ -1,9 +1,8 @@
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Working with large arrays in R}
-%\VignetteDepends{Matrix, DelayedArray, HDF5Array, SummarizedExperiment, airway, pryr}
+%\VignetteDepends{knitr,Matrix,DelayedArray,HDF5Array,SummarizedExperiment,airway,pryr}
 
-\SweaveOpts{keep.source=TRUE, eps=FALSE, width=9, height=3}
-
-\documentclass[9pt]{beamer}
+\documentclass[8pt]{beamer}
 
 \mode<presentation> {
 \usetheme{Madrid}
@@ -20,18 +19,22 @@
   \end{frame}
 }
 
-\title{Working with large arrays in R
-       ---
-       A look at HDF5Array/RleArray/DelayedArray objects}
+\title{Working with large arrays in R}
+\subtitle{A look at HDF5Array/RleArray/DelayedArray objects}
 
 \author{Herv\'e Pag\`es\\
         \href{mailto:hpages@fredhutch.org}{hpages@fredhutch.org}}
+
+\institute{Bioconductor conference\\Boston}
 
 \date{July 2017}
 
 \begin{document}
 
-<<setup, echo=FALSE, results=hide>>=
+<<setup, include=FALSE>>=
+library(knitr)
+opts_chunk$set(size="scriptsize")
+if (!dir.exists("~/mydata")) dir.create("~/mydata")
 options(width=80)
 library(Matrix)
 library(DelayedArray)
@@ -193,20 +196,28 @@ library(pryr)
 
   \centerline{\bf The "airway" dataset}
 
-  \begin{exampleblock}{}
-{\scriptsize
-<<>>=
+  \begin{columns}[t]
+    \begin{column}{0.36\textwidth}
+      \begin{exampleblock}{}
+<<airway>>=
 library(airway)
 data(airway)
 m <- unname(assay(airway))
 dim(m)
+typeof(m)
+@
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.52\textwidth}
+      \begin{exampleblock}{}
+<<airway2>>=
 head(m, n=4)
 tail(m, n=4)
 sum(m != 0) / length(m)
-typeof(m)
 @
-}
-  \end{exampleblock}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -214,8 +225,10 @@ typeof(m)
 
   \centerline{{\bf dgCMatrix} vs {\bf RleMatrix} vs {\bf HDF5Matrix}}
 
-  \begin{exampleblock}{}
-<<>>=
+  \begin{columns}[t]
+    \begin{column}{0.60\textwidth}
+      \begin{exampleblock}{}
+<<object_size>>=
 library(pryr)  # for object_size()
 object_size(m)
 
@@ -229,7 +242,9 @@ object_size(as(t(m), "RleMatrix"))
 library(HDF5Array)
 object_size(as(m, "HDF5Matrix"))
 @
-  \end{exampleblock}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -285,14 +300,20 @@ object_size(as(m, "HDF5Matrix"))
 
   \centerline{\bf Delayed operations}
 
-  \begin{exampleblock}{}
-{\scriptsize
-<<>>=
+  \bigskip
+
+  \centerline{We start with HDF5Matrix object \Rcode{M}:}
+
+  \begin{columns}[t]
+    \begin{column}{0.60\textwidth}
+      \begin{exampleblock}{}
+<<M>>=
 M <- as(m, "HDF5Matrix")
 M
 @
-}
-  \end{exampleblock}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -301,23 +322,19 @@ M
   Subsetting is delayed:
 
   \begin{columns}[t]
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.40\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
-<<>>=
+<<M2>>=
 M2 <- M[10:12, 1:5]
 M2
 @
-}
       \end{exampleblock}
     \end{column}
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
-<<>>=
+<<seed_of_M2>>=
 seed(M2)
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -329,23 +346,19 @@ seed(M2)
   Transposition is delayed:
 
   \begin{columns}[t]
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.40\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 M3 <- t(M2)
 M3
 @
-}
       \end{exampleblock}
     \end{column}
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M3)
 @
-}
       \end{exampleblock}
     \end{column}
     \end{columns}
@@ -359,21 +372,17 @@ seed(M3)
   \begin{columns}[t]
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 M4 <- cbind(M3, M[1:5, 6:8])
 M4
 @
-}
       \end{exampleblock}
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M4)
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -392,23 +401,19 @@ seed(M4)
   \end{itemize}
 
   \begin{columns}[t]
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.42\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 M5 <- M == 0
 M5
 @
-}
       \end{exampleblock}
     \end{column}
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.47\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M5)
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -420,21 +425,17 @@ seed(M5)
   \begin{columns}[t]
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
-M6 <- round(M[11:15, ] / M[1:5, ], digits=3)
+M6 <- round(M[11:14, ] / M[1:4, ], digits=3)
 M6
 @
-}
       \end{exampleblock}
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M6)
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -451,23 +452,19 @@ seed(M6)
   object to HDF5Array:
 
   \begin{columns}[t]
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.40\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 M6a <- as(M6, "HDF5Array")
 M6a
 @
-}
       \end{exampleblock}
     \end{column}
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M6a)
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -483,21 +480,17 @@ seed(M6a)
   \begin{columns}[t]
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 M6b <- as(M6, "RleArray")
 M6b
 @
-}
       \end{exampleblock}
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M6b)
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -508,29 +501,27 @@ seed(M6b)
 
   \centerline{\bf Controlling where HDF5 datasets are realized}
 
+  \bigskip
+
   {\em HDF5 dump management utilities}: a set of utilities to control where
   HDF5 datasets are written to disk.
 
   \begin{columns}[t]
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 setHDF5DumpFile("~/mydata/M6c.h5")
 setHDF5DumpName("M6c")
 M6c <- as(M6, "HDF5Array")
 @
-}
       \end{exampleblock}
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-{\scriptsize
 <<>>=
 seed(M6c)
 h5ls("~/mydata/M6c.h5")
 @
-}
       \end{exampleblock}
     \end{column}
   \end{columns}
@@ -542,11 +533,9 @@ h5ls("~/mydata/M6c.h5")
   \centerline{\Rcode{showHDF5DumpLog()}}
 
   \begin{exampleblock}{}
-{\scriptsize
 <<>>=
-(showHDF5DumpLog())
+showHDF5DumpLog()
 @
-}
   \end{exampleblock}
 \end{frame}
 
@@ -575,49 +564,26 @@ h5ls("~/mydata/M6c.h5")
 \begin{frame}[fragile]
   \frametitle{RleArray and HDF5Array objects}
 
-  \begin{exampleblock}{}
-{\small
-<<results=hide>>=
+  \begin{columns}[t]
+    \begin{column}{0.75\textwidth}
+      \begin{exampleblock}{}
+<<>>=
 DelayedArray:::set_verbose_block_processing(TRUE)
 colSums(M)
 @
-\begin{verbatim}
-Processing block 1/1 ... OK
-\end{verbatim}
-<<echo=FALSE>>=
-colSums(M)
-@
-}
-  \end{exampleblock}
+      \end{exampleblock}
 
-  \bigskip
+      Control the block size:
 
-  Control the block size:
-
-  \begin{exampleblock}{}
-{\small
+      \begin{exampleblock}{}
 <<>>=
 getOption("DelayedArray.block.size")
 options(DelayedArray.block.size=1e6)
-@
-}
-  \end{exampleblock}
-
-  \begin{exampleblock}{}
-{\small
-<<results=hide>>=
-colSums(M)
-@
-\begin{verbatim}
-Processing block 1/3 ... OK
-Processing block 2/3 ... OK
-Processing block 3/3 ... OK
-\end{verbatim}
-<<echo=FALSE>>=
 colSums(M)
 @ 
-}
-  \end{exampleblock}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 
@@ -789,6 +755,10 @@ colSums(M)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+<<cleanup, include=FALSE>>=
+unlink("~/mydata", recursive=TRUE, force=TRUE)
+@
 
 \end{document}
 
