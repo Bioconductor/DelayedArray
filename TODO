@@ -11,6 +11,9 @@
 
 - Add vignette.
 
+- Support subsetting an arbitrary object by a DelayedArray or
+  DelayedMatrix of type logical.
+
 - Support more matrix- and array-like operations.
 
 - How well supported are DelayedArray of type "character"?
