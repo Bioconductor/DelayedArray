@@ -163,7 +163,7 @@ setMethod("pmax2", c("ANY", "ANY"),
             names(ans) <- .combine_names(e1, e2)
         } else {
             dim(ans) <- ans_dim
-            dimnames(ans) <- IRanges:::combine_dimnames(list(e1, e2))
+            dimnames(ans) <- combine_dimnames(list(e1, e2))
         }
         ans
     }
@@ -178,7 +178,7 @@ setMethod("pmin2", c("ANY", "ANY"),
             names(ans) <- .combine_names(e1, e2)
         } else {
             dim(ans) <- ans_dim
-            dimnames(ans) <- IRanges:::combine_dimnames(list(e1, e2))
+            dimnames(ans) <- combine_dimnames(list(e1, e2))
         }
         ans
     }

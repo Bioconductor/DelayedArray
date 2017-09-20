@@ -74,7 +74,7 @@ setMethod("dim", "ConformableSeedCombiner",
 
 .get_ConformableSeedCombiner_dimnames <- function(x)
 {
-    IRanges:::combine_dimnames(x@seeds)
+    combine_dimnames(x@seeds)
 }
 
 setMethod("dimnames", "ConformableSeedCombiner",

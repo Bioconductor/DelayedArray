@@ -14,13 +14,14 @@ Author: Hervé Pagès
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 Depends: R (>= 3.4), methods, matrixStats, BiocGenerics,
-	S4Vectors (>= 0.15.3), IRanges (>= 2.11.5)
+	S4Vectors (>= 0.15.3), IRanges (>= 2.11.17)
 Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, SummarizedExperiment, airway, pryr,
 	knitr, BiocStyle
 License: Artistic-2.0
 VignetteBuilder: knitr
 Collate: utils.R
+	bind-arrays.R
 	Array-class.R
 	ArrayGrid-class.R
 	show-utils.R

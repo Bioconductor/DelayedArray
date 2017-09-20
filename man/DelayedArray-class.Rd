@@ -70,15 +70,11 @@
 \alias{rbind}
 \alias{rbind,DelayedMatrix-method}
 \alias{rbind,DelayedArray-method}
+\alias{arbind,DelayedArray-method}
 
 \alias{cbind}
 \alias{cbind,DelayedMatrix-method}
 \alias{cbind,DelayedArray-method}
-
-\alias{arbind}
-\alias{arbind,DelayedArray-method}
-
-\alias{acbind}
 \alias{acbind,DelayedArray-method}
 
 % Internal stuff
@@ -188,7 +184,7 @@ type(x)
     \item \code{\link[base]{cbind}} in the \pkg{base} package for
           rbind/cbind'ing ordinary arrays.
 
-    \item \code{\link[IRanges]{acbind}} in the \pkg{IRanges} package for
+    \item \code{\link{acbind}} in this package (\pkg{DelayedArray}) for
           arbind/acbind'ing ordinary arrays.
 
     \item \link{RleArray} objects.
@@ -320,12 +316,7 @@ colMeans(M12)
 
 ## arbind/acbind
 
-a1 <- array(1:60, c(3, 5, 4),
-            dimnames=list(NULL, paste0("M1y", 1:5), NULL))
-a2 <- array(101:240, c(7, 5, 4),
-            dimnames=list(paste0("M2x", 1:7), paste0("M2y", 1:5), NULL))
-a3 <- array(10001:10100, c(5, 5, 4),
-            dimnames=list(paste0("M3x", 1:5), NULL, paste0("M3z", 1:4)))
+example(acbind)  # to create arrays a1, a2, a3
 
 A1 <- DelayedArray(a1)
 A2 <- DelayedArray(a2)

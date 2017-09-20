@@ -124,8 +124,7 @@ exportMethods(
 
     ## Methods for generics defined in the IRanges package:
     ranges, start, end, width,
-    splitAsList,
-    arbind, acbind
+    splitAsList
 )
 
 
@@ -147,6 +146,7 @@ export(
 ###
 
 export(
+    arbind, acbind,
     refdim, isLinear,
     subset_seed_as_array,
     matrixClass, DelayedArray, seed, type,
@@ -158,6 +158,7 @@ export(
 
 ### Exactly the same list as above.
 exportMethods(
+    arbind, acbind,
     refdim, isLinear,
     subset_seed_as_array,
     matrixClass, DelayedArray, seed, type,
