@@ -1,5 +1,8 @@
 import(methods)
-importFrom(stats, setNames, dpois, ppois, qpois, dlogis, plogis, qlogis)
+importFrom(stats, setNames,
+                  dbinom, pbinom, qbinom,
+                  dpois, ppois, qpois,
+                  dlogis, plogis, qlogis)
 import(BiocGenerics)
 import(S4Vectors)
 import(IRanges)
@@ -109,6 +112,7 @@ exportMethods(
     coerce, show,
 
     ## Methods for generics defined in the stats package:
+    dbinom, pbinom, qbinom,
     dpois, ppois, qpois,
     dlogis, plogis, qlogis,
 

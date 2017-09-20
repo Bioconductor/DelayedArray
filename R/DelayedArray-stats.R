@@ -4,6 +4,34 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The Binomial Distribution
+###
+### All these methods return a DelayedArray object of the same dimensions
+### as their first argument.
+###
+
+setMethod("dbinom", "DelayedArray",
+    function(x, size, prob, log=FALSE)
+        register_delayed_op(x, "dbinom",
+            Rargs=list(size=size, prob=prob, log=log))
+)
+
+setMethod("pbinom", "DelayedArray",
+    function(q, size, prob, lower.tail=TRUE, log.p=FALSE)
+        register_delayed_op(q, "pbinom",
+            Rargs=list(size=size, prob=prob,
+                       lower.tail=lower.tail, log.p=log.p))
+)
+
+setMethod("qbinom", "DelayedArray",
+    function(p, size, prob, lower.tail=TRUE, log.p=FALSE)
+        register_delayed_op(p, "qbinom",
+            Rargs=list(size=size, prob=prob,
+                       lower.tail=lower.tail, log.p=log.p))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### The Poisson Distribution
 ###
 ### All these methods return a DelayedArray object of the same dimensions
