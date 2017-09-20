@@ -164,7 +164,14 @@ type(x)
   \emph{single} numeric value >= 1 and <= \code{length(x)}. It is equivalent
   to \code{x[i]}.
 
-  DelayedArray objects don't support subassignment (\code{[<-} or \code{[[<-}).
+  DelayedArray objects support only 2 forms of subassignment at the moment:
+  \code{x[i] <- value} and \code{x[] <- value}. The former is supported only
+  when the subscript \code{i} is a logical DelayedArray object with the same
+  dimensions as \code{x} and when \code{value} is a \emph{scalar} (i.e. an
+  atomic vector of length 1). The latter is supported only when \code{value}
+  is an atomic vector and \code{length(value)} is a divisor of \code{nrow(x)}.
+
+  Single value replacement (\code{x[[...]] <- value}) is not supported.
 }
 
 \section{Binding}{
@@ -219,6 +226,11 @@ stopifnot(identical(a, seed(M)))
 ## Linear single bracket subsetting:
 A[11:20]
 A[which(A <= 1e-5)]
+
+## Subassignment:
+A[A < 0.2] <- NA
+a[a < 0.2] <- NA
+stopifnot(identical(a, as.array(A)))
 
 ## Other operations:
 toto <- function(x) (5 * x[ , , 1] ^ 3 + 1L) * log(x[, , 2])

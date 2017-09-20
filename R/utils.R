@@ -85,7 +85,7 @@ extract_Nindex_from_syscall <- function(call, eframe)
     )
     argnames <- tail(names(call), n=-2L)
     if (!is.null(argnames))
-        Nindex <- Nindex[!(argnames %in% c("drop", "exact"))]
+        Nindex <- Nindex[!(argnames %in% c("drop", "exact", "value"))]
     if (length(Nindex) == 1L && is.null(Nindex[[1L]]))
         Nindex <- Nindex[0L]
     Nindex
