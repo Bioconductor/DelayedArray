@@ -4,7 +4,33 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Logistic
+### The Poisson Distribution
+###
+### All these methods return a DelayedArray object of the same dimensions
+### as their first argument.
+###
+
+setMethod("dpois", "DelayedArray",
+    function(x, lambda, log=FALSE)
+        register_delayed_op(x, "dpois",
+            Rargs=list(lambda=lambda, log=log))
+)
+
+setMethod("ppois", "DelayedArray",
+    function(q, lambda, lower.tail=TRUE, log.p=FALSE)
+        register_delayed_op(q, "ppois",
+            Rargs=list(lambda=lambda, lower.tail=lower.tail, log.p=log.p))
+)
+
+setMethod("qpois", "DelayedArray",
+    function(p, lambda, lower.tail=TRUE, log.p=FALSE)
+        register_delayed_op(p, "qpois",
+            Rargs=list(lambda=lambda, lower.tail=lower.tail, log.p=log.p))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The Logistic Distribution
 ###
 ### All these methods return a DelayedArray object of the same dimensions
 ### as their first argument.
