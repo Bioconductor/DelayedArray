@@ -4,9 +4,6 @@
 
 % DelayedArray utils
 
-\alias{dim,ConformableSeedCombiner-method}
-\alias{dimnames,ConformableSeedCombiner-method}
-
 \alias{+,DelayedArray,missing-method}
 \alias{-,DelayedArray,missing-method}
 
@@ -76,10 +73,6 @@
 \alias{rowRanges,DelayedMatrix-method}
 \alias{colRanges}
 \alias{colRanges,DelayedMatrix-method}
-
-% Internal stuff
-
-\alias{subset_seed_as_array,ConformableSeedCombiner-method}
 
 \title{Common operations on DelayedArray objects}
 

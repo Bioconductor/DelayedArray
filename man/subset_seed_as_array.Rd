@@ -6,6 +6,10 @@
 \alias{subset_seed_as_array,data.frame-method}
 \alias{subset_seed_as_array,DataFrame-method}
 
+\alias{dim,ConformableSeedCombiner-method}
+\alias{dimnames,ConformableSeedCombiner-method}
+\alias{subset_seed_as_array,ConformableSeedCombiner-method}
+
 \alias{dim,SeedBinder-method}
 \alias{dimnames,SeedBinder-method}
 \alias{subset_seed_as_array,SeedBinder-method}
