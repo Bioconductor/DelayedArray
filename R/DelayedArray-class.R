@@ -863,24 +863,8 @@ setMethod("show", "DelayedArray", show_compact_array)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Combining and splitting
 ###
-### Combining arrays with c() is NOT an endomorphism!
-###
 
-### 'objects' must be a list of array-like objects that support as.vector().
-combine_array_objects <- function(objects)
-{
-    if (!is.list(objects))
-        stop("'objects' must be a list")
-
-    NULL_idx <- which(S4Vectors:::sapply_isNULL(objects))
-    if (length(NULL_idx) != 0L)
-        objects <- objects[-NULL_idx]
-    if (length(objects) == 0L)
-        return(NULL)
-
-    unlist(lapply(objects, as.vector), recursive=FALSE, use.names=FALSE)
-}
-
+### Note that combining arrays with c() is NOT an endomorphism!
 setMethod("c", "DelayedArray",
     function (x, ..., recursive=FALSE)
     {
@@ -905,4 +889,69 @@ setMethod("splitAsList", "DelayedArray",
 split.DelayedArray <- function(x, f, drop=FALSE, ...)
     splitAsList(x, f, drop=drop, ...)
 setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Binding
+###
+### We only support binding DelayedArray objects along the rows or the cols
+### at the moment. No binding along an arbitrary dimension yet! (i.e. no
+### "abind" method yet)
+###
+
+### arbind() and acbind()
+
+.DelayedArray_arbind <- function(...)
+{
+    objects <- unname(list(...))
+    dims <- IRanges:::get_dims_to_bind(objects, 1L)
+    if (is.character(dims))
+        stop(wmsg(dims))
+    DelayedArray(new_SeedBinder(objects, 1L))
+}
+
+.DelayedArray_acbind <- function(...)
+{
+    objects <- unname(list(...))
+    dims <- IRanges:::get_dims_to_bind(objects, 2L)
+    if (is.character(dims))
+        stop(wmsg(dims))
+    DelayedArray(new_SeedBinder(objects, 2L))
+}
+
+setMethod("arbind", "DelayedArray", .DelayedArray_arbind)
+setMethod("acbind", "DelayedArray", .DelayedArray_acbind)
+
+### rbind() and cbind()
+
+setMethod("rbind", "DelayedMatrix", .DelayedArray_arbind)
+setMethod("cbind", "DelayedMatrix", .DelayedArray_acbind)
+
+.as_DelayedMatrix_objects <- function(objects)
+{
+    lapply(objects,
+        function(object) {
+            if (length(dim(object)) != 2L)
+                stop(wmsg("cbind() and rbind() are not supported on ",
+                          "DelayedArray objects that don't have exactly ",
+                          "2 dimensions. Please use acbind() or arnind() ",
+                          "instead."))
+            as(object, "DelayedMatrix")
+        })
+}
+
+.DelayedArray_rbind <- function(...)
+{
+    objects <- .as_DelayedMatrix_objects(list(...))
+    do.call("rbind", objects)
+}
+
+.DelayedArray_cbind <- function(...)
+{
+    objects <- .as_DelayedMatrix_objects(list(...))
+    do.call("cbind", objects)
+}
+
+setMethod("rbind", "DelayedArray", .DelayedArray_rbind)
+setMethod("cbind", "DelayedArray", .DelayedArray_cbind)
 

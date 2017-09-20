@@ -98,8 +98,7 @@
     \item \code{is.na}, \code{is.finite}, \code{is.infinite}, \code{is.nan}
     \item \code{nchar}, \code{tolower}, \code{toupper}
     \item \code{pmax2} and \code{pmin2}
-    \item \code{rbind} and \code{cbind} (documented in
-          \link[DelayedArray]{cbind})
+    \item \code{rbind} and \code{cbind} (documented in \link{DelayedArray})
   }
 
   Block-processed operations:

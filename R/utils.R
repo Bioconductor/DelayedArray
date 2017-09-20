@@ -176,6 +176,24 @@ to_linear_index <- function(Nindex, dim)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### combine_array_objects()
+###
+
+### 'objects' must be a list of array-like objects that support as.vector().
+combine_array_objects <- function(objects)
+{
+    if (!is.list(objects))
+        stop("'objects' must be a list")
+    NULL_idx <- which(S4Vectors:::sapply_isNULL(objects))
+    if (length(NULL_idx) != 0L)
+        objects <- objects[-NULL_idx]
+    if (length(objects) == 0L)
+        return(NULL)
+    unlist(lapply(objects, as.vector), recursive=FALSE, use.names=FALSE)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Translate an index into the whole to an index into the parts
 ###
 ### This is .rowidx2rowkeys() from BSgenome/R/OnDiskLongTable-class.R, copied

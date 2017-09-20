@@ -28,7 +28,6 @@ Collate: utils.R
 	ConformableSeedCombiner-class.R
 	SeedBinder-class.R
 	DelayedArray-class.R
-	cbind-methods.R
 	realize.R
 	block_processing.R
 	DelayedArray-utils.R

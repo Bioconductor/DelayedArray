@@ -67,6 +67,20 @@
 \alias{split.DelayedArray}
 \alias{split,DelayedArray,ANY-method}
 
+\alias{rbind}
+\alias{rbind,DelayedMatrix-method}
+\alias{rbind,DelayedArray-method}
+
+\alias{cbind}
+\alias{cbind,DelayedMatrix-method}
+\alias{cbind,DelayedArray-method}
+
+\alias{arbind}
+\alias{arbind,DelayedArray-method}
+
+\alias{acbind}
+\alias{acbind,DelayedArray-method}
+
 % Internal stuff
 \alias{matrixClass}
 \alias{matrixClass,DelayedArray-method}
@@ -157,6 +171,12 @@ type(x)
   DelayedArray objects don't support subassignment (\code{[<-} or \code{[[<-}).
 }
 
+\section{Binding}{
+  Binding DelayedArray objects along the rows (or columns) is supported
+  via the \code{rbind} and \code{arbind} (or \code{cbind} and \code{acbind})
+  methods for DelayedArray objects. All these operations are delayed.
+}
+
 \seealso{
   \itemize{
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
@@ -165,8 +185,11 @@ type(x)
     \item \link{DelayedArray-utils} for common operations on DelayedArray
           objects.
 
-    \item \link[DelayedArray]{cbind} in this package (\pkg{DelayedArray})
-          for binding DelayedArray objects along their rows or columns.
+    \item \code{\link[base]{cbind}} in the \pkg{base} package for
+          rbind/cbind'ing ordinary arrays.
+
+    \item \code{\link[IRanges]{acbind}} in the \pkg{IRanges} package for
+          arbind/acbind'ing ordinary arrays.
 
     \item \link{RleArray} objects.
 
@@ -279,7 +302,42 @@ D
 ## See '?realize' for more information about "realization backends".
 
 ## ---------------------------------------------------------------------
-## E. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
+## E. BIND DelayedArray OBJECTS
+## ---------------------------------------------------------------------
+
+## rbind/cbind
+
+library(HDF5Array)
+toy_h5 <- system.file("extdata", "toy.h5", package="HDF5Array")
+h5ls(toy_h5)
+
+M1 <- HDF5Array(toy_h5, "M1")
+M2 <- HDF5Array(toy_h5, "M2")
+
+M12 <- rbind(M1, t(M2))
+M12
+colMeans(M12)
+
+## arbind/acbind
+
+a1 <- array(1:60, c(3, 5, 4),
+            dimnames=list(NULL, paste0("M1y", 1:5), NULL))
+a2 <- array(101:240, c(7, 5, 4),
+            dimnames=list(paste0("M2x", 1:7), paste0("M2y", 1:5), NULL))
+a3 <- array(10001:10100, c(5, 5, 4),
+            dimnames=list(paste0("M3x", 1:5), NULL, paste0("M3z", 1:4)))
+
+A1 <- DelayedArray(a1)
+A2 <- DelayedArray(a2)
+A3 <- DelayedArray(a3)
+A <- arbind(A1, A2, A3)
+A
+
+## Sanity check:
+stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
+
+## ---------------------------------------------------------------------
+## F. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 \dontrun{
 library(Matrix)
