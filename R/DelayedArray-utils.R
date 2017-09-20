@@ -4,106 +4,6 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### ConformableSeedCombiner objects
-###
-### This class is for internal use only and is not exported.
-###
-
-setClass("ConformableSeedCombiner",
-    representation(
-        seeds="list",              # List of n conformable array-like objects
-                                   # to combine. Each object is expected to
-                                   # satisfy the "seed contract" i.e. to
-                                   # support dim(), dimnames(), and
-                                   # subset_seed_as_array().
-
-        COMBINING_OP="character",  # n-ary operator to combine the seeds.
-
-        Rargs="list"               # Additional arguments to the n-ary
-                                   # operator. Currently unused.
-    ),
-    prototype(
-        seeds=list(new("array")),
-        COMBINING_OP="identity"
-    )
-)
-
-.objects_are_conformable_arrays <- function(objects)
-{
-    dims <- lapply(objects, dim)
-    ndims <- lengths(dims)
-    first_ndim <- ndims[[1L]]
-    if (!all(ndims == first_ndim))
-        return(FALSE)
-    tmp <- unlist(dims, use.names=FALSE)
-    if (is.null(tmp))
-        return(FALSE)
-    dims <- matrix(tmp, nrow=first_ndim)
-    first_dim <- dims[ , 1L]
-    all(dims == first_dim)
-}
-
-.validate_ConformableSeedCombiner <- function(x)
-{
-    ## 'seeds' slot.
-    if (length(x@seeds) == 0L)
-        return(wmsg2("'x@seeds' cannot be empty"))
-    if (!.objects_are_conformable_arrays(x@seeds))
-        return(wmsg2("'x@seeds' must be a list of conformable ",
-                     "array-like objects"))
-    ## 'COMBINING_OP' slot.
-    if (!isSingleString(x@COMBINING_OP))
-        return(wmsg2("'x@COMBINING_OP' must be a single string"))
-    OP <- try(match.fun(x@COMBINING_OP), silent=TRUE)
-    if (is(OP, "try-error"))
-        return(wmsg2("the name in 'x@COMBINING_OP' (\"", x@COMBINING_OP,
-                     "\") must refer to a known n-ary operator"))
-    TRUE
-}
-
-setValidity2("ConformableSeedCombiner", .validate_ConformableSeedCombiner)
-
-.new_ConformableSeedCombiner <- function(seed=new("array"), ...,
-                                         COMBINING_OP="identity",
-                                         Rargs=list())
-{
-    seeds <- unname(list(seed, ...))
-    seeds <- lapply(seeds, remove_pristine_DelayedArray_wrapping)
-    new2("ConformableSeedCombiner", seeds=seeds,
-                                    COMBINING_OP=COMBINING_OP,
-                                    Rargs=Rargs)
-}
-
-### Implement the "seed contract" i.e. dim(), dimnames(), and
-### subset_seed_as_array().
-
-.get_ConformableSeedCombiner_dim <- function(x) dim(x@seeds[[1L]])
-
-setMethod("dim", "ConformableSeedCombiner",
-    .get_ConformableSeedCombiner_dim
-)
-
-.get_ConformableSeedCombiner_dimnames <- function(x)
-{
-    IRanges:::combine_dimnames(x@seeds)
-}
-
-setMethod("dimnames", "ConformableSeedCombiner",
-    .get_ConformableSeedCombiner_dimnames
-)
-
-.subset_ConformableSeedCombiner_as_array <- function(seed, index)
-{
-    arrays <- lapply(seed@seeds, subset_seed_as_array, index)
-    do.call(seed@COMBINING_OP, c(arrays, seed@Rargs))
-}
-
-setMethod("subset_seed_as_array", "ConformableSeedCombiner",
-    .subset_ConformableSeedCombiner_as_array
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "Ops" group generics
 ###
 ### Arith members: "+", "-", "*", "/", "^", "%%", "%/%"
@@ -172,7 +72,7 @@ setMethod("subset_seed_as_array", "ConformableSeedCombiner",
 {
     if (!identical(dim(e1), dim(e2)))
         stop("non-conformable arrays")
-    DelayedArray(.new_ConformableSeedCombiner(e1, e2, COMBINING_OP=.Generic))
+    DelayedArray(new_ConformableSeedCombiner(e1, e2, COMBINING_OP=.Generic))
 }
 
 .DelayedArray_Ops <- function(.Generic, e1, e2)

@@ -143,7 +143,8 @@ export(
 
 export(
     refdim, isLinear,
-    matrixClass, DelayedArray, seed, subset_seed_as_array, type,
+    subset_seed_as_array,
+    matrixClass, DelayedArray, seed, type,
     chunk_dim, write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,
@@ -153,7 +154,8 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     refdim, isLinear,
-    matrixClass, DelayedArray, seed, subset_seed_as_array, type,
+    subset_seed_as_array,
+    matrixClass, DelayedArray, seed, type,
     chunk_dim, write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,
