@@ -71,12 +71,6 @@
 \alias{matrixClass}
 \alias{matrixClass,DelayedArray-method}
 
-\alias{subset_seed_as_array}
-\alias{subset_seed_as_array,ANY-method}
-\alias{subset_seed_as_array,array-method}
-\alias{subset_seed_as_array,data.frame-method}
-\alias{subset_seed_as_array,DataFrame-method}
-
 \title{DelayedArray objects}
 
 \description{
