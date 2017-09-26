@@ -170,6 +170,7 @@ type(x)
   dimensions as \code{x} and when \code{value} is a \emph{scalar} (i.e. an
   atomic vector of length 1). The latter is supported only when \code{value}
   is an atomic vector and \code{length(value)} is a divisor of \code{nrow(x)}.
+  Both are delayed operations so are very light.
 
   Single value replacement (\code{x[[...]] <- value}) is not supported.
 }
