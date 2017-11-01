@@ -14,6 +14,7 @@ import(matrixStats)
 ###
 
 exportClasses(
+    Array,
     ArrayViewport, ArrayGrid, ArrayArbitraryGrid, ArrayRegularGrid,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
