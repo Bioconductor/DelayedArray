@@ -32,6 +32,7 @@
 \alias{coerce,RleArray,RleMatrix-method}
 \alias{matrixClass,RleArray-method}
 \alias{coerce,ANY,RleMatrix-method}
+\alias{coerce,RleArray,RleList-method}
 
 \alias{DelayedArray,RleArraySeed-method}
 \alias{RleArray}
@@ -135,6 +136,13 @@ stopifnot(identical(cs, CS))
 ## Coercion of a DelayedMatrix object to DataFrame produces a DataFrame
 ## object with Rle columns:
 as(B, "DataFrame")
+
+## Coercion of an RleList to an RleArray. Only works if each element of the
+## RleList has the same length. Column names are taken from the names of the
+## list elements
+rle_list <- RleList(A = Rle(sample(3, 100, replace = TRUE)),
+                    B = Rle(sample(3, 100, replace = TRUE)))
+rle_array <- as(rle_list, "RleArray")
 }
 \keyword{methods}
 \keyword{classes}

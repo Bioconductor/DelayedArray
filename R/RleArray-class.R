@@ -210,6 +210,22 @@ setAs("RleRealizationSink", "Rle",
     }
 )
 
+setAs("RleList", "RleArray",
+    function(from)
+    {
+        from_lens <- lengths(from, use.names = FALSE)
+        if (identical(from_lens, integer(0L))) {
+            return(RleArray(unlist(from), c(0L, 0L)))
+        }
+        e1_len <- from_lens[1L]
+        if (any(from_lens != e1_len)) {
+          stop("All elements of RleList must have the same length")
+        }
+        RleArray(unlist(from, use.names = FALSE),
+                 c(e1_len, length(from)),
+                 list(NULL, names(from)))
+    }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### subset_seed_as_array()
