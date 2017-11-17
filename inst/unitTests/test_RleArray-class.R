@@ -43,3 +43,13 @@ test_long_RleArray <- function()
     ## TODO: Add more tests...
 }
 
+test_coercion_to_RleArray <- function() {
+    from <- RleList()
+    checkIdentical(as(from, "RleArray"), RleArray(Rle(), c(0, 0)))
+    from <- RleList(A = Rle(1, 10), B = Rle(2, 10))
+    checkIdentical(as(from, "RleArray"),
+                   RleArray(Rle(c(1, 2), c(10, 10)), c(10, 2),
+                            list(NULL, c("A", "B"))))
+    from <- RleList(A = Rle(1, 10), B = Rle(2, 9))
+    checkException(as(from, "RleArray"), silent = TRUE)
+}
