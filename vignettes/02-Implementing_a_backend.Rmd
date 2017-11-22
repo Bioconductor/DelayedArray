@@ -121,7 +121,7 @@ It takes 2 arguments: `seed` and `index`. `seed` is the seed object
 to extract array values from. `index` must be an unnamed list of
 subscripts as positive integer vectors, one vector per seed dimension.
 Empty or missing subscripts (represented by `integer(0)` or `NULL` list
-elements, respectively) are allowed. The subscripts in 'index' can contain
+elements, respectively) are allowed. The subscripts in `index` can contain
 duplicated indices. They cannot contain NAs or non-positive values.
 
 The `subset_seed_as_array` method must return an ordinary array of the
