@@ -1,0 +1,203 @@
+---
+title: "Implementing A DelayedArray Backend"
+author:
+- name: Hervé Pagès
+  affiliation: Fred Hutchinson Cancer Research Center, Seattle, WA
+output:
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
+package: DelayedArray
+abstract: |
+  Instructions on implementing a backend for DelayedArray objects.
+vignette: |
+  %\VignetteIndexEntry{Implementing A DelayedArray Backend}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Introduction
+
+The DelayedArray framework currently supports the HDF5 on-disk backend
+(via the HDF5Array package) but can be extended to support other on-disk
+backends, that is, to support other file formats. In theory, it should be
+possible to implement a DelayedArray backend for any file format that has
+the capability to store array data with fast random access.
+Let's assume that the ADS format (Array Data Store) is such format (this
+is a made-up format for the purpose of this vignette only). Implementing a
+DelayedArray backend for ADS files should typically be done in a dedicated
+package (say ADSArray) that will depend on the DelayedArray package.
+
+The ADSArray package will need to implement:
+
+- A low-level class for representing a reference to an array located in
+  an ADS file. We'll refer to this class as "the seed class" and will
+  name it ADSArraySeed.
+
+- Two high-level classes that derive from DelayedArray: ADSArray and
+  ADSMatrix. Only the latter is needed if the ADS format supports only
+  2-dimensional arrays. 
+
+- A "realization sink" class if you also want to support realization of
+  DelayedArray objects as ADSArray objects. This is not documented yet.
+
+
+# Implementing the "seed class"
+
+A seed object should store at least the path or URL to the file. If the
+file format allows storing more than one array per file, then it should
+also store any additional information needed to locate a particular array.
+
+The definition of the seed class will look something like this:
+
+    setClass("ADSArraySeed",
+        contains="Array",
+        slots=c(
+            file="character",   # Absolute path to the ADS file so the object
+                                # doesn't break when the user changes the
+                                # working directory (e.g. with setwd()).
+            ...
+            ... additional slots needed
+            ... to locate the array in the file
+            ...
+        )
+    )
+
+It is highly recommended to provide a seed constructor e.g.:
+
+    ADSArraySeed <- function(file, other args)
+    {
+        sanity checks
+        ...
+        new("ADSArraySeed", file=file, other args)
+    }
+
+ADSArraySeed objects need to support the following set of operations,
+called "the seed API": `dim`, `dimnames`, and `subset_seed_as_array`.
+This is done by implementing methods for these generics e.g.:
+
+    setMethod("dim", "ADSArraySeed",
+        function(x)
+        {
+            ...
+        }
+    )
+
+If the ADS format does not allow storage of the dimnames, then there
+is no need to implement a `dimnames` method.
+
+The `dim` and `dimnames` methods can retrieve the dimensions and
+dimnames from the file each time they are called. Alternatively
+`dim` and `dimnames` slots (of type `integer` and `list`, respectively)
+can be added to the ADSArraySeed class and these slots populated at
+construction time so this information is retrieved from the file only
+once. With this approach, the `dim` and  `dimnames` methods are not
+needed: by default the `dim` and `dimnames` primitive functions return
+the content of these slots when they are present.
+
+`subset_seed_as_array` is a generic function defined in the
+DelayedArray package:
+
+```{r subset_seed_as_array}
+suppressPackageStartupMessages(library(DelayedArray))
+subset_seed_as_array
+```
+
+It takes 2 arguments: `seed` and `index`. `seed` is the seed object
+to extract array values from. `index` must be an unnamed list of
+subscripts as positive integer vectors, one vector per seed dimension.
+Empty or missing subscripts (represented by `integer(0)` or `NULL` list
+elements, respectively) are allowed. The subscripts in 'index' can contain
+duplicated indices. They cannot contain NAs or non-positive values.
+
+The `subset_seed_as_array` method must return an ordinary array of the
+appropriate type (i.e. `integer`, `double`, etc...). For example, if
+`seed` is an ADSArraySeed object representing an M x N on-disk matrix
+of complex numbers, `subset_seed_as_array(seed, list(NULL, 2L))` must
+return its 2nd column as an M x 1 matrix of type `complex`.
+
+Note that the `subset_seed_as_array` method needs to support empty
+list elements e.g. `subset_seed_as_array(seed, list(NULL, integer(0)))`
+must return an M x 0 matrix of type `complex` and
+`subset_seed_as_array(seed, list(integer0, integer(0)))`
+a 0 x 0 matrix of type `complex. This last edge case is important
+because the `type` and `show` methods for DelayedArray objects rely
+on it to work. More precisely, once the `subset_seed_as_array` method
+supports an `index` with empty integer vectors, the following should
+work:
+
+    M <- DelayedArray(seed)
+    type(M)
+    show(M)
+
+Finally note that subscripts should be allowed to contain duplicated
+indices e.g. something like
+
+    subset_seed_as_array(seed, list(c(1:3, 3:1), 2L))
+
+should work. 
+
+Make sure to export the ADSArraySeed class, its constructor, and the
+`dim`, `dimnames`, and `subset_seed_as_array` methods.
+
+At this point, you can wrap a ADSArraySeed object `seed` in a DelayedArray
+object with `DelayedArray(seed)` and this should return a fully functional
+object.
+
+
+# Implemeting high-level classes ADSArray and ADSMatrix
+
+These classes are not strictly needed but add convenience.
+They should extend DelayedArray without trying to add slots
+to it. So just:
+
+    setClass("ADSArray", contains="DelayedArray")
+
+    setClass("ADSMatrix", contains=c("DelayedMatrix", "ADSArray"))
+
+Coercion from ADSArray to ADSMatrix needs to be supported with:
+
+    setAs("ADSArray", "ADSMatrix", function(from) new("ADSMatrix", from))
+
+Add a `DelayedArray` method for ADSArraySeed objects that does:
+
+    setMethod("DelayedArray", "ADSArraySeed",
+        function(seed) DelayedArray:::new_DelayedArray(seed, Class="ADSArray")
+    )
+
+Now you should be able to construct an ADSArray object with:
+
+    DelayedArray(ADSArraySeed(...))
+
+The `ADSArray` constructor should just do that:
+
+    ADSArray <- function(file, other args)
+        DelayedArray(ADSArraySeed(file, other args))
+
+Define a validity method for ADSArray objects:
+
+  .validate_ADSArray <- function(x)
+  {
+    if (!is(x@seed, "ADSArraySeed"))
+        return(wmsg("'x@seed' must be an ADSArraySeed object"))
+    if (!DelayedArray:::is_pristine(x))
+        return(wmsg("'x' carries delayed operations"))
+    TRUE
+  }
+
+  setValidity2("ADSArray", .validate_ADSArray)
+
+This will prevent the user from passing something that is not a
+ADSArraySeed to the ADSArray() constructor.
+
+The idea behind the `is_pristine()` check is that an ADSArray
+object is a particular kind of DelayedArray object that doesn't carry
+delayed operations yet. As soon as you start operating on it, it will
+be degraded to a DelayedArray *instance*.
+
+Make sure to export the ADSArray and ADSMatrix classes, the `ADSArray`
+constructor, and the `coerce` methods.
+
+That's basically it.
+
