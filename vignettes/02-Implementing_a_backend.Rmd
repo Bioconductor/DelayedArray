@@ -114,10 +114,8 @@ of these slots if present.
 `subset_seed_as_array` is a generic function defined in the
 DelayedArray package:
 
-```{r subset_seed_as_array}
-suppressPackageStartupMessages(library(DelayedArray))
-subset_seed_as_array
-```
+    library(DelayedArray)
+    ?subset_seed_as_array
 
 It takes 2 arguments: `seed` and `index`. `seed` is the seed object
 to extract array values from. `index` must be an unnamed list of
