@@ -121,37 +121,33 @@ to the ADSArraySeed class.
 It takes 2 arguments: `x` and `index`. `x` is the seed object
 to extract array values from. `index` must be an unnamed list of
 subscripts as positive integer vectors, one vector per seed dimension.
-Empty or missing subscripts (represented by `integer(0)` or `NULL` list
+Empty and missing subscripts (represented by `integer(0)` and `NULL` list
 elements, respectively) are allowed. The subscripts in `index` can contain
 duplicated indices. They cannot contain NAs or non-positive values.
 
-The `extract_array` method must return an ordinary array of the
+The `extract_array` method must return an *ordinary* array of the
 appropriate type (i.e. `integer`, `double`, etc...). For example, if
 `x` is an ADSArraySeed object representing an M x N on-disk matrix
 of complex numbers, `extract_array(x, list(NULL, 2L))` must
-return its 2nd column as an M x 1 matrix of type `complex`.
+return its 2nd column as an *ordinary* M x 1 matrix of type `complex`.
 
-Note that the `extract_array` method needs to support empty
-list elements e.g. `extract_array(x, list(NULL, integer(0)))`
-must return an M x 0 matrix of type `complex` and
-`extract_array(x, list(integer0, integer(0)))`
-a 0 x 0 matrix of type `complex`. This last edge case is important
-because the `type` and `show` methods for DelayedArray objects rely
-on it to work. More precisely, once the `extract_array` method
-supports an `index` with empty integer vectors, the following should
-work:
+Note that the `extract_array` method needs to support empty and missing
+subscripts e.g. `extract_array(x, list(NULL, integer(0)))` must return
+an M x 0 matrix of type `complex` and
+`extract_array(x, list(integer(0), integer(0)))` a 0 x 0 matrix of
+type `complex`. This last edge case is important because the `type`
+and `show` methods for DelayedArray objects rely on it to work.
+More precisely, once the `extract_array` method supports an `index`
+with empty integer vectors, the following should work:
 
     seed <- ADSArraySeed(...)
     M <- DelayedArray(seed)
     type(M)
     show(M)
 
-Finally note that subscripts should be allowed to contain duplicated
-indices e.g. something like
-
-    extract_array(seed, list(c(1:3, 3:1), 2L))
-
-should work. 
+Finally note that subscripts are allowed to contain duplicated indices
+so things like `extract_array(seed, list(c(1:3, 3:1), 2L))` need to be
+supported. 
 
 ## Testing
 
