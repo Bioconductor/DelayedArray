@@ -228,32 +228,32 @@ setAs("RleList", "RleArray",
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### subset_seed_as_array()
+### extract_array()
 ###
 
-.subset_SolidRleArraySeed_as_array <- function(seed, index)
+.extract_array_from_SolidRleArraySeed <- function(x, index)
 {
-    seed_dim <- dim(seed)
-    i <- to_linear_index(index, seed_dim)
-    ans <- S4Vectors:::extract_positions_from_Rle(seed@rle, i, decoded=TRUE)
-    dim(ans) <- get_Nindex_lengths(index, seed_dim)
+    x_dim <- dim(x)
+    i <- to_linear_index(index, x_dim)
+    ans <- S4Vectors:::extract_positions_from_Rle(x@rle, i, decoded=TRUE)
+    dim(ans) <- get_Nindex_lengths(index, x_dim)
     ans
 }
-setMethod("subset_seed_as_array", "SolidRleArraySeed",
-    .subset_SolidRleArraySeed_as_array
+setMethod("extract_array", "SolidRleArraySeed",
+    .extract_array_from_SolidRleArraySeed
 )
 
-.subset_ChunkedRleArraySeed_as_array <- function(seed, index)
+.extract_array_from_ChunkedRleArraySeed <- function(x, index)
 {
-    seed_dim <- dim(seed)
-    i <- to_linear_index(index, seed_dim)
-    ans <- match.fun(seed@type)(0)
+    x_dim <- dim(x)
+    i <- to_linear_index(index, x_dim)
+    ans <- match.fun(x@type)(0)
     if (length(i) != 0L) {
-        part_idx <- get_part_index(i, seed@breakpoints)
-        split_part_idx <- split_part_index(part_idx, length(seed@breakpoints))
+        part_idx <- get_part_index(i, x@breakpoints)
+        split_part_idx <- split_part_index(part_idx, length(x@breakpoints))
         chunk_idx <- which(lengths(split_part_idx) != 0L)  # chunks to visit
         res <- lapply(chunk_idx, function(i1) {
-            chunk <- .get_chunk(seed@chunks, i1)
+            chunk <- .get_chunk(x@chunks, i1)
             ## Because a valid ChunkedRleArraySeed object is guaranteed to not
             ## contain long chunks at the moment, 'i2' can be represented as
             ## an integer vector.
@@ -263,11 +263,11 @@ setMethod("subset_seed_as_array", "SolidRleArraySeed",
         res <- c(list(ans), res)
         ans <- unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
     }
-    dim(ans) <- get_Nindex_lengths(index, seed_dim)
+    dim(ans) <- get_Nindex_lengths(index, x_dim)
     ans
 }
-setMethod("subset_seed_as_array", "ChunkedRleArraySeed",
-    .subset_ChunkedRleArraySeed_as_array
+setMethod("extract_array", "ChunkedRleArraySeed",
+    .extract_array_from_ChunkedRleArraySeed
 )
 
 

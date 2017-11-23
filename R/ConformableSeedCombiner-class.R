@@ -11,7 +11,7 @@ setClass("ConformableSeedCombiner",
                                   # to combine. Each object is expected to
                                   # satisfy the "seed contract" i.e. to
                                   # support dim(), dimnames(), and
-                                  # subset_seed_as_array().
+                                  # extract_array().
 
         COMBINING_OP="function",  # n-ary operator to combine the seeds.
 
@@ -64,7 +64,7 @@ new_ConformableSeedCombiner <- function(seed=new("array"), ...,
 }
 
 ### Implement the "seed contract" i.e. dim(), dimnames(), and
-### subset_seed_as_array().
+### extract_array().
 
 .get_ConformableSeedCombiner_dim <- function(x) dim(x@seeds[[1L]])
 
@@ -81,13 +81,13 @@ setMethod("dimnames", "ConformableSeedCombiner",
     .get_ConformableSeedCombiner_dimnames
 )
 
-.subset_ConformableSeedCombiner_as_array <- function(seed, index)
+.extract_array_from_ConformableSeedCombiner <- function(x, index)
 {
-    arrays <- lapply(seed@seeds, subset_seed_as_array, index)
-    do.call(seed@COMBINING_OP, c(arrays, seed@Rargs))
+    arrays <- lapply(x@seeds, extract_array, index)
+    do.call(x@COMBINING_OP, c(arrays, x@Rargs))
 }
 
-setMethod("subset_seed_as_array", "ConformableSeedCombiner",
-    .subset_ConformableSeedCombiner_as_array
+setMethod("extract_array", "ConformableSeedCombiner",
+    .extract_array_from_ConformableSeedCombiner
 )
 

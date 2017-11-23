@@ -149,7 +149,7 @@ export(
 export(
     arbind, acbind,
     refdim, isLinear,
-    subset_seed_as_array,
+    extract_array,
     matrixClass, DelayedArray, seed, type,
     chunk_dim, write_block_to_sink, close,
     realize,
@@ -161,7 +161,7 @@ export(
 exportMethods(
     arbind, acbind,
     refdim, isLinear,
-    subset_seed_as_array,
+    extract_array,
     matrixClass, DelayedArray, seed, type,
     chunk_dim, write_block_to_sink, close,
     realize,

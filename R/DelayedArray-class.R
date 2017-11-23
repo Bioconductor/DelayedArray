@@ -8,7 +8,7 @@ setClass("DelayedArray",
     representation(
         seed="ANY",              # An array-like object expected to satisfy
                                  # the "seed contract" i.e. to support dim(),
-                                 # dimnames(), and subset_seed_as_array().
+                                 # dimnames(), and extract_array().
 
         index="list",            # List (possibly named) of subscripts as
                                  # positive integer vectors, one vector per
@@ -793,7 +793,7 @@ setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
 {
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
-    ans <- subset_seed_as_array(seed(x), unname(x@index))
+    ans <- extract_array(seed(x), unname(x@index))
     dim(ans) <- .get_DelayedArray_dim_before_transpose(x)
     ans <- .execute_delayed_ops(ans, x@delayed_ops)
     dimnames(ans) <- .get_DelayedArray_dimnames_before_transpose(x)

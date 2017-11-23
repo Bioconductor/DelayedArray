@@ -9,8 +9,7 @@ setClass("SeedBinder",
     representation(
         seeds="list",    # List of array-like objects to bind. Each object
                          # is expected to satisfy the "seed contract" i.e.
-                         # to support dim(), dimnames(), and
-                         # subset_seed_as_array().
+                         # to support dim(), dimnames(), and extract_array().
 
         along="integer"  # Single integer indicating the dimension along
                          # which to bind the seeds.
@@ -41,8 +40,7 @@ new_SeedBinder <- function(seeds, along)
     new2("SeedBinder", seeds=seeds, along=along)
 }
 
-### Implement the "seed contract" i.e. dim(), dimnames(), and
-### subset_seed_as_array().
+### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array().
 
 .get_SeedBinder_dim <- function(x)
 {
@@ -60,37 +58,37 @@ setMethod("dim", "SeedBinder", .get_SeedBinder_dim)
 
 setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
 
-.subset_SeedBinder_as_array <- function(seed, index)
+.extract_array_from_SeedBinder <- function(x, index)
 {
-    i <- index[[seed@along]]
+    i <- index[[x@along]]
 
     if (is.null(i)) {
         ## This is the easy situation.
-        tmp <- lapply(seed@seeds, subset_seed_as_array, index)
+        tmp <- lapply(x@seeds, extract_array, index)
         ## Bind the ordinary arrays in 'tmp'.
-        ans <- do.call(simple_abind, c(tmp, list(along=seed@along)))
+        ans <- do.call(simple_abind, c(tmp, list(along=x@along)))
         return(ans)
     }
 
     ## From now on 'i' is a vector of positive integers.
-    dims <- get_dims_to_bind(seed@seeds, seed@along)
-    breakpoints <- cumsum(dims[seed@along, ])
+    dims <- get_dims_to_bind(x@seeds, x@along)
+    breakpoints <- cumsum(dims[x@along, ])
     part_idx <- get_part_index(i, breakpoints)
     split_part_idx <- split_part_index(part_idx, length(breakpoints))
     FUN <- function(s) {
-        index[[seed@along]] <- split_part_idx[[s]]
-        subset_seed_as_array(seed@seeds[[s]], index)
+        index[[x@along]] <- split_part_idx[[s]]
+        extract_array(x@seeds[[s]], index)
     }
-    tmp <- lapply(seq_along(seed@seeds), FUN)
+    tmp <- lapply(seq_along(x@seeds), FUN)
 
     ## Bind the ordinary arrays in 'tmp'.
-    ans <- do.call(simple_abind, c(tmp, list(along=seed@along)))
+    ans <- do.call(simple_abind, c(tmp, list(along=x@along)))
 
     ## Reorder the rows or columns in 'ans'.
     Nindex <- vector(mode="list", length=length(index))
-    Nindex[[seed@along]] <- get_rev_index(part_idx)
+    Nindex[[x@along]] <- get_rev_index(part_idx)
     subset_by_Nindex(ans, Nindex)
 }
 
-setMethod("subset_seed_as_array", "SeedBinder", .subset_SeedBinder_as_array)
+setMethod("extract_array", "SeedBinder", .extract_array_from_SeedBinder)
 

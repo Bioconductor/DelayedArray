@@ -1,5 +1,5 @@
 ### =========================================================================
-### subset_seed_as_array()
+### extract_array()
 ### -------------------------------------------------------------------------
 ###
 
@@ -66,29 +66,28 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### subset_seed_as_array() generic and methods
+### extract_array() generic and methods
 ###
 
-### 'index' is expected to be an unnamed list of subscripts as positive integer
-### vectors, one vector per seed dimension. *Missing* list elements are allowed
-### and represented by NULLs.
-### The "subset_seed_as_array" methods don't need to support anything else.
+### 'index' is expected to be an unnamed list of subscripts as positive
+### integer vectors, one vector per dimension in 'x'. *Missing* list elements
+### are allowed and represented by NULLs.
+### The "extract_array" methods don't need to support anything else.
 ### They must return an ordinary array. No need to propagate the dimnames.
-setGeneric("subset_seed_as_array", signature="seed",
-    function(seed, index) standardGeneric("subset_seed_as_array")
+setGeneric("extract_array", signature="x",
+    function(x, index) standardGeneric("extract_array")
 )
 
-setMethod("subset_seed_as_array", "ANY",
-    function(seed, index)
+setMethod("extract_array", "ANY",
+    function(x, index)
     {
-        slice <- subset_by_Nindex(seed, index)
+        slice <- subset_by_Nindex(x, index)
         as.array(slice)
     }
 )
 
-setMethod("subset_seed_as_array", "array",
-    function(seed, index)
-        subset_by_Nindex(seed, index)
+setMethod("extract_array", "array",
+    function(x, index) subset_by_Nindex(x, index)
 )
 
 ### Equivalent to
@@ -97,14 +96,14 @@ setMethod("subset_seed_as_array", "array",
 ###
 ### but avoids the cost of turning the full data frame 'x' into a matrix so
 ### memory footprint stays small when 'index' is small.
-setMethod("subset_seed_as_array", "data.frame",
-    function(seed, index)
+setMethod("extract_array", "data.frame",
+    function(x, index)
     {
-        #ans_type <- .get_data_frame_type(seed)
-        slice0 <- .extract_data_frame_slice0(seed)
-        slice <- .extract_data_frame_slice(seed, index)
+        #ans_type <- .get_data_frame_type(x)
+        slice0 <- .extract_data_frame_slice0(x)
+        slice <- .extract_data_frame_slice(x, index)
         data <- unlist(c(slice0, slice), use.names=FALSE)
-        array(data, dim=get_Nindex_lengths(index, dim(seed)))
+        array(data, dim=get_Nindex_lengths(index, dim(x)))
     }
 )
 
@@ -115,14 +114,14 @@ setMethod("subset_seed_as_array", "data.frame",
 ### but avoids the cost of turning the full DataFrame 'x' first into a data
 ### frame then into a matrix so memory footprint stays small when 'index' is
 ### small.
-setMethod("subset_seed_as_array", "DataFrame",
-    function(seed, index)
+setMethod("extract_array", "DataFrame",
+    function(x, index)
     {
-        #ans_type <- .get_DataFrame_type(seed)
-        slice0 <- .extract_DataFrame_slice0(seed)
-        slice <- .extract_DataFrame_slice(seed, index)
+        #ans_type <- .get_DataFrame_type(x)
+        slice0 <- .extract_DataFrame_slice0(x)
+        slice <- .extract_DataFrame_slice(x, index)
         data <- unlist(c(slice0, slice), use.names=FALSE)
-        array(data, dim=get_Nindex_lengths(index, dim(seed)))
+        array(data, dim=get_Nindex_lengths(index, dim(x)))
     }
 )
 

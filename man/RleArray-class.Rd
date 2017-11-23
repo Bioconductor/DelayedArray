@@ -16,8 +16,8 @@
 \alias{coerce,SolidRleArraySeed,Rle-method}
 \alias{coerce,RleRealizationSink,Rle-method}
 
-\alias{subset_seed_as_array,SolidRleArraySeed-method}
-\alias{subset_seed_as_array,ChunkedRleArraySeed-method}
+\alias{extract_array,SolidRleArraySeed-method}
+\alias{extract_array,ChunkedRleArraySeed-method}
 
 \alias{coerce,RleRealizationSink,ChunkedRleArraySeed-method}
 \alias{coerce,ChunkedRleArraySeed,SolidRleArraySeed-method}

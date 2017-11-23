@@ -79,11 +79,12 @@ It is highly recommended to provide a "seed constructor" e.g.:
         new("ADSArraySeed", file=file, other args)
     }
 
-## Seed API
+## The seed contract
 
-Seed objects need to support the following set of operations,
-called "the seed API": `dim`, `dimnames`, and `subset_seed_as_array`.
-This is done by implementing methods for these generics.
+Seed objects are expected to satisfy the "seed contract" i.e. to
+support `dim()`, `dimnames()`, and `extract_array()`. This is normally
+done by implementing methods for these generics, but, as we will
+see below, a method is rarely needed for `dim()` or `dimnames()`.
 
 For example, the `dim` method for ADSArraySeed objects could look like
 this:
@@ -99,47 +100,48 @@ this:
         }
     )
 
-If the ADS format does not allow storage of the dimnames, then there
-is no need to implement a `dimnames` method.
-
 Note that the above `dim` method consults the ADS file each time it's
 called. However this can be avoided by adding a `dim` (and `dimnames`)
 slot (of type `integer` for `dim`, of type `list` for `dimnames`) to
-the ADSArraySeed class, and to populate it at construction time so this
+the ADSArraySeed class, and to populate it at construction time, so this
 information is retrieved from the file only once. With this approach,
 the `dim` and  `dimnames` methods are actually not needed, because, by
 default, the `dim` and `dimnames` primitive functions return the content
 of these slots if present.
 
-`subset_seed_as_array` is a generic function defined in the
-DelayedArray package:
+If the ADS format does not allow storage of the dimnames, then there
+is no need to implement a `dimnames` method or to add a `dimnames` slot
+to the ADSArraySeed class.
+
+`extract_array` is a generic function defined in the DelayedArray package:
 
     library(DelayedArray)
-    ?subset_seed_as_array
+    ?extract_array
 
-It takes 2 arguments: `seed` and `index`. `seed` is the seed object
+It takes 2 arguments: `x` and `index`. `x` is the seed object
 to extract array values from. `index` must be an unnamed list of
 subscripts as positive integer vectors, one vector per seed dimension.
 Empty or missing subscripts (represented by `integer(0)` or `NULL` list
 elements, respectively) are allowed. The subscripts in `index` can contain
 duplicated indices. They cannot contain NAs or non-positive values.
 
-The `subset_seed_as_array` method must return an ordinary array of the
+The `extract_array` method must return an ordinary array of the
 appropriate type (i.e. `integer`, `double`, etc...). For example, if
-`seed` is an ADSArraySeed object representing an M x N on-disk matrix
-of complex numbers, `subset_seed_as_array(seed, list(NULL, 2L))` must
+`x` is an ADSArraySeed object representing an M x N on-disk matrix
+of complex numbers, `extract_array(x, list(NULL, 2L))` must
 return its 2nd column as an M x 1 matrix of type `complex`.
 
-Note that the `subset_seed_as_array` method needs to support empty
-list elements e.g. `subset_seed_as_array(seed, list(NULL, integer(0)))`
+Note that the `extract_array` method needs to support empty
+list elements e.g. `extract_array(x, list(NULL, integer(0)))`
 must return an M x 0 matrix of type `complex` and
-`subset_seed_as_array(seed, list(integer0, integer(0)))`
+`extract_array(x, list(integer0, integer(0)))`
 a 0 x 0 matrix of type `complex`. This last edge case is important
 because the `type` and `show` methods for DelayedArray objects rely
-on it to work. More precisely, once the `subset_seed_as_array` method
+on it to work. More precisely, once the `extract_array` method
 supports an `index` with empty integer vectors, the following should
 work:
 
+    seed <- ADSArraySeed(...)
     M <- DelayedArray(seed)
     type(M)
     show(M)
@@ -147,14 +149,14 @@ work:
 Finally note that subscripts should be allowed to contain duplicated
 indices e.g. something like
 
-    subset_seed_as_array(seed, list(c(1:3, 3:1), 2L))
+    extract_array(seed, list(c(1:3, 3:1), 2L))
 
 should work. 
 
 ## Testing
 
 Make sure to export the ADSArraySeed class, its constructor, and the
-`dim`, `dimnames`, and `subset_seed_as_array` methods.
+`dim`, `dimnames`, and `extract_array` methods.
 
 At this point, you should be able to wrap an ADSArraySeed object `seed`
 in a DelayedArray object with `DelayedArray(seed)` and this should return
