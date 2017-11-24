@@ -32,10 +32,10 @@
 \alias{coerce,RleArray,RleMatrix-method}
 \alias{matrixClass,RleArray-method}
 \alias{coerce,ANY,RleMatrix-method}
-\alias{coerce,RleArray,RleList-method}
 
 \alias{DelayedArray,RleArraySeed-method}
 \alias{RleArray}
+\alias{coerce,RleArray,Rle-method}
 
 \alias{write_block_to_sink,RleRealizationSink-method}
 \alias{coerce,RleRealizationSink,RleArray-method}
@@ -44,10 +44,12 @@
 \alias{coerce,DelayedArray,RleArray-method}
 \alias{coerce,DelayedMatrix,RleMatrix-method}
 
-\alias{coerce,DataFrame,RleMatrix-method}
 \alias{coerce,DataFrame,RleArray-method}
 \alias{coerce,RleMatrix,DataFrame-method}
 \alias{coerce,DelayedMatrix,DataFrame-method}
+
+\alias{coerce,RleList,RleArray-method}
+\alias{coerce,RleMatrix,RleList-method}
 
 \title{RleArray objects}
 
@@ -117,6 +119,8 @@ object.size(A)
 
 stopifnot(identical(a, as.array(A)))
 
+as(A, "Rle")  # deconstruction
+
 toto <- function(x) (5 * x[ , , 1] ^ 3 + 1L) * log(x[, , 2])
 b <- toto(a)
 head(b)
@@ -137,12 +141,14 @@ stopifnot(identical(cs, CS))
 ## object with Rle columns:
 as(B, "DataFrame")
 
-## Coercion of an RleList to an RleArray. Only works if each element of the
-## RleList has the same length. Column names are taken from the names of the
-## list elements
-rle_list <- RleList(A = Rle(sample(3, 100, replace = TRUE)),
-                    B = Rle(sample(3, 100, replace = TRUE)))
-rle_array <- as(rle_list, "RleArray")
+## Coercion of an RleList object to RleArray only works if all the list
+## elements in the RleList have the same length. Column names are taken
+## from the names of the list elements.
+rle_list <- RleList(A=Rle(sample(3L, 100, replace=TRUE)),
+                    B=Rle(sample(3L, 100, replace=TRUE)))
+C <- as(rle_list, "RleArray")
+C
+stopifnot(identical(as(C, "RleList"), rle_list))
 }
 \keyword{methods}
 \keyword{classes}

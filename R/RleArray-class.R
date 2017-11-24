@@ -210,22 +210,6 @@ setAs("RleRealizationSink", "Rle",
     }
 )
 
-setAs("RleList", "RleArray",
-    function(from)
-    {
-        from_lens <- lengths(from, use.names = FALSE)
-        if (identical(from_lens, integer(0L))) {
-            return(RleArray(unlist(from), c(0L, 0L)))
-        }
-        e1_len <- from_lens[1L]
-        if (any(from_lens != e1_len)) {
-          stop("All elements of RleList must have the same length")
-        }
-        RleArray(unlist(from, use.names = FALSE),
-                 c(e1_len, length(from)),
-                 list(NULL, names(from)))
-    }
-)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### extract_array()
@@ -389,6 +373,9 @@ RleArray <- function(rle, dim, dimnames=NULL, chunksize=NULL)
     DelayedArray(seed)
 }
 
+### Deconstruction.
+setAs("RleArray", "Rle", function(from) as(seed(from), "Rle"))
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Realization as an RleArray object
@@ -437,7 +424,6 @@ setAs("DelayedMatrix", "RleMatrix", .as_RleArray)
     as(DelayedArray(from), "RleMatrix")
 }
 
-setAs("DataFrame", "RleMatrix", .from_DataFrame_to_RleMatrix)
 setAs("DataFrame", "RleArray", .from_DataFrame_to_RleMatrix)
 
 ### From RleMatrix to DataFrame.
@@ -460,4 +446,38 @@ setAs("RleMatrix", "DataFrame", .from_RleMatrix_to_DataFrame)
 setAs("DelayedMatrix", "DataFrame",
     function(from) as(as(from, "RleMatrix"), "DataFrame")
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Switching between RleList and RleMatrix representation
+###
+
+### From RleList to RleMatrix.
+.from_RleList_to_RleMatrix <- function(from)
+{
+    ans_ncol <- length(from)
+    unlisted_from <- unlist(from, use.names=FALSE)
+    if (ans_ncol == 0L)
+        return(RleArray(unlisted_from, c(0L, 0L)))
+    from_lens <- lengths(from, use.names = FALSE)
+    ans_nrow <- from_lens[[1L]]
+    if (!all(from_lens == ans_nrow))
+        stop(wmsg("all the list elements in the RleList object ",
+                  "to coerce must have the same length"))
+    RleArray(unlisted_from, c(ans_nrow, ans_ncol),
+             dimnames=list(NULL, names(from)))
+}
+
+setAs("RleList", "RleArray", .from_RleList_to_RleMatrix)
+
+### From RleMatrix to RleList.
+.from_RleMatrix_to_RleList <- function(from)
+{
+    unlisted_ans <- as(from, "Rle")
+    ans_partitioning <- PartitioningByEnd(seq_len(ncol(from)) * nrow(from),
+                                          names=colnames(from))
+    relist(unlisted_ans, ans_partitioning)
+}
+
+setAs("RleMatrix", "RleList", .from_RleMatrix_to_RleList)
 
