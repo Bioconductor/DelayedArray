@@ -155,7 +155,7 @@ Make sure to export the ADSArraySeed class, its constructor, and the
 `dim`, `dimnames`, and `extract_array` methods.
 
 At this point, you should be able to wrap an ADSArraySeed object `seed`
-in a DelayedArray object with `DelayedArray(seed)` and this should return
+in a DelayedArray object with `DelayedArray(seed)`, and this should return
 a fully functional object.
 
 
@@ -165,7 +165,7 @@ These classes are not strictly needed but add a nice level of convenience.
 
 ## Class definitions
 
-They should extend DelayedArray without trying to add slots to it.
+They should extend the DelayedArray class without trying to add slots to it.
 So just:
 
     setClass("ADSArray", contains="DelayedArray")
