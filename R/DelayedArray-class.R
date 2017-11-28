@@ -173,8 +173,8 @@ remove_pristine_DelayedArray_wrapping <- function(x)
 downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 {
     if (is(x, "DelayedMatrix"))
-        return(as(x, "DelayedMatrix"))
-    as(x, "DelayedArray")
+        return(as(x, "DelayedMatrix", strict=TRUE))
+    as(x, "DelayedArray", strict=TRUE)
 }
 
 
@@ -273,9 +273,9 @@ setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
     if (!identical(x@metaindex, x_metaindex)) {
         x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
         x@metaindex <- x_metaindex
+        Class <- if (length(dim(x)) == 2L) "DelayedMatrix" else "DelayedArray"
+        x <- as(x, Class, strict=TRUE)
     }
-    if (length(dim(x)) == 2L)
-        x <- as(x, matrixClass(x))
     x
 }
 

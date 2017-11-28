@@ -33,7 +33,7 @@ The ADSArray package will need to implement:
 
 - Two high-level classes that derive from DelayedArray: ADSArray and
   ADSMatrix. Only the latter is needed if the ADS format supports only
-  2-dimensional arrays. 
+  2-dimensional arrays.
 
 - A "realization sink" class if you also want to support realization of
   DelayedArray objects as ADSArray objects. This is not documented yet.
@@ -147,7 +147,7 @@ with empty integer vectors, the following should work:
 
 Finally note that subscripts are allowed to contain duplicated indices
 so things like `extract_array(seed, list(c(1:3, 3:1), 2L))` need to be
-supported. 
+supported.
 
 ## Testing
 
@@ -172,11 +172,34 @@ So just:
 
     setClass("ADSMatrix", contains=c("DelayedMatrix", "ADSArray"))
 
-## Coercion from ADSArray to ADSMatrix
+## Going from ADSArray to ADSMatrix
 
-Coercion from ADSArray to ADSMatrix needs to be supported with:
+Define a `matrixClass` method for ADSArray objects as follow:
+
+    setMethod("matrixClass", "ADSArray", function(x) "ADSMatrix")
+
+`matrixClass` is a generic function defined in the DelayedArray package.
+When passed an ADSArraySeed object, internal constructor
+`DelayedArray:::new_DelayedArray` (see below) will generally return
+an ADSArray *instance*, except when the ADSArraySeed object is
+2-dimensional, in which case it needs to return an ADSMatrix *instance*.
+It will obtain the name of the class of the object to return (`"ADSMatrix"`
+in this case) by calling `matrixClass`.
+
+Also coercion from ADSArray to ADSMatrix needs to be supported with:
 
     setAs("ADSArray", "ADSMatrix", function(from) new("ADSMatrix", from))
+
+This coercion will make sure that the end-user gets the following error
+when trying to coerce an ADSArray object that is not 2-dimensional to
+ADSMatrix:
+
+    as(x, "ADSMatrix")
+    # Error in validObject(.Object) : invalid class "ADSMatrix" object:
+    #     'x' must have exactly 2 dimensions
+
+Without the above coercion method, `as(x, "ADSMatrix")` would silently
+return an invalid ADSMatrix object.
 
 ## Constructor
 
