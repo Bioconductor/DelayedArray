@@ -290,8 +290,7 @@ setMethod("drop", "DelayedArray",
     function(x)
     {
         x_dim <- dim(x)
-        dim(x) <- x_dim[x_dim != 1L]
-        x
+        set_dim(x, x_dim[x_dim != 1L])
     }
 )
 
@@ -541,7 +540,7 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
         a_new_dim <- dim(a)
         if (is.null(a_new_dim)) {
             ## Restore the dim attribute.
-            dim(a) <- a_dim
+            a <- set_dim(a, a_dim)
         } else {
             ## Sanity check.
             stopifnot(identical(a_dim, a_new_dim))
@@ -777,10 +776,10 @@ setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
     x_dimnames <- dimnames(x)
     effdim_idx <- which(x_dim != 1L)  # index of effective dimensions
     if (length(effdim_idx) >= 2L) {
-        dim(x) <- x_dim[effdim_idx]
-        dimnames(x) <- x_dimnames[effdim_idx]
+        x <- set_dim(x, x_dim[effdim_idx])
+        x <- set_dimnames(x, x_dimnames[effdim_idx])
     } else {
-        dim(x) <- NULL
+        x <- set_dim(x, NULL)
         if (length(effdim_idx) == 1L)
             names(x) <- x_dimnames[[effdim_idx]]
     }
@@ -794,9 +793,9 @@ setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
     ans <- extract_array(seed(x), unname(x@index))
-    dim(ans) <- .get_DelayedArray_dim_before_transpose(x)
+    ans <- set_dim(ans, .get_DelayedArray_dim_before_transpose(x))
     ans <- .execute_delayed_ops(ans, x@delayed_ops)
-    dimnames(ans) <- .get_DelayedArray_dimnames_before_transpose(x)
+    ans <- set_dimnames(ans, .get_DelayedArray_dimnames_before_transpose(x))
     if (drop)
         ans <- .reduce_array_dimensions(ans)
     ## Base R doesn't support transposition of an array of arbitrary dimension
@@ -813,8 +812,7 @@ setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
 }
 
 ### S3/S4 combo for as.array.DelayedArray
-as.array.DelayedArray <- function(x, ...)
-    .from_DelayedArray_to_array(x, ...)
+as.array.DelayedArray <- function(x, ...) .from_DelayedArray_to_array(x, ...)
 setMethod("as.array", "DelayedArray", .from_DelayedArray_to_array)
 
 
@@ -837,8 +835,8 @@ slicing_tip <- c(
                   "cannot be coerced to a matrix. ", slicing_tip))
     ans <- as.array(x, drop=TRUE)
     if (length(x_dim) == 2L) {
-        dim(ans) <- x_dim
-        dimnames(ans) <- dimnames(x)
+        ans <- set_dim(ans, x_dim)
+        ans <- set_dimnames(ans, dimnames(x))
     } else {
         as.matrix(ans)
     }

@@ -218,8 +218,7 @@ setMethod("realize", "ANY",
         ## the dimnames. See R/writeHDF5Array.R in the HDF5Array package for
         ## more information about this.
         ## TODO: Remove line below when this is addressed.
-        dimnames(ans) <- dimnames(x)
-        ans
+        set_dimnames(ans, dimnames(x))
     }
 )
 

@@ -220,8 +220,7 @@ setAs("RleRealizationSink", "Rle",
     x_dim <- dim(x)
     i <- to_linear_index(index, x_dim)
     ans <- S4Vectors:::extract_positions_from_Rle(x@rle, i, decoded=TRUE)
-    dim(ans) <- get_Nindex_lengths(index, x_dim)
-    ans
+    set_dim(ans, get_Nindex_lengths(index, x_dim))
 }
 setMethod("extract_array", "SolidRleArraySeed",
     .extract_array_from_SolidRleArraySeed
@@ -247,8 +246,7 @@ setMethod("extract_array", "SolidRleArraySeed",
         res <- c(list(ans), res)
         ans <- unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
     }
-    dim(ans) <- get_Nindex_lengths(index, x_dim)
-    ans
+    set_dim(ans, get_Nindex_lengths(index, x_dim))
 }
 setMethod("extract_array", "ChunkedRleArraySeed",
     .extract_array_from_ChunkedRleArraySeed

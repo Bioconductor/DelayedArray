@@ -568,7 +568,6 @@ split_array_in_linear_blocks <- function(x, max_block_len)
 unsplit_array_from_linear_blocks <- function(blocks, x)
 {
     ans <- combine_array_objects(blocks)
-    dim(ans) <- dim(x)
-    ans
+    set_dim(ans, dim(x))
 }
 

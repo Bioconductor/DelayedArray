@@ -142,11 +142,10 @@ simple_abind <- function(..., along)
     ans <- .intertwine_blocks(objects, block_lens)
 
     ## Set the dim.
-    dim(ans) <- combine_dims_along(dims, along)
+    ans <- set_dim(ans, combine_dims_along(dims, along))
 
     ## Combine and set the dimnames.
-    dimnames(ans) <- combine_dimnames_along(objects, dims, along)
-    ans
+    set_dimnames(ans, combine_dimnames_along(objects, dims, along))
 }
 
 

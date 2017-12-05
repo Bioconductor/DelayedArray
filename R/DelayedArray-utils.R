@@ -162,8 +162,8 @@ setMethod("pmax2", c("ANY", "ANY"),
         if (is.null(ans_dim)) {
             names(ans) <- .combine_names(e1, e2)
         } else {
-            dim(ans) <- ans_dim
-            dimnames(ans) <- combine_dimnames(list(e1, e2))
+            ans <- set_dim(ans, ans_dim)
+            ans <- set_dimnames(ans, combine_dimnames(list(e1, e2)))
         }
         ans
     }
@@ -177,8 +177,8 @@ setMethod("pmin2", c("ANY", "ANY"),
         if (is.null(ans_dim)) {
             names(ans) <- .combine_names(e1, e2)
         } else {
-            dim(ans) <- ans_dim
-            dimnames(ans) <- combine_dimnames(list(e1, e2))
+            ans <- set_dim(ans, ans_dim)
+            ans <- set_dimnames(ans, combine_dimnames(list(e1, e2)))
         }
         ans
     }
@@ -537,7 +537,7 @@ setGeneric("apply", signature="X")
             Nindex <- vector(mode="list", length=length(X_dim))
             Nindex[[MARGIN]] <- i
             slice <- subset_by_Nindex(X, Nindex, drop=TRUE)
-            dim(slice) <- dim(slice)[-MARGIN]
+            slice <- set_dim(slice, dim(slice)[-MARGIN])
             FUN(slice, ...)
         })
 

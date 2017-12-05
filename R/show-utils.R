@@ -23,8 +23,8 @@
         x_dim <- dim(x)
         x_dimnames <- dimnames(x)
         x <- paste0("\"", x, "\"")
-        dim(x) <- x_dim
-        dimnames(x) <- x_dimnames
+        x <- set_dim(x, x_dim)
+        x <- set_dimnames(x, x_dimnames)
     }
     format(x, justify=justify)
 }
@@ -260,7 +260,7 @@
         s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames)
         cat(s, "\n", sep="")
         slice <- extract_block(x, viewport)
-        dim(slice) <- dim(slice)[1:2]
+        slice <- set_dim(slice, dim(slice)[1:2])
         .print_2D_array_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")
     }

@@ -7,6 +7,26 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies
+### of 'x'
+###
+
+set_dim <- function(x, value)
+{
+    if (!identical(dim(x), value))
+        dim(x) <- value
+    x
+}
+
+set_dimnames <- function(x, value)
+{
+    if (!identical(dimnames(x), value))
+        dimnames(x) <- value
+    x
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Used in validity methods
 ###
 
