@@ -108,6 +108,7 @@ exportMethods(
     round, signif,
     rowSums, colSums, rowMeans, colMeans,
     nchar, tolower, toupper,
+    sub, gsub,
 
     ## Methods for generics defined in the methods package:
     coerce, show,
@@ -119,6 +120,7 @@ exportMethods(
 
     ## Methods for generics defined in the BiocGenerics package:
     cbind, rbind,
+    grepl,
 
     ## Methods for generics defined in the S4Vectors package:
     isEmpty,

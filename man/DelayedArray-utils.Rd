@@ -31,6 +31,10 @@
 \alias{round,DelayedArray-method}
 \alias{signif,DelayedArray-method}
 
+\alias{grepl,DelayedArray-method}
+\alias{sub,DelayedArray-method}
+\alias{gsub,DelayedArray-method}
+
 \alias{anyNA,DelayedArray-method}
 \alias{which,DelayedArray-method}
 
@@ -89,7 +93,8 @@
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups
     \item \code{!}
     \item \code{is.na}, \code{is.finite}, \code{is.infinite}, \code{is.nan}
-    \item \code{nchar}, \code{tolower}, \code{toupper}
+    \item \code{nchar}, \code{tolower}, \code{toupper},
+          \code{grepl}, \code{sub}, \code{gsub}
     \item \code{pmax2} and \code{pmin2}
     \item \code{rbind} and \code{cbind} (documented in \link{DelayedArray})
   }

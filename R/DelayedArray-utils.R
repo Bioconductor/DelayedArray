@@ -246,6 +246,38 @@ setMethod("signif", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### grepl(), sub(), gsub()
+###
+
+setMethod("grepl", c(x="DelayedArray"),
+    function(pattern, x,
+             ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
+        register_delayed_op(x, "grepl",
+            Largs=list(pattern=pattern),
+            Rargs=list(ignore.case=ignore.case, perl=perl,
+                       fixed=fixed, useBytes=useBytes))
+)
+
+setMethod("sub", c(x="DelayedArray"),
+    function(pattern, replacement, x,
+             ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
+        register_delayed_op(x, "sub",
+            Largs=list(pattern=pattern, replacement=replacement),
+            Rargs=list(ignore.case=ignore.case, perl=perl,
+                       fixed=fixed, useBytes=useBytes))
+)
+
+setMethod("gsub", c(x="DelayedArray"),
+    function(pattern, replacement, x,
+             ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
+        register_delayed_op(x, "gsub",
+            Largs=list(pattern=pattern, replacement=replacement),
+            Rargs=list(ignore.case=ignore.case, perl=perl,
+                       fixed=fixed, useBytes=useBytes))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### A low-level utility for putting DelayedArray object in a "straight" form
 ###
 ### Untranspose the DelayedArray object and put its rows and columns in their
