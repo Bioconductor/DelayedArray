@@ -6,27 +6,40 @@
 ###
 
 
+### 'x' must be an ordinary vector or matrix of atomic or recursive type.
+### 'max.width' takes effect only if 'x' is character or list (i.e. if the
+### underlying type inherits from character or list when 'x' is a matrix).
+.format2 <- function(x, justify, quote=TRUE, max.width=22L)
+{
+    if (is.character(x) && length(x) != 0L && quote)
+        x <- paste0("\"", x, "\"")
+    ans <- format(x, justify=justify)
+    if ((is.character(x) || is.list(x)) && length(x) != 0L) {
+        truncate_me <- nchar(ans) > max.width
+        stop <- ifelse(truncate_me, max.width - 2L, nchar(ans))
+        ans <- substr(ans, 1L, stop)
+        ans <- paste0(ans, ifelse(truncate_me, "..", ""))
+    }
+    ans
+}
+
 .format_as_character_vector <- function(x, justify, quote=TRUE)
 {
     x_names <- names(x)
     x <- as.vector(x)
-    if (quote && typeof(x) == "character" && length(x) != 0L)
-        x <- paste0("\"", x, "\"")
-    names(x) <- x_names
-    format(x, justify=justify)
+    ans <- .format2(x, justify, quote)
+    names(ans) <- x_names
+    ans
 }
 
 .format_as_character_matrix <- function(x, justify, quote=TRUE)
 {
+    x_dim <- dim(x)
+    x_dimnames <- dimnames(x)
     x <- as.matrix(x)
-    if (quote && typeof(x) == "character" && length(x) != 0L) {
-        x_dim <- dim(x)
-        x_dimnames <- dimnames(x)
-        x <- paste0("\"", x, "\"")
-        x <- set_dim(x, x_dim)
-        x <- set_dimnames(x, x_dimnames)
-    }
-    format(x, justify=justify)
+    ans <- .format2(x, justify, quote)
+    ans <- set_dim(ans, x_dim)
+    set_dimnames(ans, x_dimnames)
 }
 
 
@@ -327,20 +340,16 @@ show_compact_array <- function(object)
     object_dim <- dim(object)
     dim_in1string <- paste0(object_dim, collapse=" x ")
     object_type <- type(object)
-    if (any(object_dim == 0L)) {
-        cat(sprintf("<%s> %s object of type \"%s\"\n",
-                    dim_in1string, object_class, object_type))
+    cat(sprintf("<%s> %s object of type \"%s\"\n",
+                dim_in1string, object_class, object_type))
+    if (any(object_dim == 0L))
+        return()
+    if (object_type == "integer") {
+        n1 <- n2 <- 4L
     } else {
-        cat(sprintf("%s object of %s %s%s:\n",
-                    object_class, dim_in1string, object_type,
-                    ifelse(any(object_dim >= 2L), "s", "")))
-        if (object_type == "integer") {
-            n1 <- n2 <- 4L
-        } else {
-            n1 <- 3L
-            n2 <- 2L
-        }
-        .print_array_data(object, n1, n2)
+        n1 <- 3L
+        n2 <- 2L
     }
+    .print_array_data(object, n1, n2)
 }
 

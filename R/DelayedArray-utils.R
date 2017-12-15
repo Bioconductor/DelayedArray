@@ -216,6 +216,12 @@ for (.Generic in .UNARY_OPS) {
     )
 }
 
+setMethod("lengths", "DelayedArray",
+    function(x, use.names=TRUE)
+        register_delayed_op(x, "lengths",
+            Rargs=list(use.names=use.names))
+)
+
 setMethod("nchar", "DelayedArray",
     function(x, type="chars", allowNA=FALSE, keepNA=NA)
         register_delayed_op(x, "nchar",

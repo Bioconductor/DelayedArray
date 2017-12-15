@@ -24,6 +24,8 @@
 \alias{is.nan,DelayedArray-method}
 \alias{!,DelayedArray-method}
 
+\alias{lengths,DelayedArray-method}
+
 \alias{nchar,DelayedArray-method}
 \alias{tolower,DelayedArray-method}
 \alias{toupper,DelayedArray-method}
@@ -93,6 +95,7 @@
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups
     \item \code{!}
     \item \code{is.na}, \code{is.finite}, \code{is.infinite}, \code{is.nan}
+    \item \code{lengths}
     \item \code{nchar}, \code{tolower}, \code{toupper},
           \code{grepl}, \code{sub}, \code{gsub}
     \item \code{pmax2} and \code{pmin2}
