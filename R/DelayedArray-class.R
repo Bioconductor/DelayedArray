@@ -63,13 +63,13 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 
 .validate_DelayedArray <- function(x)
 {
-    x_dim <- dim(x@seed)
-    x_ndim <- length(x_dim)
+    seed_dim <- dim(x@seed)
+    seed_ndim <- length(seed_dim)
     ## 'seed' slot.
-    if (x_ndim == 0L)
+    if (seed_ndim == 0L)
         return(wmsg2("'x@seed' must have dimensions"))
     ## 'index' slot.
-    if (length(x@index) != x_ndim)
+    if (length(x@index) != seed_ndim)
         return(wmsg2("'x@index' must have one list element per dimension ",
                      "in 'x@seed'"))
     if (!all(S4Vectors:::sapply_isNULL(x@index) |
@@ -79,12 +79,12 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
     ## 'metaindex' slot.
     if (length(x@metaindex) == 0L)
         return(wmsg2("'x@metaindex' cannot be empty"))
-    if (S4Vectors:::anyMissingOrOutside(x@metaindex, 1L, x_ndim))
+    if (S4Vectors:::anyMissingOrOutside(x@metaindex, 1L, seed_ndim))
         return(wmsg2("all values in 'x@metaindex' must be >= 1 ",
                      "and <= 'length(x@index)'"))
     if (!isStrictlySorted(x@metaindex))
         return(wmsg2("'x@metaindex' must be strictly sorted"))
-    if (!all(get_Nindex_lengths(x@index, x_dim)[-x@metaindex] == 1L))
+    if (!all(get_Nindex_lengths(x@index, seed_dim)[-x@metaindex] == 1L))
         return(wmsg2("all the dropped dimensions in 'x' must be equal to 1"))
     ## 'is_transposed' slot.
     if (!isTRUEorFALSE(x@is_transposed))
