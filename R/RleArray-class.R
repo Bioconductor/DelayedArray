@@ -26,7 +26,7 @@ setClass("SolidRleArraySeed",
 
 ### The RleRealizationSink class is a concrete RealizationSink subclass that
 ### implements realization of an array-like object as an RleArray object that
-### will have a ChunkedRleArraySeed seed (once writting to the sink is
+### will have a ChunkedRleArraySeed seed (once writing to the sink is
 ### complete).
 setClass("RleRealizationSink",
     contains=c("RleArraySeed", "RealizationSink"),
