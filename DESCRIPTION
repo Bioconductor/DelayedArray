@@ -28,7 +28,7 @@ Collate: utils.R
 	extract_array.R
 	ConformableSeedCombiner-class.R
 	SeedBinder-class.R
-	SeedDimPicker-class.R
+	SeedDimCombiner-class.R
 	DelayedArray-class.R
 	realize.R
 	block_processing.R
