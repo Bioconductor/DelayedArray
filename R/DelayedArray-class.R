@@ -407,18 +407,19 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Transpose
 ###
-
 ### The actual transposition of the data is delayed i.e. it will be realized
 ### on the fly only when as.array() (or as.vector() or as.matrix()) is called
 ### on 'x'.
-setMethod("t", "DelayedArray",
-    function(x)
-    {
-        x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-        x@is_transposed <- !x@is_transposed
-        x
-    }
-)
+### TODO: Make this a method for DelayedMatrix objects and based on aperm().
+
+### S3/S4 combo for t.DelayedArray
+t.DelayedArray <- function(x)
+{
+    x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
+    x@is_transposed <- !x@is_transposed
+    x
+}
+setMethod("t", "DelayedArray", t.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -29,6 +29,7 @@
 
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
+\alias{t.DelayedArray}
 \alias{t,DelayedArray-method}
 
 \alias{as.array.DelayedArray}

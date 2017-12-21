@@ -14,6 +14,10 @@
 \alias{dimnames,SeedBinder-method}
 \alias{extract_array,SeedBinder-method}
 
+\alias{dim,SeedDimCombiner-method}
+\alias{dimnames,SeedDimCombiner-method}
+\alias{extract_array,SeedDimCombiner-method}
+
 \title{extract_array}
 
 \description{
