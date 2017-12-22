@@ -5,6 +5,15 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Transpose
+###
+
+### S3/S4 combo for t.DelayedMatrix
+t.DelayedMatrix <- function(x) aperm(x)
+setMethod("t", "DelayedMatrix", t.DelayedMatrix)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Matrix multiplication
 ###
 ### We only support multiplication of an ordinary matrix (typically

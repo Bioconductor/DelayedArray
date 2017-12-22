@@ -35,8 +35,6 @@
 
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
-\alias{t.DelayedArray}
-\alias{t,DelayedArray-method}
 
 \alias{as.array.DelayedArray}
 \alias{as.array,DelayedArray-method}
@@ -274,9 +272,8 @@ seed(A2)  # 'DF'
 as(A2, "DataFrame")
 stopifnot(identical(DF, as(A2, "DataFrame")))
 
-t(A2)  # transposition is delayed so is very fast and very memory
-       # efficient
-stopifnot(identical(DF, seed(t(A2))))  # the "seed" is still the same
+t(A2)  # transposition is delayed so is very fast and memory efficient
+stopifnot(identical(A2, t(t(A2))))
 colSums(A2)
 
 ## ---------------------------------------------------------------------

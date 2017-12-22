@@ -35,9 +35,6 @@
 .DelayedMatrix_block_rowSums <- function(x, na.rm=FALSE, dims=1)
 {
     .normarg_dims(dims, "rowSums")
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_colSums(t(x), na.rm=na.rm, dims=dims))
-
     .get_ans_type(x)  # check input type
     APPLY <- function(m) rowSums(m, na.rm=na.rm)
     COMBINE <- function(b, m, init, reduced) { init + reduced }
@@ -49,9 +46,6 @@
 .DelayedMatrix_block_colSums <- function(x, na.rm=FALSE, dims=1)
 {
     .normarg_dims(dims, "colSums")
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_rowSums(t(x), na.rm=na.rm, dims=dims))
-
     .get_ans_type(x)  # check input type
     colsums_list <- colblock_APPLY(x, colSums, na.rm=na.rm)
     if (length(colsums_list) == 0L)
@@ -67,13 +61,10 @@ setMethod("colSums", "DelayedMatrix", .DelayedMatrix_block_colSums)
 .DelayedMatrix_block_rowMeans <- function(x, na.rm=FALSE, dims=1)
 {
     .normarg_dims(dims, "rowMeans")
-    if (is(x, "DelayedMatrix") && x@is_transposed)
-        return(.DelayedMatrix_block_colMeans(t(x), na.rm=na.rm, dims=dims))
-
     .get_ans_type(x)  # check input type
     APPLY <- function(m) {
         m_sums <- rowSums(m, na.rm=na.rm)
-        m_nvals <- ncol(m)
+        m_nvals <- rep.int(ncol(m), nrow(m))
         if (na.rm)
             m_nvals <- m_nvals - rowSums(is.na(m))
         cbind(m_sums, m_nvals)
@@ -90,9 +81,6 @@ setMethod("colSums", "DelayedMatrix", .DelayedMatrix_block_colSums)
 .DelayedMatrix_block_colMeans <- function(x, na.rm=FALSE, dims=1)
 {
     .normarg_dims(dims, "colMeans")
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_rowMeans(t(x), na.rm=na.rm, dims=dims))
-
     .get_ans_type(x)  # check input type
     colmeans_list <- colblock_APPLY(x, colMeans, na.rm=na.rm)
     if (length(colmeans_list) == 0L)
@@ -123,10 +111,6 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
 .DelayedMatrix_block_rowMaxs <- function(x, rows=NULL, cols=NULL,
                                          na.rm=FALSE, dim.=dim(x))
 {
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_colMaxs(t(x), rows=rows, cols=cols,
-                                            na.rm=na.rm, dim.=dim.))
-
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowMaxs(m, na.rm=na.rm)
     COMBINE <- function(b, m, init, reduced)
@@ -139,10 +123,6 @@ setMethod("colMeans", "DelayedMatrix", .DelayedMatrix_block_colMeans)
 .DelayedMatrix_block_colMaxs <- function(x, rows=NULL, cols=NULL,
                                          na.rm=FALSE, dim.=dim(x))
 {
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_rowMaxs(t(x), rows=rows, cols=cols,
-                                            na.rm=na.rm, dim.=dim.))
-
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     colmaxs_list <- colblock_APPLY(x, colMaxs, na.rm=na.rm)
     if (length(colmaxs_list) == 0L)
@@ -161,10 +141,6 @@ setMethod("colMaxs", "DelayedMatrix", .DelayedMatrix_block_colMaxs)
 .DelayedMatrix_block_rowMins <- function(x, rows=NULL, cols=NULL,
                                          na.rm=FALSE, dim.=dim(x))
 {
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_colMins(t(x), rows=rows, cols=cols,
-                                            na.rm=na.rm, dim.=dim.))
-
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowMins(m, na.rm=na.rm)
     COMBINE <- function(b, m, init, reduced)
@@ -177,10 +153,6 @@ setMethod("colMaxs", "DelayedMatrix", .DelayedMatrix_block_colMaxs)
 .DelayedMatrix_block_colMins <- function(x, rows=NULL, cols=NULL,
                                          na.rm=FALSE, dim.=dim(x))
 {
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_rowMins(t(x), rows=rows, cols=cols,
-                                            na.rm=na.rm, dim.=dim.))
-
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     colmins_list <- colblock_APPLY(x, colMins, na.rm=na.rm)
     if (length(colmins_list) == 0L)
@@ -199,16 +171,17 @@ setMethod("colMins", "DelayedMatrix", .DelayedMatrix_block_colMins)
 .DelayedMatrix_block_rowRanges <- function(x, rows=NULL, cols=NULL,
                                            na.rm=FALSE, dim.=dim(x))
 {
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_colRanges(t(x), rows=rows, cols=cols,
-                                              na.rm=na.rm, dim.=dim.))
-
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     APPLY <- function(m) rowRanges(m, na.rm=na.rm)
     COMBINE <- function(b, m, init, reduced) {
-        .fix_type(cbind(pmin(init[ , 1L], reduced[ , 1L]),
-                        pmax(init[ , 2L], reduced[ , 2L])),
-                  ans_type)
+        combined <- cbind(pmin(init[ , 1L], reduced[ , 1L]),
+                          pmax(init[ , 2L], reduced[ , 2L]))
+        ## 'combined' can have unexpected dimnames because of the following
+        ## bug in cbind/rbind:
+        ##   https://stat.ethz.ch/pipermail/r-devel/2017-December/075288.html
+        ## TODO: Remove the line below once the above bug is fixed.
+        dimnames(combined) <- NULL
+        .fix_type(combined, ans_type)
     }
     init <- .fix_type(matrix(rep(c(Inf, -Inf), each=nrow(x)), ncol=2L),
                       ans_type)
@@ -219,10 +192,6 @@ setMethod("colMins", "DelayedMatrix", .DelayedMatrix_block_colMins)
 .DelayedMatrix_block_colRanges <- function(x, rows=NULL, cols=NULL,
                                            na.rm=FALSE, dim.=dim(x))
 {
-    if (is(x, "DelayedArray") && x@is_transposed)
-        return(.DelayedMatrix_block_rowRanges(t(x), rows=rows, cols=cols,
-                                              na.rm=na.rm, dim.=dim.))
-
     ans_type <- .get_ans_type(x, must.be.numeric=TRUE)
     colranges_list <- colblock_APPLY(x, colRanges, na.rm=na.rm)
     if (length(colranges_list) == 0L)

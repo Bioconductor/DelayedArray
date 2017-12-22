@@ -204,10 +204,10 @@ test_DelayedArray_Summary <- function()
         for (block_size in block_sizes) {
             options(DelayedArray.block.size=block_size)
             checkIdentical(target1, GENERIC(A))
-            checkIdentical(target1, GENERIC(t(A)))
+            checkIdentical(target1, GENERIC(aperm(A)))
             checkIdentical(target1, DelayedArray_block_Summary(.Generic, a))
             checkIdentical(target2, GENERIC(A, na.rm=TRUE))
-            checkIdentical(target2, GENERIC(t(A), na.rm=TRUE))
+            checkIdentical(target2, GENERIC(aperm(A), na.rm=TRUE))
             checkIdentical(target2, DelayedArray_block_Summary(.Generic, a,
                                                                na.rm=TRUE))
         }
@@ -248,11 +248,11 @@ test_DelayedArray_mean <- function()
     for (block_size in block_sizes2) {
         options(DelayedArray.block.size=block_size)
         checkIdentical(target1, mean(A))
-        checkIdentical(target1, mean(t(A)))
+        checkIdentical(target1, mean(aperm(A)))
         checkIdentical(target2, mean(A, na.rm=TRUE))
-        checkIdentical(target2, mean(t(A), na.rm=TRUE))
+        checkIdentical(target2, mean(aperm(A), na.rm=TRUE))
         checkIdentical(target3, mean(A[ , 10:4, -2]))
-        checkIdentical(target3, mean(t(A[ , 10:4, -2])))
+        checkIdentical(target3, mean(aperm(A[ , 10:4, -2])))
     }
 }
 

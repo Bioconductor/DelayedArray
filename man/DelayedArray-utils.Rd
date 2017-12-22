@@ -48,6 +48,9 @@
 
 % DelayedMatrix utils
 
+\alias{t.DelayedMatrix}
+\alias{t,DelayedMatrix-method}
+
 \alias{\%*\%}
 \alias{\%*\%,DelayedMatrix,matrix-method}
 \alias{\%*\%,matrix,DelayedMatrix-method}
@@ -99,6 +102,7 @@
     \item \code{nchar}, \code{tolower}, \code{toupper},
           \code{grepl}, \code{sub}, \code{gsub}
     \item \code{pmax2} and \code{pmin2}
+    \item \code{t}
     \item \code{rbind} and \code{cbind} (documented in \link{DelayedArray})
   }
 

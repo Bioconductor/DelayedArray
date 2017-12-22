@@ -55,7 +55,7 @@ S3method(mean, DelayedArray)
 
 S3method(split, DelayedArray)
 
-S3method(t, DelayedArray)
+S3method(t, DelayedMatrix)
 
 ### We also export them thru the export() directive so that (a) they can be
 ### called directly, (b) tab-completion on the name of the generic shows them,
@@ -90,7 +90,7 @@ export(
 
     split.DelayedArray,
 
-    t.DelayedArray
+    t.DelayedMatrix
 )
 
 

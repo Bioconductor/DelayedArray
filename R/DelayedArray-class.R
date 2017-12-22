@@ -3,6 +3,8 @@
 ### -------------------------------------------------------------------------
 
 
+### Starting with DelayedArray 0.5.11, the "is_transposed" slot is not used
+### anymore. TODO: Remove this slot.
 setClass("DelayedArray",
     contains="Array",
     representation(
@@ -21,8 +23,7 @@ setClass("DelayedArray",
         delayed_ops="list",      # List of delayed operations. See below
                                  # for the details.
 
-        is_transposed="logical"  # Is the object considered to be transposed
-                                 # with respect to the seed?
+        is_transposed="logical"  # NOT USED
     ),
     prototype(
         seed=new("array"),
@@ -87,8 +88,8 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
     if (!all(get_Nindex_lengths(x@index, seed_dim)[-x@metaindex] == 1L))
         return(wmsg2("all the dropped dimensions in 'x' must be equal to 1"))
     ## 'is_transposed' slot.
-    if (!isTRUEorFALSE(x@is_transposed))
-        return(wmsg2("'x@is_transposed' must be TRUE or FALSE"))
+    if (!identical(x@is_transposed, FALSE))
+        return(wmsg2("'x@is_transposed' must be FALSE"))
     TRUE
 }
 
@@ -182,19 +183,9 @@ downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 ### dim() getter
 ###
 
-.get_DelayedArray_dim_before_transpose <- function(x)
-{
-    get_Nindex_lengths(x@index, dim(seed(x)))[x@metaindex]
-}
-.get_DelayedArray_dim <- function(x)
-{
-    ans <- .get_DelayedArray_dim_before_transpose(x)
-    if (x@is_transposed)
-        ans <- rev(ans)
-    ans
-}
-
-setMethod("dim", "DelayedArray", .get_DelayedArray_dim)
+setMethod("dim", "DelayedArray",
+    function(x) get_Nindex_lengths(x@index, dim(seed(x)))[x@metaindex]
+)
 
 setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
 
@@ -296,11 +287,7 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
     value <- .normalize_dim_replacement_value(value, x_dim)
     new2old <- .map_new_to_old_dim(value, x_dim, class(x))
     stopifnot(identical(value, x_dim[new2old]))  # sanity check
-    if (x@is_transposed) {
-        x_metaindex <- rev(rev(x@metaindex)[new2old])
-    } else {
-        x_metaindex <- x@metaindex[new2old]
-    }
+    x_metaindex <- x@metaindex[new2old]
     if (!identical(x@metaindex, x_metaindex)) {
         x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
         x@metaindex <- x_metaindex
@@ -332,26 +319,19 @@ setMethod("drop", "DelayedArray",
 
 ### dimnames() getter.
 
-.get_DelayedArray_dimnames_before_transpose <- function(x)
-{
-    x_seed_dimnames <- dimnames(seed(x))
-    ans <- lapply(x@metaindex,
-                  get_Nindex_names_along,
-                    Nindex=x@index,
-                    dimnames=x_seed_dimnames)
-    if (all(S4Vectors:::sapply_isNULL(ans)))
-        return(NULL)
-    ans
-}
-.get_DelayedArray_dimnames <- function(x)
-{
-    ans <- .get_DelayedArray_dimnames_before_transpose(x)
-    if (x@is_transposed)
-        ans <- rev(ans)
-    ans
-}
-
-setMethod("dimnames", "DelayedArray", .get_DelayedArray_dimnames)
+setMethod("dimnames", "DelayedArray",
+    function(x)
+    {
+        x_seed_dimnames <- dimnames(seed(x))
+        ans <- lapply(x@metaindex,
+                      get_Nindex_names_along,
+                        Nindex=x@index,
+                        dimnames=x_seed_dimnames)
+        if (all(S4Vectors:::sapply_isNULL(ans)))
+            return(NULL)
+        ans
+    }
+)
 
 ### dimnames() setter.
 
@@ -372,8 +352,6 @@ setMethod("dimnames", "DelayedArray", .get_DelayedArray_dimnames)
 .set_DelayedArray_dimnames <- function(x, value)
 {
     value <- .normalize_dimnames_replacement_value(value, length(x@metaindex))
-    if (x@is_transposed)
-        value <- rev(value)
 
     ## We quickly identify a no-op situation. While doing so, we are careful to
     ## not trigger a copy of the "index" slot (which can be big). The goal is
@@ -433,24 +411,6 @@ setMethod("names", "DelayedArray", .get_DelayedArray_names)
 }
 
 setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Transpose
-###
-### The actual transposition of the data is delayed i.e. it will be realized
-### on the fly only when as.array() (or as.vector() or as.matrix()) is called
-### on 'x'.
-### TODO: Make this a method for DelayedMatrix objects and based on aperm().
-
-### S3/S4 combo for t.DelayedArray
-t.DelayedArray <- function(x)
-{
-    x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-    x@is_transposed <- !x@is_transposed
-    x
-}
-setMethod("t", "DelayedArray", t.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -605,7 +565,7 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
         subscript <- user_Nindex[[n]]
         if (is.null(subscript))
             next
-        n0 <- if (x@is_transposed) x_ndim - n + 1L else n
+        n0 <- n
         N <- x@metaindex[[n0]]
         i <- x_index[[N]]
         if (is.null(i)) {
@@ -767,7 +727,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
         value <- rep(value, length.out=x_nrow)
     }
     register_delayed_op(x, `[<-`, Rargs=list(value=value),
-                                  recycle_along_last_dim=x@is_transposed)
+                                  recycle_along_last_dim=FALSE)
 }
 
 .subassign_DelayedArray <- function(x, i, j, ..., value)
@@ -825,21 +785,11 @@ setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
     ans <- extract_array(seed(x), unname(x@index))
-    ans <- set_dim(ans, .get_DelayedArray_dim_before_transpose(x))
+    ans <- set_dim(ans, dim(x))
     ans <- .execute_delayed_ops(ans, x@delayed_ops)
-    ans <- set_dimnames(ans, .get_DelayedArray_dimnames_before_transpose(x))
+    ans <- set_dimnames(ans, dimnames(x))
     if (drop)
         ans <- .reduce_array_dimensions(ans)
-    ## Base R doesn't support transposition of an array of arbitrary dimension
-    ## (generalized transposition) so the call to t() below will fail if 'ans'
-    ## has more than 2 dimensions. If we want as.array() to work on a
-    ## transposed DelayedArray object of arbitrary dimension, we need to
-    ## implement our own generalized transposition of an ordinary array.
-    if (x@is_transposed) {
-        if (length(dim(ans)) > 2L)
-            stop("can't do as.array() on this object, sorry")
-        ans <- t(ans)
-    }
     ans
 }
 

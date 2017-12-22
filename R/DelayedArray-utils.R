@@ -36,7 +36,7 @@
         e2 <- rep(e2, length.out=e1_nrow)
     }
     register_delayed_op(e1, .Generic, Rargs=list(e2),
-                                      recycle_along_last_dim=e1@is_transposed)
+                                      recycle_along_last_dim=FALSE)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e2'.
@@ -64,7 +64,7 @@
         e1 <- rep(e1, length.out=e2_nrow)
     }
     register_delayed_op(e2, .Generic, Largs=list(e1),
-                                      recycle_along_last_dim=e2@is_transposed)
+                                      recycle_along_last_dim=FALSE)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
@@ -308,12 +308,10 @@ setMethod("gsub", c(x="DelayedArray"),
     }
 }
 
-.straighten <- function(x, untranspose=FALSE, straighten.index=FALSE)
+.straighten <- function(x, straighten.index=FALSE)
 {
     if (is.array(x))
         return(x)
-    if (untranspose)
-        x@is_transposed <- FALSE
     if (!straighten.index)
         return(x)
     x_index <- x@index
@@ -342,7 +340,7 @@ setMethod("gsub", c(x="DelayedArray"),
     init <- FALSE
     BREAKIF <- identity
 
-    x <- .straighten(x, untranspose=TRUE, straighten.index=TRUE)
+    x <- .straighten(x, straighten.index=TRUE)
     block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
 }
 
@@ -455,9 +453,9 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
 
     for (x in objects) {
         if (.Generic %in% c("sum", "prod")) {
-            x <- .straighten(x, untranspose=TRUE)
+            x <- .straighten(x)
         } else {
-            x <- .straighten(x, untranspose=TRUE, straighten.index=TRUE)
+            x <- .straighten(x, straighten.index=TRUE)
         }
         init <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
     }
@@ -495,7 +493,7 @@ setMethod("Summary", "DelayedArray",
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])
 
-    x <- .straighten(x, untranspose=TRUE)
+    x <- .straighten(x)
     ans <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
     ans[[1L]] / ans[[2L]]
 }
