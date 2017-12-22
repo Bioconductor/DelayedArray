@@ -3,8 +3,8 @@
 ### -------------------------------------------------------------------------
 
 
-### Starting with DelayedArray 0.5.11, the "is_transposed" slot is not used
-### anymore. TODO: Remove this slot.
+### Starting with DelayedArray 0.5.11, the "metaindex" and "is_transposed"
+### slots are not used anymore. TODO: Remove these slots.
 setClass("DelayedArray",
     contains="Array",
     representation(
@@ -17,8 +17,7 @@ setClass("DelayedArray",
                                  # seed dimension. *Missing* list elements
                                  # are allowed and represented by NULLs.
 
-        metaindex="integer",     # Index into the "index" slot specifying the
-                                 # seed dimensions to keep.
+        metaindex="integer",     # NOT USED
 
         delayed_ops="list",      # List of delayed operations. See below
                                  # for the details.
@@ -78,18 +77,11 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
         return(wmsg2("every list element in 'x@index' must be either NULL ",
                      "or an integer vector"))
     ## 'metaindex' slot.
-    if (length(x@metaindex) == 0L)
-        return(wmsg2("'x@metaindex' cannot be empty"))
-    if (S4Vectors:::anyMissingOrOutside(x@metaindex, 1L, seed_ndim))
-        return(wmsg2("all values in 'x@metaindex' must be >= 1 ",
-                     "and <= 'length(x@index)'"))
-    if (!isStrictlySorted(x@metaindex))
-        return(wmsg2("'x@metaindex' must be strictly sorted"))
-    if (!all(get_Nindex_lengths(x@index, seed_dim)[-x@metaindex] == 1L))
-        return(wmsg2("all the dropped dimensions in 'x' must be equal to 1"))
+    if (!identical(x@metaindex, seq_along(x@index)))
+        return(wmsg2("invalid 'x@metaindex'"))
     ## 'is_transposed' slot.
     if (!identical(x@is_transposed, FALSE))
-        return(wmsg2("'x@is_transposed' must be FALSE"))
+        return(wmsg2("invalid 'x@is_transposed'"))
     TRUE
 }
 
@@ -184,7 +176,7 @@ downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 ###
 
 setMethod("dim", "DelayedArray",
-    function(x) get_Nindex_lengths(x@index, dim(seed(x)))[x@metaindex]
+    function(x) get_Nindex_lengths(x@index, dim(seed(x)))
 )
 
 setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
@@ -287,14 +279,7 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
     value <- .normalize_dim_replacement_value(value, x_dim)
     new2old <- .map_new_to_old_dim(value, x_dim, class(x))
     stopifnot(identical(value, x_dim[new2old]))  # sanity check
-    x_metaindex <- x@metaindex[new2old]
-    if (!identical(x@metaindex, x_metaindex)) {
-        x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-        x@metaindex <- x_metaindex
-        Class <- if (length(dim(x)) == 2L) "DelayedMatrix" else "DelayedArray"
-        x <- as(x, Class, strict=TRUE)
-    }
-    x
+    aperm(x, new2old)
 }
 
 setReplaceMethod("dim", "DelayedArray", .set_DelayedArray_dim)
@@ -323,7 +308,7 @@ setMethod("dimnames", "DelayedArray",
     function(x)
     {
         x_seed_dimnames <- dimnames(seed(x))
-        ans <- lapply(x@metaindex,
+        ans <- lapply(seq_along(x@index),
                       get_Nindex_names_along,
                         Nindex=x@index,
                         dimnames=x_seed_dimnames)
@@ -351,35 +336,34 @@ setMethod("dimnames", "DelayedArray",
 
 .set_DelayedArray_dimnames <- function(x, value)
 {
-    value <- .normalize_dimnames_replacement_value(value, length(x@metaindex))
+    value <- .normalize_dimnames_replacement_value(value, length(x@index))
 
     ## We quickly identify a no-op situation. While doing so, we are careful to
     ## not trigger a copy of the "index" slot (which can be big). The goal is
     ## to make a no-op like 'dimnames(x) <- dimnames(x)' as fast as possible.
     x_seed_dimnames <- dimnames(seed(x))
-    touched_midx <- which(mapply(
-        function(N, names)
+    touched_idx <- which(mapply(
+        function(along, names)
             !identical(
-                get_Nindex_names_along(x@index, x_seed_dimnames, N),
+                get_Nindex_names_along(x@index, x_seed_dimnames, along),
                 names
             ),
-        x@metaindex, value,
+        seq_along(x@index), value,
         USE.NAMES=FALSE
     ))
-    if (length(touched_midx) == 0L)
+    if (length(touched_idx) == 0L)
         return(x)  # no-op
 
     x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-    touched_idx <- x@metaindex[touched_midx]
     x_seed_dim <- dim(seed(x))
     x@index[touched_idx] <- mapply(
-        function(N, names) {
-            i <- x@index[[N]]
+        function(along, names) {
+            i <- x@index[[along]]
             if (is.null(i))
-                i <- seq_len(x_seed_dim[[N]])  # expand 'i'
+                i <- seq_len(x_seed_dim[[along]])  # expand 'i'
             setNames(i, names)
         },
-        touched_idx, value[touched_midx],
+        touched_idx, value[touched_idx],
         SIMPLIFY=FALSE, USE.NAMES=FALSE
     )
     x
@@ -436,9 +420,9 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ###
 
 register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
-                                        recycle_along_last_dim=NA)
+                                        recycle_along_first_dim=FALSE)
 {
-    if (isTRUEorFALSE(recycle_along_last_dim)) {
+    if (recycle_along_first_dim) {
         nLargs <- length(Largs)
         nRargs <- length(Rargs)
         ## Recycling is only supported for function calls with 2 arguments
@@ -447,17 +431,16 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
         partially_recycled_arg <- if (nLargs == 1L) Largs[[1L]] else Rargs[[1L]]
         stopifnot(length(partially_recycled_arg) == nrow(x))
     }
-    delayed_op <- list(FUN, Largs, Rargs, recycle_along_last_dim)
+    delayed_op <- list(FUN, Largs, Rargs, recycle_along_first_dim)
     x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
     x@delayed_ops <- c(x@delayed_ops, list(delayed_op))
     x
 }
 
-.subset_delayed_op_args <- function(delayed_op, i, subset_along_last_dim)
+.subset_delayed_op_args <- function(delayed_op, i)
 {
-    recycle_along_last_dim <- delayed_op[[4L]]
-    if (is.na(recycle_along_last_dim)
-     || recycle_along_last_dim != subset_along_last_dim)
+    recycle_along_first_dim <- delayed_op[[4L]]
+    if (!recycle_along_first_dim)
         return(delayed_op)
     Largs <- delayed_op[[2L]]
     Rargs <- delayed_op[[3L]]
@@ -472,49 +455,42 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
         delayed_op[[3L]] <- list(new_arg)
     }
     if (length(new_arg) == 1L)
-        delayed_op[[4L]] <- NA
+        delayed_op[[4L]] <- FALSE
     delayed_op
 }
 
-.subset_delayed_ops_args <- function(delayed_ops, i, subset_along_last_dim)
-    lapply(delayed_ops, .subset_delayed_op_args, i, subset_along_last_dim)
+.subset_delayed_ops_args <- function(delayed_ops, i)
+    lapply(delayed_ops, .subset_delayed_op_args, i)
 
 ### 'a' is the ordinary array returned by the "combining" operator.
 .execute_delayed_ops <- function(a, delayed_ops)
 {
     a_dim <- dim(a)
     first_dim <- a_dim[[1L]]
-    last_dim <- a_dim[[length(a_dim)]]
     a_len <- length(a)
     if (a_len == 0L) {
-        p1 <- p2 <- 0L
+        p1 <- 0L
     } else {
         p1 <- a_len / first_dim
-        p2 <- a_len / last_dim
     }
 
-    recycle_arg <- function(partially_recycled_arg, recycle_along_last_dim) {
-        if (recycle_along_last_dim) {
-            stopifnot(length(partially_recycled_arg) == last_dim)
-            rep(partially_recycled_arg, each=p2)
-        } else {
-            stopifnot(length(partially_recycled_arg) == first_dim)
-            rep.int(partially_recycled_arg, p1)
-        }
+    recycle_arg <- function(partially_recycled_arg) {
+        stopifnot(length(partially_recycled_arg) == first_dim)
+        rep.int(partially_recycled_arg, p1)
     }
 
     prepare_call_args <- function(a, delayed_op) {
         Largs <- delayed_op[[2L]]
         Rargs <- delayed_op[[3L]]
-        recycle_along_last_dim <- delayed_op[[4L]]
-        if (isTRUEorFALSE(recycle_along_last_dim)) {
+        recycle_along_first_dim <- delayed_op[[4L]]
+        if (recycle_along_first_dim) {
             nLargs <- length(Largs)
             nRargs <- length(Rargs)
             stopifnot(nLargs + nRargs == 1L)
             if (nLargs == 1L) {
-                Largs <- list(recycle_arg(Largs[[1L]], recycle_along_last_dim))
+                Largs <- list(recycle_arg(Largs[[1L]]))
             } else {
-                Rargs <- list(recycle_arg(Rargs[[1L]], recycle_along_last_dim))
+                Rargs <- list(recycle_arg(Rargs[[1L]]))
             }
         }
         c(Largs, list(a), Rargs)
@@ -557,30 +533,24 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
 {
     stopifnot(is.list(user_Nindex))
     x_index <- x@index
-    x_ndim <- length(x@metaindex)
+    x_ndim <- length(x_index)
     x_seed_dim <- dim(seed(x))
     x_seed_dimnames <- dimnames(seed(x))
     x_delayed_ops <- x@delayed_ops
-    for (n in seq_along(user_Nindex)) {
-        subscript <- user_Nindex[[n]]
+    for (along in seq_along(user_Nindex)) {
+        subscript <- user_Nindex[[along]]
         if (is.null(subscript))
             next
-        n0 <- n
-        N <- x@metaindex[[n0]]
-        i <- x_index[[N]]
+        i <- x_index[[along]]
         if (is.null(i)) {
-            i <- seq_len(x_seed_dim[[N]])  # expand 'i'
-            names(i) <- get_Nindex_names_along(x_index, x_seed_dimnames, N)
+            i <- seq_len(x_seed_dim[[along]])  # expand 'i'
+            names(i) <- get_Nindex_names_along(x_index, x_seed_dimnames, along)
         }
         subscript <- normalizeSingleBracketSubscript(subscript, i,
                                                      as.NSBS=TRUE)
-        x_index[[N]] <- extractROWS(i, subscript)
-        if (n0 == 1L)
-            x_delayed_ops <- .subset_delayed_ops_args(x_delayed_ops, subscript,
-                                                      FALSE)
-        if (n0 == x_ndim)
-            x_delayed_ops <- .subset_delayed_ops_args(x_delayed_ops, subscript,
-                                                      TRUE)
+        x_index[[along]] <- extractROWS(i, subscript)
+        if (along == 1L)
+            x_delayed_ops <- .subset_delayed_ops_args(x_delayed_ops, subscript)
     }
     if (!identical(x@index, x_index)) {
         x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
@@ -727,7 +697,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
         value <- rep(value, length.out=x_nrow)
     }
     register_delayed_op(x, `[<-`, Rargs=list(value=value),
-                                  recycle_along_last_dim=FALSE)
+                                  recycle_along_first_dim=TRUE)
 }
 
 .subassign_DelayedArray <- function(x, i, j, ..., value)

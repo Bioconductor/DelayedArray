@@ -228,7 +228,6 @@ m <- a[11:20 , 5, ]        # a matrix
 A[11:20 , 5, ]             # not a DelayedMatrix (still 3 dimensions)
 M <- drop(A[11:20 , 5, ])  # a DelayedMatrix object
 stopifnot(identical(m, as.array(M)))
-stopifnot(identical(a, seed(M)))
 
 ## Linear single bracket subsetting:
 A[11:20]

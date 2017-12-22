@@ -36,7 +36,7 @@
         e2 <- rep(e2, length.out=e1_nrow)
     }
     register_delayed_op(e1, .Generic, Rargs=list(e2),
-                                      recycle_along_last_dim=FALSE)
+                                      recycle_along_first_dim=TRUE)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e2'.
@@ -64,7 +64,7 @@
         e1 <- rep(e1, length.out=e2_nrow)
     }
     register_delayed_op(e2, .Generic, Largs=list(e1),
-                                      recycle_along_last_dim=FALSE)
+                                      recycle_along_first_dim=TRUE)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
@@ -316,11 +316,11 @@ setMethod("gsub", c(x="DelayedArray"),
         return(x)
     x_index <- x@index
     x_seed_dim <- dim(seed(x))
-    for (N in x@metaindex) {
-        i <- x_index[[N]]
+    for (along in seq_along(x_index)) {
+        i <- x_index[[along]]
         if (is.null(i) || isStrictlySorted(i))
             next
-        x_index[[N]] <- .straighten_index(i)
+        x_index[[along]] <- .straighten_index(i)
     }
     if (!identical(x@index, x_index))
         x@index <- x_index
