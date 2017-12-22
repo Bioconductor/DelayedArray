@@ -26,7 +26,7 @@ Collate: utils.R
 	ArrayGrid-class.R
 	show-utils.R
 	extract_array.R
-	SeedDimCombiner-class.R
+	SeedDimPicker-class.R
 	ConformableSeedCombiner-class.R
 	SeedBinder-class.R
 	DelayedArray-class.R

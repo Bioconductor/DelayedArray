@@ -244,13 +244,13 @@ setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
 ### aperm()
 ###
 
-setAs("DelayedArray", "SeedDimCombiner",
+setAs("DelayedArray", "SeedDimPicker",
     function(from)
     {
         from_seed <- seed(from)
-        if (is_pristine(from) && is(from_seed, "SeedDimCombiner"))
+        if (is_pristine(from) && is(from_seed, "SeedDimPicker"))
             return(from_seed)
-        new_SeedDimCombiner(from)
+        new_SeedDimPicker(from)
     }
 )
 
@@ -262,7 +262,7 @@ setAs("DelayedArray", "SeedDimCombiner",
     } else {
         perm <- normarg_perm(perm, a_dim)
     }
-    DelayedArray(aperm(as(a, "SeedDimCombiner"), perm))
+    DelayedArray(aperm(as(a, "SeedDimPicker"), perm))
 }
 
 ### S3/S4 combo for aperm.DelayedArray
