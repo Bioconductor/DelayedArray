@@ -40,7 +40,10 @@ new_SeedBinder <- function(seeds, along)
     new2("SeedBinder", seeds=seeds, along=along)
 }
 
-### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array().
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array()
+###
 
 .get_SeedBinder_dim <- function(x)
 {

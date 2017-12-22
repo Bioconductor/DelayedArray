@@ -18,8 +18,14 @@
 \alias{seed,DelayedArray-method}
 
 \alias{dim,DelayedArray-method}
-\alias{dim<-,DelayedArray-method}
 \alias{isEmpty,DelayedArray-method}
+
+\alias{coerce,DelayedArray,SeedDimCombiner-method}
+\alias{aperm}
+\alias{aperm.DelayedArray}
+\alias{aperm,DelayedArray-method}
+
+\alias{dim<-,DelayedArray-method}
 \alias{dimnames,DelayedArray-method}
 \alias{dimnames<-,DelayedArray-method}
 \alias{names,DelayedArray-method}

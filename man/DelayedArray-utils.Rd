@@ -33,9 +33,9 @@
 \alias{round,DelayedArray-method}
 \alias{signif,DelayedArray-method}
 
-\alias{grepl,DelayedArray-method}
-\alias{sub,DelayedArray-method}
-\alias{gsub,DelayedArray-method}
+\alias{grepl,ANY,DelayedArray-method}
+\alias{sub,ANY,ANY,DelayedArray-method}
+\alias{gsub,ANY,ANY,DelayedArray-method}
 
 \alias{anyNA,DelayedArray-method}
 \alias{which,DelayedArray-method}

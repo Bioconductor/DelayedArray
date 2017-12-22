@@ -179,10 +179,8 @@ downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### dim()
+### dim() getter
 ###
-
-### dim() getter.
 
 .get_DelayedArray_dim_before_transpose <- function(x)
 {
@@ -200,7 +198,40 @@ setMethod("dim", "DelayedArray", .get_DelayedArray_dim)
 
 setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
 
-### dim() setter.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### aperm()
+###
+
+setAs("DelayedArray", "SeedDimCombiner",
+    function(from)
+    {
+        from_seed <- seed(from)
+        if (is_pristine(from) && is(from_seed, "SeedDimCombiner"))
+            return(from_seed)
+        new_SeedDimCombiner(from)
+    }
+)
+
+.aperm.DelayedArray <- function(a, perm)
+{
+    a_dim <- dim(a)
+    if (missing(perm)) {
+        perm <- rev(seq_along(a_dim))
+    } else {
+        perm <- normarg_perm(perm, a_dim)
+    }
+    DelayedArray(aperm(as(a, "SeedDimCombiner"), perm))
+}
+
+### S3/S4 combo for aperm.DelayedArray
+aperm.DelayedArray <- function(a, perm, ...) .aperm.DelayedArray(a, perm, ...)
+setMethod("aperm", "DelayedArray", aperm.DelayedArray)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### dim() setter
+###
 
 .normalize_dim_replacement_value <- function(value, x_dim)
 {

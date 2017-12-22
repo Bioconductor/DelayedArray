@@ -6,18 +6,6 @@
 \alias{extract_array,data.frame-method}
 \alias{extract_array,DataFrame-method}
 
-\alias{dim,ConformableSeedCombiner-method}
-\alias{dimnames,ConformableSeedCombiner-method}
-\alias{extract_array,ConformableSeedCombiner-method}
-
-\alias{dim,SeedBinder-method}
-\alias{dimnames,SeedBinder-method}
-\alias{extract_array,SeedBinder-method}
-
-\alias{dim,SeedDimCombiner-method}
-\alias{dimnames,SeedDimCombiner-method}
-\alias{extract_array,SeedDimCombiner-method}
-
 \title{extract_array}
 
 \description{

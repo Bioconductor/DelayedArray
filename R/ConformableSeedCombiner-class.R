@@ -63,8 +63,10 @@ new_ConformableSeedCombiner <- function(seed=new("array"), ...,
                                     Rargs=Rargs)
 }
 
-### Implement the "seed contract" i.e. dim(), dimnames(), and
-### extract_array().
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array()
+###
 
 .get_ConformableSeedCombiner_dim <- function(x) dim(x@seeds[[1L]])
 

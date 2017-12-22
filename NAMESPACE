@@ -27,6 +27,9 @@ exportClasses(
 ### Export S3 methods
 ###
 
+S3method(aperm, DelayedArray)
+S3method(aperm, SeedDimCombiner)
+
 S3method(as.array, DelayedArray)
 
 S3method(as.character, ArrayGrid)
@@ -59,6 +62,9 @@ S3method(t, DelayedArray)
 ### and (c) methods() doesn't asterisk them.
 
 export(
+    aperm.DelayedArray,
+    aperm.SeedDimCombiner,
+
     as.array.DelayedArray,
 
     as.character.ArrayGrid,
@@ -153,13 +159,29 @@ export(
 ###
 
 export(
+    ## bind-arrays.R:
     arbind, acbind,
+
+    ## ArrayGrid-class.R:
     refdim, isLinear,
+
+    ## extract_array.R:
     extract_array,
+
+    ## SeedDimCombiner-class.R:
+    aperm,
+
+    ## DelayedArray-class.R:
     matrixClass, DelayedArray, seed, type,
+
+    ## realize.R:
     chunk_dim, write_block_to_sink, close,
     realize,
+
+    ## DelayedArray-utils.R:
     pmax2, pmin2, apply,
+
+    ## DelayedMatrix-stats.R:
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 
@@ -168,6 +190,7 @@ exportMethods(
     arbind, acbind,
     refdim, isLinear,
     extract_array,
+    aperm,
     matrixClass, DelayedArray, seed, type,
     chunk_dim, write_block_to_sink, close,
     realize,
