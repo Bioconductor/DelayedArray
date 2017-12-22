@@ -14,6 +14,8 @@
 \alias{DelayedArray,ANY-method}
 \alias{DelayedArray,DelayedArray-method}
 
+\alias{updateObject,DelayedArray-method}
+
 \alias{seed}
 \alias{seed,DelayedArray-method}
 

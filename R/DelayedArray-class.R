@@ -3,32 +3,24 @@
 ### -------------------------------------------------------------------------
 
 
-### Starting with DelayedArray 0.5.11, the "metaindex" and "is_transposed"
-### slots are not used anymore. TODO: Remove these slots.
 setClass("DelayedArray",
     contains="Array",
     representation(
-        seed="ANY",              # An array-like object expected to satisfy
-                                 # the "seed contract" i.e. to support dim(),
-                                 # dimnames(), and extract_array().
+        seed="ANY",         # An array-like object expected to satisfy
+                            # the "seed contract" i.e. to support dim(),
+                            # dimnames(), and extract_array().
 
-        index="list",            # List (possibly named) of subscripts as
-                                 # positive integer vectors, one vector per
-                                 # seed dimension. *Missing* list elements
-                                 # are allowed and represented by NULLs.
+        index="list",       # List (possibly named) of subscripts as
+                            # positive integer vectors, one vector per
+                            # seed dimension. *Missing* list elements
+                            # are allowed and represented by NULLs.
 
-        metaindex="integer",     # NOT USED
-
-        delayed_ops="list",      # List of delayed operations. See below
-                                 # for the details.
-
-        is_transposed="logical"  # NOT USED
+        delayed_ops="list"  # List of delayed operations. See below
+                            # for the details.
     ),
     prototype(
         seed=new("array"),
-        index=list(NULL),
-        metaindex=1L,
-        is_transposed=FALSE
+        index=list(NULL)
     )
 )
 
@@ -38,8 +30,7 @@ setClass("DelayedMatrix",
     contains=c("DelayedArray", "DataTable"),
     prototype=prototype(
         seed=new("matrix"),
-        index=list(NULL, NULL),
-        metaindex=1:2
+        index=list(NULL, NULL)
     )
 )
 
@@ -76,12 +67,6 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
              vapply(x@index, is.integer, logical(1), USE.NAMES=FALSE)))
         return(wmsg2("every list element in 'x@index' must be either NULL ",
                      "or an integer vector"))
-    ## 'metaindex' slot.
-    if (!identical(x@metaindex, seq_along(x@index)))
-        return(wmsg2("invalid 'x@metaindex'"))
-    ## 'is_transposed' slot.
-    if (!identical(x@is_transposed, FALSE))
-        return(wmsg2("invalid 'x@is_transposed'"))
     TRUE
 }
 
@@ -111,7 +96,7 @@ new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
     if (seed_ndim == 2L)
         Class <- matrixClass(new(Class))
     index <- vector(mode="list", length=seed_ndim)
-    new2(Class, seed=seed, index=index, metaindex=seq_along(index))
+    new2(Class, seed=seed, index=index)
 }
 
 setGeneric("DelayedArray", function(seed) standardGeneric("DelayedArray"))
@@ -120,6 +105,79 @@ setMethod("DelayedArray", "ANY", function(seed) new_DelayedArray(seed))
 
 ### Calling DelayedArray() on a DelayedArray object is a no-op.
 setMethod("DelayedArray", "DelayedArray", function(seed) seed)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### updateObject()
+###
+### Internal representation of DelayedArray objects has changed in
+### DelayedArray 0.5.11 (Bioc 3.7).
+###
+
+.get_DelayedArray_version <- function(object)
+{
+    if (.hasSlot(object, "metaindex") && .hasSlot(object, "is_transposed"))
+        "< 0.5.11"
+    else
+        "current"
+}
+
+.update_delayed_ops <- function(delayed_ops)
+{
+    for (i in seq_along(delayed_ops)) {
+        delayed_op <- delayed_ops[[i]]
+        recycle_along_last_dim <- delayed_op[[4L]]
+        if (is.na(recycle_along_last_dim)) {
+            recycle_along_first_dim <- FALSE
+        } else if (!recycle_along_last_dim) {
+            recycle_along_first_dim <- TRUE
+        } else {
+            stop(wmsg("object is too complex, sorry"))
+        }
+        delayed_op[[4L]] <- recycle_along_first_dim
+        delayed_ops[[i]] <- delayed_op
+    }
+    delayed_ops
+}
+
+.updateObject_DelayedArray <- function(object, ..., verbose=FALSE)
+{
+    object@seed <- updateObject(object@seed, verbose=verbose)
+
+    version <- .get_DelayedArray_version(object)
+
+    if (version == "current") {
+        if (verbose)
+            message("[updateObject] Internal representation of ",
+                    class(object), " object is current.\n",
+                    "[updateObject] Nothing to update.")
+        return(object)
+    }
+
+    if (verbose)
+        message("[updateObject] ", class(object), " object uses ",
+                "internal representation from\n",
+                "[updateObject] DelayedArray ", version, ". Updating it ...")
+
+    delayed_ops <- .update_delayed_ops(object@delayed_ops)
+    ans <- new2(class(object), seed=object@seed,
+                               index=object@index,
+                               delayed_ops=delayed_ops,
+                               check=FALSE)
+    if (identical(object@metaindex, seq_along(object@index)) &&
+        identical(object@is_transposed, FALSE))
+        return(ans)
+    if (any(vapply(delayed_ops,
+                   function(delayed_op) delayed_op[[4L]],
+                   logical(1))))
+        stop(wmsg("object is too complex, sorry"))
+    perm <- object@metaindex
+    if (object@is_transposed)
+        perm <- rev(perm)
+    aperm(ans, perm)
+}
+
+setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -887,7 +945,18 @@ setMethod("[[", "DelayedArray",
 ### Show
 ###
 
-setMethod("show", "DelayedArray", show_compact_array)
+setMethod("show", "DelayedArray",
+    function(object)
+    {
+        version <- .get_DelayedArray_version(object)
+        if (version != "current")
+            stop(class(object), " object uses internal representation from ",
+                 "DelayedArray ", version, "\n  and cannot be displayed or ",
+                 "used. Please update it with:\n",
+                 "    object <- updateObject(object, verbose=TRUE)")
+        show_compact_array(object)
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
