@@ -167,13 +167,13 @@ export(
     refdim, isLinear,
 
     ## extract_array.R:
-    extract_array,
+    extract_array, type,
 
     ## SeedDimPicker-class.R:
     aperm,
 
     ## DelayedArray-class.R:
-    matrixClass, DelayedArray, seed, type,
+    matrixClass, DelayedArray, seed,
 
     ## realize.R:
     chunk_dim, write_block_to_sink, close,
@@ -190,9 +190,9 @@ export(
 exportMethods(
     arbind, acbind,
     refdim, isLinear,
-    extract_array,
+    extract_array, type,
     aperm,
-    matrixClass, DelayedArray, seed, type,
+    matrixClass, DelayedArray, seed,
     chunk_dim, write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,

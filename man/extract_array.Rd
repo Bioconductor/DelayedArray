@@ -6,6 +6,10 @@
 \alias{extract_array,data.frame-method}
 \alias{extract_array,DataFrame-method}
 
+\alias{type}
+\alias{type,array-method}
+\alias{type,ANY-method}
+
 \title{extract_array}
 
 \description{
@@ -20,6 +24,8 @@
 
 \usage{
 extract_array(x, index)
+
+type(x)
 }
 
 \arguments{
@@ -43,13 +49,21 @@ extract_array(x, index)
 
   Also subscripts are allowed to contain duplicated indices so things like
   \code{extract_array(seed, list(c(1:3, 3:1), 2L))} need to be supported.
+
+  \code{type(x)} returns the type of the elements in \code{x}. It's equivalent
+  to \code{typeof(x)} or \code{storage.mode(x)} on an ordinary array.
+  It works out-of-the-box on any array-like object \code{x} for which
+  \code{extract_array(x)} works.
 }
 
 \value{
-  An \emph{ordinary} array of the appropriate type (i.e. integer, double,
-  etc...). For example, if \code{x} is an object representing an M x N matrix
-  of complex numbers, \code{extract_array(x, list(NULL, 2L))} must return its
-  2nd column as an \emph{ordinary} M x 1 matrix of type complex.
+  \code{extract_array} must return an \emph{ordinary} array of the
+  appropriate type (i.e. integer, double, etc...). For example, if
+  \code{x} is an object representing an M x N matrix of complex numbers,
+  \code{extract_array(x, list(NULL, 2L))} must return its 2nd column as
+  an \emph{ordinary} M x 1 matrix of type complex.
+
+  \code{type} returns the type of the array elements.
 }
 
 \seealso{

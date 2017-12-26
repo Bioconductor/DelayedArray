@@ -62,10 +62,6 @@
 \alias{coerce,DelayedMatrix,dgCMatrix-method}
 \alias{coerce,DelayedMatrix,sparseMatrix-method}
 
-\alias{type}
-\alias{type,array-method}
-\alias{type,DelayedArray-method}
-
 \alias{[[,DelayedArray-method}
 
 \alias{show,DelayedArray-method}
@@ -102,7 +98,6 @@
 \usage{
 DelayedArray(seed)  # constructor function
 seed(x)             # seed getter
-type(x)
 }
 
 \arguments{
@@ -110,8 +105,7 @@ type(x)
     An array-like object.
   }
   \item{x}{
-    A DelayedArray object. (Can also be an ordinary array in case of
-    \code{type}.)
+    A DelayedArray object.
   }
 }
 
@@ -191,6 +185,9 @@ type(x)
 
 \seealso{
   \itemize{
+    \item \code{\link{type}} to get the type of the elements of an array-like
+          object.
+
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
 

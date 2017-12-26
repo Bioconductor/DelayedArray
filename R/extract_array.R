@@ -125,3 +125,22 @@ setMethod("extract_array", "DataFrame",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### type() generic and default method
+###
+
+setGeneric("type", function(x) standardGeneric("type"))
+
+setMethod("type", "array", function(x) typeof(x))
+
+### type() works out-of-the-box on any array-like object for which
+### extract_array() works.
+setMethod("type", "ANY",
+    function(x)
+    {
+        index <- rep.int(list(integer(0)), length(dim(x)))
+        type(extract_array(x, index))
+    }
+)
+

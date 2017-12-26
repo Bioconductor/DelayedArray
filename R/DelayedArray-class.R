@@ -621,29 +621,6 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### type()
-###
-### For internal use only.
-###
-
-setGeneric("type", function(x) standardGeneric("type"))
-
-setMethod("type", "array", function(x) typeof(x))
-
-### If 'x' is a DelayedArray object, 'type(x)' must always return the same
-### as 'typeof(as.array(x))'.
-setMethod("type", "DelayedArray",
-    function(x)
-    {
-        user_Nindex <- as.list(integer(length(dim(x))))
-        ## x0 <- x[0, ..., 0]
-        x0 <- .subset_DelayedArray_by_Nindex(x, user_Nindex)
-        typeof(as.array(x0, drop=TRUE))
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Linear single bracket subsetting
 ###
 ###     x[i]
