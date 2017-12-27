@@ -137,3 +137,34 @@ aperm.SeedDimPicker <- function(a, perm, ...)
     .aperm.SeedDimPicker(a, perm, ...)
 setMethod("aperm", "SeedDimPicker", aperm.SeedDimPicker)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### seed() getter/setter
+###
+
+setGeneric("seed", function(x) standardGeneric("seed"))
+
+setMethod("seed", "SeedDimPicker", function(x) x@seed)
+
+setGeneric("seed<-", signature="x",
+    function(x, ..., value) standardGeneric("seed<-")
+)
+
+normalize_seed_replacement_value <- function(value, x_seed)
+{
+    if (!is(value, class(x_seed)))
+        stop(wmsg("supplied seed must be a ", class(x_seed), " object"))
+    if (!identical(dim(value), dim(x_seed)))
+        stop(wmsg("supplied seed must have the same dimensions ",
+                  "as current seed"))
+    value
+}
+
+setReplaceMethod("seed", "SeedDimPicker",
+    function(x, value)
+    {
+        x@seed <- normalize_seed_replacement_value(value, seed(x))
+        x
+    }
+)
+

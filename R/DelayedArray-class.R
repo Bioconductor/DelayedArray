@@ -181,12 +181,18 @@ setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### seed()
+### seed() getter/setter
 ###
 
-setGeneric("seed", function(x) standardGeneric("seed"))
-
 setMethod("seed", "DelayedArray", function(x) x@seed)
+
+setReplaceMethod("seed", "DelayedArray",
+    function(x, value)
+    {
+        x@seed <- normalize_seed_replacement_value(value, seed(x))
+        x
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

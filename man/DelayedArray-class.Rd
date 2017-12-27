@@ -18,6 +18,8 @@
 
 \alias{seed}
 \alias{seed,DelayedArray-method}
+\alias{seed<-}
+\alias{seed<-,DelayedArray-method}
 
 \alias{dim,DelayedArray-method}
 \alias{isEmpty,DelayedArray-method}

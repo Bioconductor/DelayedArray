@@ -7,6 +7,9 @@
 \alias{aperm.SeedDimPicker}
 \alias{aperm,SeedDimPicker-method}
 
+\alias{seed,SeedDimPicker-method}
+\alias{seed<-,SeedDimPicker-method}
+
 \title{SeedDimPicker objects}
 
 \description{
