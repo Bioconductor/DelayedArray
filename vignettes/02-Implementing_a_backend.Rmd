@@ -53,7 +53,7 @@ The definition of the seed class will look something like this:
     setClass("ADSArraySeed",
         contains="Array",
         slots=c(
-            file="character",
+            path="character",
             ...
             ... additional slots needed
             ... to locate the array in the file
@@ -61,9 +61,9 @@ The definition of the seed class will look something like this:
         )
     )
 
-The `file` slot should be a single string that contains the absolute path
-to the ADS file so the object doesn't break when the user changes the
-working directory (e.g. with `setwd()`). Note that storing an open
+The `path` slot should be a single string that contains the absolute
+path to the ADS file so the object doesn't break when the user changes
+the working directory (e.g. with `setwd()`). Note that storing an open
 connection to the file should be avoided because connections don't work
 properly in the context of a fork (e.g. when processing the seed object
 in parallel) and tend to break when serializing the object.
@@ -72,11 +72,11 @@ in parallel) and tend to break when serializing the object.
 
 It is highly recommended to provide a "seed constructor" e.g.:
 
-    ADSArraySeed <- function(file, other args)
+    ADSArraySeed <- function(path, other args)
     {
         sanity checks
         ...
-        new("ADSArraySeed", file=file, other args)
+        new("ADSArraySeed", path=path, other args)
     }
 
 ## The seed contract
@@ -215,8 +215,8 @@ Now you should be able to construct an ADSArray object with:
 
 The `ADSArray` constructor should just do that:
 
-    ADSArray <- function(file, other args)
-        DelayedArray(ADSArraySeed(file, other args))
+    ADSArray <- function(path, other args)
+        DelayedArray(ADSArraySeed(path, other args))
 
 However, it's also nice to be able to pass an ADSArraySeed object to
 this constructor (with `ADSArray(seed)`). This can easily be supported
@@ -224,15 +224,15 @@ with something like:
 
     ### Works directly on an ADSArraySeed object, in which case it must be
     ### called with a single argument.
-    ADSArray <- function(file, other args)
+    ADSArray <- function(path, other args)
     {
-        if (is(file, "ADSArraySeed")) {
+        if (is(path, "ADSArraySeed")) {
             if (!(missing(other arg1) && missing(other arg2) && ...))
                 stop(wmsg("ADSArray() must be called with a single argument ",
                           "when passed an ADSArraySeed object"))
-            seed <- file
+            seed <- path
         } else {
-            seed <- ADSArraySeed(file, other args)
+            seed <- ADSArraySeed(path, other args)
         }
         DelayedArray(seed)
     }
