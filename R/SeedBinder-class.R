@@ -95,3 +95,22 @@ setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
 
 setMethod("extract_array", "SeedBinder", .extract_array_from_SeedBinder)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### path() getter/setter
+###
+### SeedBinder objects don't support the path() getter/setter for now.
+###
+
+setMethod("path", "SeedBinder",
+    function(object)
+        stop(wmsg("path() is not supported on a DelayedArray ",
+                  "object with multiple leaf seeds at the moment"))
+)
+
+setReplaceMethod("path", "SeedBinder",
+    function(object, ..., value)
+        stop(wmsg("the path() setter is not supported on a DelayedArray ",
+                  "object with multiple leaf seeds at the moment"))
+)
+

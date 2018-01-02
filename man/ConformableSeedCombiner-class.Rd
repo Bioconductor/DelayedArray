@@ -4,6 +4,9 @@
 \alias{dimnames,ConformableSeedCombiner-method}
 \alias{extract_array,ConformableSeedCombiner-method}
 
+\alias{path,ConformableSeedCombiner-method}
+\alias{path<-,ConformableSeedCombiner-method}
+
 \title{ConformableSeedCombiner objects}
 
 \description{

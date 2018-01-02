@@ -93,3 +93,23 @@ setMethod("extract_array", "ConformableSeedCombiner",
     .extract_array_from_ConformableSeedCombiner
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### path() getter/setter
+###
+### ConformableSeedCombiner objects don't support the path() getter/setter
+### for now.
+###
+
+setMethod("path", "ConformableSeedCombiner",
+    function(object)
+        stop(wmsg("path() is not supported on a DelayedArray ",
+                  "object with multiple leaf seeds at the moment"))
+)
+
+setReplaceMethod("path", "ConformableSeedCombiner",
+    function(object, ..., value)
+        stop(wmsg("the path() setter is not supported on a DelayedArray ",
+                  "object with multiple leaf seeds at the moment"))
+)
+

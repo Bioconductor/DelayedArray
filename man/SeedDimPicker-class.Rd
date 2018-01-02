@@ -10,6 +10,9 @@
 \alias{seed,SeedDimPicker-method}
 \alias{seed<-,SeedDimPicker-method}
 
+\alias{path,SeedDimPicker-method}
+\alias{path<-,SeedDimPicker-method}
+
 \title{SeedDimPicker objects}
 
 \description{

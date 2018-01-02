@@ -21,6 +21,9 @@
 \alias{seed<-}
 \alias{seed<-,DelayedArray-method}
 
+\alias{path,DelayedArray-method}
+\alias{path<-,DelayedArray-method}
+
 \alias{dim,DelayedArray-method}
 \alias{isEmpty,DelayedArray-method}
 

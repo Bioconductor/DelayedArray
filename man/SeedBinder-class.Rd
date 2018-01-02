@@ -4,6 +4,9 @@
 \alias{dimnames,SeedBinder-method}
 \alias{extract_array,SeedBinder-method}
 
+\alias{path,SeedBinder-method}
+\alias{path<-,SeedBinder-method}
+
 \title{SeedBinder objects}
 
 \description{

@@ -196,6 +196,30 @@ setReplaceMethod("seed", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### path() getter/setter
+###
+
+### The path of a DelayedArray object is the path of its seed so path()
+### will work only on a DelayedArray object with a seed that supports path().
+### For example it will work if the seed is an on-disk object (e.g. an
+### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
+### ordinary array or RleArraySeed object).
+setMethod("path", "DelayedArray", function(object) path(seed(object)))
+
+### The path() setter sets the path of the seed of a DelayedArray object so
+### it will work out-of-the-box on any DelayedArray object with a seed that
+### supports the path() setter. For example it will work if the seed is an
+### HDF5ArraySeed object.
+setReplaceMethod("path", "DelayedArray",
+    function(object, ..., value)
+    {
+        path(seed(object), ...) <- value
+        object
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Pristine objects
 ###
 ### A pristine DelayedArray object is an object that does not carry any

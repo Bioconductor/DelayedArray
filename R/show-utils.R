@@ -340,10 +340,13 @@ show_compact_array <- function(object)
     object_dim <- dim(object)
     dim_in1string <- paste0(object_dim, collapse=" x ")
     object_type <- type(object)
-    cat(sprintf("<%s> %s object of type \"%s\"\n",
+    cat(sprintf("<%s> %s object of type \"%s\"",
                 dim_in1string, object_class, object_type))
-    if (any(object_dim == 0L))
+    if (any(object_dim == 0L)) {
+        cat("\n")
         return()
+    }
+    cat(":\n")
     if (object_type == "integer") {
         n1 <- n2 <- 4L
     } else {
