@@ -103,6 +103,7 @@
 \usage{
 DelayedArray(seed)  # constructor function
 seed(x)             # seed getter
+path(x)             # path getter
 }
 
 \arguments{
@@ -286,12 +287,13 @@ library(HDF5Array)
 A3 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file
 A3
 is(A3, "DelayedArray")     # TRUE
-seed(A3)                   # a HDF5ArraySeed object
+seed(A3)                   # an HDF5ArraySeed object
+path(A3)
 
 B3 <- toto(A3)             # very fast! (operations are delayed)
 
-B3                         # not a HDF5Array object because now it
-                           # carries delayed operations
+B3                         # not a HDF5Array object anymore because now
+                           # it carries delayed operations
 B3 <- drop(B3)
 
 CS3 <- colSums(B3)
@@ -306,6 +308,7 @@ as(B3, "HDF5Array")        # "realize" 'B3' on disk
 ## with B3 or replace it with its "realized" version:
 B3 <- as(B3, "HDF5Array")  # no more delayed operations on new 'B3'
 seed(B3)
+path(B3)
 
 ## For convenience, realize() can be used instead of explicit coercion.
 ## The current "realization backend" controls where realization
@@ -349,7 +352,37 @@ A
 stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
 
 ## ---------------------------------------------------------------------
-## F. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
+## F. MODIFY THE PATH OF A DelayedArray OBJECT
+## ---------------------------------------------------------------------
+## This can be useful if the file containing the array data is on a
+## shared partition but the exact path to the partition depends on the
+## machine from which the data is being accessed.
+## For example:
+
+\dontrun{
+A <- HDF5Array("path/to/my_precious_data.h5")
+path(A)
+## Operate on A...
+## Now A carries delayed operations.
+## Make sure path(A) still works:
+path(A)
+## Save A:
+save(A, file="A.rda")
+## A.rda should be small (it doesn't contain the array data). Send it
+## to a co-worker that has access to my_precious_data.h5.
+## Co-worker loads it:
+load("A.rda")
+path(A)
+## A is broken because path(A) is incorrect for co-worker:
+A  # error!
+## Co-worker fixes the path:
+dirname(A) <- "E:/path/to/my_precious_data.h5"
+## A "works" again:
+A
+}
+
+## ---------------------------------------------------------------------
+## G. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 \dontrun{
 library(Matrix)
