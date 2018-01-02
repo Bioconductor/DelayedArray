@@ -104,6 +104,7 @@
 DelayedArray(seed)  # constructor function
 seed(x)             # seed getter
 path(x)             # path getter
+type(x)
 }
 
 \arguments{
@@ -135,12 +136,12 @@ path(x)             # path getter
 \section{Accessors}{
   DelayedArray objects support the same set of getters as ordinary arrays
   i.e. \code{dim()}, \code{length()}, and \code{dimnames()}.
-  In addition, they support \code{type()}, which is the DelayedArray
-  equivalent of \code{typeof()} or \code{storage.mode()} for ordinary
-  arrays. Note that, for convenience and consistency, \code{type()} also
-  works on ordinary arrays.
+  In addition, they support \code{seed()}, \code{path()}, and \code{type()}.
+  \code{type()} is the DelayedArray equivalent of \code{typeof()} (or
+  \code{storage.mode()}) for ordinary arrays. Note that, for convenience
+  and consistency, \code{type()} also works on ordinary arrays.
 
-  Only \code{dimnames()} is supported as a setter.
+  \code{dimnames()}, \code{seed()}, and \code{path()} also work as setters.
 }
 
 \section{Subsetting}{
@@ -288,7 +289,6 @@ A3 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file
 A3
 is(A3, "DelayedArray")     # TRUE
 seed(A3)                   # an HDF5ArraySeed object
-path(A3)
 
 B3 <- toto(A3)             # very fast! (operations are delayed)
 
@@ -360,23 +360,31 @@ stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
 ## For example:
 
 \dontrun{
-A <- HDF5Array("path/to/my_precious_data.h5")
+A <- HDF5Array("/path/to/lab_data/my_precious_data.h5")
 path(A)
+
 ## Operate on A...
 ## Now A carries delayed operations.
 ## Make sure path(A) still works:
 path(A)
+
 ## Save A:
 save(A, file="A.rda")
-## A.rda should be small (it doesn't contain the array data). Send it
-## to a co-worker that has access to my_precious_data.h5.
+
+## A.rda should be small (it doesn't contain the array data).
+## Send it to a co-worker that has access to my_precious_data.h5.
+
 ## Co-worker loads it:
 load("A.rda")
 path(A)
+
 ## A is broken because path(A) is incorrect for co-worker:
 A  # error!
-## Co-worker fixes the path:
-dirname(A) <- "E:/path/to/my_precious_data.h5"
+
+## Co-worker fixes the path (in this case this is better done using the
+## dirname() setter rather than the path() setter):
+dirname(A) <- "E:/other/path/to/lab_data"
+
 ## A "works" again:
 A
 }
