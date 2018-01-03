@@ -335,7 +335,11 @@ setMethod("dim", "ArrayRegularGrid",
 ### Constructors
 
 ArrayArbitraryGrid <- function(tickmarks)
+{
+    if (!is.list(tickmarks))
+        stop(wmsg("'tickmarks' must be a list"))
     new("ArrayArbitraryGrid", tickmarks=tickmarks)
+}
 
 ### Note that none of the dimensions of an ArrayRegularGrid object can be 0,
 ### even when some dimensions of the reference array are 0 (in which case,
@@ -347,7 +351,19 @@ ArrayArbitraryGrid <- function(tickmarks)
 ### If 'spacings' is omitted, return a grid with a single grid element
 ### covering the whole reference array.
 ArrayRegularGrid <- function(refdim, spacings=refdim)
+{
+    if (!is.numeric(refdim))
+        stop(wmsg("'refdim' must be an integer vector"))
+    if (!is.integer(refdim))
+        refdim <- as.integer(refdim)
+    if (!is.numeric(spacings))
+        stop(wmsg("'spacings' must be an integer vector"))
+    if (!is.integer(spacings))
+        spacings <- as.integer(spacings)
+    if (length(refdim) != length(spacings))
+        stop(wmsg("'refdim' and 'spacings' must have the same length"))
     new("ArrayRegularGrid", refdim=refdim, spacings=spacings)
+}
 
 ### [[
 

@@ -36,10 +36,9 @@
 {
     .normarg_dims(dims, "rowSums")
     .get_ans_type(x)  # check input type
-    APPLY <- function(m) rowSums(m, na.rm=na.rm)
-    COMBINE <- function(b, m, init, reduced) { init + reduced }
-    init <- numeric(nrow(x))
-    ans <- colblock_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
+    grid <- defaultGrid(x)
+    ans_list <- blockApply(x, rowSums, na.rm=na.rm, grid=grid)
+    ans <- rowSums(matrix(unlist(ans_list, use.names=FALSE), nrow=nrow(x)))
     setNames(ans, rownames(x))
 }
 

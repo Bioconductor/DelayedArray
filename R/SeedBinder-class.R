@@ -103,7 +103,7 @@ setMethod("extract_array", "SeedBinder", .extract_array_from_SeedBinder)
 ###
 
 setMethod("path", "SeedBinder",
-    function(object)
+    function(object, ...)
         stop(wmsg("path() is not supported on a DelayedArray ",
                   "object with multiple leaf seeds at the moment"))
 )

@@ -178,7 +178,9 @@ setReplaceMethod("seed", "SeedDimPicker",
 ### For example it will work if the seed is an on-disk object (e.g. an
 ### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
 ### ordinary array or RleArraySeed object).
-setMethod("path", "SeedDimPicker", function(object) path(seed(object)))
+setMethod("path", "SeedDimPicker",
+    function(object, ...) path(seed(object), ...)
+)
 
 ### The path() setter sets the path of the seed of a SeedDimPicker object so
 ### it will work out-of-the-box on any SeedDimPicker object with a seed that

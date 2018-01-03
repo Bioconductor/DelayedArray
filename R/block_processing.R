@@ -95,6 +95,67 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
         })
 }
 
+defaultGrid <- function(x)
+{
+    max_block_len <- get_max_block_length(type(x))
+    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
+    ArrayRegularGrid(dim(x), spacings)
+}
+
+.normarg_grid <- function(grid, x)
+{
+    if (is.null(grid))
+        return(defaultGrid(x))
+    if (!is(grid, "ArrayGrid"))
+        stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
+    if (!identical(refdim(grid), dim(x)))
+        stop(wmsg("'grid' is incompatible with 'x'"))
+    grid
+}
+
+### 'x' must be an array-like object.
+### 'FUN' is the function to be applied to each block of array-like object 'x'.
+### It must take at least 1 argument which is the current array block as an
+### ordinay array or matrix.
+### 'grid' must be an ArrayGrid object describing the block partitioning
+### of 'x'. If not supplied, the grid returned by 'defaultGrid(x)' is used.
+### The effective grid (i.e. 'grid' or 'defaultGrid(x)') can be obtained
+### from within 'FUN' with 'effectiveGrid()'.
+### The current block number can be obtained from within 'FUN' with
+### 'currentBlockId()'.
+### The ArrayViewport object describing the current block can be obtained
+### from within 'FUN' with 'effectiveGrid()[[currentBlockId()]]'.
+### 'BPREDO' and 'BPPARAM' are passed to bplapply(). In theory, the best
+### performance should be obtained when bplapply() uses a post office queue
+### model. According to https://support.bioconductor.org/p/96856/#96888, this
+### can be achieved by setting the nb of tasks to the nb of blocks (i.e. with
+### BPPARAM=MulticoreParam(tasks=length(grid))). However, in practice, that
+### seems to be slower than using tasks=0 (the default). Investigate this!
+blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
+{
+    grid <- .normarg_grid(grid, x)
+    assign("effectiveGrid", function() grid, envir=environment(FUN))
+    nblock <- length(grid)
+    bplapply(seq_len(nblock),
+        function(b) {
+            if (get_verbose_block_processing())
+                message("Processing block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            assign("currentBlockId", function() b, envir=environment(FUN))
+            viewport <- grid[[b]]
+            block <- extract_block(x, viewport)
+            if (!is.array(block))
+                block <- .as_array_or_matrix(block)
+            block_ans <- FUN(block, ...)
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
+        },
+        BPREDO=BPREDO,
+        BPPARAM=BPPARAM
+    )
+}
+
 ### A mapply-like function for conformable arrays.
 block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
 {

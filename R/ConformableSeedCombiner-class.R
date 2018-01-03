@@ -102,7 +102,7 @@ setMethod("extract_array", "ConformableSeedCombiner",
 ###
 
 setMethod("path", "ConformableSeedCombiner",
-    function(object)
+    function(object, ...)
         stop(wmsg("path() is not supported on a DelayedArray ",
                   "object with multiple leaf seeds at the moment"))
 )

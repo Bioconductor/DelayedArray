@@ -6,7 +6,6 @@
 \alias{extract_array,data.frame-method}
 \alias{extract_array,DataFrame-method}
 
-\alias{type}
 \alias{type,array-method}
 \alias{type,ANY-method}
 

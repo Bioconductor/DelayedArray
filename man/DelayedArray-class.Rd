@@ -21,8 +21,11 @@
 \alias{seed<-}
 \alias{seed<-,DelayedArray-method}
 
+\alias{path}
 \alias{path,DelayedArray-method}
 \alias{path<-,DelayedArray-method}
+
+\alias{type}
 
 \alias{dim,DelayedArray-method}
 \alias{isEmpty,DelayedArray-method}
@@ -103,7 +106,7 @@
 \usage{
 DelayedArray(seed)  # constructor function
 seed(x)             # seed getter
-path(x)             # path getter
+path(object, ...)   # path getter
 type(x)
 }
 
@@ -111,8 +114,11 @@ type(x)
   \item{seed}{
     An array-like object.
   }
-  \item{x}{
+  \item{x, object}{
     A DelayedArray object.
+  }
+  \item{...}{
+    Additional arguments passed to methods.
   }
 }
 
