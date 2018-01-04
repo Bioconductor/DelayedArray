@@ -134,14 +134,17 @@ defaultGrid <- function(x)
 blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 {
     grid <- .normarg_grid(grid, x)
-    assign("effectiveGrid", function() grid, envir=environment(FUN))
+    FUN_envir <- environment(FUN)
+    if (!is.null(FUN_envir))
+        assign("effectiveGrid", function() grid, envir=FUN_envir)
     nblock <- length(grid)
     bplapply(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            assign("currentBlockId", function() b, envir=environment(FUN))
+            if (!is.null(FUN_envir))
+                assign("currentBlockId", function() b, envir=FUN_envir)
             viewport <- grid[[b]]
             block <- extract_block(x, viewport)
             if (!is.array(block))
