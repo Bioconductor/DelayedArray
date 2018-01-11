@@ -3,10 +3,11 @@ importFrom(stats, setNames,
                   dbinom, pbinom, qbinom,
                   dpois, ppois, qpois,
                   dlogis, plogis, qlogis)
+import(matrixStats)
 import(BiocGenerics)
 import(S4Vectors)
 import(IRanges)
-import(matrixStats)
+import(BiocParallel)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
