@@ -309,7 +309,7 @@ RleArraySeed <- function(rle, dim, dimnames=NULL, chunksize=NULL)
     sink <- RleRealizationSink(dim, dimnames, type)
     ## FIXME: breakInChunks() does not accept a 'totalsize' >= 2^31 at the
     ## moment so this won't work on a long Rle.
-    partitioning <- breakInChunks(length(rle), chunksize)
+    partitioning <- breakInChunks(length(rle), chunksize=chunksize)
     rle_list <- relist(rle, partitioning)
     for (k in seq_along(rle_list))
         .append_Rle_to_sink(rle_list[[k]], sink)
