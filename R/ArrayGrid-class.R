@@ -154,7 +154,9 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
             }
         )
     }
-    Nindex[expand_idx] <- as.list(viewport_ranges[expand_idx])
+    Nindex[expand_idx] <- as.list(as(viewport_ranges[expand_idx],
+                                     "CompressedIntegerList"))
+
     Nindex
 }
 
