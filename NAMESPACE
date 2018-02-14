@@ -170,7 +170,7 @@ export(
     refdim, isLinear,
 
     ## extract_array.R:
-    extract_array, type,
+    extract_array, type, chunkdim,
 
     ## SeedDimPicker-class.R:
     aperm, seed, "seed<-",
@@ -193,7 +193,7 @@ export(
 exportMethods(
     arbind, acbind,
     refdim, isLinear,
-    extract_array, type,
+    extract_array, type, chunkdim,
     aperm, seed, "seed<-",
     matrixClass, DelayedArray,
     chunk_dim, write_block_to_sink, close,

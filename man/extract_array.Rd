@@ -9,6 +9,9 @@
 \alias{type,array-method}
 \alias{type,ANY-method}
 
+\alias{chunkdim}
+\alias{chunkdim,ANY-method}
+
 \title{extract_array}
 
 \description{

@@ -298,8 +298,8 @@ seed(A3)                   # an HDF5ArraySeed object
 
 B3 <- toto(A3)             # very fast! (operations are delayed)
 
-B3                         # not a HDF5Array object anymore because now
-                           # it carries delayed operations
+B3                         # not an HDF5Array object anymore because
+                           # now it carries delayed operations
 B3 <- drop(B3)
 
 CS3 <- colSums(B3)

@@ -130,6 +130,7 @@ setMethod("extract_array", "DataFrame",
 ### type() generic and default method
 ###
 
+### Conflicts with Biostrings::type!
 setGeneric("type", function(x) standardGeneric("type"))
 
 setMethod("type", "array", function(x) typeof(x))
@@ -143,4 +144,13 @@ setMethod("type", "ANY",
         type(extract_array(x, index))
     }
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### chunkdim() generic and default method
+###
+
+setGeneric("chunkdim", function(x) standardGeneric("chunkdim"))
+
+setMethod("chunkdim", "ANY", function(x) NULL)
 
