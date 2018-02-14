@@ -687,7 +687,7 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
 
     max_block_len <- get_max_block_length(type(x))
     spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- ArrayRegularGrid(dim(x), spacings)
+    grid <- RegularArrayGrid(dim(x), spacings)
     nblock <- length(grid)
 
     breakpoints <- cumsum(lengths(grid))

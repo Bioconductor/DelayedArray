@@ -73,7 +73,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
     if (is.null(max_block_len))
         max_block_len <- get_max_block_length(type(x))
     spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- ArrayRegularGrid(dim(x), spacings)
+    grid <- RegularArrayGrid(dim(x), spacings)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -99,7 +99,7 @@ defaultGrid <- function(x)
 {
     max_block_len <- get_max_block_length(type(x))
     spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    ArrayRegularGrid(dim(x), spacings)
+    RegularArrayGrid(dim(x), spacings)
 }
 
 .normarg_grid <- function(grid, x)
@@ -192,7 +192,7 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
         max_block_len <- min(get_max_block_length(types))
     }
     spacings <- get_max_spacings_for_linear_blocks(x_dim, max_block_len)
-    grid <- ArrayRegularGrid(x_dim, spacings)
+    grid <- RegularArrayGrid(x_dim, spacings)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -229,7 +229,7 @@ block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
     if (is.null(max_block_len))
         max_block_len <- get_max_block_length(type(x))
     spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- ArrayRegularGrid(dim(x), spacings)
+    grid <- RegularArrayGrid(dim(x), spacings)
     nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())

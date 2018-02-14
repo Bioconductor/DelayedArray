@@ -184,8 +184,8 @@ replace_block <- function(x, viewport, block)
 ###
 ### An ArrayGrid object represents a grid on top of an array (called "the
 ### reference array" or "the underlying array"). The ArrayGrid class is a
-### virtual class with 2 concrete subclasses, ArrayArbitraryGrid and
-### ArrayRegularGrid, for representing an arbitrarily-spaced or a
+### virtual class with 2 concrete subclasses, ArbitraryArrayGrid and
+### RegularArrayGrid, for representing an arbitrarily-spaced or a
 ### regularly-spaced grid, respectively. The API we implement on these objects
 ### is divided into 3 groups of methods:
 ###   1) One special method:
@@ -213,7 +213,7 @@ setClass("ArrayGrid",
     prototype(elementType="ArrayViewport")
 )
 
-setClass("ArrayArbitraryGrid",
+setClass("ArbitraryArrayGrid",
     contains="ArrayGrid",
     representation(
         tickmarks="list"      # A list of integer vectors, one along each
@@ -224,7 +224,7 @@ setClass("ArrayArbitraryGrid",
     )
 )
 
-setClass("ArrayRegularGrid",
+setClass("RegularArrayGrid",
     contains="ArrayGrid",
     representation(
         refdim="integer",     # Dimensions of the reference array.
@@ -234,25 +234,25 @@ setClass("ArrayRegularGrid",
 
 ### Low-level helpers
 
-.get_ArrayArbitraryGrid_spacings_along <- function(x, along)
+.get_ArbitraryArrayGrid_spacings_along <- function(x, along)
     S4Vectors:::diffWithInitialZero(x@tickmarks[[along]])
 
-.get_ArrayArbitraryGrid_max_spacings <- function(x)
+.get_ArbitraryArrayGrid_max_spacings <- function(x)
 {
     vapply(seq_along(x@tickmarks),
            function(along)
-               max(0L, .get_ArrayArbitraryGrid_spacings_along(x, along)),
+               max(0L, .get_ArbitraryArrayGrid_spacings_along(x, along)),
            integer(1))
 }
 
-.get_ArrayRegularGrid_dim <- function(refdim, spacings)
+.get_RegularArrayGrid_dim <- function(refdim, spacings)
 {
     ans <- refdim %/% spacings + (refdim %% spacings != 0L)
     ans[is.na(ans)] <- 1L
     ans
 }
 
-.get_ArrayRegularGrid_spacings_along <- function(x, along)
+.get_RegularArrayGrid_spacings_along <- function(x, along)
 {
     D <- x@refdim[[along]]
     if (D == 0L)
@@ -271,7 +271,7 @@ setClass("ArrayRegularGrid",
 {
     is.integer(tm) && !S4Vectors:::anyMissingOrOutside(tm, 0L) && isSorted(tm)
 }
-.validate_ArrayArbitraryGrid <- function(x)
+.validate_ArbitraryArrayGrid <- function(x)
 {
     x_tickmarks <- x@tickmarks
     if (!is.list(x_tickmarks))
@@ -280,15 +280,15 @@ setClass("ArrayRegularGrid",
     if (!all(ok))
         return(wmsg2("each list element in 'tickmarks' slot must be a ",
                      "sorted integer vector of non-negative values"))
-    max_spacings <- .get_ArrayArbitraryGrid_max_spacings(x)
+    max_spacings <- .get_ArbitraryArrayGrid_max_spacings(x)
     if (prod(max_spacings) > .Machine$integer.max)
         return(wmsg2("grid is too coarse (all grid elements must have a ",
                      "length <= .Machine$integer.max)"))
     TRUE
 }
-setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
+setValidity2("ArbitraryArrayGrid", .validate_ArbitraryArrayGrid)
 
-.validate_ArrayRegularGrid <- function(x)
+.validate_RegularArrayGrid <- function(x)
 {
     msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
@@ -312,11 +312,11 @@ setValidity2("ArrayArbitraryGrid", .validate_ArrayArbitraryGrid)
                      "length <= .Machine$integer.max)"))
     TRUE
 }
-setValidity2("ArrayRegularGrid", .validate_ArrayRegularGrid)
+setValidity2("RegularArrayGrid", .validate_RegularArrayGrid)
 
 ### Getters
 
-setMethod("refdim", "ArrayArbitraryGrid",
+setMethod("refdim", "ArbitraryArrayGrid",
     function(x)
     {
         mapply(function(tm, tm_len) if (tm_len == 0L) 0L else tm[[tm_len]],
@@ -326,33 +326,33 @@ setMethod("refdim", "ArrayArbitraryGrid",
     }
 )
 
-setMethod("refdim", "ArrayRegularGrid", function(x) x@refdim)
+setMethod("refdim", "RegularArrayGrid", function(x) x@refdim)
 
-setMethod("dim", "ArrayArbitraryGrid", function(x) lengths(x@tickmarks))
+setMethod("dim", "ArbitraryArrayGrid", function(x) lengths(x@tickmarks))
 
-setMethod("dim", "ArrayRegularGrid",
-    function(x) .get_ArrayRegularGrid_dim(refdim(x), x@spacings)
+setMethod("dim", "RegularArrayGrid",
+    function(x) .get_RegularArrayGrid_dim(refdim(x), x@spacings)
 )
 
 ### Constructors
 
-ArrayArbitraryGrid <- function(tickmarks)
+ArbitraryArrayGrid <- function(tickmarks)
 {
     if (!is.list(tickmarks))
         stop(wmsg("'tickmarks' must be a list"))
-    new("ArrayArbitraryGrid", tickmarks=tickmarks)
+    new("ArbitraryArrayGrid", tickmarks=tickmarks)
 }
 
-### Note that none of the dimensions of an ArrayRegularGrid object can be 0,
+### Note that none of the dimensions of an RegularArrayGrid object can be 0,
 ### even when some dimensions of the reference array are 0 (in which case,
 ### the corresponding dimensions of the grid object are set to 1). As a
-### consequence, an ArrayRegularGrid object always contains at least 1 grid
+### consequence, an RegularArrayGrid object always contains at least 1 grid
 ### element. Each dimension of the first grid element is always equal to the
-### spacing along that dimension i.e. for any ArrayRegularGrid object,
+### spacing along that dimension i.e. for any RegularArrayGrid object,
 ### 'dim(grid[[1]])' is identical to 'spacings'.
 ### If 'spacings' is omitted, return a grid with a single grid element
 ### covering the whole reference array.
-ArrayRegularGrid <- function(refdim, spacings=refdim)
+RegularArrayGrid <- function(refdim, spacings=refdim)
 {
     if (!is.numeric(refdim))
         stop(wmsg("'refdim' must be an integer vector"))
@@ -364,19 +364,19 @@ ArrayRegularGrid <- function(refdim, spacings=refdim)
         spacings <- as.integer(spacings)
     if (length(refdim) != length(spacings))
         stop(wmsg("'refdim' and 'spacings' must have the same length"))
-    new("ArrayRegularGrid", refdim=refdim, spacings=spacings)
+    new("RegularArrayGrid", refdim=refdim, spacings=spacings)
 }
 
 ### [[
 
-setMethod("getArrayElement", "ArrayArbitraryGrid",
+setMethod("getArrayElement", "ArbitraryArrayGrid",
     function(x, subscripts)
     {
         x_refdim <- refdim(x)
         ans_end <- mapply(`[[`, x@tickmarks, subscripts)
         ans_width <- mapply(
             function(along, i)
-                .get_ArrayArbitraryGrid_spacings_along(x, along)[[i]],
+                .get_ArbitraryArrayGrid_spacings_along(x, along)[[i]],
             seq_along(x_refdim),
             subscripts)
         ans_ranges <- IRanges(end=ans_end, width=ans_width)
@@ -384,7 +384,7 @@ setMethod("getArrayElement", "ArrayArbitraryGrid",
     }
 )
 
-setMethod("getArrayElement", "ArrayRegularGrid",
+setMethod("getArrayElement", "RegularArrayGrid",
     function(x, subscripts)
     {
         x_refdim <- refdim(x)
@@ -401,11 +401,11 @@ setMethod("getArrayElement", "ArrayRegularGrid",
 setGeneric("get_spacings_along", signature="x",
     function(x, along) standardGeneric("get_spacings_along")
 )
-setMethod("get_spacings_along", "ArrayArbitraryGrid",
-    .get_ArrayArbitraryGrid_spacings_along
+setMethod("get_spacings_along", "ArbitraryArrayGrid",
+    .get_ArbitraryArrayGrid_spacings_along
 )
-setMethod("get_spacings_along", "ArrayRegularGrid",
-    .get_ArrayRegularGrid_spacings_along
+setMethod("get_spacings_along", "RegularArrayGrid",
+    .get_RegularArrayGrid_spacings_along
 )
 
 ### Equivalent to 'vapply(x, length, integer(1))' but faster.
@@ -464,7 +464,7 @@ setMethod("show", "ArrayGrid",
 ###
 ###    max_block_len <- get_max_block_length(type(x))
 ###    spacings <- get_max_spacings_for_hypercube_blocks(dim(x), max_block_len)
-###    grid <- ArrayRegularGrid(dim(x), spacings)
+###    grid <- RegularArrayGrid(dim(x), spacings)
 ###
 ### NOT exported but used in HDF5Array!
 get_max_spacings_for_hypercube_blocks <- function(refdim, max_block_len)
@@ -490,8 +490,8 @@ get_max_spacings_for_hypercube_blocks <- function(refdim, max_block_len)
         spacings[is_max] <- L
     }
     spacings[is_max] <- as.integer(L)
-    q <- .get_ArrayRegularGrid_dim(refdim, spacings + 1L) /
-         .get_ArrayRegularGrid_dim(refdim, spacings)
+    q <- .get_RegularArrayGrid_dim(refdim, spacings + 1L) /
+         .get_RegularArrayGrid_dim(refdim, spacings)
     for (along in which(is_max)[order(q[is_max])]) {
         spacings[[along]] <- spacings[[along]] + 1L
         p <- prod(spacings)
@@ -543,7 +543,7 @@ setMethod("isLinear", "ArrayGrid",
 ###
 ###    max_block_len <- get_max_block_length(type(x))
 ###    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-###    grid <- ArrayRegularGrid(dim(x), spacings)
+###    grid <- RegularArrayGrid(dim(x), spacings)
 ###
 ### All the grid elements are guaranteed to have a length <= 'max_block_len'.
 ### NOT exported but used in HDF5Array!
@@ -570,7 +570,7 @@ get_max_spacings_for_linear_blocks <- function(refdim, max_block_len)
 split_array_in_linear_blocks <- function(x, max_block_len)
 {
     spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- ArrayRegularGrid(dim(x), spacings)
+    grid <- RegularArrayGrid(dim(x), spacings)
     lapply(grid, function(viewport) extract_block(x, viewport))
 }
 

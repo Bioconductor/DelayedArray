@@ -37,9 +37,9 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
     ## length so that each block is made of at least one column.
     max_block_len <- max(get_max_block_length(type(y)), nrow(y))
     spacings <- get_max_spacings_for_linear_blocks(dim(y), max_block_len)
-    y_grid <- ArrayRegularGrid(dim(y), spacings)
+    y_grid <- RegularArrayGrid(dim(y), spacings)
     spacings[[1L]] <- ans_dim[[1L]]
-    ans_grid <- ArrayRegularGrid(ans_dim, spacings)  # parallel to 'y_grid'
+    ans_grid <- RegularArrayGrid(ans_dim, spacings)  # parallel to 'y_grid'
     nblock <- length(y_grid)  # same as 'length(ans_grid)'
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())

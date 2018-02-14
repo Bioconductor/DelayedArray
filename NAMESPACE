@@ -16,7 +16,7 @@ import(BiocParallel)
 
 exportClasses(
     Array,
-    ArrayViewport, ArrayGrid, ArrayArbitraryGrid, ArrayRegularGrid,
+    ArrayViewport, ArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
     DelayedArray, DelayedMatrix,
     RealizationSink, arrayRealizationSink,
     RleArraySeed, SolidRleArraySeed, RleRealizationSink, ChunkedRleArraySeed,
@@ -150,7 +150,7 @@ exportMethods(
 
 export(
     ArrayViewport, makeNindexFromArrayViewport,
-    ArrayArbitraryGrid, ArrayRegularGrid,
+    ArbitraryArrayGrid, RegularArrayGrid,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
     defaultGrid, blockApply, effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,

@@ -302,7 +302,7 @@
         }
     }
     spacings <- get_max_spacings_for_linear_blocks(x_dim, prod(x_dim[1:2]))
-    grid <- ArrayRegularGrid(x_dim, spacings)
+    grid <- RegularArrayGrid(x_dim, spacings)
     nblock <- length(grid)
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)

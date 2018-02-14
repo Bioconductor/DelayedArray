@@ -21,18 +21,18 @@
 \alias{ArrayGrid-class}
 \alias{ArrayGrid}
 
-\alias{class:ArrayArbitraryGrid}
-\alias{ArrayArbitraryGrid-class}
-\alias{ArrayArbitraryGrid}
+\alias{class:ArbitraryArrayGrid}
+\alias{ArbitraryArrayGrid-class}
+\alias{ArbitraryArrayGrid}
 
-\alias{class:ArrayRegularGrid}
-\alias{ArrayRegularGrid-class}
-\alias{ArrayRegularGrid}
+\alias{class:RegularArrayGrid}
+\alias{RegularArrayGrid-class}
+\alias{RegularArrayGrid}
 
-\alias{refdim,ArrayArbitraryGrid-method}
-\alias{refdim,ArrayRegularGrid-method}
-\alias{dim,ArrayArbitraryGrid-method}
-\alias{dim,ArrayRegularGrid-method}
+\alias{refdim,ArbitraryArrayGrid-method}
+\alias{refdim,RegularArrayGrid-method}
+\alias{dim,ArbitraryArrayGrid-method}
+\alias{dim,RegularArrayGrid-method}
 \alias{as.character.ArrayGrid}
 \alias{as.character,ArrayGrid-method}
 \alias{lengths,ArrayGrid-method}
@@ -55,7 +55,7 @@
 ## ---------------------------------------------------------------------
 
 ## Create a regularly-spaced grid on top of a 3700 x 100 x 33 array:
-grid <- ArrayRegularGrid(c(3700L, 100L, 33L), c(250L, 100L, 10L))
+grid <- RegularArrayGrid(c(3700L, 100L, 33L), c(250L, 100L, 10L))
 
 ## Dimensions of the reference array:
 refdim(grid)
@@ -112,7 +112,7 @@ viewport2 <- ArrayViewport(dim(m0), IRanges(c(1, 3), width=block_dim))
 replace_block(m0, viewport2, block1 + 100L)
 
 ## Using a grid:
-grid <- ArrayRegularGrid(dim(m0), spacings=c(3L, 2L))
+grid <- RegularArrayGrid(dim(m0), spacings=c(3L, 2L))
 grid
 extract_block(m0, grid[[3L]])
 extract_block(m0, grid[[1L, 3L]])
