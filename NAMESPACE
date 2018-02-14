@@ -152,7 +152,8 @@ export(
     ArrayViewport, makeNindexFromArrayViewport,
     ArrayArbitraryGrid, ArrayRegularGrid,
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
-    defaultGrid, blockApply, write_array_to_sink,
+    defaultGrid, blockApply, effectiveGrid, currentBlockId, currentViewport,
+    write_array_to_sink,
     RleArray
 )
 

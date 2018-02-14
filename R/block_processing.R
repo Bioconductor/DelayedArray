@@ -114,17 +114,16 @@ defaultGrid <- function(x)
 }
 
 ### 'x' must be an array-like object.
-### 'FUN' is the function to be applied to each block of array-like object 'x'.
-### It must take at least 1 argument which is the current array block as an
-### ordinay array or matrix.
+### 'FUN' is the callback function to be applied to each block of array-like
+### object 'x'. It must take at least 1 argument which is the current array
+### block as an ordinay array or matrix.
 ### 'grid' must be an ArrayGrid object describing the block partitioning
 ### of 'x'. If not supplied, the grid returned by 'defaultGrid(x)' is used.
-### The effective grid (i.e. 'grid' or 'defaultGrid(x)') can be obtained
-### from within 'FUN' with 'effectiveGrid()'.
-### The current block number can be obtained from within 'FUN' with
-### 'currentBlockId()'.
-### The ArrayViewport object describing the current block can be obtained
-### from within 'FUN' with 'effectiveGrid()[[currentBlockId()]]'.
+### The effective grid (i.e. 'grid' or 'defaultGrid(x)'), current block number,
+### and current viewport (i.e. the ArrayViewport object describing the position
+### of the current block w.r.t. the effective grid), can be obtained from
+### within 'FUN' with 'effectiveGrid(block)', 'currentBlockId(block)', and
+### 'currentViewport(block)', respectively.
 ### 'BPREDO' and 'BPPARAM' are passed to bplapply(). In theory, the best
 ### performance should be obtained when bplapply() uses a post office queue
 ### model. According to https://support.bioconductor.org/p/96856/#96888, this
@@ -134,21 +133,18 @@ defaultGrid <- function(x)
 blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 {
     grid <- .normarg_grid(grid, x)
-    FUN_envir <- environment(FUN)
-    if (!is.null(FUN_envir))
-        assign("effectiveGrid", function() grid, envir=FUN_envir)
     nblock <- length(grid)
     bplapply(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            if (!is.null(FUN_envir))
-                assign("currentBlockId", function() b, envir=FUN_envir)
             viewport <- grid[[b]]
             block <- extract_block(x, viewport)
             if (!is.array(block))
                 block <- .as_array_or_matrix(block)
+            attr(block, "from_grid") <- grid
+            attr(block, "block_id") <- b
             block_ans <- FUN(block, ...)
             if (get_verbose_block_processing())
                 message("OK")
@@ -158,6 +154,29 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
         BPPARAM=BPPARAM
     )
 }
+
+effectiveGrid <- function(block)
+{
+    if (!is.array(block))
+        stop("'block' must be an ordinary array")
+    if (!("from_grid" %in% names(attributes(block))))
+        stop(wmsg("'block' has no \"from_grid\" attribute. ",
+                  "Was effectiveGrid() called in a blockApply() loop?"))
+    attr(block, "from_grid", exact=TRUE)
+}
+
+currentBlockId <- function(block)
+{
+    if (!is.array(block))
+        stop("'block' must be an ordinary array")
+    if (!("block_id" %in% names(attributes(block))))
+        stop(wmsg("'block' has no \"block_id\" attribute. ",
+                  "Was currentBlockId() called in a blockApply() loop?"))
+    attr(block, "block_id", exact=TRUE)
+}
+
+currentViewport <- function(block)
+    effectiveGrid(block)[[currentBlockId(block)]]
 
 ### A mapply-like function for conformable arrays.
 block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
