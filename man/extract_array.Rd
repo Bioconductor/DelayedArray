@@ -12,6 +12,10 @@
 \alias{chunkdim}
 \alias{chunkdim,ANY-method}
 
+\alias{class:integer_OR_NULL}
+\alias{integer_OR_NULL-class}
+\alias{integer_OR_NULL}
+
 \title{extract_array}
 
 \description{

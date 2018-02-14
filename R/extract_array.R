@@ -149,8 +149,15 @@ setMethod("type", "ANY",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### chunkdim() generic and default method
 ###
+### chunkdim(x) must return NULL or an integer vector parallel to dim(x).
+###
 
 setGeneric("chunkdim", function(x) standardGeneric("chunkdim"))
 
 setMethod("chunkdim", "ANY", function(x) NULL)
+
+### For use in *Seed classes that use a slot to store the chunkdim. See for
+### example the "chunkdim" slot of the HDF5ArraySeed class defined in the
+### HDF5Array package.
+setClassUnion("integer_OR_NULL", c("integer", "NULL"))
 

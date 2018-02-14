@@ -15,10 +15,22 @@ import(BiocParallel)
 ###
 
 exportClasses(
+    ## Array-class.R:
     Array,
+
+    ## ArrayGrid-class.R:
     ArrayViewport, ArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
+
+    ## extract_array.R:
+    integer_OR_NULL,
+
+    ## DelayedArray-class.R:
     DelayedArray, DelayedMatrix,
+
+    ## realize.R:
     RealizationSink, arrayRealizationSink,
+
+    ## RleArray-class.R:
     RleArraySeed, SolidRleArraySeed, RleRealizationSink, ChunkedRleArraySeed,
     RleArray, RleMatrix
 )
@@ -149,11 +161,18 @@ exportMethods(
 ###
 
 export(
+    ## ArrayGrid-class.R:
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
+
+    ## realize.R:
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
+
+    ## block_processing.R:
     defaultGrid, blockApply, effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,
+
+    ## RleArray-class.R:
     RleArray
 )
 
