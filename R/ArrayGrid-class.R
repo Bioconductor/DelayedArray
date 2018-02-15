@@ -455,22 +455,20 @@ setMethod("show", "ArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get_max_spacings_for_hypercube_blocks()
+### get_spacings_for_hypercube_capped_length_blocks()
 ###
-
-### Typically used to create a grid that divides the reference array 'x' into
-### blocks that have a shape that is as close as possible to an hypercube
-### (while having their length <= 'max_block_len'):
-###
-###    max_block_len <- get_max_block_length(type(x))
-###    spacings <- get_max_spacings_for_hypercube_blocks(dim(x), max_block_len)
-###    grid <- RegularArrayGrid(dim(x), spacings)
-###
+### Typically used to create a regular grid with a first block that is as
+### close as possible to an hypercube and that has a length as close as
+### possibe to (but not bigger than) 'max_block_len'.
 ### NOT exported but used in HDF5Array!
-get_max_spacings_for_hypercube_blocks <- function(refdim, max_block_len)
+get_spacings_for_hypercube_capped_length_blocks <-
+    function(refdim, max_block_len)
 {
     if (!isSingleNumber(max_block_len))
-        stop("'max_block_len' must be a single number")
+        stop("'max_block_len' must be a single integer")
+    if (!is.integer(max_block_len))
+        max_block_len <- as.integer(max_block_len)
+
     p <- prod(refdim)
     if (p <= max_block_len)
         return(refdim)
@@ -507,13 +505,12 @@ get_max_spacings_for_hypercube_blocks <- function(refdim, max_block_len)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Grids with "linear grid elements"
+### Linear blocks
 ###
-### The grid elements are said to be "linear" if they divide the reference
-### array in "linear blocks", i.e. in blocks that would be made of array
-### elements contiguous in memory if the reference array was an ordinary R
-### array (where the fastest changing dimension is the first one).
-### Note that if the 1st grid element is linear, then they all are.
+### An array block is "linear" if it would be made of elements contiguous in
+### memory if the reference array was an ordinary R array (where the fastest
+### changing dimension is the first one).
+### A grid element is "linear" if it defines a linear block.
 ###
 
 setGeneric("isLinear", function(x) standardGeneric("isLinear"))
@@ -529,6 +526,7 @@ setMethod("isLinear", "ArrayViewport",
     }
 )
 
+### If the 1st grid element is linear, then they all are.
 setMethod("isLinear", "ArrayGrid",
     function(x)
     {
@@ -538,21 +536,16 @@ setMethod("isLinear", "ArrayGrid",
     }
 )
 
-### Typically used to create a regular grid with "linear grid elements" i.e.
-### a grid that divides the reference array 'x' into "linear blocks":
-###
-###    max_block_len <- get_max_block_length(type(x))
-###    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-###    grid <- RegularArrayGrid(dim(x), spacings)
-###
-### All the grid elements are guaranteed to have a length <= 'max_block_len'.
+### Typically used to create a regular grid with linear blocks of length as
+### close as possibe to (but not bigger than) 'max_block_len'.
 ### NOT exported but used in HDF5Array!
-get_max_spacings_for_linear_blocks <- function(refdim, max_block_len)
+get_spacings_for_linear_capped_length_blocks <- function(refdim, max_block_len)
 {
     if (!isSingleNumber(max_block_len))
-        stop("'max_block_len' must be a single number")
+        stop("'max_block_len' must be a single integer")
     if (!is.integer(max_block_len))
         max_block_len <- as.integer(max_block_len)
+
     p <- cumprod(refdim)
     w <- which(p <= max_block_len)
     N <- if (length(w) == 0L) 1L else w[[length(w)]] + 1L
@@ -566,23 +559,64 @@ get_max_spacings_for_linear_blocks <- function(refdim, max_block_len)
     c(head(refdim, n=N-1L), by, rep.int(1L, length(refdim)-N))
 }
 
-### NOT exported but used in unit tests.
-split_array_in_linear_blocks <- function(x, max_block_len)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Some unexported utilities
+###
+
+.get_spacings_for_capped_length_blocks <-
+    function(refdim, max_block_len, block_shape=c("hypercube", "linear"))
 {
-    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- RegularArrayGrid(dim(x), spacings)
+    block_shape <- match.arg(block_shape)
+    FUN <- switch(block_shape,
+                  hypercube=get_spacings_for_hypercube_capped_length_blocks,
+                  linear=get_spacings_for_linear_capped_length_blocks,
+                  stop("unsupported 'block_shape'"))
+    FUN(refdim, max_block_len)
+}
+
+make_RegularArrayGrid_of_capped_length_blocks <-
+    function(refdim, max_block_len, block_shape=c("hypercube", "linear"))
+{
+    spacings <- .get_spacings_for_capped_length_blocks(
+                    refdim, max_block_len, block_shape=block_shape)
+    RegularArrayGrid(refdim, spacings)
+}
+
+### Used in unit tests.
+split_array_in_capped_length_blocks <-
+    function(x, max_block_len, block_shape=c("hypercube", "linear"))
+{
+    grid <- make_RegularArrayGrid_of_capped_length_blocks(
+                        dim(x), max_block_len, block_shape=block_shape)
     lapply(grid, function(viewport) extract_block(x, viewport))
 }
 
-### NOT exported but used in unit tests.
-### Rebuild the original array from the blocks obtained by
-### split_array_in_linear_blocks() as an *ordinary* array.
-### So if 'x' is an ordinary array, then:
+### Used in unit tests.
+### Rebuild the original array from the blocks obtained with
+### split_array_in_capped_length_blocks( , block_shape="hypercube") as
+### an *ordinary* array. So if 'x' is an ordinary array, then:
 ###
-###   blocks <- split_array_in_linear_blocks(x, max_block_len)
+###   blocks <- split_array_in_capped_length_blocks(x, max_block_len,
+###                                                 block_shape="hypercube")
+###   unsplit_array_from_hypercube_blocks(blocks, x)
+###
+### should be a no-op for any 'max_block_len' <= 'length(x)'.
+unsplit_array_from_hypercube_blocks <- function(blocks, x)
+{
+    stop("Not ready yet")
+}
+
+### Used in unit tests.
+### Rebuild the original array from the blocks obtained with
+### split_array_in_capped_length_blocks( , block_shape="linear") as
+### an *ordinary* array. So if 'x' is an ordinary array, then:
+###
+###   blocks <- split_array_in_capped_length_blocks(x, max_block_len,
+###                                                 block_shape="linear")
 ###   unsplit_array_from_linear_blocks(blocks, x)
 ###
-### should be a no-op for any 'max_block_len' < 'length(x)'.
+### should be a no-op for any 'max_block_len' <= 'length(x)'.
 unsplit_array_from_linear_blocks <- function(blocks, x)
 {
     ans <- combine_array_objects(blocks)

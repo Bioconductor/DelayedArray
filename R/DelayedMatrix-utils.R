@@ -36,7 +36,8 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
     ## We're going to walk along the columns so need to increase the block
     ## length so that each block is made of at least one column.
     max_block_len <- max(get_max_block_length(type(y)), nrow(y))
-    spacings <- get_max_spacings_for_linear_blocks(dim(y), max_block_len)
+    spacings <- get_spacings_for_linear_capped_length_blocks(dim(y),
+                                                             max_block_len)
     y_grid <- RegularArrayGrid(dim(y), spacings)
     spacings[[1L]] <- ans_dim[[1L]]
     ans_grid <- RegularArrayGrid(ans_dim, spacings)  # parallel to 'y_grid'

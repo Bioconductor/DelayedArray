@@ -685,9 +685,7 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
     ## We want to walk only on the blocks that we actually need to visit so we
     ## don't use block_APPLY() or family because they walk on all the blocks.
 
-    max_block_len <- get_max_block_length(type(x))
-    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- RegularArrayGrid(dim(x), spacings)
+    grid <- defaultGrid(x)
     nblock <- length(grid)
 
     breakpoints <- cumsum(lengths(grid))

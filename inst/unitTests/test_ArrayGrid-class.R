@@ -1,205 +1,207 @@
 #setRealizationBackend("RleArray")
 #setRealizationBackend("HDF5Array")
 
-test_get_max_spacings_for_hypercube_blocks <- function()
+test_get_spacings_for_hypercube_capped_length_blocks <- function()
 {
-    get_max_spacings_for_hypercube_blocks <-
-        DelayedArray:::get_max_spacings_for_hypercube_blocks
+    get_spacings_for_hypercube_capped_length_blocks <-
+        DelayedArray:::get_spacings_for_hypercube_capped_length_blocks
 
     refdim <- c(15L, 10L, 5L, 8L, 10L)
 
     target <- c( 3L,  3L, 3L, 3L,  3L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 243)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 243)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 323)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 323)
     checkIdentical(target, current)
 
     target <- c( 3L,  3L, 3L, 4L,  3L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 324)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 324)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 431)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 431)
     checkIdentical(target, current)
 
     target <- c( 3L,  4L, 3L, 4L,  3L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 432)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 432)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 575)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 575)
     checkIdentical(target, current)
 
     target <- c( 3L,  4L, 3L, 4L,  4L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 576)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 576)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 767)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 767)
     checkIdentical(target, current)
 
     target <- c( 4L,  4L, 3L, 4L,  4L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 768)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 768)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1023)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1023)
     checkIdentical(target, current)
 
     target <- c( 4L,  4L, 4L, 4L,  4L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1024)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1024)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1279)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1279)
     checkIdentical(target, current)
 
     target <- c( 4L,  4L, 5L, 4L,  4L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1280)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1280)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1599)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1599)
     checkIdentical(target, current)
 
     target <- c( 4L,  5L, 5L, 4L,  4L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1600)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1600)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 1999)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 1999)
     checkIdentical(target, current)
 
     target <- c( 4L,  5L, 5L, 4L,  5L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 2000)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 2000)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 2499)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 2499)
     checkIdentical(target, current)
 
     target <- c( 5L,  5L, 5L, 4L,  5L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 2500)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 2500)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 3124)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 3124)
     checkIdentical(target, current)
 
     target <- c( 5L,  5L, 5L, 5L,  5L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 3125)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 3125)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 3749)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 3749)
     checkIdentical(target, current)
 
     target <- c( 6L,  5L, 5L, 5L,  5L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 3750)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 3750)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 4499)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 4499)
     checkIdentical(target, current)
 
     target <- c( 6L,  6L, 5L, 5L,  5L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 4500)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 4500)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 5399)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 5399)
     checkIdentical(target, current)
 
     target <- c( 6L,  6L, 5L, 6L,  5L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 5400)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 5400)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 6479)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 6479)
     checkIdentical(target, current)
 
     target <- c( 6L,  6L, 5L, 6L,  6L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 6480)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 6480)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 7559)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 7559)
     checkIdentical(target, current)
 
     target <- c( 7L,  6L, 5L, 6L,  6L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 7560)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 7560)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 8819)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 8819)
     checkIdentical(target, current)
 
     target <- c( 7L,  7L, 5L, 6L,  6L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 8820)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 8820)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 10289)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 10289)
     checkIdentical(target, current)
 
     target <- c( 7L,  7L, 5L, 7L,  6L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 10290)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 10290)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 12004)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 12004)
     checkIdentical(target, current)
 
     target <- c( 7L,  7L, 5L, 7L,  7L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 12005)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 12005)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 13719)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 13719)
     checkIdentical(target, current)
 
     target <- c( 7L,  7L, 5L, 8L,  7L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 13720)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 13720)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 15679)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 15679)
     checkIdentical(target, current)
 
     target <- c( 8L,  7L, 5L, 8L,  7L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 15680)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 15680)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 17919)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 17919)
     checkIdentical(target, current)
 
     target <- c( 8L,  8L, 5L, 8L,  7L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 17920)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 17920)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 20479)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 20479)
     checkIdentical(target, current)
 
     target <- c( 8L,  8L, 5L, 8L,  8L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 20480)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 20480)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 23039)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 23039)
     checkIdentical(target, current)
 
     target <- c( 9L,  8L, 5L, 8L,  8L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 23040)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 23040)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 25919)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 25919)
     checkIdentical(target, current)
 
     target <- c( 9L,  9L, 5L, 8L,  8L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 25920)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 25920)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 29159)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 29159)
     checkIdentical(target, current)
 
     target <- c( 9L,  9L, 5L, 8L,  9L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 29160)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 29160)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 32399)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 32399)
     checkIdentical(target, current)
 
     target <- c( 9L, 10L, 5L, 8L,  9L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 32400)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 32400)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 35999)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 35999)
     checkIdentical(target, current)
 
     target <- c( 9L, 10L, 5L, 8L, 10L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 36000)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 36000)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 39999)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 39999)
     checkIdentical(target, current)
 
     target <- c( 10L, 10L, 5L, 8L, 10L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 40000)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 40000)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 43999)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 43999)
     checkIdentical(target, current)
 
     target <- c( 11L, 10L, 5L, 8L, 10L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 44000)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 44000)
     checkIdentical(target, current)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, 47999)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim, 47999)
     checkIdentical(target, current)
 
     target <- c( 14L, 10L, 5L, 8L, 10L)
-    current <- get_max_spacings_for_hypercube_blocks(refdim, prod(refdim)-1)
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim,
+                                                               prod(refdim)-1)
     checkIdentical(target, current)
 
-    current <- get_max_spacings_for_hypercube_blocks(refdim, prod(refdim))
+    current <- get_spacings_for_hypercube_capped_length_blocks(refdim,
+                                                               prod(refdim))
     checkIdentical(refdim, current)
 }
 
-test_split_array_in_linear_blocks <- function()
+test_split_and_unsplit_array_in_capped_length_blocks <- function()
 {
-    split_array_in_linear_blocks <-
-        DelayedArray:::split_array_in_linear_blocks
+    split_array_in_capped_length_blocks <-
+        DelayedArray:::split_array_in_capped_length_blocks
     unsplit_array_from_linear_blocks <-
         DelayedArray:::unsplit_array_from_linear_blocks
 
@@ -207,20 +209,22 @@ test_split_array_in_linear_blocks <- function()
     A1 <- realize(a1)
 
     for (max_block_len in c(1:7, 29:31, 39:40, 59:60, 119:120)) {
-        blocks <- split_array_in_linear_blocks(a1, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(a1, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, a1)
         checkIdentical(a1, current)
 
-        blocks <- split_array_in_linear_blocks(A1, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(A1, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, A1)
         checkIdentical(a1, current)
     }
 }
 
-test_split_matrix_in_blocks <- function()
+test_split_and_unsplit_matrix_in_capped_length_blocks <- function()
 {
-    split_array_in_linear_blocks <-
-        DelayedArray:::split_array_in_linear_blocks
+    split_array_in_capped_length_blocks <-
+        DelayedArray:::split_array_in_capped_length_blocks
     unsplit_array_from_linear_blocks <-
         DelayedArray:::unsplit_array_from_linear_blocks
 
@@ -242,27 +246,33 @@ test_split_matrix_in_blocks <- function()
     checkIdentical(tm1, as.matrix(tM1b))
 
     for (max_block_len in seq_len(length(m1) * 2L)) {
-        blocks <- split_array_in_linear_blocks(m1, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(m1, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, m1)
         checkIdentical(m1, current)
 
-        blocks <- split_array_in_linear_blocks(M1a, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(M1a, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, M1a)
         checkIdentical(m1, current)
 
-        blocks <- split_array_in_linear_blocks(M1b, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(M1b, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, M1b)
         checkIdentical(m1, current)
 
-        blocks <- split_array_in_linear_blocks(tm1, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(tm1, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, tm1)
         checkIdentical(tm1, current)
 
-        blocks <- split_array_in_linear_blocks(tM1a, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(tM1a, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, tM1a)
         checkIdentical(tm1, current)
 
-        blocks <- split_array_in_linear_blocks(tM1b, max_block_len)
+        blocks <- split_array_in_capped_length_blocks(tM1b, max_block_len,
+                                                      block_shape="linear")
         current <- unsplit_array_from_linear_blocks(blocks, tM1b)
         checkIdentical(tm1, current)
     }

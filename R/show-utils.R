@@ -301,8 +301,9 @@
             z1 <- z2 <- 1L  # print only first and last slices
         }
     }
-    spacings <- get_max_spacings_for_linear_blocks(x_dim, prod(x_dim[1:2]))
-    grid <- RegularArrayGrid(x_dim, spacings)
+    grid <- make_RegularArrayGrid_of_capped_length_blocks(x_dim,
+                                                          prod(x_dim[1:2]),
+                                                          block_shape="linear")
     nblock <- length(grid)
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)

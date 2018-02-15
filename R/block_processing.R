@@ -36,6 +36,22 @@ get_max_block_length <- function(type)
     as.integer(block_size / type_size)
 }
 
+### Return a regular grid with linear blocks of length as close as possibe to
+### (but not bigger than) 'max.block.length'.
+### TODO: Add 'block.shape' argument.
+defaultGrid <- function(x, max.block.length=NULL)
+{
+    if (is.null(max.block.length)) {
+        max_block_len <- get_max_block_length(type(x))
+    } else {
+        if (!isSingleNumber(max.block.length))
+            stop("'max.block.length' must be a single integer or NULL")
+        max_block_len <- as.integer(max.block.length)
+    }
+    make_RegularArrayGrid_of_capped_length_blocks(dim(x), max_block_len,
+                                                  block_shape="linear")
+}
+
 ### Used in HDF5Array!
 get_verbose_block_processing <- function()
 {
@@ -70,10 +86,7 @@ set_verbose_block_processing <- function(verbose)
 block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
 {
     APPLY <- match.fun(APPLY)
-    if (is.null(max_block_len))
-        max_block_len <- get_max_block_length(type(x))
-    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- RegularArrayGrid(dim(x), spacings)
+    grid <- defaultGrid(x, max_block_len)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -93,13 +106,6 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
                 message("OK")
             block_ans
         })
-}
-
-defaultGrid <- function(x)
-{
-    max_block_len <- get_max_block_length(type(x))
-    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    RegularArrayGrid(dim(x), spacings)
 }
 
 .normarg_grid <- function(grid, x)
@@ -132,6 +138,7 @@ defaultGrid <- function(x)
 ### seems to be slower than using tasks=0 (the default). Investigate this!
 blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 {
+    FUN <- match.fun(FUN)
     grid <- .normarg_grid(grid, x)
     nblock <- length(grid)
     bplapply(seq_len(nblock),
@@ -183,16 +190,14 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
 {
     MAPPLY <- match.fun(MAPPLY)
     dots <- unname(list(...))
-    dims <- sapply(dots, dim)
-    x_dim <- dims[ , 1L]
-    if (!all(dims == x_dim))
+    dims <- vapply(dots, dim, integer(2))
+    if (!all(dims == dims[ , 1L]))
         stop("non-conformable arrays")
     if (is.null(max_block_len)) {
         types <- unlist(lapply(dots, type))
         max_block_len <- min(get_max_block_length(types))
     }
-    spacings <- get_max_spacings_for_linear_blocks(x_dim, max_block_len)
-    grid <- RegularArrayGrid(x_dim, spacings)
+    grid <- defaultGrid(x, max_block_len)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -226,10 +231,7 @@ block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
     COMBINE <- match.fun(COMBINE)
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
-    if (is.null(max_block_len))
-        max_block_len <- get_max_block_length(type(x))
-    spacings <- get_max_spacings_for_linear_blocks(dim(x), max_block_len)
-    grid <- RegularArrayGrid(dim(x), spacings)
+    grid <- defaultGrid(x, max_block_len)
     nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
