@@ -564,7 +564,8 @@ get_spacings_for_linear_capped_length_blocks <- function(refdim, max_block_len)
 ### Some unexported utilities
 ###
 
-.get_spacings_for_capped_length_blocks <-
+### Used in the DelayedMatrixStats package!
+get_spacings_for_capped_length_blocks <-
     function(refdim, max_block_len, block_shape=c("hypercube", "linear"))
 {
     block_shape <- match.arg(block_shape)
@@ -578,7 +579,7 @@ get_spacings_for_linear_capped_length_blocks <- function(refdim, max_block_len)
 make_RegularArrayGrid_of_capped_length_blocks <-
     function(refdim, max_block_len, block_shape=c("hypercube", "linear"))
 {
-    spacings <- .get_spacings_for_capped_length_blocks(
+    spacings <- get_spacings_for_capped_length_blocks(
                     refdim, max_block_len, block_shape=block_shape)
     RegularArrayGrid(refdim, spacings)
 }
