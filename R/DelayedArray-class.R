@@ -42,6 +42,11 @@ setAs("DelayedArray", "DelayedMatrix",
     function(from) new("DelayedMatrix", from)
 )
 
+### The user should not be able to degrade a DelayedMatrix object to a
+### DelayedArray object so 'as(x, "DelayedArray", strict=TRUE)' must be a
+### no-op when 'x' is a DelayedMatrix object.
+setAs("DelayedMatrix", "DelayedArray", function(from) from)
+
 ### For internal use only.
 setGeneric("matrixClass", function(x) standardGeneric("matrixClass"))
 
@@ -67,6 +72,12 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
              vapply(x@index, is.integer, logical(1), USE.NAMES=FALSE)))
         return(wmsg2("every list element in 'x@index' must be either NULL ",
                      "or an integer vector"))
+    ## In the context of validObject(), 'class(x)' is always "DelayedArray"
+    ## and not the real class of 'x', which seems to be a bug in validObject().
+    ## This prevents us from doing the check below.
+    #if (length(dim(x)) == 2L && !is(x, matrixClass(x)))
+    #    return(wmsg2("'x' has 2 dimensions but is not a ",
+    #                 matrixClass(x), " derivative"))
     TRUE
 }
 

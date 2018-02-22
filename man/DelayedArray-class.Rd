@@ -9,6 +9,7 @@
 \alias{DelayedMatrix}
 
 \alias{coerce,DelayedArray,DelayedMatrix-method}
+\alias{coerce,DelayedMatrix,DelayedArray-method}
 
 \alias{DelayedArray}
 \alias{DelayedArray,ANY-method}
