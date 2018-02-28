@@ -156,7 +156,7 @@ Make sure to export the ADSArraySeed class, its constructor, and the
 
 At this point, you should be able to wrap an ADSArraySeed object `seed`
 in a DelayedArray object with `DelayedArray(seed)`, and this should return
-a fully functional object.
+a fully functional DelayedArray object.
 
 
 # Implemeting high-level classes ADSArray and ADSMatrix
@@ -205,10 +205,10 @@ return an invalid ADSMatrix object.
 
 The user should not be able to degrade an ADSMatrix object to an ADSArray
 object so `as(x, "DelayedArray", strict=TRUE)` should fail or be a no-op
-when 'x' is an ADSMatrix object. The easiest (and recommended) way to achieve
+when `x` is an ADSMatrix object. The easiest (and recommended) way to achieve
 this is to define the following coercion method:
 
-    setAs("ADSMatrix", "ADSArray", function(from) from)
+    setAs("ADSMatrix", "ADSArray", function(from) from)  # no-op
 
 ## Constructor
 
