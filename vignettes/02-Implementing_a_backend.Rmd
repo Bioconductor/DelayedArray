@@ -39,7 +39,7 @@ The _ADSArray_ package will need to implement:
   DelayedArray objects as ADSArray objects. This is not documented yet.
 
 The rest of this document covers the above topics in greater details.
-Some famliarity with writing R packages is assumed.
+Some familiarity with writing R packages is assumed.
 Don't hesitate to look at the source of the
 [_HDF5Array_](https://github.com/Bioconductor/HDF5Array) package
 for a real example of DelayedArray on-disk backend implementation.
