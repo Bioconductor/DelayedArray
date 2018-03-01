@@ -16,16 +16,16 @@ vignette: |
 # Introduction
 
 The DelayedArray framework currently supports the HDF5 on-disk backend
-(via the HDF5Array package) but can be extended to support other on-disk
+(via the _HDF5Array_ package) but can be extended to support other on-disk
 backends, that is, to support other file formats. In theory, it should be
 possible to implement a DelayedArray backend for any file format that has
 the capability to store array data with fast random access.
 Let's assume that the ADS format (Array Data Store) is such format (this
 is a made-up format for the purpose of this vignette only). Implementing a
 DelayedArray backend for ADS files should typically be done in a dedicated
-package (say ADSArray) that will depend on the DelayedArray package.
+package (say _ADSArray_) that will depend on the _DelayedArray_ package.
 
-The ADSArray package will need to implement:
+The _ADSArray_ package will need to implement:
 
 - A low-level class for representing a reference to an array located in
   an ADS file. We'll refer to this class as "the seed class" and will
@@ -37,6 +37,11 @@ The ADSArray package will need to implement:
 
 - A "realization sink" class if you also want to support realization of
   DelayedArray objects as ADSArray objects. This is not documented yet.
+
+The rest of this documents covers the above topics in greater details.
+Some famliarity with writing R packages is assumed. Don't hesitate to
+look at the source of the _HDF5Array_ package for a real example of
+DelayedArray on-disk backend implementation.
 
 
 # Implementing the seed class
@@ -63,10 +68,12 @@ The definition of the seed class will look something like this:
 
 The `filepath` slot should be a single string that contains the absolute
 path to the ADS file so the object doesn't break when the user changes
-the working directory (e.g. with `setwd()`). Note that storing an open
-connection to the file should be avoided because connections don't work
-properly in the context of a fork (e.g. when processing the seed object
-in parallel) and tend to break when serializing the object.
+the working directory (e.g. with `setwd()`).
+
+Note that storing an open connection to the file should be avoided because
+connections don't work properly in the context of a fork (e.g. when
+processing the seed object in parallel) and tend to break when serializing
+the object.
 
 ## Constructor
 
@@ -76,8 +83,19 @@ It is highly recommended to provide a "seed constructor" e.g.:
     {
         sanity checks
         ...
+        filepath <- file_path_as_absolute(filepath)
+        ...
         new("ADSArraySeed", filepath=filepath, other args)
     }
+
+Note that `file_path_as_absolute()` is defined in the _tools_ package
+so it needs to be imported by adding the following to the NAMESPACE file
+of the _ADSArray_ package:
+
+    importFrom(tools, file_path_as_absolute)
+
+and adding _tools_ to the `Imports` field of the DESCRIPTION file of the
+package.
 
 ## The seed contract
 
@@ -113,7 +131,7 @@ If the ADS format does not allow storage of the dimnames, then there
 is no need to implement a `dimnames` method or to add a `dimnames` slot
 to the ADSArraySeed class.
 
-`extract_array` is a generic function defined in the DelayedArray package:
+`extract_array` is a generic function defined in the _DelayedArray_ package:
 
     library(DelayedArray)
     ?extract_array
@@ -149,6 +167,29 @@ Finally note that subscripts are allowed to contain duplicated indices
 so things like `extract_array(seed, list(c(1:3, 3:1), 2L))` need to be
 supported.
 
+## What to import?
+
+Make sure the NAMESPACE file of the _ADSArray_ package contains at least
+the following imports:
+
+    import(methods)
+    importFrom(tools, file_path_as_absolute)
+    
+    import(BiocGenerics)
+    import(S4Vectors)
+    import(IRanges)
+    import(DelayedArray)
+
+Unless you have a good reason for it, don't try to selectively import
+things from the _methods_, _BiocGenerics_, _S4Vectors_, _IRanges_, and
+_DelayedArray_ packages. This will only complicate maintenance of the
+_ADSArray_ package in the long run and has no real benefits (contrary
+to popular belief).
+
+Add _methods_, _BiocGenerics_, and _DelayedArray_ to the `Depends` field
+of the DESCRIPTION file of the package, and _tools_, _S4Vectors_, and
+_IRanges_ to its `Imports` field.
+
 ## Testing
 
 Make sure to export the ADSArraySeed class, its constructor, and the
@@ -159,7 +200,7 @@ in a DelayedArray object with `DelayedArray(seed)`, and this should return
 a fully functional DelayedArray object.
 
 
-# Implemeting high-level classes ADSArray and ADSMatrix
+# Implementing high-level classes ADSArray and ADSMatrix
 
 These classes are not strictly needed but add a nice level of convenience.
 
@@ -178,7 +219,7 @@ Define a `matrixClass` method for ADSArray objects as follow:
 
     setMethod("matrixClass", "ADSArray", function(x) "ADSMatrix")
 
-`matrixClass` is a generic function defined in the DelayedArray package.
+`matrixClass` is a generic function defined in the _DelayedArray_ package.
 When passed an ADSArraySeed object, internal constructor
 `DelayedArray:::new_DelayedArray` (see below) will generally return
 an ADSArray *instance*, except when the ADSArraySeed object is
@@ -266,8 +307,16 @@ object is a particular kind of DelayedArray object that doesn't carry
 delayed operations yet. As soon as you start operating on it, it will
 be degraded to a DelayedArray *instance*.
 
-## Testing
+## What to export?
 
 Make sure to export the ADSArray and ADSMatrix classes, the `ADSArray`
 constructor, and the `coerce` methods.
+
+
+# Testing
+
+Install the _ADSArray_ package and load it in a fresh R session:
+
+    library(ADSArray)
+    ... coming soon ...
 
