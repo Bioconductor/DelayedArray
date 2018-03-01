@@ -246,9 +246,9 @@ return an invalid ADSMatrix object.
 ## Going from ADSMatrix to ADSArray
 
 The user should not be able to degrade an ADSMatrix object to an ADSArray
-object so `as(x, "DelayedArray", strict=TRUE)` should fail or be a no-op
-when `x` is an ADSMatrix object. The easiest (and recommended) way to achieve
-this is to define the following coercion method:
+object so `as(x, "ADSArray", strict=TRUE)` should fail or be a no-op
+when `x` is an ADSMatrix object. The easiest (and recommended) way to
+achieve this is to define the following coercion method:
 
     setAs("ADSMatrix", "ADSArray", function(from) from)  # no-op
 

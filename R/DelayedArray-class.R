@@ -43,9 +43,10 @@ setAs("DelayedArray", "DelayedMatrix",
 )
 
 ### The user should not be able to degrade a DelayedMatrix object to a
-### DelayedArray object so 'as(x, "DelayedArray", strict=TRUE)' must be a
-### no-op when 'x' is a DelayedMatrix object.
-setAs("DelayedMatrix", "DelayedArray", function(from) from)
+### DelayedArray object so 'as(x, "DelayedArray", strict=TRUE)' should
+### fail or be a no-op when 'x' is a DelayedMatrix object. Making this
+### coercion a no-op seems to be the easiest (and safest) way to go.
+setAs("DelayedMatrix", "DelayedArray", function(from) from)  # no-op
 
 ### For internal use only.
 setGeneric("matrixClass", function(x) standardGeneric("matrixClass"))
