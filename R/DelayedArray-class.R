@@ -1052,7 +1052,7 @@ setMethod("cbind", "DelayedMatrix", .DelayedArray_acbind)
             if (length(dim(object)) != 2L)
                 stop(wmsg("cbind() and rbind() are not supported on ",
                           "DelayedArray objects that don't have exactly ",
-                          "2 dimensions. Please use acbind() or arnind() ",
+                          "2 dimensions. Please use acbind() or arbind() ",
                           "instead."))
             as(object, "DelayedMatrix")
         })
