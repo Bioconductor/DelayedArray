@@ -208,6 +208,9 @@ type(x)
     \item \link{DelayedArray-utils} for common operations on DelayedArray
           objects.
 
+    \item \link{DelayedArray-stats} for statistical functions on
+          DelayedArray objects.
+
     \item \code{\link[base]{cbind}} in the \pkg{base} package for
           rbind/cbind'ing ordinary arrays.
 

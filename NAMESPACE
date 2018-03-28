@@ -1,9 +1,9 @@
 import(methods)
 importFrom(stats, setNames,
+                  dnorm, pnorm, qnorm,
                   dbinom, pbinom, qbinom,
                   dpois, ppois, qpois,
-                  dlogis, plogis, qlogis,
-                  dnorm, pnorm, qnorm)
+                  dlogis, plogis, qlogis)
 import(matrixStats)
 import(BiocGenerics)
 import(S4Vectors)
@@ -138,10 +138,10 @@ exportMethods(
     coerce, show,
 
     ## Methods for generics defined in the stats package:
+    dnorm, pnorm, qnorm,
     dbinom, pbinom, qbinom,
     dpois, ppois, qpois,
     dlogis, plogis, qlogis,
-    dnorm, pnorm, qnorm,
 
     ## Methods for generics defined in the BiocGenerics package:
     cbind, rbind,

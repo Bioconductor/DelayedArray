@@ -104,6 +104,10 @@
     \item \code{pmax2} and \code{pmin2}
     \item \code{t}
     \item \code{rbind} and \code{cbind} (documented in \link{DelayedArray})
+    \item statistical functions like \code{dnorm}, \code{dbinom}, \code{dpois},
+          and \code{dlogis} (for the Normal, Binomial, Poisson, and Logistic
+          distribution, respectively) and related functions (documented in
+          \link{DelayedArray-stats})
   }
 
   Block-processed operations:
@@ -141,6 +145,9 @@
           HDF5 datasets.
 
     \item \link{DelayedArray} objects.
+
+    \item \link{DelayedArray-stats} for statistical functions on
+          DelayedArray objects.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 

@@ -4,6 +4,32 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The Normal Distribution
+###
+### All these methods return a DelayedArray object of the same dimensions
+### as their first argument.
+###
+
+setMethod("dnorm", "DelayedArray",
+    function(x, mean=0, sd=1, log=FALSE)
+        register_delayed_op(x, "dnorm",
+            Rargs=list(mean=mean, sd=sd, log=log))
+)
+
+setMethod("pnorm", "DelayedArray",
+    function(q, mean=0, sd=1, lower.tail=TRUE, log.p=FALSE)
+        register_delayed_op(q, "pnorm",
+            Rargs=list(mean=mean, sd=sd, lower.tail=lower.tail, log.p=log.p))
+)
+
+setMethod("qnorm", "DelayedArray",
+    function(p, mean=0, sd=1, lower.tail=TRUE, log.p=FALSE)
+        register_delayed_op(p, "qnorm",
+            Rargs=list(mean=mean, sd=sd, lower.tail=lower.tail, log.p=log.p))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### The Binomial Distribution
 ###
 ### All these methods return a DelayedArray object of the same dimensions
@@ -82,32 +108,5 @@ setMethod("qlogis", "DelayedArray",
         register_delayed_op(p, "qlogis",
             Rargs=list(location=location, scale=scale,
                        lower.tail=lower.tail, log.p=log.p))
-)
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The Normal Distribution
-###
-### All these methods return a DelayedArray object of the same dimensions
-### as their first argument.
-###
-
-setMethod("dnorm", "DelayedArray",
-          function(x, mean=0, sd=1, log=FALSE)
-              register_delayed_op(x, "dnorm",
-                                  Rargs=list(mean=mean, sd=sd, log=log))
-)
-
-setMethod("pnorm", "DelayedArray",
-          function(q, mean=0, sd=1, lower.tail=TRUE, log.p=FALSE)
-              register_delayed_op(q, "pnorm",
-                                  Rargs=list(mean=mean, sd=sd,
-                                             lower.tail=lower.tail, log.p=log.p))
-)
-
-setMethod("qnorm", "DelayedArray",
-          function(p, mean=0, sd=1, lower.tail=TRUE, log.p=FALSE)
-              register_delayed_op(p, "qnorm",
-                                  Rargs=list(mean=mean, sd=sd,
-                                             lower.tail=lower.tail, log.p=log.p))
 )
 
