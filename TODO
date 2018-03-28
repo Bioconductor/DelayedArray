@@ -1,3 +1,6 @@
+- Support delayed array replication.
+  See https://github.com/Bioconductor/DelayedArray/issues/8
+
 - Document global option DelayedArray.block.size
 
 - Add man page and unit tests for statistical methods defined in
