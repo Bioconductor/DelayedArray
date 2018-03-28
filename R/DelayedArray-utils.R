@@ -204,11 +204,11 @@ for (.Generic in c("pmax2", "pmin2")) {
 ### sweep()
 ###
 
-### Unlike base::sweep(), supports a single MARGIN only.
+### Only supports a MARGIN of length 1 for now.
 ### Ignores 'check.margin'.
 ### Works if 'FUN' is a member of the Ops group or, more generally, if 'FUN'
-### works on DelayedArray object 'x' and preserves the dimensions (e.g.
-### pmax2() or pmin2() above).
+### works on a DelayedArray object and preserves its dimensions (e.g. pmax2()
+### or pmin2() above).
 setMethod("sweep", "DelayedArray",
     function(x, MARGIN, STATS, FUN="-", check.margin=TRUE, ...)
     {
@@ -219,7 +219,8 @@ setMethod("sweep", "DelayedArray",
         x_dim <- dim(x)
         x_ndim <- length(x_dim)
         if (!isSingleNumber(MARGIN))
-            stop("'MARGIN' must be a single integer")
+            stop(wmsg("the \"sweep\" method for DelayedArray objects ",
+                      "only supports a MARGIN of length 1 at the moment"))
         if (!is.integer(MARGIN))
             MARGIN <- as.integer(MARGIN)
         if (MARGIN < 1 || MARGIN > x_ndim)

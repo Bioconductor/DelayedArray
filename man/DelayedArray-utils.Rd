@@ -18,6 +18,8 @@
 \alias{pmax2,DelayedArray,DelayedArray-method}
 \alias{pmin2,DelayedArray,DelayedArray-method}
 
+\alias{sweep,DelayedArray-method}
+
 \alias{is.na,DelayedArray-method}
 \alias{is.finite,DelayedArray-method}
 \alias{is.infinite,DelayedArray-method}
@@ -96,6 +98,7 @@
   \itemize{
     \item all the members of the \code{\link[methods]{Ops}},
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups
+    \item \code{sweep}
     \item \code{!}
     \item \code{is.na}, \code{is.finite}, \code{is.infinite}, \code{is.nan}
     \item \code{lengths}
@@ -171,6 +174,8 @@ log(M1)
 
 M2 <- HDF5Array(toy_h5, "M2")
 pmax2(M2, 0)
+
+sweep(M2, 2, colMeans(M2))
 
 M3 <- rbind(M1, t(M2))
 M3
