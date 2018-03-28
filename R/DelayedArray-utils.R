@@ -11,6 +11,24 @@
 ### Logic members: &, |
 ###
 
+.normarg_Ops_vector_arg <- function(e, x_nrow,
+                                    e_what="left object",
+                                    x_what="first dimension of right object",
+                                    x_what2=x_what,
+                                    check.only=FALSE)
+{
+    e_len <- length(e)
+    if (e_len == x_nrow || e_len == 1L)
+        return(e)
+    if (e_len > x_nrow)
+        stop(wmsg(e_what, " is longer than ", x_what))
+    if (e_len == 0L || x_nrow %% e_len != 0L)
+        stop(wmsg("length of ", e_what, " is not a divisor of ", x_what2))
+    if (check.only)
+        return(e)
+    rep(e, length.out=x_nrow)
+}
+
 ### Return a DelayedArray object of the same dimensions as 'e1'.
 .DelayedArray_Ops_with_right_vector <- function(.Generic, e1, e2)
 {
@@ -22,21 +40,12 @@
     if (!is.atomic(e2))
         stop(wmsg("`", .Generic, "` between ", e1_class, " and ",
                   e2_class, " objects is not supported"))
-    e2_len <- length(e2)
-    if (e2_len == 1L)
-        return(register_delayed_op(e1, .Generic, Rargs=list(e2)))
-    e1_len <- length(e1)
-    if (e2_len > e1_len)
-        stop(wmsg("right object is longer than left object"))
-    e1_nrow <- nrow(e1)
-    if (e1_nrow != 0L) {
-        if (e2_len == 0L || e1_nrow %% e2_len != 0L)
-            stop(wmsg("length of right object is not a divisor ",
-                      "of number of rows in left object"))
-        e2 <- rep(e2, length.out=e1_nrow)
-    }
+    e2 <- .normarg_Ops_vector_arg(e2, nrow(e1),
+                                  e_what="right object",
+                                  x_what="first dimension of left object")
+    recycle_along_first_dim <- length(e2) != 1L
     register_delayed_op(e1, .Generic, Rargs=list(e2),
-                                      recycle_along_first_dim=TRUE)
+                        recycle_along_first_dim=recycle_along_first_dim)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e2'.
@@ -50,21 +59,12 @@
     if (!is.atomic(e1))
         stop(wmsg("`", .Generic, "` between ", e1_class, " and ",
                   e2_class, " objects is not supported"))
-    e1_len <- length(e1)
-    if (e1_len == 1L)
-        return(register_delayed_op(e2, .Generic, Largs=list(e1)))
-    e2_len <- length(e2)
-    if (e1_len > e2_len)
-        stop(wmsg("left object is longer than right object"))
-    e2_nrow <- nrow(e2)
-    if (e2_nrow != 0L) {
-        if (e1_len == 0L || e2_nrow %% e1_len != 0L)
-            stop(wmsg("length of left object is not a divisor ",
-                      "of number of rows in right object"))
-        e1 <- rep(e1, length.out=e2_nrow)
-    }
+    e1 <- .normarg_Ops_vector_arg(e1, nrow(e2),
+                                  e_what="left object",
+                                  x_what="first dimension of right object")
+    recycle_along_first_dim <- length(e1) != 1L
     register_delayed_op(e2, .Generic, Largs=list(e1),
-                                      recycle_along_first_dim=TRUE)
+                        recycle_along_first_dim=recycle_along_first_dim)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
@@ -114,56 +114,6 @@ setMethod("+", c("DelayedArray", "missing"),
 )
 setMethod("-", c("DelayedArray", "missing"),
     function(e1, e2) register_delayed_op(e1, .Generic, Largs=list(0L))
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### sweep()
-###
-
-### Unlike base::sweep(), supports a single MARGIN only.
-### Ignores 'check.margin'.
-### Works if 'FUN' is a member of the Ops group or, more generally, if 'FUN'
-### works on DelayedArray object 'x' and preserves the dimensions.
-setMethod("sweep", "DelayedArray",
-    function(x, MARGIN, STATS, FUN="-", check.margin=TRUE, ...)
-    {
-        FUN <- match.fun(FUN)
-        if (!identical(check.margin, TRUE))
-            warning(wmsg("'check.margin' is ignored when 'x' is ",
-                         "a DelayedArray object or derivative"))
-        x_dim <- dim(x)
-        x_ndim <- length(x_dim)
-        if (!isSingleNumber(MARGIN))
-            stop("'MARGIN' must be a single integer")
-        if (!is.integer(MARGIN))
-            MARGIN <- as.integer(MARGIN)
-        if (MARGIN < 1 || MARGIN > x_ndim)
-            stop("invalid 'MARGIN'")
-
-        ## Check 'STATS' length.
-        ## If 'FUN' is a member of the Ops group, it will check the length
-        ## of 'STATS' and possibly reject it but it will display an obscure
-        ## error message (see .DelayedArray_Ops_with_left_vector() and
-        ## .DelayedArray_Ops_with_right_vector() above in this file). By
-        ## checking the length early, we can display a more appropriate
-        ## error message.
-        STATS_len <- length(STATS)
-        if (STATS_len != 1L) {
-            if (STATS_len > x_dim[[MARGIN]])
-                stop(wmsg("'STATS' is longer than the extent ",
-                          "of 'dim(x)[MARGIN]'"))
-            if (x_dim[[MARGIN]] != 0L && (STATS_len == 0L ||
-                                          x_dim[[MARGIN]] %% STATS_len != 0L))
-                stop(wmsg("length of 'STATS' is not a divisor ",
-                          "of 'dim(x)[MARGIN]'"))
-        }
-
-        perm <- c(MARGIN, seq_len(x_ndim)[-MARGIN])
-        x2 <- aperm(x, perm)
-        ans2 <- FUN(x2, STATS, ...)
-        aperm(ans2, order(perm))
-    }
 )
 
 
@@ -248,6 +198,51 @@ for (.Generic in c("pmax2", "pmin2")) {
             .DelayedArray_Ops(.Generic, e1, e2)
     )
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### sweep()
+###
+
+### Unlike base::sweep(), supports a single MARGIN only.
+### Ignores 'check.margin'.
+### Works if 'FUN' is a member of the Ops group or, more generally, if 'FUN'
+### works on DelayedArray object 'x' and preserves the dimensions (e.g.
+### pmax2() or pmin2() above).
+setMethod("sweep", "DelayedArray",
+    function(x, MARGIN, STATS, FUN="-", check.margin=TRUE, ...)
+    {
+        FUN <- match.fun(FUN)
+        if (!identical(check.margin, TRUE))
+            warning(wmsg("'check.margin' is ignored when 'x' is ",
+                         "a DelayedArray object or derivative"))
+        x_dim <- dim(x)
+        x_ndim <- length(x_dim)
+        if (!isSingleNumber(MARGIN))
+            stop("'MARGIN' must be a single integer")
+        if (!is.integer(MARGIN))
+            MARGIN <- as.integer(MARGIN)
+        if (MARGIN < 1 || MARGIN > x_ndim)
+            stop("invalid 'MARGIN'")
+
+        ## Check 'STATS' length.
+        ## If 'FUN' is a member of the Ops group, it will check the length
+        ## of 'STATS' and possibly reject it but it will display an obscure
+        ## error message (see .normarg_Ops_vector_arg() in this file). By
+        ## checking the length early, we can display a more appropriate
+        ## error message.
+        .normarg_Ops_vector_arg(STATS, x_dim[[MARGIN]],
+                                e_what="'STATS'",
+                                x_what="the extent of 'dim(x)[MARGIN]'",
+                                x_what2="'dim(x)[MARGIN]'",
+                                check.only=TRUE)
+
+        perm <- c(MARGIN, seq_len(x_ndim)[-MARGIN])
+        x2 <- aperm(x, perm)
+        ans2 <- FUN(x2, STATS, ...)
+        aperm(ans2, order(perm))
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
