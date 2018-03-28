@@ -118,6 +118,56 @@ setMethod("-", c("DelayedArray", "missing"),
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### sweep()
+###
+
+### Unlike base::sweep(), supports a single MARGIN only.
+### Ignores 'check.margin'.
+### Works if 'FUN' is a member of the Ops group or, more generally, if 'FUN'
+### works on DelayedArray object 'x' and preserves the dimensions.
+setMethod("sweep", "DelayedArray",
+    function(x, MARGIN, STATS, FUN="-", check.margin=TRUE, ...)
+    {
+        FUN <- match.fun(FUN)
+        if (!identical(check.margin, TRUE))
+            warning(wmsg("'check.margin' is ignored when 'x' is ",
+                         "a DelayedArray object or derivative"))
+        x_dim <- dim(x)
+        x_ndim <- length(x_dim)
+        if (!isSingleNumber(MARGIN))
+            stop("'MARGIN' must be a single integer")
+        if (!is.integer(MARGIN))
+            MARGIN <- as.integer(MARGIN)
+        if (MARGIN < 1 || MARGIN > x_ndim)
+            stop("invalid 'MARGIN'")
+
+        ## Check 'STATS' length.
+        ## If 'FUN' is a member of the Ops group, it will check the length
+        ## of 'STATS' and possibly reject it but it will display an obscure
+        ## error message (see .DelayedArray_Ops_with_left_vector() and
+        ## .DelayedArray_Ops_with_right_vector() above in this file). By
+        ## checking the length early, we can display a more appropriate
+        ## error message.
+        STATS_len <- length(STATS)
+        if (STATS_len != 1L) {
+            if (STATS_len > x_dim[[MARGIN]])
+                stop(wmsg("'STATS' is longer than the extent ",
+                          "of 'dim(x)[MARGIN]'"))
+            if (x_dim[[MARGIN]] != 0L && (STATS_len == 0L ||
+                                          x_dim[[MARGIN]] %% STATS_len != 0L))
+                stop(wmsg("length of 'STATS' is not a divisor ",
+                          "of 'dim(x)[MARGIN]'"))
+        }
+
+        perm <- c(MARGIN, seq_len(x_ndim)[-MARGIN])
+        x2 <- aperm(x, perm)
+        ans2 <- FUN(x2, STATS, ...)
+        aperm(ans2, order(perm))
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### pmax2() and pmin2()
 ###
 ### We treat them like the binary operators of the "Ops" group generics.
