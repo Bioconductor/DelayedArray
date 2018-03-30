@@ -26,9 +26,9 @@ Collate: utils.R
 	ArrayGrid-class.R
 	show-utils.R
 	extract_array.R
-	SeedDimPicker-class.R
-	ConformableSeedCombiner-class.R
-	SeedBinder-class.R
+	DelayedAperm-class.R
+	DelayedVariadicOp-class.R
+	DelayedAbind-class.R
 	DelayedArray-class.R
 	realize.R
 	block_processing.R

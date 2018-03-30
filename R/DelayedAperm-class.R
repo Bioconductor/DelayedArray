@@ -1,11 +1,11 @@
 ### =========================================================================
-### SeedDimPicker objects
+### DelayedAperm objects
 ### -------------------------------------------------------------------------
 ###
 ### This class is for internal use only and is not exported.
 ###
 
-setClass("SeedDimPicker",
+setClass("DelayedAperm",
     representation(
         seed="ANY",                # An array-like object expected to satisfy
                                    # the "seed contract" i.e. to support dim(),
@@ -20,7 +20,7 @@ setClass("SeedDimPicker",
     )
 )
 
-.validate_SeedDimPicker <- function(x)
+.validate_DelayedAperm <- function(x)
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
@@ -40,14 +40,14 @@ setClass("SeedDimPicker",
     TRUE
 }
 
-setValidity2("SeedDimPicker", .validate_SeedDimPicker)
+setValidity2("DelayedAperm", .validate_DelayedAperm)
 
-new_SeedDimPicker <- function(seed, dim_combination=NULL)
+new_DelayedAperm <- function(seed, dim_combination=NULL)
 {
     seed <- remove_pristine_DelayedArray_wrapping(seed)
     if (is.null(dim_combination))
         dim_combination <- seq_along(dim(seed))
-    new2("SeedDimPicker", seed=seed, dim_combination=dim_combination)
+    new2("DelayedAperm", seed=seed, dim_combination=dim_combination)
 }
 
 
@@ -55,23 +55,23 @@ new_SeedDimPicker <- function(seed, dim_combination=NULL)
 ### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array()
 ###
 
-.get_SeedDimPicker_dim <- function(x)
+.get_DelayedAperm_dim <- function(x)
 {
     seed_dim <- dim(x@seed)
     seed_dim[x@dim_combination]
 }
 
-setMethod("dim", "SeedDimPicker", .get_SeedDimPicker_dim)
+setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
 
-.get_SeedDimPicker_dimnames <- function(x)
+.get_DelayedAperm_dimnames <- function(x)
 {
     seed_dimnames <- dimnames(x@seed)
     seed_dimnames[x@dim_combination]  # return NULL if 'seed_dimnames' is NULL
 }
 
-setMethod("dimnames", "SeedDimPicker", .get_SeedDimPicker_dimnames)
+setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
 
-.extract_array_from_SeedDimPicker <- function(x, index)
+.extract_array_from_DelayedAperm <- function(x, index)
 {
     seed_dim <- dim(x@seed)
     seed_index <- rep.int(list(1L), length(seed_dim))
@@ -81,8 +81,8 @@ setMethod("dimnames", "SeedDimPicker", .get_SeedDimPicker_dimnames)
     aperm(subseed, perm=rank(x@dim_combination))
 }
 
-setMethod("extract_array", "SeedDimPicker",
-    .extract_array_from_SeedDimPicker
+setMethod("extract_array", "DelayedAperm",
+    .extract_array_from_DelayedAperm
 )
 
 
@@ -93,7 +93,7 @@ setMethod("extract_array", "SeedDimPicker",
 setGeneric("aperm", signature="a")
 
 ### Unlike base::aperm() the method below supports dropping dimensions.
-### If 'simplify' is TRUE, 'aperm(a)' drops the SeedDimPicker wrapping
+### If 'simplify' is TRUE, 'aperm(a)' drops the DelayedAperm wrapping
 ### around the returned object if this wrapping represents a dim combination
 ### that is the identity (i.e. if the wrapped seed is semantically equivalent
 ### to the seed).
@@ -115,7 +115,7 @@ normarg_perm <- function(perm, a_dim)
     perm
 }
 
-.aperm.SeedDimPicker <- function(a, perm, simplify=TRUE)
+.aperm.DelayedAperm <- function(a, perm, simplify=TRUE)
 {
     if (!isTRUEorFALSE(simplify))
         stop(wmsg("'simplify' must be TRUE or FALSE"))
@@ -132,10 +132,10 @@ normarg_perm <- function(perm, a_dim)
     a
 }
 
-### S3/S4 combo for aperm.SeedDimPicker
-aperm.SeedDimPicker <- function(a, perm, ...)
-    .aperm.SeedDimPicker(a, perm, ...)
-setMethod("aperm", "SeedDimPicker", aperm.SeedDimPicker)
+### S3/S4 combo for aperm.DelayedAperm
+aperm.DelayedAperm <- function(a, perm, ...)
+    .aperm.DelayedAperm(a, perm, ...)
+setMethod("aperm", "DelayedAperm", aperm.DelayedAperm)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -144,7 +144,7 @@ setMethod("aperm", "SeedDimPicker", aperm.SeedDimPicker)
 
 setGeneric("seed", function(x) standardGeneric("seed"))
 
-setMethod("seed", "SeedDimPicker", function(x) x@seed)
+setMethod("seed", "DelayedAperm", function(x) x@seed)
 
 setGeneric("seed<-", signature="x",
     function(x, ..., value) standardGeneric("seed<-")
@@ -160,7 +160,7 @@ normalize_seed_replacement_value <- function(value, x_seed)
     value
 }
 
-setReplaceMethod("seed", "SeedDimPicker",
+setReplaceMethod("seed", "DelayedAperm",
     function(x, value)
     {
         x@seed <- normalize_seed_replacement_value(value, seed(x))
@@ -173,20 +173,20 @@ setReplaceMethod("seed", "SeedDimPicker",
 ### path() getter/setter
 ###
 
-### The path of a SeedDimPicker object is the path of its seed so path()
-### will work only on a SeedDimPicker object with a seed that supports path().
+### The path of a DelayedAperm object is the path of its seed so path()
+### will work only on a DelayedAperm object with a seed that supports path().
 ### For example it will work if the seed is an on-disk object (e.g. an
 ### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
 ### ordinary array or RleArraySeed object).
-setMethod("path", "SeedDimPicker",
+setMethod("path", "DelayedAperm",
     function(object, ...) path(seed(object), ...)
 )
 
-### The path() setter sets the path of the seed of a SeedDimPicker object so
-### it will work out-of-the-box on any SeedDimPicker object with a seed that
+### The path() setter sets the path of the seed of a DelayedAperm object so
+### it will work out-of-the-box on any DelayedAperm object with a seed that
 ### supports the path() setter. For example it will work if the seed is an
 ### HDF5ArraySeed object.
-setReplaceMethod("path", "SeedDimPicker",
+setReplaceMethod("path", "DelayedAperm",
     function(object, ..., value)
     {
         path(seed(object), ...) <- value

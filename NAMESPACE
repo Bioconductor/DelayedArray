@@ -42,7 +42,7 @@ exportClasses(
 ###
 
 S3method(aperm, DelayedArray)
-S3method(aperm, SeedDimPicker)
+S3method(aperm, DelayedAperm)
 
 S3method(as.array, DelayedArray)
 
@@ -77,7 +77,7 @@ S3method(t, DelayedMatrix)
 
 export(
     aperm.DelayedArray,
-    aperm.SeedDimPicker,
+    aperm.DelayedAperm,
 
     as.array.DelayedArray,
 
@@ -194,7 +194,7 @@ export(
     ## extract_array.R:
     extract_array, type, chunkdim,
 
-    ## SeedDimPicker-class.R:
+    ## DelayedAperm-class.R:
     aperm, seed, "seed<-",
 
     ## DelayedArray-class.R:

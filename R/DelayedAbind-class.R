@@ -1,11 +1,11 @@
 ### =========================================================================
-### SeedBinder objects
+### DelayedAbind objects
 ### -------------------------------------------------------------------------
 ###
 ### This class is for internal use only and is not exported.
 ###
 
-setClass("SeedBinder",
+setClass("DelayedAbind",
     representation(
         seeds="list",    # List of array-like objects to bind. Each object
                          # is expected to satisfy the "seed contract" i.e.
@@ -20,7 +20,7 @@ setClass("SeedBinder",
     )
 )
 
-.validate_SeedBinder <- function(x)
+.validate_DelayedAbind <- function(x)
 {
     if (length(x@seeds) == 0L)
         return(wmsg2("'x@seeds' cannot be empty"))
@@ -32,12 +32,12 @@ setClass("SeedBinder",
     TRUE
 }
 
-setValidity2("SeedBinder", .validate_SeedBinder)
+setValidity2("DelayedAbind", .validate_DelayedAbind)
 
-new_SeedBinder <- function(seeds, along)
+new_DelayedAbind <- function(seeds, along)
 {
     seeds <- lapply(seeds, remove_pristine_DelayedArray_wrapping)
-    new2("SeedBinder", seeds=seeds, along=along)
+    new2("DelayedAbind", seeds=seeds, along=along)
 }
 
 
@@ -45,23 +45,23 @@ new_SeedBinder <- function(seeds, along)
 ### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array()
 ###
 
-.get_SeedBinder_dim <- function(x)
+.get_DelayedAbind_dim <- function(x)
 {
     dims <- get_dims_to_bind(x@seeds, x@along)
     combine_dims_along(dims, x@along)
 }
 
-setMethod("dim", "SeedBinder", .get_SeedBinder_dim)
+setMethod("dim", "DelayedAbind", .get_DelayedAbind_dim)
 
-.get_SeedBinder_dimnames <- function(x)
+.get_DelayedAbind_dimnames <- function(x)
 {
     dims <- get_dims_to_bind(x@seeds, x@along)
     combine_dimnames_along(x@seeds, dims, x@along)
 }
 
-setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
+setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
 
-.extract_array_from_SeedBinder <- function(x, index)
+.extract_array_from_DelayedAbind <- function(x, index)
 {
     i <- index[[x@along]]
 
@@ -93,22 +93,22 @@ setMethod("dimnames", "SeedBinder", .get_SeedBinder_dimnames)
     subset_by_Nindex(ans, Nindex)
 }
 
-setMethod("extract_array", "SeedBinder", .extract_array_from_SeedBinder)
+setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### path() getter/setter
 ###
-### SeedBinder objects don't support the path() getter/setter for now.
+### DelayedAbind objects don't support the path() getter/setter for now.
 ###
 
-setMethod("path", "SeedBinder",
+setMethod("path", "DelayedAbind",
     function(object, ...)
         stop(wmsg("path() is not supported on a DelayedArray ",
                   "object with multiple leaf seeds at the moment"))
 )
 
-setReplaceMethod("path", "SeedBinder",
+setReplaceMethod("path", "DelayedAbind",
     function(object, ..., value)
         stop(wmsg("the path() setter is not supported on a DelayedArray ",
                   "object with multiple leaf seeds at the moment"))

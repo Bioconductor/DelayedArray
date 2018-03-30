@@ -288,13 +288,13 @@ setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
 ### aperm()
 ###
 
-setAs("DelayedArray", "SeedDimPicker",
+setAs("DelayedArray", "DelayedAperm",
     function(from)
     {
         from_seed <- seed(from)
-        if (is_pristine(from) && is(from_seed, "SeedDimPicker"))
+        if (is_pristine(from) && is(from_seed, "DelayedAperm"))
             return(from_seed)
-        new_SeedDimPicker(from)
+        new_DelayedAperm(from)
     }
 )
 
@@ -306,7 +306,7 @@ setAs("DelayedArray", "SeedDimPicker",
     } else {
         perm <- normarg_perm(perm, a_dim)
     }
-    DelayedArray(aperm(as(a, "SeedDimPicker"), perm))
+    DelayedArray(aperm(as(a, "DelayedAperm"), perm))
 }
 
 ### S3/S4 combo for aperm.DelayedArray
@@ -794,9 +794,8 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
         stop(wmsg(.subassign_error_msg))
     if (!(is.vector(value) && is.atomic(value) && length(value) == 1L))
         stop(wmsg(.subassign_error_msg))
-    DelayedArray(new_ConformableSeedCombiner(x, i,
-                                             COMBINING_OP=`[<-`,
-                                             Rargs=list(value=value)))
+    DelayedArray(new_DelayedVariadicOp(x, i, OP=`[<-`,
+                                       Rargs=list(value=value)))
 }
 
 setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
@@ -1025,7 +1024,7 @@ setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
     dims <- get_dims_to_bind(objects, 1L)
     if (is.character(dims))
         stop(wmsg(dims))
-    DelayedArray(new_SeedBinder(objects, 1L))
+    DelayedArray(new_DelayedAbind(objects, 1L))
 }
 
 .DelayedArray_acbind <- function(...)
@@ -1034,7 +1033,7 @@ setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
     dims <- get_dims_to_bind(objects, 2L)
     if (is.character(dims))
         stop(wmsg(dims))
-    DelayedArray(new_SeedBinder(objects, 2L))
+    DelayedArray(new_DelayedAbind(objects, 2L))
 }
 
 setMethod("arbind", "DelayedArray", .DelayedArray_arbind)
