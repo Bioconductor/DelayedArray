@@ -7,15 +7,16 @@
 
 setClass("DelayedVariadicIsoOp",
     representation(
-        seeds="list",   # List of n conformable array-like objects to
-                        # combine. Each object is expected to satisfy the
-                        # "seed contract" i.e. to support dim(), dimnames(),
-                        # and extract_array().
+        seeds="list",   # List of conformable array-like objects to combine.
+                        # Each object is expected to satisfy the "seed
+                        # contract" i.e. to support dim(), dimnames(), and
+                        # extract_array().
 
-        OP="function",  # n-ary operator to combine the seeds.
+        OP="function",  # The function to use to combine the seeds. It should
+                        # act as an isomorphism i.e. always return an array
+                        # parallel to the input arrays (i.e. same dimensions).
 
-        Rargs="list"    # Additional arguments to the n-ary
-                        # operator.
+        Rargs="list"    # Additional right arguments to OP.
     ),
     prototype(
         seeds=list(new("array")),
@@ -52,8 +53,7 @@ setClass("DelayedVariadicIsoOp",
 setValidity2("DelayedVariadicIsoOp", .validate_DelayedVariadicIsoOp)
 
 new_DelayedVariadicIsoOp <- function(seed=new("array"), ...,
-                                     OP=identity,
-                                     Rargs=list())
+                                     OP=identity, Rargs=list())
 {
     seeds <- unname(list(seed, ...))
     OP <- match.fun(OP)

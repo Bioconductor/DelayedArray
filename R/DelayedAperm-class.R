@@ -76,9 +76,9 @@ setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
     seed_dim <- dim(x@seed)
     seed_index <- rep.int(list(1L), length(seed_dim))
     seed_index[x@dim_combination] <- index
-    subseed <- extract_array(x@seed, seed_index)
-    dim(subseed) <- dim(subseed)[sort(x@dim_combination)]
-    aperm(subseed, perm=rank(x@dim_combination))
+    a <- extract_array(x@seed, seed_index)
+    dim(a) <- dim(a)[sort(x@dim_combination)]
+    aperm(a, perm=rank(x@dim_combination))
 }
 
 setMethod("extract_array", "DelayedAperm",
@@ -182,10 +182,10 @@ setMethod("path", "DelayedAperm",
     function(object, ...) path(seed(object), ...)
 )
 
-### The path() setter sets the path of the seed of a DelayedAperm object so
-### it will work out-of-the-box on any DelayedAperm object with a seed that
-### supports the path() setter. For example it will work if the seed is an
-### HDF5ArraySeed object.
+### The path() setter sets the supplied path on the seed of the DelayedAperm
+### object so it will work out-of-the-box on any DelayedAperm object with a
+### seed that supports the path() setter.
+### For example it will work if the seed is an HDF5ArraySeed object.
 setReplaceMethod("path", "DelayedAperm",
     function(object, ..., value)
     {
