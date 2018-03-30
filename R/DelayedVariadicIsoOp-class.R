@@ -1,11 +1,11 @@
 ### =========================================================================
-### DelayedVariadicOp objects
+### DelayedVariadicIsoOp objects
 ### -------------------------------------------------------------------------
 ###
 ### This class is for internal use only and is not exported.
 ###
 
-setClass("DelayedVariadicOp",
+setClass("DelayedVariadicIsoOp",
     representation(
         seeds="list",   # List of n conformable array-like objects to
                         # combine. Each object is expected to satisfy the
@@ -38,7 +38,7 @@ setClass("DelayedVariadicOp",
     all(dims == first_dim)
 }
 
-.validate_DelayedVariadicOp <- function(x)
+.validate_DelayedVariadicIsoOp <- function(x)
 {
     ## 'seeds' slot.
     if (length(x@seeds) == 0L)
@@ -49,15 +49,15 @@ setClass("DelayedVariadicOp",
     TRUE
 }
 
-setValidity2("DelayedVariadicOp", .validate_DelayedVariadicOp)
+setValidity2("DelayedVariadicIsoOp", .validate_DelayedVariadicIsoOp)
 
-new_DelayedVariadicOp <- function(seed=new("array"), ...,
-                                  OP=identity,
-                                  Rargs=list())
+new_DelayedVariadicIsoOp <- function(seed=new("array"), ...,
+                                     OP=identity,
+                                     Rargs=list())
 {
     seeds <- unname(list(seed, ...))
     OP <- match.fun(OP)
-    new2("DelayedVariadicOp", seeds=seeds, OP=OP, Rargs=Rargs)
+    new2("DelayedVariadicIsoOp", seeds=seeds, OP=OP, Rargs=Rargs)
 }
 
 
@@ -65,38 +65,43 @@ new_DelayedVariadicOp <- function(seed=new("array"), ...,
 ### Implement the "seed contract" i.e. dim(), dimnames(), and extract_array()
 ###
 
-.get_DelayedVariadicOp_dim <- function(x) dim(x@seeds[[1L]])
+.get_DelayedVariadicIsoOp_dim <- function(x) dim(x@seeds[[1L]])
 
-setMethod("dim", "DelayedVariadicOp", .get_DelayedVariadicOp_dim)
+setMethod("dim", "DelayedVariadicIsoOp",
+    .get_DelayedVariadicIsoOp_dim
+)
 
-.get_DelayedVariadicOp_dimnames <- function(x) combine_dimnames(x@seeds)
+.get_DelayedVariadicIsoOp_dimnames <- function(x) combine_dimnames(x@seeds)
 
-setMethod("dimnames", "DelayedVariadicOp", .get_DelayedVariadicOp_dimnames)
+setMethod("dimnames", "DelayedVariadicIsoOp",
+    .get_DelayedVariadicIsoOp_dimnames
+)
 
-.extract_array_from_DelayedVariadicOp <- function(x, index)
+.extract_array_from_DelayedVariadicIsoOp <- function(x, index)
 {
     arrays <- lapply(x@seeds, extract_array, index)
     do.call(x@OP, c(arrays, x@Rargs))
 }
 
-setMethod("extract_array", "DelayedVariadicOp",
-    .extract_array_from_DelayedVariadicOp
+setMethod("extract_array", "DelayedVariadicIsoOp",
+    .extract_array_from_DelayedVariadicIsoOp
 )
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### path() getter/setter
 ###
-### DelayedVariadicOp objects don't support the path() getter/setter for now.
+### DelayedVariadicIsoOp objects don't support the path() getter/setter for
+### now.
 ###
 
-setMethod("path", "DelayedVariadicOp",
+setMethod("path", "DelayedVariadicIsoOp",
     function(object, ...)
         stop(wmsg("path() is not supported on a DelayedArray ",
                   "object with multiple leaf seeds at the moment"))
 )
 
-setReplaceMethod("path", "DelayedVariadicOp",
+setReplaceMethod("path", "DelayedVariadicIsoOp",
     function(object, ..., value)
         stop(wmsg("the path() setter is not supported on a DelayedArray ",
                   "object with multiple leaf seeds at the moment"))

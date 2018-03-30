@@ -27,7 +27,7 @@ Collate: utils.R
 	show-utils.R
 	extract_array.R
 	DelayedAperm-class.R
-	DelayedVariadicOp-class.R
+	DelayedVariadicIsoOp-class.R
 	DelayedAbind-class.R
 	DelayedArray-class.R
 	realize.R
