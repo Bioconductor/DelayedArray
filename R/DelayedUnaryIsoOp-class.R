@@ -49,7 +49,7 @@ setMethod("dimnames", "DelayedUnaryIsoOp", .get_DelayedUnaryIsoOp_dimnames)
 .extract_array_from_DelayedUnaryIsoOp <- function(x, index)
 {
     a <- extract_array(x@seed, index)
-    do.call(x@OP, c(x@Largs list(a), x@Rargs))
+    do.call(x@OP, c(x@Largs, list(a), x@Rargs))
 }
 
 setMethod("extract_array", "DelayedUnaryIsoOp",
