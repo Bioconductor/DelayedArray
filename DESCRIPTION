@@ -26,11 +26,8 @@ Collate: utils.R
 	ArrayGrid-class.R
 	show-utils.R
 	extract_array.R
+	DelayedOp-class.R
 	DelayedAperm-class.R
-	DelayedSubset-class.R
-	DelayedUnaryIsoOp-class.R
-	DelayedVariadicIsoOp-class.R
-	DelayedAbind-class.R
 	DelayedArray-class.R
 	realize.R
 	block_processing.R
