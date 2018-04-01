@@ -140,8 +140,25 @@ setClass("DelayedSubset",
 
 setValidity2("DelayedSubset", .validate_DelayedSubset)
 
-new_DelayedSubset <- function(seed=new("array"), index=list(NULL))
+### 'Nindex' must be a "multidimensional subsetting Nindex" (see utils.R).
+new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
 {
+    seed_dim <- dim(seed)
+    seed_ndim <- length(seed_dim)
+    stopifnot(is.list(Nindex), length(Nindex) == seed_ndim)
+
+    ## Normalize 'Nindex' i.e. check and turn its non-NULL list elements into
+    ## positive integer vectors.
+    seed_dimnames <- dimnames(seed)
+    index <- lapply(seq_len(seed_ndim),
+                    function(along) {
+                        subscript <- Nindex[[along]]
+                        if (is.null(subscript))
+                            return(NULL)
+                        x <- seq_len(seed_dim[[along]])
+                        names(x) <- seed_dimnames[[along]]
+                        normalizeSingleBracketSubscript(subscript, x)
+                    })
     new2("DelayedSubset", seed=seed, index=index)
 }
 
