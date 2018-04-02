@@ -215,7 +215,7 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 ### DelayedDimnames objects
 ###
 
-.INHERIT_FROM_SEED <- 0L
+.INHERIT_FROM_SEED <- -1L
 
 setClass("DelayedDimnames",
     contains="DelayedOp",
@@ -289,8 +289,7 @@ new_DelayedDimnames <- function(seed=new("array"),
     dimnames <- lapply(seq_len(seed_ndim),
                        function(along) {
                            dn <- dimnames[[along]]
-                           if (!is.null(dn) &&
-                               identical(dn, seed_dimnames[[along]]))
+                           if (identical(dn, seed_dimnames[[along]]))
                                return(.INHERIT_FROM_SEED)
                            dn
                        })
