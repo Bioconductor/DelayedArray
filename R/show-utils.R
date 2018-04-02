@@ -5,6 +5,9 @@
 ### Nothing in this file is exported.
 ###
 
+### TODO: Use extract_array() instead of [ to extract array values so
+### show_compact_array() can work on any array-like object that supports
+### extract_array().
 
 ### 'x' must be an ordinary vector or matrix of atomic or recursive type.
 ### 'max.width' takes effect only if 'x' is character or list (i.e. if the
