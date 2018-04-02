@@ -6,6 +6,7 @@
 \alias{Array}
 
 \alias{length,Array-method}
+\alias{isEmpty,Array-method}
 \alias{[[,Array-method}
 
 \title{Array objects}

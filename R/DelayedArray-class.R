@@ -281,8 +281,6 @@ setMethod("dim", "DelayedArray",
     function(x) get_Nindex_lengths(x@index, dim(seed(x)))
 )
 
-setMethod("isEmpty", "DelayedArray", function(x) any(dim(x) == 0L))
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()

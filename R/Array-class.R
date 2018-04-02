@@ -12,11 +12,13 @@ setClass("Array", representation("VIRTUAL"))
 ### it's <= .Machine$integer.max
 setMethod("length", "Array", function(x) prod(dim(x)))
 
+setMethod("isEmpty", "Array", function(x) any(dim(x) == 0L))
+
 ### 'subscripts' is assumed to be an integer vector parallel to 'dim(x)' and
 ### with no out-of-bounds subscripts (i.e. 'all(subscripts >= 1)' and
 ### 'all(subscripts <= dim(x))').
-### NOT exported at the moment but should probably be at some point (like
-### S4Vectors::getListElement() is.
+### NOT exported for now but should probably be at some point (like
+### S4Vectors::getListElement() is).
 setGeneric("getArrayElement", signature="x",
     function(x, subscripts) standardGeneric("getArrayElement")
 )
@@ -39,6 +41,9 @@ setGeneric("getArrayElement", signature="x",
 }
 
 ### Support multi-dimensional and linear subsetting.
+### FIXME: Linear subsetting should support a single *numeric* subscript.
+### FIXME: Multi-dimensional subsetting should support things like
+###        x[[5, 15, 2]] and x[["E", 15, "b"]].
 setMethod("[[", "Array",
     function(x, i, j, ...)
     {

@@ -29,7 +29,6 @@
 \alias{type}
 
 \alias{dim,DelayedArray-method}
-\alias{isEmpty,DelayedArray-method}
 
 \alias{coerce,DelayedArray,SeedDimCombiner-method}
 \alias{aperm}
