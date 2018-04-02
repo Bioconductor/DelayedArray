@@ -111,9 +111,9 @@ setClass("DelayedSubset",
         seed="ANY",   # An array-like object expected to satisfy the "seed
                       # contract".
 
-        index="list"  # List (possibly named) of subscripts as positive
-                      # integer vectors, one per seed dimension. *Missing*
-                      # list elements are allowed and represented by NULLs.
+        index="list"  # List of subscripts as positive integer vectors, one
+                      # per seed dimension. *Missing* list elements are
+                      # allowed and represented by NULLs.
     ),
     prototype(
         seed=new("array"),
@@ -125,15 +125,19 @@ setClass("DelayedSubset",
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
+
     ## 'seed' slot.
     if (seed_ndim == 0L)
         return(wmsg2("'x@seed' must have dimensions"))
+
     ## 'index' slot.
     if (length(x@index) != seed_ndim)
         return(wmsg2("'x@index' must have one list element per dimension ",
                      "in 'x@seed'"))
-    if (!all(S4Vectors:::sapply_isNULL(x@index) |
-             vapply(x@index, is.integer, logical(1), USE.NAMES=FALSE)))
+    if (!is.null(names(x@index)))
+        return(wmsg2("'x@index' should not have names"))
+    ok <- lapply(x@index, function(i) { is.null(i) || is.integer(i) })
+    if (!all(unlist(ok)))
         return(wmsg2("each list element in 'x@index' must be NULL ",
                      "or an integer vector"))
     TRUE
@@ -158,7 +162,7 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
                             return(NULL)
                         x <- seq_len(seed_dim[[along]])
                         names(x) <- seed_dimnames[[along]]
-                        extractROWS(x, subscript)
+                        normalizeSingleBracketSubscript(subscript, x)
                     })
     new2("DelayedSubset", seed=seed, index=index)
 }
@@ -173,9 +177,13 @@ setMethod("dim", "DelayedSubset", .get_DelayedSubset_dim)
 {
     x_seed_dimnames <- dimnames(x@seed)
     ans <- lapply(seq_along(x@index),
-                  get_Nindex_names_along,
-                      Nindex=x@index,
-                      dimnames=x_seed_dimnames)
+                  function(along) {
+                      dn <- x_seed_dimnames[[along]]
+                      i <- x@index[[along]]
+                      if (is.null(dn) || is.null(i))
+                          return(dn)
+                      dn[i]
+                  })
     if (all(S4Vectors:::sapply_isNULL(ans)))
         return(NULL)
     ans
@@ -194,7 +202,7 @@ setMethod("dimnames", "DelayedSubset", .get_DelayedSubset_dimnames)
                          if (is.null(i2))
                              return(i1)
                          if (is.null(i1))
-                             i1 <- seq_len(x_seed_dim[[along]])  # expand 'i1'
+                             return(i2)
                          i1[i2]
                      })
     extract_array(x@seed, index2)
@@ -229,9 +237,11 @@ setClass("DelayedDimnames",
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
+
     ## 'seed' slot.
     if (seed_ndim == 0L)
         return(wmsg2("'x@seed' must have dimensions"))
+
     ## 'dimnames' slot.
     if (length(x@dimnames) != seed_ndim)
         return(wmsg2("'x@dimnames' must have one list element per dimension ",
@@ -243,7 +253,6 @@ setClass("DelayedDimnames",
                  },
                  x@dimnames, seed_dim,
                  SIMPLIFY=FALSE, USE.NAMES=FALSE)
-
     if (!all(unlist(ok)))
         return(wmsg2("each list element in 'x@dimnames' must be NULL, ",
                      "or a character vector of length the extent of ",
@@ -385,9 +394,11 @@ setClass("DelayedAperm",
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
+
     ## 'seed' slot.
     if (seed_ndim == 0L)
         return(wmsg2("'x@seed' must have dimensions"))
+
     ## 'dim_combination' slot.
     if (length(x@dim_combination) == 0L)
         return(wmsg2("'x@dim_combination' cannot be empty"))
@@ -540,10 +551,14 @@ setClass("DelayedAbind",
 
 .validate_DelayedAbind <- function(x)
 {
+    ## 'seeds' slot.
     if (length(x@seeds) == 0L)
         return(wmsg2("'x@seeds' cannot be empty"))
+
+    ## 'along' slot.
     if (!(isSingleInteger(x@along) && x@along > 0L))
         return(wmsg2("'x@along' must be a single positive integer"))
+
     dims <- get_dims_to_bind(x@seeds, x@along)
     if (is.character(dims))
         return(wmsg2(dims))
