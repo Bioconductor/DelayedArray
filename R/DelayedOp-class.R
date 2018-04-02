@@ -4,12 +4,13 @@
 ###
 ### In a DelayedArray object the delayed operations are stored as a tree of
 ### DelayedOp objects. Each node in the tree is represented by a DelayedOp
-### object. 5 types of nodes are currently supported. Each type is a concrete
+### object. 6 types of nodes are currently supported. Each type is a concrete
 ### DelayedOp subclass:
 ###
 ###   Node type      outdegree  operation
 ###   ---------------------------------------------------------------------
 ###   DelayedSubset          1  Multi-dimensional single bracket subsetting
+###   DelayedDimnames        1  Set dimnames
 ###   DelayedUnaryIsoOp      1  Unary op that preserves the geometry
 ###   DelayedAperm           1  Extended aperm() (can drop dimensions)
 ###   DelayedVariadicIsoOp   N  N-ary op that preserves the geometry
@@ -21,7 +22,7 @@
 ### seed() and path() getters and setters.
 ###
 
-### This virtual class and its 5 concrete subclasses are for internal use
+### This virtual class and its 6 concrete subclasses are for internal use
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
@@ -133,7 +134,7 @@ setClass("DelayedSubset",
                      "in 'x@seed'"))
     if (!all(S4Vectors:::sapply_isNULL(x@index) |
              vapply(x@index, is.integer, logical(1), USE.NAMES=FALSE)))
-        return(wmsg2("every list element in 'x@index' must be either NULL ",
+        return(wmsg2("each list element in 'x@index' must be NULL ",
                      "or an integer vector"))
     TRUE
 }
@@ -200,6 +201,118 @@ setMethod("dimnames", "DelayedSubset", .get_DelayedSubset_dimnames)
 }
 
 setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedDimnames objects
+###
+
+.INHERIT_FROM_SEED <- 0L
+
+setClass("DelayedDimnames",
+    contains="DelayedOp",
+    representation(
+        seed="ANY",      # An array-like object expected to satisfy the "seed
+                         # contract".
+
+        dimnames="list"  # List with one list element per seed dimension. Each
+                         # list element must be NULL, or a character vector,
+                         # or special value .INHERIT_FROM_SEED
+    ),
+    prototype(
+        seed=new("array"),
+        dimnames=list(.INHERIT_FROM_SEED)
+    )
+)
+
+.validate_DelayedDimnames <- function(x)
+{
+    seed_dim <- dim(x@seed)
+    seed_ndim <- length(seed_dim)
+    ## 'seed' slot.
+    if (seed_ndim == 0L)
+        return(wmsg2("'x@seed' must have dimensions"))
+    ## 'dimnames' slot.
+    if (length(x@dimnames) != seed_ndim)
+        return(wmsg2("'x@dimnames' must have one list element per dimension ",
+                     "in 'x@seed'"))
+    ok <- mapply(function(dn, d) {
+                     identical(dn, .INHERIT_FROM_SEED) ||
+                     is.null(dn) ||
+                     is.character(dn) && length(dn) == d
+                 },
+                 x@dimnames, seed_dim,
+                 SIMPLIFY=FALSE, USE.NAMES=FALSE)
+
+    if (!all(unlist(ok)))
+        return(wmsg2("each list element in 'x@dimnames' must be NULL, ",
+                     "or a character vector of length the extent of ",
+                     "the corresponding dimension, or special value ",
+                     .INHERIT_FROM_SEED))
+    TRUE
+}
+
+setValidity2("DelayedDimnames", .validate_DelayedDimnames)
+
+### TODO: Also make sure that each 'dimnames' list element is either NULL or
+### a character vector of the correct length.
+.normalize_dimnames <- function(dimnames, ndim)
+{
+    if (is.null(dimnames))
+        return(vector("list", length=ndim))
+    if (!is.list(dimnames))
+        stop("the supplied dimnames must be a list")
+    if (length(dimnames) > ndim)
+        stop(wmsg("the supplied dimnames is longer ",
+                  "than the number of dimensions"))
+    if (length(dimnames) < ndim)
+        length(dimnames) <- ndim
+    dimnames
+}
+
+new_DelayedDimnames <- function(seed=new("array"),
+                                dimnames=list(.INHERIT_FROM_SEED))
+{
+    seed_dim <- dim(seed)
+    seed_ndim <- length(seed_dim)
+    dimnames <- .normalize_dimnames(dimnames, seed_ndim)
+    seed_dimnames <- dimnames(seed)
+    dimnames <- lapply(seq_len(seed_ndim),
+                       function(along) {
+                           dn <- dimnames[[along]]
+                           if (!is.null(dn) &&
+                               identical(dn, seed_dimnames[[along]]))
+                               return(.INHERIT_FROM_SEED)
+                           dn
+                       })
+    new2("DelayedDimnames", seed=seed, dimnames=dimnames)
+}
+
+### Seed contract.
+
+setMethod("dim", "DelayedDimnames", function(x) dim(x@seed))
+
+.get_DelayedDimnames_dimnames <- function(x)
+{
+    x_dimnames <- x@dimnames
+    x_seed_dimnames <- dimnames(x@seed)
+    ans <- lapply(seq_along(x_dimnames),
+                  function(along) {
+                      dn <- x_dimnames[[along]]
+                      if (identical(dn, .INHERIT_FROM_SEED))
+                          dn <- x_seed_dimnames[[along]]
+                      dn
+                  })
+    if (all(S4Vectors:::sapply_isNULL(ans)))
+        return(NULL)
+    ans
+}
+
+setMethod("dimnames", "DelayedDimnames", .get_DelayedDimnames_dimnames)
+
+setMethod("extract_array", "DelayedDimnames",
+    function(x, index) extract_array(x@seed, index)
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
