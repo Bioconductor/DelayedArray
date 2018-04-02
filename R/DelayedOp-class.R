@@ -157,7 +157,7 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
                             return(NULL)
                         x <- seq_len(seed_dim[[along]])
                         names(x) <- seed_dimnames[[along]]
-                        normalizeSingleBracketSubscript(subscript, x)
+                        extractROWS(x, subscript)
                     })
     new2("DelayedSubset", seed=seed, index=index)
 }
