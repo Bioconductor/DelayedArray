@@ -334,13 +334,15 @@ setClass("DelayedUnaryIsoOp",
                          # return an array parallel to the input array (i.e.
                          # same dimensions).
 
-        Largs="list",    # Additional left arguments to OP.
-        Rargs="list",    # Additional right arguments to OP.
+        Largs="list",    # Left arguments to OP i.e. arguments to place
+                         # before the array in the function call.
+        Rargs="list",    # Right arguments to OP i.e. arguments to place
+                         # after the array in the function call.
 
-        Lidx="integer",  # Index of the left arguments parallel to the rows
-                         # of the seed.
-        Ridx="integer"   # Index of the right arguments parallel to the rows
-                         # of the seed.
+        Lidx="integer",  # Index of left arguments that are parallel to the
+                         # rows of the seed.
+        Ridx="integer"   # Index of right arguments that are parallel to the
+                         # rows of the seed.
     ),
     prototype(
         seed=new("array"),
