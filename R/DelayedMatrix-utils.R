@@ -28,7 +28,7 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
               ncol(x) == nrow(y))
 
     ans_dim <- c(nrow(x), ncol(y))
-    ans_dimnames <- list(rownames(x), colnames(y))
+    ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
     ans_type <- typeof(match.fun(type(x))(1) * match.fun(type(y))(1))
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
