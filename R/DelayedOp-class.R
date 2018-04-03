@@ -387,7 +387,17 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
             Largs[x@Lidx] <- lapply(Largs[x@Lidx], extractROWS, i1)
             Rargs[x@Ridx] <- lapply(Rargs[x@Ridx], extractROWS, i1)
         }
-        do.call(x@OP, c(Largs, list(a), Rargs))
+        ans <- do.call(x@OP, c(Largs, list(a), Rargs))
+        ## Some operations (e.g. dnorm()) don't propagate the "dim" attribute
+        ## if the input array is empty.
+        a_dim <- dim(a)
+        ans_dim <- dim(ans)
+        if (is.null(ans_dim)) {
+            dim(ans) <- a_dim  # propagate the "dim" attribute
+        } else {
+            stopifnot(identical(ans_dim, a_dim))  # sanity check
+        }
+        ans
     }
 )
 
