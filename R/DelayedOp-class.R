@@ -175,26 +175,24 @@ setMethod("dim", "DelayedSubset", .get_DelayedSubset_dim)
 
 .get_DelayedSubset_dimnames <- function(x)
 {
-    x_seed_dimnames <- dimnames(x@seed)
+    seed_dimnames <- dimnames(x@seed)
     ans <- lapply(seq_along(x@index),
                   function(along) {
-                      dn <- x_seed_dimnames[[along]]
+                      dn <- seed_dimnames[[along]]
                       i <- x@index[[along]]
                       if (is.null(dn) || is.null(i))
                           return(dn)
                       dn[i]
                   })
-    if (all(S4Vectors:::sapply_isNULL(ans)))
-        return(NULL)
-    ans
+    simplify_NULL_dimnames(ans)
 }
 
 setMethod("dimnames", "DelayedSubset", .get_DelayedSubset_dimnames)
 
 .extract_array_from_DelayedSubset <- function(x, index)
 {
-    x_seed_dim <- dim(x@seed)
-    stopifnot(is.list(index), length(index) == length(x_seed_dim))
+    seed_dim <- dim(x@seed)
+    stopifnot(is.list(index), length(index) == length(seed_dim))
     index2 <- lapply(seq_along(x@index),
                      function(along) {
                          i1 <- x@index[[along]]
@@ -303,17 +301,15 @@ setMethod("dim", "DelayedDimnames", function(x) dim(x@seed))
 .get_DelayedDimnames_dimnames <- function(x)
 {
     x_dimnames <- x@dimnames
-    x_seed_dimnames <- dimnames(x@seed)
+    seed_dimnames <- dimnames(x@seed)
     ans <- lapply(seq_along(x_dimnames),
                   function(along) {
                       dn <- x_dimnames[[along]]
                       if (identical(dn, .INHERIT_FROM_SEED))
-                          dn <- x_seed_dimnames[[along]]
+                          dn <- seed_dimnames[[along]]
                       dn
                   })
-    if (all(S4Vectors:::sapply_isNULL(ans)))
-        return(NULL)
-    ans
+    simplify_NULL_dimnames(ans)
 }
 
 setMethod("dimnames", "DelayedDimnames", .get_DelayedDimnames_dimnames)
@@ -432,13 +428,10 @@ setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
 
 .get_DelayedAperm_dimnames <- function(x)
 {
-    ans <- dimnames(x@seed)
-    if (is.null(ans))
+    seed_dimnames <- dimnames(x@seed)
+    if (is.null(seed_dimnames))
         return(NULL)
-    ans <- ans[x@dim_combination]
-    if (all(S4Vectors:::sapply_isNULL(ans)))
-        return(NULL)
-    ans
+    simplify_NULL_dimnames(seed_dimnames[x@dim_combination])
 }
 
 setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
@@ -522,13 +515,7 @@ new_DelayedVariadicIsoOp <- function(seed=new("array"), ...,
 setMethod("dim", "DelayedVariadicIsoOp", function(x) dim(x@seeds[[1L]]))
 
 setMethod("dimnames", "DelayedVariadicIsoOp",
-    function(x)
-    {
-        ans <- combine_dimnames(x@seeds)
-        if (all(S4Vectors:::sapply_isNULL(ans)))
-            return(NULL)
-        ans
-    }
+    function(x) simplify_NULL_dimnames(combine_dimnames(x@seeds))
 )
 
 setMethod("extract_array", "DelayedVariadicIsoOp",

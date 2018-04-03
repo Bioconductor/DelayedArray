@@ -180,13 +180,7 @@ setValidity2("ChunkedRleArraySeed", .validate_ChunkedRleArraySeed)
 setMethod("dim", "RleArraySeed", function(x) x@DIM)
 
 setMethod("dimnames", "RleArraySeed",
-    function(x)
-    {
-        ans <- x@DIMNAMES
-        if (all(S4Vectors:::sapply_isNULL(ans)))
-            return(NULL)
-        ans
-    }
+    function(x) simplify_NULL_dimnames(x@DIMNAMES)
 )
 
 

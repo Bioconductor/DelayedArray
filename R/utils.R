@@ -7,6 +7,18 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### simplify_NULL_dimnames()
+###
+
+simplify_NULL_dimnames <- function(dimnames)
+{
+    if (all(S4Vectors:::sapply_isNULL(dimnames)))
+        return(NULL)
+    dimnames
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies
 ### of 'x'
 ###

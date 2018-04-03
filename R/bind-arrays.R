@@ -70,9 +70,7 @@ combine_dimnames_along <- function(objects, dims, along)
     along_names <- unlist(along_names, use.names=FALSE)
     if (!is.null(along_names))
         dimnames[[along]] <- along_names
-    if (all(S4Vectors:::sapply_isNULL(dimnames)))
-        dimnames <- NULL
-    dimnames
+    simplify_NULL_dimnames(dimnames)
 }
 
 
