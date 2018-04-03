@@ -432,8 +432,13 @@ setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
 
 .get_DelayedAperm_dimnames <- function(x)
 {
-    seed_dimnames <- dimnames(x@seed)
-    seed_dimnames[x@dim_combination]  # return NULL if 'seed_dimnames' is NULL
+    ans <- dimnames(x@seed)
+    if (is.null(ans))
+        return(NULL)
+    ans <- ans[x@dim_combination]
+    if (all(S4Vectors:::sapply_isNULL(ans)))
+        return(NULL)
+    ans
 }
 
 setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
@@ -517,7 +522,13 @@ new_DelayedVariadicIsoOp <- function(seed=new("array"), ...,
 setMethod("dim", "DelayedVariadicIsoOp", function(x) dim(x@seeds[[1L]]))
 
 setMethod("dimnames", "DelayedVariadicIsoOp",
-    function(x) combine_dimnames(x@seeds)
+    function(x)
+    {
+        ans <- combine_dimnames(x@seeds)
+        if (all(S4Vectors:::sapply_isNULL(ans)))
+            return(NULL)
+        ans
+    }
 )
 
 setMethod("extract_array", "DelayedVariadicIsoOp",
