@@ -9,6 +9,28 @@
 \alias{type,array-method}
 \alias{type,ANY-method}
 
+\alias{as.array.Array}
+\alias{as.array,Array-method}
+
+\alias{as.matrix.Array}
+\alias{as.matrix,Array-method}
+\alias{as.data.frame.Array}
+\alias{as.data.frame,Array-method}
+\alias{as.vector.Array}
+\alias{as.vector,Array-method}
+\alias{as.logical.Array}
+\alias{as.logical,Array-method}
+\alias{as.integer.Array}
+\alias{as.integer,Array-method}
+\alias{as.numeric.Array}
+\alias{as.numeric,Array-method}
+\alias{as.complex.Array}
+\alias{as.complex,Array-method}
+\alias{as.character.Array}
+\alias{as.character,Array-method}
+\alias{as.raw.Array}
+\alias{as.raw,Array-method}
+
 \alias{chunkdim}
 \alias{chunkdim,ANY-method}
 

@@ -12,19 +12,19 @@
 
 setMethod("dnorm", "DelayedArray",
     function(x, mean=0, sd=1, log=FALSE)
-        register_delayed_op(x, "dnorm",
+        stash_DelayedUnaryIsoOp(x, "dnorm",
             Rargs=list(mean=mean, sd=sd, log=log))
 )
 
 setMethod("pnorm", "DelayedArray",
     function(q, mean=0, sd=1, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(q, "pnorm",
+        stash_DelayedUnaryIsoOp(q, "pnorm",
             Rargs=list(mean=mean, sd=sd, lower.tail=lower.tail, log.p=log.p))
 )
 
 setMethod("qnorm", "DelayedArray",
     function(p, mean=0, sd=1, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(p, "qnorm",
+        stash_DelayedUnaryIsoOp(p, "qnorm",
             Rargs=list(mean=mean, sd=sd, lower.tail=lower.tail, log.p=log.p))
 )
 
@@ -38,20 +38,20 @@ setMethod("qnorm", "DelayedArray",
 
 setMethod("dbinom", "DelayedArray",
     function(x, size, prob, log=FALSE)
-        register_delayed_op(x, "dbinom",
+        stash_DelayedUnaryIsoOp(x, "dbinom",
             Rargs=list(size=size, prob=prob, log=log))
 )
 
 setMethod("pbinom", "DelayedArray",
     function(q, size, prob, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(q, "pbinom",
+        stash_DelayedUnaryIsoOp(q, "pbinom",
             Rargs=list(size=size, prob=prob,
                        lower.tail=lower.tail, log.p=log.p))
 )
 
 setMethod("qbinom", "DelayedArray",
     function(p, size, prob, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(p, "qbinom",
+        stash_DelayedUnaryIsoOp(p, "qbinom",
             Rargs=list(size=size, prob=prob,
                        lower.tail=lower.tail, log.p=log.p))
 )
@@ -66,19 +66,19 @@ setMethod("qbinom", "DelayedArray",
 
 setMethod("dpois", "DelayedArray",
     function(x, lambda, log=FALSE)
-        register_delayed_op(x, "dpois",
+        stash_DelayedUnaryIsoOp(x, "dpois",
             Rargs=list(lambda=lambda, log=log))
 )
 
 setMethod("ppois", "DelayedArray",
     function(q, lambda, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(q, "ppois",
+        stash_DelayedUnaryIsoOp(q, "ppois",
             Rargs=list(lambda=lambda, lower.tail=lower.tail, log.p=log.p))
 )
 
 setMethod("qpois", "DelayedArray",
     function(p, lambda, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(p, "qpois",
+        stash_DelayedUnaryIsoOp(p, "qpois",
             Rargs=list(lambda=lambda, lower.tail=lower.tail, log.p=log.p))
 )
 
@@ -92,20 +92,20 @@ setMethod("qpois", "DelayedArray",
 
 setMethod("dlogis", "DelayedArray",
     function(x, location=0, scale=1, log=FALSE)
-        register_delayed_op(x, "dlogis",
+        stash_DelayedUnaryIsoOp(x, "dlogis",
             Rargs=list(location=location, scale=scale, log=log))
 )
 
 setMethod("plogis", "DelayedArray",
     function(q, location=0, scale=1, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(q, "plogis",
+        stash_DelayedUnaryIsoOp(q, "plogis",
             Rargs=list(location=location, scale=scale,
                        lower.tail=lower.tail, log.p=log.p))
 )
 
 setMethod("qlogis", "DelayedArray",
     function(p, location=0, scale=1, lower.tail=TRUE, log.p=FALSE)
-        register_delayed_op(p, "qlogis",
+        stash_DelayedUnaryIsoOp(p, "qlogis",
             Rargs=list(location=location, scale=scale,
                        lower.tail=lower.tail, log.p=log.p))
 )

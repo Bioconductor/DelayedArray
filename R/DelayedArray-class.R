@@ -6,31 +6,25 @@
 setClass("DelayedArray",
     contains="Array",
     representation(
-        seed="ANY",         # An array-like object expected to satisfy
-                            # the "seed contract" i.e. to support dim(),
-                            # dimnames(), and extract_array().
-
-        index="list",       # List (possibly named) of subscripts as
-                            # positive integer vectors, one vector per
-                            # seed dimension. *Missing* list elements
-                            # are allowed and represented by NULLs.
-
-        delayed_ops="list"  # List of delayed operations. See below
-                            # for the details.
+        seed="ANY"  # An array-like object expected to satisfy the "seed
+                    # contract" i.e. to support dim(), dimnames(), and
+                    # extract_array().
     ),
     prototype(
-        seed=new("array"),
-        index=list(NULL)
+        seed=new("array")
     )
 )
 
 ### Extending DataTable gives us a few things for free (head(), tail(),
-### etc...)
+### etc...). Note that even though DelayedMatrix already extends Array via
+### DelayedArray, we need to make DelayedMatrix a *direct* child of Array
+### and to place Array *before* DataTable in the contains field below. This
+### ensures that method dispatch will pick the method for Array in case a
+### generic has methods defined for Array and DataTable (e.g. as.data.frame()).
 setClass("DelayedMatrix",
-    contains=c("DelayedArray", "DataTable"),
+    contains=c("DelayedArray", "Array", "DataTable"),
     prototype=prototype(
-        seed=new("matrix"),
-        index=list(NULL, NULL)
+        seed=new("matrix")
     )
 )
 
@@ -62,21 +56,12 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
-    ## 'seed' slot.
     if (seed_ndim == 0L)
-        return(wmsg2("'x@seed' must have dimensions"))
-    ## 'index' slot.
-    if (length(x@index) != seed_ndim)
-        return(wmsg2("'x@index' must have one list element per dimension ",
-                     "in 'x@seed'"))
-    if (!all(S4Vectors:::sapply_isNULL(x@index) |
-             vapply(x@index, is.integer, logical(1), USE.NAMES=FALSE)))
-        return(wmsg2("every list element in 'x@index' must be either NULL ",
-                     "or an integer vector"))
+        return(wmsg2("the seed of a DelayedArray object must have dimensions"))
     ## In the context of validObject(), 'class(x)' is always "DelayedArray"
     ## and not the real class of 'x', which seems to be a bug in validObject().
     ## This prevents us from doing the check below.
-    #if (length(dim(x)) == 2L && !is(x, matrixClass(x)))
+    #if (seed_ndim == 2L && !is(x, matrixClass(x)))
     #    return(wmsg2("'x' has 2 dimensions but is not a ",
     #                 matrixClass(x), " derivative"))
     TRUE
@@ -103,12 +88,10 @@ setValidity2("DelayedMatrix", .validate_DelayedMatrix)
 ### NOT exported but used in HDF5Array!
 new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
 {
-    seed <- remove_pristine_DelayedArray_wrapping(seed)
     seed_ndim <- length(dim(seed))
     if (seed_ndim == 2L)
         Class <- matrixClass(new(Class))
-    index <- vector(mode="list", length=seed_ndim)
-    new2(Class, seed=seed, index=index)
+    new2(Class, seed=seed)
 }
 
 setGeneric("DelayedArray", function(seed) standardGeneric("DelayedArray"))
@@ -193,6 +176,19 @@ setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+
+setMethod("dim", "DelayedArray", function(x) dim(x@seed))
+
+setMethod("dimnames", "DelayedArray", function(x) dimnames(x@seed))
+
+setMethod("extract_array", "DelayedArray",
+    function(x, index) extract_array(x@seed, index)
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### seed() getter/setter
 ###
 
@@ -234,67 +230,59 @@ setReplaceMethod("path", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Pristine objects
+### Stash delayed ops in a DelayedArray object
 ###
-### A pristine DelayedArray object is an object that does not carry any
-### delayed operation on it. In other words, it's in sync with (i.e. reflects
-### the content of) its seed.
+### Each "stashing" utility below:
+###   1) creates a new DelayedOp object representing a particular delayed
+###      operation,
+###   2) "stashes" the new DelayedOp object inside the input DelayedArray
+###      object 'x' by inserting it in the tree of DelayedOp objects (stored
+###      in 'x@seed') as the new root node.
+###
+### Note that these "stashing" utilities are provided only for the *unary*
+### DelayedOp nodes at the moment (see DelayedOp-class.R for a list of all
+### node types).
 ###
 
-### NOT exported but used in HDF5Array!
-### Note that false negatives happen when 'x' carries delayed operations that
-### do nothing, but that's ok.
-is_pristine <- function(x)
+stash_DelayedSubset <- function(x, Nindex)
 {
-    ## 'x' should not carry any delayed operation on it, that is, all the
-    ## DelayedArray slots must be in their original state.
-    x2 <- new_DelayedArray(seed(x))
-    class(x) <- class(x2) <- "DelayedArray"
-    identical(x, x2)
+    DelayedArray(new_DelayedSubset(x@seed, Nindex))
 }
 
-### Remove the DelayedArray wrapping (or nested wrappings) from around the
-### seed if the wrappings are pristine.
-remove_pristine_DelayedArray_wrapping <- function(x)
+stash_DelayedDimnames <- function(x, dimnames)
 {
-    if (!(is(x, "DelayedArray") && is_pristine(x)))
-        return(x)
-    remove_pristine_DelayedArray_wrapping(seed(x))
+    DelayedArray(new_DelayedDimnames(x@seed, dimnames))
 }
 
-### When a pristine DelayedArray derived object (i.e. an HDF5Array object) is
-### about to be touched, we first need to downgrade it to a DelayedArray or
-### DelayedMatrix *instance*.
-downgrade_to_DelayedArray_or_DelayedMatrix <- function(x)
+stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
+                                       Lidx=integer(0), Ridx=integer(0))
 {
-    if (is(x, "DelayedMatrix"))
-        return(as(x, "DelayedMatrix", strict=TRUE))
-    as(x, "DelayedArray", strict=TRUE)
+    DelayedArray(new_DelayedUnaryIsoOp(x@seed,
+                                       OP=OP, Largs=Largs, Rargs=Rargs,
+                                       Lidx=Lidx, Ridx=Ridx))
+}
+
+stash_DelayedAperm <- function(x, dim_combination)
+{
+    DelayedArray(new_DelayedAperm(x@seed, dim_combination))
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### dim() getter
+### Pristine objects
+###
+### A pristine DelayedArray object is an object that does not carry any
+### delayed operation.
 ###
 
-setMethod("dim", "DelayedArray",
-    function(x) get_Nindex_lengths(x@index, dim(seed(x)))
-)
+### Note that false negatives happen when 'x' carries delayed operations that
+### do nothing, but that's ok.
+#is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
-
-setAs("DelayedArray", "DelayedAperm",
-    function(from)
-    {
-        from_seed <- seed(from)
-        if (is_pristine(from) && is(from_seed, "DelayedAperm"))
-            return(from_seed)
-        new_DelayedAperm(from)
-    }
-)
 
 .aperm.DelayedArray <- function(a, perm)
 {
@@ -304,7 +292,7 @@ setAs("DelayedArray", "DelayedAperm",
     } else {
         perm <- normarg_perm(perm, a_dim)
     }
-    DelayedArray(aperm(as(a, "DelayedAperm"), perm))
+    stash_DelayedAperm(a, perm)
 }
 
 ### S3/S4 combo for aperm.DelayedArray
@@ -399,77 +387,12 @@ setMethod("drop", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### dimnames()
+### dimnames() setter
 ###
 
-### dimnames() getter.
-
-setMethod("dimnames", "DelayedArray",
-    function(x)
-    {
-        x_seed_dimnames <- dimnames(seed(x))
-        ans <- lapply(seq_along(x@index),
-                      get_Nindex_names_along,
-                        Nindex=x@index,
-                        dimnames=x_seed_dimnames)
-        if (all(S4Vectors:::sapply_isNULL(ans)))
-            return(NULL)
-        ans
-    }
+setReplaceMethod("dimnames", "DelayedArray",
+    function(x, value) stash_DelayedDimnames(x, value)
 )
-
-### dimnames() setter.
-
-.normalize_dimnames_replacement_value <- function(value, ndim)
-{
-    if (is.null(value))
-        return(vector("list", length=ndim))
-    if (!is.list(value))
-        stop("the supplied dimnames must be a list")
-    if (length(value) > ndim)
-        stop(wmsg("the supplied dimnames is longer ",
-                  "than the number of dimensions"))
-    if (length(value) <- ndim)
-        length(value) <- ndim
-    value
-}
-
-.set_DelayedArray_dimnames <- function(x, value)
-{
-    value <- .normalize_dimnames_replacement_value(value, length(x@index))
-
-    ## We quickly identify a no-op situation. While doing so, we are careful to
-    ## not trigger a copy of the "index" slot (which can be big). The goal is
-    ## to make a no-op like 'dimnames(x) <- dimnames(x)' as fast as possible.
-    x_seed_dimnames <- dimnames(seed(x))
-    touched_idx <- which(mapply(
-        function(along, names)
-            !identical(
-                get_Nindex_names_along(x@index, x_seed_dimnames, along),
-                names
-            ),
-        seq_along(x@index), value,
-        USE.NAMES=FALSE
-    ))
-    if (length(touched_idx) == 0L)
-        return(x)  # no-op
-
-    x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-    x_seed_dim <- dim(seed(x))
-    x@index[touched_idx] <- mapply(
-        function(along, names) {
-            i <- x@index[[along]]
-            if (is.null(i))
-                i <- seq_len(x_seed_dim[[along]])  # expand 'i'
-            setNames(i, names)
-        },
-        touched_idx, value[touched_idx],
-        SIMPLIFY=FALSE, USE.NAMES=FALSE
-    )
-    x
-}
-
-setReplaceMethod("dimnames", "DelayedArray", .set_DelayedArray_dimnames)
 
 ### names() getter & setter.
 
@@ -498,187 +421,20 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Management of delayed operations
-###
-### The 'delayed_ops' slot represents the list of delayed operations op1, op2,
-### etc... Each delayed operation is itself represented by a list of length 4:
-###   1) The name of the function to call (e.g. "+" or "log").
-###   2) The list of "left arguments" i.e. the list of arguments to place
-###      before the array in the function call.
-###   3) The list of "right arguments" i.e. the list of arguments to place
-###      after the array in the function call.
-###   4) A single logical. Indicates the dimension along which the (left or
-###      right) argument of the function call needs to be recycled when the
-###      operation is actually executed (done by .execute_delayed_ops() which
-###      is called by as.array()). FALSE: along the 1st dim; TRUE: along
-###      the last dim; NA: no recycling. Recycling is only supported for
-###      function calls with 2 arguments (i.e. the array and the recycled
-###      argument) at the moment.
-###      
-### Each operation must return an array of the same dimensions as the original
-### array.
+### [
 ###
 
-register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
-                                        recycle_along_first_dim=FALSE)
-{
-    if (recycle_along_first_dim) {
-        nLargs <- length(Largs)
-        nRargs <- length(Rargs)
-        ## Recycling is only supported for function calls with 2 arguments
-        ## (i.e. the array and the recycled argument) at the moment.
-        stopifnot(nLargs + nRargs == 1L)
-        partially_recycled_arg <- if (nLargs == 1L) Largs[[1L]] else Rargs[[1L]]
-        stopifnot(length(partially_recycled_arg) == nrow(x))
-    }
-    delayed_op <- list(FUN, Largs, Rargs, recycle_along_first_dim)
-    x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-    x@delayed_ops <- c(x@delayed_ops, list(delayed_op))
-    x
-}
-
-.subset_delayed_op_args <- function(delayed_op, i)
-{
-    recycle_along_first_dim <- delayed_op[[4L]]
-    if (!recycle_along_first_dim)
-        return(delayed_op)
-    Largs <- delayed_op[[2L]]
-    Rargs <- delayed_op[[3L]]
-    nLargs <- length(Largs)
-    nRargs <- length(Rargs)
-    stopifnot(nLargs + nRargs == 1L)
-    if (nLargs == 1L) {
-        new_arg <- extractROWS(Largs[[1L]], i)
-        delayed_op[[2L]] <- list(new_arg)
-    } else {
-        new_arg <- extractROWS(Rargs[[1L]], i)
-        delayed_op[[3L]] <- list(new_arg)
-    }
-    if (length(new_arg) == 1L)
-        delayed_op[[4L]] <- FALSE
-    delayed_op
-}
-
-.subset_delayed_ops_args <- function(delayed_ops, i)
-    lapply(delayed_ops, .subset_delayed_op_args, i)
-
-### 'a' is the ordinary array returned by the "combining" operator.
-.execute_delayed_ops <- function(a, delayed_ops)
-{
-    a_dim <- dim(a)
-    first_dim <- a_dim[[1L]]
-    a_len <- length(a)
-    if (a_len == 0L) {
-        p1 <- 0L
-    } else {
-        p1 <- a_len / first_dim
-    }
-
-    recycle_arg <- function(partially_recycled_arg) {
-        stopifnot(length(partially_recycled_arg) == first_dim)
-        rep.int(partially_recycled_arg, p1)
-    }
-
-    prepare_call_args <- function(a, delayed_op) {
-        Largs <- delayed_op[[2L]]
-        Rargs <- delayed_op[[3L]]
-        recycle_along_first_dim <- delayed_op[[4L]]
-        if (recycle_along_first_dim) {
-            nLargs <- length(Largs)
-            nRargs <- length(Rargs)
-            stopifnot(nLargs + nRargs == 1L)
-            if (nLargs == 1L) {
-                Largs <- list(recycle_arg(Largs[[1L]]))
-            } else {
-                Rargs <- list(recycle_arg(Rargs[[1L]]))
-            }
-        }
-        c(Largs, list(a), Rargs)
-    }
-
-    for (delayed_op in delayed_ops) {
-        FUN <- delayed_op[[1L]]
-        call_args <- prepare_call_args(a, delayed_op)
-
-        ## Perform the delayed operation.
-        a <- do.call(FUN, call_args)
-
-        ## Some vectorized operations on an ordinary array can drop the dim
-        ## attribute (e.g. comparing a zero-col matrix with an atomic vector).
-        a_new_dim <- dim(a)
-        if (is.null(a_new_dim)) {
-            ## Restore the dim attribute.
-            a <- set_dim(a, a_dim)
-        } else {
-            ## Sanity check.
-            stopifnot(identical(a_dim, a_new_dim))
-        }
-    }
-    a
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Multi-dimensional single bracket subsetting
-###
-###     x[i_1, i_2, ..., i_n]
-###
-### Return an object of the same class as 'x' (endomorphism).
-### 'user_Nindex' must be a "multidimensional subsetting Nindex" i.e. a
-### list with one subscript per dimension in 'x'. Missing subscripts must
-### be represented by NULLs.
-###
-
-.subset_DelayedArray_by_Nindex <- function(x, user_Nindex)
-{
-    stopifnot(is.list(user_Nindex))
-    x_index <- x@index
-    x_ndim <- length(x_index)
-    x_seed_dim <- dim(seed(x))
-    x_seed_dimnames <- dimnames(seed(x))
-    x_delayed_ops <- x@delayed_ops
-    for (along in seq_along(user_Nindex)) {
-        subscript <- user_Nindex[[along]]
-        if (is.null(subscript))
-            next
-        i <- x_index[[along]]
-        if (is.null(i)) {
-            i <- seq_len(x_seed_dim[[along]])  # expand 'i'
-            names(i) <- get_Nindex_names_along(x_index, x_seed_dimnames, along)
-        }
-        subscript <- normalizeSingleBracketSubscript(subscript, i,
-                                                     as.NSBS=TRUE)
-        x_index[[along]] <- extractROWS(i, subscript)
-        if (along == 1L)
-            x_delayed_ops <- .subset_delayed_ops_args(x_delayed_ops, subscript)
-    }
-    if (!identical(x@index, x_index)) {
-        x <- downgrade_to_DelayedArray_or_DelayedMatrix(x)
-        x@index <- x_index
-        if (!identical(x@delayed_ops, x_delayed_ops))
-            x@delayed_ops <- x_delayed_ops
-    }
-    x
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Linear single bracket subsetting
-###
-###     x[i]
-###
+### Linear single bracket subsetting e.g. x[5].
 ### Return an atomic vector.
-###
-
 .subset_DelayedArray_by_1Dindex <- function(x, i)
 {
     if (!is.numeric(i))
         stop(wmsg("1D-style subsetting of a DelayedArray object only ",
                   "accepts a numeric subscript at the moment"))
     if (length(i) == 0L) {
-        user_Nindex <- as.list(integer(length(dim(x))))
-        ## x0 <- x[0, ..., 0]
-        x0 <- .subset_DelayedArray_by_Nindex(x, user_Nindex)
+        ## x0 <- x[integer(0), ..., integer(0)]
+        index <- rep.int(list(integer(0)), length(dim(x)))
+        x0 <- extract_array(x, index)
         return(as.vector(x0))
     }
     if (anyNA(i))
@@ -717,24 +473,26 @@ register_delayed_op <- function(x, FUN, Largs=list(), Rargs=list(),
     unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
 }
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### [
-###
-
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
 {
     if (missing(x))
         stop("'x' is missing")
-    user_Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
-    nsubscript <- length(user_Nindex)
+    Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
+    nsubscript <- length(Nindex)
     if (nsubscript != 0L && nsubscript != length(dim(x))) {
         if (nsubscript != 1L)
             stop("incorrect number of subscripts")
-        return(.subset_DelayedArray_by_1Dindex(x, user_Nindex[[1L]]))
+        ## Linear single bracket subsetting e.g. x[5].
+        return(.subset_DelayedArray_by_1Dindex(x, Nindex[[1L]]))
     }
-    .subset_DelayedArray_by_Nindex(x, user_Nindex)
+    ## Multi-dimensional single bracket subsetting
+    ##
+    ##     x[i_1, i_2, ..., i_n]
+    ##
+    ## Return an object of the same class as 'x' (endomorphism).
+    stash_DelayedSubset(x, Nindex)
 }
+
 setMethod("[", "DelayedArray", .subset_DelayedArray)
 
 
@@ -761,7 +519,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
         stop(wmsg(.filling_error_msg))
     value_len <- length(value)
     if (value_len == 1L)
-        return(register_delayed_op(x, `[<-`, Rargs=list(value=value)))
+        return(stash_DelayedUnaryIsoOp(x, `[<-`, Rargs=list(value=value)))
     x_len <- length(x)
     if (value_len > x_len)
         stop(wmsg("'value' is longer than 'x'"))
@@ -771,21 +529,20 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
             stop(wmsg(.filling_error_msg))
         value <- rep(value, length.out=x_nrow)
     }
-    register_delayed_op(x, `[<-`, Rargs=list(value=value),
-                                  recycle_along_first_dim=TRUE)
+    stash_DelayedUnaryIsoOp(x, `[<-`, Rargs=list(value=value), Ridx=1L)
 }
 
 .subassign_DelayedArray <- function(x, i, j, ..., value)
 {
     if (missing(x))
         stop("'x' is missing")
-    user_Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
-    nsubscript <- length(user_Nindex)
+    Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
+    nsubscript <- length(Nindex)
     if (nsubscript == 0L)
         return(.fill_DelayedArray_with_value(x, value))
     if (nsubscript != 1L)
         stop(wmsg(.subassign_error_msg))
-    i <- user_Nindex[[1L]]
+    i <- Nindex[[1L]]
     if (!(is(i, "DelayedArray") &&
           identical(dim(x), dim(i)) &&
           type(i) == "logical"))
@@ -797,119 +554,6 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 }
 
 setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Realization in memory
-###
-###     as.array(x)
-###
-
-### TODO: Do we actually need this? Using drop() should do it.
-.reduce_array_dimensions <- function(x)
-{
-    x_dim <- dim(x)
-    x_dimnames <- dimnames(x)
-    effdim_idx <- which(x_dim != 1L)  # index of effective dimensions
-    if (length(effdim_idx) >= 2L) {
-        x <- set_dim(x, x_dim[effdim_idx])
-        x <- set_dimnames(x, x_dimnames[effdim_idx])
-    } else {
-        x <- set_dim(x, NULL)
-        if (length(effdim_idx) == 1L)
-            names(x) <- x_dimnames[[effdim_idx]]
-    }
-    x
-}
-
-### Realize the object i.e. execute all the delayed operations and turn the
-### object back into an ordinary array.
-.from_DelayedArray_to_array <- function(x, drop=FALSE)
-{
-    if (!isTRUEorFALSE(drop))
-        stop("'drop' must be TRUE or FALSE")
-    ans <- extract_array(seed(x), unname(x@index))
-    ans <- set_dim(ans, dim(x))
-    ans <- .execute_delayed_ops(ans, x@delayed_ops)
-    ans <- set_dimnames(ans, dimnames(x))
-    if (drop)
-        ans <- .reduce_array_dimensions(ans)
-    ans
-}
-
-### S3/S4 combo for as.array.DelayedArray
-as.array.DelayedArray <- function(x, ...) .from_DelayedArray_to_array(x, ...)
-setMethod("as.array", "DelayedArray", .from_DelayedArray_to_array)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Other coercions based on as.array()
-###
-
-slicing_tip <- c(
-    "Consider reducing its number of effective dimensions by slicing it ",
-    "first (e.g. x[8, 30, , 2, ]). Make sure that all the indices used for ",
-    "the slicing have length 1 except at most 2 of them which can be of ",
-    "arbitrary length or missing."
-)
-
-.from_DelayedArray_to_matrix <- function(x)
-{
-    x_dim <- dim(x)
-    if (sum(x_dim != 1L) > 2L)
-        stop(wmsg(class(x), " object with more than 2 effective dimensions ",
-                  "cannot be coerced to a matrix. ", slicing_tip))
-    ans <- as.array(x, drop=TRUE)
-    if (length(x_dim) == 2L) {
-        ans <- set_dim(ans, x_dim)
-        ans <- set_dimnames(ans, dimnames(x))
-    } else {
-        as.matrix(ans)
-    }
-    ans
-}
-
-### S3/S4 combo for as.matrix.DelayedArray
-as.matrix.DelayedArray <- function(x, ...) .from_DelayedArray_to_matrix(x, ...)
-setMethod("as.matrix", "DelayedArray", .from_DelayedArray_to_matrix)
-
-### S3/S4 combo for as.data.frame.DelayedArray
-as.data.frame.DelayedArray <- function(x, row.names=NULL, optional=FALSE, ...)
-    as.data.frame(as.array(x, drop=TRUE),
-                  row.names=row.names, optional=optional, ...)
-setMethod("as.data.frame", "DelayedArray", as.data.frame.DelayedArray)
-
-### S3/S4 combo for as.vector.DelayedArray
-as.vector.DelayedArray <- function(x, mode="any")
-{
-    ans <- as.array(x, drop=TRUE)
-    as.vector(ans, mode=mode)
-}
-setMethod("as.vector", "DelayedArray", as.vector.DelayedArray)
-
-### S3/S4 combo for as.logical.DelayedArray
-as.logical.DelayedArray <- function(x, ...) as.vector(x, mode="logical", ...)
-setMethod("as.logical", "DelayedArray", as.logical.DelayedArray)
-
-### S3/S4 combo for as.integer.DelayedArray
-as.integer.DelayedArray <- function(x, ...) as.vector(x, mode="integer", ...)
-setMethod("as.integer", "DelayedArray", as.integer.DelayedArray)
-
-### S3/S4 combo for as.numeric.DelayedArray
-as.numeric.DelayedArray <- function(x, ...) as.vector(x, mode="numeric", ...)
-setMethod("as.numeric", "DelayedArray", as.numeric.DelayedArray)
-
-### S3/S4 combo for as.complex.DelayedArray
-as.complex.DelayedArray <- function(x, ...) as.vector(x, mode="complex", ...)
-setMethod("as.complex", "DelayedArray", as.complex.DelayedArray)
-
-### S3/S4 combo for as.character.DelayedArray
-as.character.DelayedArray <- function(x, ...) as.vector(x, mode="character", ...)
-setMethod("as.character", "DelayedArray", as.character.DelayedArray)
-
-### S3/S4 combo for as.raw.DelayedArray
-as.raw.DelayedArray <- function(x) as.vector(x, mode="raw")
-setMethod("as.raw", "DelayedArray", as.raw.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -933,16 +577,25 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### [[
 ###
+### TODO: Implement a "getArrayElement" method for Array objects (in
+### extract_array.R) that is based on extract_array() e.g it just needs
+### to do something like:
+###
+###     as.vector(extract_array(x, as.list(subscripts)))
+###
+### This will make multi-dimensional and linear [[ work on DelayedArray
+### objects. Then remove the method below and update DelayedArray-class.Rd
+###
 
 .get_DelayedArray_element <- function(x, i)
 {
     i <- normalizeDoubleBracketSubscript(i, x)
-    user_Nindex <- as.list(arrayInd(i, dim(x)))
-    as.vector(.subset_DelayedArray_by_Nindex(x, user_Nindex))
+    index <- as.list(arrayInd(i, dim(x)))
+    as.vector(extract_array(x, index))
 }
 
-### Only support linear subscripting at the moment.
-### TODO: Support multidimensional subscripting e.g. x[[5, 15, 2]] or
+### Only support linear subsetting at the moment.
+### TODO: Support multi-dimensional subsetting e.g. x[[5, 15, 2]] or
 ### x[["E", 15, "b"]].
 setMethod("[[", "DelayedArray",
     function(x, i, j, ...)
@@ -977,6 +630,9 @@ setMethod("show", "DelayedArray",
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Combining and splitting
+###
+### TODO: These methods are based on as.vector() so could be made methods
+### for Array objects (and moved to extract_array.R).
 ###
 
 ### Note that combining arrays with c() is NOT an endomorphism!

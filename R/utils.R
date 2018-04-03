@@ -173,17 +173,6 @@ get_Nindex_lengths <- function(Nindex, dim)
     ans
 }
 
-### 'dimnames' must be NULL or a list of the same length as 'Nindex'.
-### 'along' must be an integer >= 1 and <= length(Nindex).
-get_Nindex_names_along <- function(Nindex, dimnames, along)
-{
-    stopifnot(is.list(Nindex))
-    i <- Nindex[[along]]
-    if (is.null(i))
-        return(dimnames[[along]])
-    names(i)
-}
-
 ### Convert 'Nindex' to a "linear index".
 ### Return the "linear index" as an integer vector if prod(dim) <=
 ### .Machine$integer.max, otherwise as a vector of doubles.

@@ -29,14 +29,14 @@
 \alias{type}
 
 \alias{dim,DelayedArray-method}
+\alias{dimnames,DelayedArray-method}
+\alias{extract_array,DelayedArray-method}
 
-\alias{coerce,DelayedArray,SeedDimCombiner-method}
 \alias{aperm}
 \alias{aperm.DelayedArray}
 \alias{aperm,DelayedArray-method}
 
 \alias{dim<-,DelayedArray-method}
-\alias{dimnames,DelayedArray-method}
 \alias{dimnames<-,DelayedArray-method}
 \alias{names,DelayedArray-method}
 \alias{names<-,DelayedArray-method}
@@ -45,27 +45,6 @@
 
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
-
-\alias{as.array.DelayedArray}
-\alias{as.array,DelayedArray-method}
-\alias{as.matrix.DelayedArray}
-\alias{as.matrix,DelayedArray-method}
-\alias{as.data.frame.DelayedArray}
-\alias{as.data.frame,DelayedArray-method}
-\alias{as.vector.DelayedArray}
-\alias{as.vector,DelayedArray-method}
-\alias{as.logical.DelayedArray}
-\alias{as.logical,DelayedArray-method}
-\alias{as.integer.DelayedArray}
-\alias{as.integer,DelayedArray-method}
-\alias{as.numeric.DelayedArray}
-\alias{as.numeric,DelayedArray-method}
-\alias{as.complex.DelayedArray}
-\alias{as.complex,DelayedArray-method}
-\alias{as.character.DelayedArray}
-\alias{as.character,DelayedArray-method}
-\alias{as.raw.DelayedArray}
-\alias{as.raw,DelayedArray-method}
 
 \alias{coerce,DelayedMatrix,dgCMatrix-method}
 \alias{coerce,DelayedMatrix,sparseMatrix-method}
@@ -287,7 +266,6 @@ as(A2, "DataFrame")
 stopifnot(identical(DF, as(A2, "DataFrame")))
 
 t(A2)  # transposition is delayed so is very fast and memory efficient
-stopifnot(identical(A2, t(t(A2))))
 colSums(A2)
 
 ## ---------------------------------------------------------------------

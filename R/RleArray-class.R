@@ -335,8 +335,6 @@ setMethod("matrixClass", "RleArray", function(x) "RleMatrix")
 {
     if (!is(seed(x), "RleArraySeed"))
         return(wmsg2("'seed(x)' must be an RleArraySeed object"))
-    if (!is_pristine(x))
-        return(wmsg2("'x' carries delayed operations on it"))
     TRUE
 }
 

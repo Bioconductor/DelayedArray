@@ -44,26 +44,26 @@ exportClasses(
 S3method(aperm, DelayedArray)
 S3method(aperm, DelayedAperm)
 
-S3method(as.array, DelayedArray)
+S3method(as.array, Array)
 
+S3method(as.character, Array)
 S3method(as.character, ArrayGrid)
-S3method(as.character, DelayedArray)
 
-S3method(as.complex, DelayedArray)
+S3method(as.complex, Array)
 
-S3method(as.data.frame, DelayedArray)
+S3method(as.data.frame, Array)
 
-S3method(as.integer, DelayedArray)
+S3method(as.integer, Array)
 
-S3method(as.logical, DelayedArray)
+S3method(as.logical, Array)
 
-S3method(as.matrix, DelayedArray)
+S3method(as.matrix, Array)
 
-S3method(as.numeric, DelayedArray)
+S3method(as.numeric, Array)
 
-S3method(as.raw, DelayedArray)
+S3method(as.raw, Array)
 
-S3method(as.vector, DelayedArray)
+S3method(as.vector, Array)
 
 S3method(mean, DelayedArray)
 
@@ -79,26 +79,26 @@ export(
     aperm.DelayedArray,
     aperm.DelayedAperm,
 
-    as.array.DelayedArray,
+    as.array.Array,
 
     as.character.ArrayGrid,
-    as.character.DelayedArray,
+    as.character.Array,
 
-    as.complex.DelayedArray,
+    as.complex.Array,
 
-    as.data.frame.DelayedArray,
+    as.data.frame.Array,
 
-    as.integer.DelayedArray,
+    as.integer.Array,
 
-    as.logical.DelayedArray,
+    as.logical.Array,
 
-    as.matrix.DelayedArray,
+    as.matrix.Array,
 
-    as.numeric.DelayedArray,
+    as.numeric.Array,
 
-    as.raw.DelayedArray,
+    as.raw.Array,
 
-    as.vector.DelayedArray,
+    as.vector.Array,
 
     mean.DelayedArray,
 

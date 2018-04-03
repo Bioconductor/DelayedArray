@@ -150,7 +150,6 @@ test_DelayedArray_subsetting <- function()
     checkTrue(is(A, "DelayedArray"))
     checkTrue(validObject(A, complete=TRUE))
 
-    checkIdentical(A, A[ , , ])
     checkIdentical(a, as.array(A[ , , ]))
     checkException(A[ , 27, ], silent=TRUE)
     checkException(A[ , , "f"], silent=TRUE)

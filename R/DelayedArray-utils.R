@@ -43,9 +43,8 @@
     e2 <- .normarg_Ops_vector_arg(e2, nrow(e1),
                                   e_what="right object",
                                   x_what="first dimension of left object")
-    recycle_along_first_dim <- length(e2) != 1L
-    register_delayed_op(e1, .Generic, Rargs=list(e2),
-                        recycle_along_first_dim=recycle_along_first_dim)
+    Ridx <- if (length(e2) == 1L) integer(0) else 1L
+    stash_DelayedUnaryIsoOp(e1, .Generic, Rargs=list(e2), Ridx=Ridx)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e2'.
@@ -62,9 +61,8 @@
     e1 <- .normarg_Ops_vector_arg(e1, nrow(e2),
                                   e_what="left object",
                                   x_what="first dimension of right object")
-    recycle_along_first_dim <- length(e1) != 1L
-    register_delayed_op(e2, .Generic, Largs=list(e1),
-                        recycle_along_first_dim=recycle_along_first_dim)
+    Lidx <- if (length(e1) == 1L) integer(0) else 1L
+    stash_DelayedUnaryIsoOp(e2, .Generic, Largs=list(e1), Lidx=Lidx)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
@@ -110,10 +108,10 @@ setMethod("Ops", c("DelayedArray", "DelayedArray"),
 
 ### Support unary operators "+" and "-".
 setMethod("+", c("DelayedArray", "missing"),
-    function(e1, e2) register_delayed_op(e1, .Generic, Largs=list(0L))
+    function(e1, e2) stash_DelayedUnaryIsoOp(e1, .Generic, Largs=list(0L))
 )
 setMethod("-", c("DelayedArray", "missing"),
-    function(e1, e2) register_delayed_op(e1, .Generic, Largs=list(0L))
+    function(e1, e2) stash_DelayedUnaryIsoOp(e1, .Generic, Largs=list(0L))
 )
 
 
@@ -258,24 +256,24 @@ setMethod("sweep", "DelayedArray",
 
 for (.Generic in .UNARY_OPS) {
     setMethod(.Generic, "DelayedArray",
-        function(x) register_delayed_op(x, .Generic)
+        function(x) stash_DelayedUnaryIsoOp(x, .Generic)
     )
 }
 
 setMethod("lengths", "DelayedArray",
     function(x, use.names=TRUE)
-        register_delayed_op(x, "lengths",
+        stash_DelayedUnaryIsoOp(x, "lengths",
             Rargs=list(use.names=use.names))
 )
 
 setMethod("nchar", "DelayedArray",
     function(x, type="chars", allowNA=FALSE, keepNA=NA)
-        register_delayed_op(x, "nchar",
+        stash_DelayedUnaryIsoOp(x, "nchar",
             Rargs=list(type=type, allowNA=allowNA, keepNA=keepNA))
 )
 
 setMethod("Math", "DelayedArray",
-    function(x) register_delayed_op(x, .Generic)
+    function(x) stash_DelayedUnaryIsoOp(x, .Generic)
 )
 
 .DelayedArray_Math2 <- function(.Generic, x, digits)
@@ -285,7 +283,7 @@ setMethod("Math", "DelayedArray",
         stop(wmsg("'digits' must be a single numeric"))
     if (!is.integer(digits))
         digits <- as.integer(digits)
-    register_delayed_op(x, .Generic, Rargs=list(digits=digits))
+    stash_DelayedUnaryIsoOp(x, .Generic, Rargs=list(digits=digits))
 }
 
 ### Note that round() and signif() don't use the same default for 'digits'.
@@ -304,7 +302,7 @@ setMethod("signif", "DelayedArray",
 setMethod("grepl", c(x="DelayedArray"),
     function(pattern, x,
              ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
-        register_delayed_op(x, "grepl",
+        stash_DelayedUnaryIsoOp(x, "grepl",
             Largs=list(pattern=pattern),
             Rargs=list(ignore.case=ignore.case, perl=perl,
                        fixed=fixed, useBytes=useBytes))
@@ -313,7 +311,7 @@ setMethod("grepl", c(x="DelayedArray"),
 setMethod("sub", c(x="DelayedArray"),
     function(pattern, replacement, x,
              ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
-        register_delayed_op(x, "sub",
+        stash_DelayedUnaryIsoOp(x, "sub",
             Largs=list(pattern=pattern, replacement=replacement),
             Rargs=list(ignore.case=ignore.case, perl=perl,
                        fixed=fixed, useBytes=useBytes))
@@ -322,56 +320,11 @@ setMethod("sub", c(x="DelayedArray"),
 setMethod("gsub", c(x="DelayedArray"),
     function(pattern, replacement, x,
              ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
-        register_delayed_op(x, "gsub",
+        stash_DelayedUnaryIsoOp(x, "gsub",
             Largs=list(pattern=pattern, replacement=replacement),
             Rargs=list(ignore.case=ignore.case, perl=perl,
                        fixed=fixed, useBytes=useBytes))
 )
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### A low-level utility for putting DelayedArray object in a "straight" form
-###
-### Untranspose the DelayedArray object and put its rows and columns in their
-### "native" order. The result is a DelayedArray object where the array
-### elements are in the same order as in the seeds. This makes block-processing
-### faster if the seeds are on-disk objects where the 1st dimension is the fast
-### changing dimension (e.g. 5x faster if the seeds are HDF5ArraySeed objects).
-###
-
-.straighten_index <- function(i)
-{
-    i_len <- length(i)
-    if (i_len == 0L)
-        return(i)
-    i_max <- max(i)
-    ## Threshold is a rough estimate obtained empirically.
-    ## TODO: Refine this.
-    if (i_max <= 2L * i_len * log(i_len)) {
-        which(as.logical(tabulate(i, nbins=i_max)))
-    } else {
-        sort(unique(i))
-    }
-}
-
-.straighten <- function(x, straighten.index=FALSE)
-{
-    if (is.array(x))
-        return(x)
-    if (!straighten.index)
-        return(x)
-    x_index <- x@index
-    x_seed_dim <- dim(seed(x))
-    for (along in seq_along(x_index)) {
-        i <- x_index[[along]]
-        if (is.null(i) || isStrictlySorted(i))
-            next
-        x_index[[along]] <- .straighten_index(i)
-    }
-    if (!identical(x@index, x_index))
-        x@index <- x_index
-    x
-}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -386,7 +339,6 @@ setMethod("gsub", c(x="DelayedArray"),
     init <- FALSE
     BREAKIF <- identity
 
-    x <- .straighten(x, straighten.index=TRUE)
     block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
 }
 
@@ -497,14 +449,8 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
             FALSE)  # fallback (actually not needed)
     }
 
-    for (x in objects) {
-        if (.Generic %in% c("sum", "prod")) {
-            x <- .straighten(x)
-        } else {
-            x <- .straighten(x, straighten.index=TRUE)
-        }
+    for (x in objects)
         init <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
-    }
     if (is.null(init))
         init <- GENERIC()
     init
@@ -539,7 +485,6 @@ setMethod("Summary", "DelayedArray",
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])
 
-    x <- .straighten(x)
     ans <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
     ans[[1L]] / ans[[2L]]
 }

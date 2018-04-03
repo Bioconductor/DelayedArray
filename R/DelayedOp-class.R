@@ -7,7 +7,7 @@
 ### object. 6 types of nodes are currently supported. Each type is a concrete
 ### DelayedOp subclass:
 ###
-###   Node type      outdegree  operation
+###   Node type      Outdegree  Operation
 ###   ---------------------------------------------------------------------
 ###   DelayedSubset          1  Multi-dimensional single bracket subsetting
 ###   DelayedDimnames        1  Set dimnames

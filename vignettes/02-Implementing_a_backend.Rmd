@@ -207,7 +207,12 @@ These classes are not strictly needed but add a nice level of convenience.
 
 ## Class definitions
 
-They should extend the DelayedArray class without trying to add slots to it.
+An ADSArray or ADSMatrix object is a DelayedArray derivative that doesn't
+carry delayed operations yet. As soon as the user will start operating on it,
+it will be degraded to a DelayedArray *instance*.
+
+The ADSArray and ADSMatrix classes should extend the DelayedArray and
+DelayedMatrix classes, respectively, without adding any slot to them.
 So just:
 
     setClass("ADSArray", contains="DelayedArray")
@@ -296,17 +301,10 @@ It's also highly recommended to define a validity method for ADSArray objects:
     {
         if (!is(x@seed, "ADSArraySeed"))
             return(wmsg("'x@seed' must be an ADSArraySeed object"))
-        if (!DelayedArray:::is_pristine(x))
-            return(wmsg("'x' carries delayed operations"))
         TRUE
     }
 
     setValidity2("ADSArray", .validate_ADSArray)
-
-The idea behind the `is_pristine()` check is that an ADSArray
-object is a particular kind of DelayedArray object that doesn't carry
-delayed operations yet. As soon as you start operating on it, it will
-be degraded to a DelayedArray *instance*.
 
 ## What to export?
 

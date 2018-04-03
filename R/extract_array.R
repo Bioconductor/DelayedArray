@@ -140,10 +140,124 @@ setMethod("type", "array", function(x) typeof(x))
 setMethod("type", "ANY",
     function(x)
     {
+        ## x0 <- x[integer(0), ..., integer(0)]
         index <- rep.int(list(integer(0)), length(dim(x)))
-        type(extract_array(x, index))
+        x0 <- extract_array(x, index)
+        type(x0)
     }
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### as.array(x) (in-memory realization of an array-like object)
+###
+
+### TODO: Do we actually need this? Using drop() should do it.
+.reduce_array_dimensions <- function(x)
+{
+    x_dim <- dim(x)
+    x_dimnames <- dimnames(x)
+    effdim_idx <- which(x_dim != 1L)  # index of effective dimensions
+    if (length(effdim_idx) >= 2L) {
+        x <- set_dim(x, x_dim[effdim_idx])
+        x <- set_dimnames(x, x_dimnames[effdim_idx])
+    } else {
+        x <- set_dim(x, NULL)
+        if (length(effdim_idx) == 1L)
+            names(x) <- x_dimnames[[effdim_idx]]
+    }
+    x
+}
+
+### Realize the object i.e. execute all the delayed operations and turn the
+### object back into an ordinary array.
+.from_Array_to_array <- function(x, drop=FALSE)
+{
+    if (!isTRUEorFALSE(drop))
+        stop("'drop' must be TRUE or FALSE")
+    index <- rep.int(list(NULL), length(dim(x)))
+    ans <- extract_array(x, index)
+    ans <- set_dimnames(ans, dimnames(x))
+    if (drop)
+        ans <- .reduce_array_dimensions(ans)
+    ans
+}
+
+### S3/S4 combo for as.array.Array
+as.array.Array <- function(x, ...) .from_Array_to_array(x, ...)
+setMethod("as.array", "Array", .from_Array_to_array)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Other coercions to in-memory representations
+###
+### All these coercions are based on as.array().
+###
+
+.SLICING_TIP <- c(
+    "Consider reducing its number of effective dimensions by slicing it ",
+    "first (e.g. x[8, 30, , 2, ]). Make sure that all the indices used for ",
+    "the slicing have length 1 except at most 2 of them which can be of ",
+    "arbitrary length or missing."
+)
+
+.from_Array_to_matrix <- function(x)
+{
+    x_dim <- dim(x)
+    if (sum(x_dim != 1L) > 2L)
+        stop(wmsg(class(x), " object with more than 2 effective dimensions ",
+                  "cannot be coerced to a matrix. ", .SLICING_TIP))
+    ans <- as.array(x, drop=TRUE)
+    if (length(x_dim) == 2L) {
+        ans <- set_dim(ans, x_dim)
+        ans <- set_dimnames(ans, dimnames(x))
+    } else {
+        as.matrix(ans)
+    }
+    ans
+}
+
+### S3/S4 combo for as.matrix.Array
+as.matrix.Array <- function(x, ...) .from_Array_to_matrix(x, ...)
+setMethod("as.matrix", "Array", .from_Array_to_matrix)
+
+### S3/S4 combo for as.data.frame.Array
+as.data.frame.Array <- function(x, row.names=NULL, optional=FALSE, ...)
+    as.data.frame(as.array(x, drop=TRUE),
+                  row.names=row.names, optional=optional, ...)
+setMethod("as.data.frame", "Array", as.data.frame.Array)
+
+### S3/S4 combo for as.vector.Array
+as.vector.Array <- function(x, mode="any")
+{
+    ans <- as.array(x, drop=TRUE)
+    as.vector(ans, mode=mode)
+}
+setMethod("as.vector", "Array", as.vector.Array)
+
+### S3/S4 combo for as.logical.Array
+as.logical.Array <- function(x, ...) as.vector(x, mode="logical", ...)
+setMethod("as.logical", "Array", as.logical.Array)
+
+### S3/S4 combo for as.integer.Array
+as.integer.Array <- function(x, ...) as.vector(x, mode="integer", ...)
+setMethod("as.integer", "Array", as.integer.Array)
+
+### S3/S4 combo for as.numeric.Array
+as.numeric.Array <- function(x, ...) as.vector(x, mode="numeric", ...)
+setMethod("as.numeric", "Array", as.numeric.Array)
+
+### S3/S4 combo for as.complex.Array
+as.complex.Array <- function(x, ...) as.vector(x, mode="complex", ...)
+setMethod("as.complex", "Array", as.complex.Array)
+
+### S3/S4 combo for as.character.Array
+as.character.Array <- function(x, ...) as.vector(x, mode="character", ...)
+setMethod("as.character", "Array", as.character.Array)
+
+### S3/S4 combo for as.raw.Array
+as.raw.Array <- function(x) as.vector(x, mode="raw")
+setMethod("as.raw", "Array", as.raw.Array)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
