@@ -104,6 +104,8 @@ setReplaceMethod("path", "DelayedOp",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedSubset objects
 ###
+### Delayed "Multi-dimensional single bracket subsetting".
+###
 
 setClass("DelayedSubset",
     contains="DelayedOp",
@@ -211,6 +213,8 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedDimnames objects
+###
+### Delayed "Set dimnames".
 ###
 
 .INHERIT_FROM_SEED <- -1L
@@ -322,6 +326,8 @@ setMethod("extract_array", "DelayedDimnames",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedUnaryIsoOp objects
 ###
+### Delayed "Unary op that preserves the geometry".
+###
 
 setClass("DelayedUnaryIsoOp",
     contains="DelayedOp",
@@ -404,6 +410,8 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedAperm objects
+###
+### Delayed "Extended aperm()" (can drop dimensions).
 ###
 
 setClass("DelayedAperm",
@@ -490,6 +498,8 @@ setMethod("extract_array", "DelayedAperm",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedVariadicIsoOp objects
 ###
+### Delayed "N-ary op that preserves the geometry".
+###
 
 setClass("DelayedVariadicIsoOp",
     contains="DelayedOp",
@@ -565,6 +575,8 @@ setMethod("extract_array", "DelayedVariadicIsoOp",
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedAbind objects
+###
+### Delayed "abind()".
 ###
 
 setClass("DelayedAbind",
