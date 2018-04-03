@@ -4,9 +4,6 @@
 \alias{dimnames,DelayedVariadicIsoOp-method}
 \alias{extract_array,DelayedVariadicIsoOp-method}
 
-\alias{path,DelayedVariadicIsoOp-method}
-\alias{path<-,DelayedVariadicIsoOp-method}
-
 \title{DelayedVariadicIsoOp objects}
 
 \description{

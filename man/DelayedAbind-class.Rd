@@ -4,9 +4,6 @@
 \alias{dimnames,DelayedAbind-method}
 \alias{extract_array,DelayedAbind-method}
 
-\alias{path,DelayedAbind-method}
-\alias{path<-,DelayedAbind-method}
-
 \title{DelayedAbind objects}
 
 \description{

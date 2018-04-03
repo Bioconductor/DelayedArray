@@ -262,9 +262,9 @@ stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
                                        Lidx=Lidx, Ridx=Ridx))
 }
 
-stash_DelayedAperm <- function(x, dim_combination)
+stash_DelayedAperm <- function(x, perm)
 {
-    DelayedArray(new_DelayedAperm(x@seed, dim_combination))
+    DelayedArray(new_DelayedAperm(x@seed, perm))
 }
 
 
@@ -283,15 +283,18 @@ stash_DelayedAperm <- function(x, dim_combination)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
+### Unlike base::aperm(), the method for DelayedArray objects supports
+### dropping dimensions. Note that only "ineffective" dimensions can be
+### dropped (i.e. dimensions equal to 1, so dropping them preserves the
+### length). This feature is used by the dim() setter below.
+###
+
+setGeneric("aperm", signature="a")
 
 .aperm.DelayedArray <- function(a, perm)
 {
-    a_dim <- dim(a)
-    if (missing(perm)) {
-        perm <- rev(seq_along(a_dim))
-    } else {
-        perm <- normarg_perm(perm, a_dim)
-    }
+    if (missing(perm))
+        perm <- rev(seq_along(dim(a)))
     stash_DelayedAperm(a, perm)
 }
 
@@ -302,6 +305,10 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### dim() setter
+###
+### On a DelayedArray object, the dim() setter can only be used to drop some
+### of the "ineffective" dimensions (i.e. dimensions equal to 1, so dropping
+### them preserves the length of the object).
 ###
 
 .normalize_dim_replacement_value <- function(value, x_dim)
@@ -332,11 +339,12 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
     idx1 <- which(new_dim != 1L)
     idx2 <- which(old_dim != 1L)
 
-    cannot_map_msg <- wmsg(
+    cannot_map_msg <- c(
         "Cannot map the supplied dim vector to the current dimensions of ",
         "the object. On a ", x_class, " object, the dim() setter can only ",
-        "be used to drop some of the ineffective dimensions (the dimensions ",
-        "equal to 1 are the ineffective dimensions)."
+        "be used to drop some of the \"ineffective\" dimensions (i.e. ",
+        "dimensions equal to 1, so dropping them preserves the length of ",
+        "the object)."
     )
 
     can_map <- function() {
@@ -350,13 +358,13 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
         tmp[[1L]] >= 0L && isSorted(tmp)
     }
     if (!can_map())
-        stop(cannot_map_msg)
+        stop(wmsg(cannot_map_msg))
 
     new2old <- seq_along(new_dim) +
         rep.int(c(0L, idx2 - idx1), diff(c(1L, idx1, length(new_dim) + 1L)))
 
     if (new2old[[length(new2old)]] > length(old_dim))
-        stop(cannot_map_msg)
+        stop(wmsg(cannot_map_msg))
 
     new2old
 }

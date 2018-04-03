@@ -412,6 +412,8 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 ### DelayedAperm objects
 ###
 ### Delayed "Extended aperm()" (can drop dimensions).
+### Note that only "ineffective" dimensions can be dropped (i.e. dimensions
+### equal to 1, so dropping them preserves the length).
 ###
 
 setClass("DelayedAperm",
@@ -421,7 +423,7 @@ setClass("DelayedAperm",
                                    # the "seed contract".
 
         dim_combination="integer"  # Index into dim(seed) specifying the seed
-                                   # dimensions to keep.
+                                   # dimensions to keep and in which order.
     ),
     prototype(
         seed=new("array"),
@@ -453,11 +455,36 @@ setClass("DelayedAperm",
 
 setValidity2("DelayedAperm", .validate_DelayedAperm)
 
-new_DelayedAperm <- function(seed, dim_combination=NULL)
+### Input array is referred to as 'a' in the error messages for consistency
+### with aperm().
+.normarg_perm <- function(perm, a_dim)
 {
-    if (is.null(dim_combination))
-        dim_combination <- seq_along(dim(seed))
-    new2("DelayedAperm", seed=seed, dim_combination=dim_combination)
+    if (!is.numeric(perm))
+        stop(wmsg("'perm' must be an integer vector"))
+    if (!is.integer(perm))
+        perm <- as.integer(perm)
+    if (length(perm) == 0L)
+        stop(wmsg("'perm' cannot be an empty vector"))
+    if (S4Vectors:::anyMissingOrOutside(perm, 1L, length(a_dim)))
+        stop(wmsg("values out of range in 'perm'"))
+    if (anyDuplicated(perm))
+        stop(wmsg("'perm' cannot have duplicates"))
+    if (!all(a_dim[-perm] == 1L))
+        stop(wmsg("dimensions to drop from 'a' must be equal to 1"))
+    perm
+}
+
+### Name of argument is 'perm' instead of 'dim_combination' for consistency
+### with aperm().
+new_DelayedAperm <- function(seed, perm=NULL)
+{
+    seed_dim <- dim(seed)
+    if (is.null(perm)) {
+        perm <- seq_along(seed_dim)
+    } else {
+        perm <- .normarg_perm(perm, seed_dim)
+    }
+    new2("DelayedAperm", seed=seed, dim_combination=perm)
 }
 
 ### Seed contract.

@@ -4,15 +4,6 @@
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
 
-\alias{aperm.DelayedAperm}
-\alias{aperm,DelayedAperm-method}
-
-\alias{seed,DelayedAperm-method}
-\alias{seed<-,DelayedAperm-method}
-
-\alias{path,DelayedAperm-method}
-\alias{path<-,DelayedAperm-method}
-
 \title{DelayedAperm objects}
 
 \description{
