@@ -326,17 +326,21 @@ setMethod("extract_array", "DelayedDimnames",
 setClass("DelayedUnaryIsoOp",
     contains="DelayedOp",
     representation(
-        seed="ANY",     # An array-like object expected to satisfy the
-                        # "seed contract".
+        seed="ANY",      # An array-like object expected to satisfy the
+                         # "seed contract".
 
-        OP="function",  # The function to apply to the seed (e.g. `+` or
-                        # log). It should act as an isomorphism i.e. always
-                        # return an array parallel to the input array (i.e.
-                        # same dimensions).
+        OP="function",   # The function to apply to the seed (e.g. `+` or
+                         # log). It should act as an isomorphism i.e. always
+                         # return an array parallel to the input array (i.e.
+                         # same dimensions).
 
-        Largs="list",   # Additional left arguments to OP.
+        Largs="list",    # Additional left arguments to OP.
+        Rargs="list",    # Additional right arguments to OP.
 
-        Rargs="list"    # Additional right arguments to OP.
+        Lidx="integer",  # Index of the left arguments parallel to the rows
+                         # of the seed.
+        Ridx="integer"   # Index of the right arguments parallel to the rows
+                         # of the seed.
     ),
     prototype(
         seed=new("array"),
@@ -345,10 +349,23 @@ setClass("DelayedUnaryIsoOp",
 )
 
 new_DelayedUnaryIsoOp <- function(seed=new("array"),
-                                  OP=identity, Largs=list(), Rargs=list())
+                                  OP=identity, Largs=list(), Rargs=list(),
+                                  Lidx=integer(0), Ridx=integer(0))
 {
+    seed_dim <- dim(seed)
+    if (length(seed_dim) == 0L)
+        stop(wmsg("'seed' must have dimensions"))
+
     OP <- match.fun(OP)
-    new2("DelayedUnaryIsoOp", seed=seed, OP=OP, Largs=Largs, Rargs=Rargs)
+
+    seed_nrow <- seed_dim[[1L]]
+    stopifnot(is.list(Largs), is.list(Rargs),
+              is.integer(Lidx), is.integer(Ridx),
+              all(elementNROWS(Largs[Lidx]) == seed_nrow),
+              all(elementNROWS(Rargs[Ridx]) == seed_nrow))
+
+    new2("DelayedUnaryIsoOp", seed=seed, OP=OP, Largs=Largs, Rargs=Rargs,
+                              Lidx=Lidx, Ridx=Ridx)
 }
 
 ### Seed contract.
@@ -361,7 +378,14 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
     function(x, index)
     {
         a <- extract_array(x@seed, index)
-        do.call(x@OP, c(x@Largs, list(a), x@Rargs))
+        Largs <- x@Largs
+        Rargs <- x@Rargs
+        i1 <- index[[1L]]
+        if (!is.null(i1)) {
+            Largs[x@Lidx] <- lapply(Largs[x@Lidx], extractROWS, i1)
+            Rargs[x@Ridx] <- lapply(Rargs[x@Ridx], extractROWS, i1)
+        }
+        do.call(x@OP, c(Largs, list(a), Rargs))
     }
 )
 
