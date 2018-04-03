@@ -273,7 +273,8 @@
     x_dimnames <- dimnames(x)
     for (i in idx) {
         viewport <- grid[[i]]
-        s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames)
+        s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames,
+                                            as.2Dslice=TRUE)
         cat(s, "\n", sep="")
         slice <- extract_block(x, viewport)
         slice <- set_dim(slice, dim(slice)[1:2])

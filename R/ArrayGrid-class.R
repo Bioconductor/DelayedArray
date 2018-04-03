@@ -87,23 +87,36 @@ ArrayViewport <- function(refdim, ranges=NULL)
 ### Show
 
 make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
+                                           as.2Dslice=FALSE,
                                            with.brackets=FALSE)
 {
+    if (!isTRUEorFALSE(as.2Dslice))
+        stop("'as.2Dslice' must be TRUE or FALSE")
     if (!isTRUEorFALSE(with.brackets))
         stop("'with.brackets' must be TRUE or FALSE")
+
     viewport_ranges <- ranges(viewport)
+    ans <- as.character(viewport_ranges)
+
+    ## Place "blank" subscripts.
     viewport_dim <- dim(viewport)
     viewport_refdim <- refdim(viewport)
-    ans <- as.character(viewport_ranges)
-    ans[viewport_dim == viewport_refdim] <- ""
+    useblank <- viewport_dim == viewport_refdim
+    ndim <- length(viewport_dim)
+    if (as.2Dslice && ndim >= 3L)
+        useblank[3:ndim] <- FALSE
+    ans[useblank] <- ""
+
     if (!is.null(dimnames)) {
-        stopifnot(is.list(dimnames), length(viewport_dim) == length(dimnames))
-        usename_idx <- which(viewport_dim == 1L &
-                             viewport_refdim != 1L &
+        stopifnot(is.list(dimnames), length(dimnames) == ndim)
+        usename_idx <- which(!useblank &
+                             viewport_dim == 1L &
                              lengths(dimnames) != 0L)
-        ans[usename_idx] <- mapply(`[`, dimnames[usename_idx],
-                                        start(viewport_ranges)[usename_idx],
-                                        SIMPLIFY=FALSE)
+        ans[usename_idx] <- unlist(mapply(`[`,
+                                          dimnames[usename_idx],
+                                          start(viewport_ranges)[usename_idx],
+                                          SIMPLIFY=FALSE,
+                                          USE.NAMES=FALSE))
     }
     if (ans[[1L]] == "" && with.brackets)
         ans[[1L]] <- " "
