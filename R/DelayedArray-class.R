@@ -6,7 +6,7 @@
 setClass("DelayedArray",
     contains="Array",
     representation(
-        seed="ANY"  # An array-like object expected to satisfy the "seed
+        seed="ANY"  # An array-like object expected to comply with the "seed
                     # contract" i.e. to support dim(), dimnames(), and
                     # extract_array().
     ),

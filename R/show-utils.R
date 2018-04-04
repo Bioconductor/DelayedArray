@@ -5,9 +5,13 @@
 ### Nothing in this file is exported.
 ###
 
-### TODO: Use extract_array() instead of [ to extract array values so
-### show_compact_array() can work on any array-like object that supports
-### extract_array().
+
+### Wrapper around extract_array() that preserves the dimnames.
+.extract_array_with_dimnames <- function(x, index)
+{
+    a <- extract_array(x, index)
+    set_dimnames(a, subset_dimnames(dimnames(x), index))
+}
 
 ### 'x' must be an ordinary vector or matrix of atomic or recursive type.
 ### 'max.width' takes effect only if 'x' is character or list (i.e. if the
@@ -50,7 +54,7 @@
 ### 1D array
 ###
 
-.split_1D_array_names <- function(x_names, idx1, idx2, justify)
+.split_1Darray_names <- function(x_names, idx1, idx2, justify)
 {
     make_elt_indices <- function(i) {
         if (length(i) == 0L)
@@ -67,7 +71,7 @@
     format(c(s1, ".", s2), justify=justify)
 }
 
-.prepare_1D_array_sample <- function(x, n1, n2, justify, quote=TRUE)
+.prepare_1Darray_sample <- function(x, n1, n2, justify, quote=TRUE)
 {
     x_len <- length(x)
     x_names <- names(x)
@@ -75,24 +79,26 @@
         ans <- .format_as_character_vector(x, justify, quote=quote)
         idx1 <- seq_len(x_len)
         idx2 <- integer(0)
-        names(ans) <- .split_1D_array_names(x_names, idx1, idx2, justify)[idx1]
+        names(ans) <- .split_1Darray_names(x_names, idx1, idx2, justify)[idx1]
     } else {
         idx1 <- seq_len(n1)
         idx2 <- seq(to=x_len, by=1L, length.out=n2)
-        ans1 <- .format_as_character_vector(x[idx1], justify, quote=quote)
-        ans2 <- .format_as_character_vector(x[idx2], justify, quote=quote)
+        x1 <- .extract_array_with_dimnames(x, list(idx1))
+        x2 <- .extract_array_with_dimnames(x, list(idx2))
+        ans1 <- .format_as_character_vector(x1, justify, quote=quote)
+        ans2 <- .format_as_character_vector(x2, justify, quote=quote)
         ans <- c(ans1, ".", ans2)
-        names(ans) <- .split_1D_array_names(x_names, idx1, idx2, justify)
+        names(ans) <- .split_1Darray_names(x_names, idx1, idx2, justify)
     }
     ans
 }
 
-.print_1D_array_data <- function(x, n1, n2, quote=TRUE)
+.print_1Darray_data <- function(x, n1, n2, quote=TRUE)
 {
     stopifnot(length(dim(x)) == 1L)
     right <- type(x) != "character"
     justify <- if (right) "right" else "left"
-    out <- .prepare_1D_array_sample(x, n1, n2, justify, quote=quote)
+    out <- .prepare_1Darray_sample(x, n1, n2, justify, quote=quote)
     print(out, quote=FALSE, right=right, max=length(out))
 }
 
@@ -144,17 +150,17 @@
     c(head(ans, n=length(s1)), "...", tail(ans, n=length(s2)))
 }
 
-.rsplit_2D_array_data <- function(x, m1, m2, justify, quote=TRUE)
+.rsplit_2Darray_data <- function(x, m1, m2, justify, quote=TRUE)
 {
     x_nrow <- nrow(x)
     x_rownames <- rownames(x)
     idx1 <- seq_len(m1)
     idx2 <- seq(to=x_nrow, by=1L, length.out=m2)
 
-    ans1 <- .format_as_character_matrix(x[idx1, , drop=FALSE], justify,
-                                        quote=quote)
-    ans2 <- .format_as_character_matrix(x[idx2, , drop=FALSE], justify,
-                                        quote=quote)
+    x1 <- .extract_array_with_dimnames(x, list(idx1, NULL))
+    x2 <- .extract_array_with_dimnames(x, list(idx2, NULL))
+    ans1 <- .format_as_character_matrix(x1, justify, quote=quote)
+    ans2 <- .format_as_character_matrix(x2, justify, quote=quote)
     dots <- rep.int(".", ncol(ans1))
     ans <- rbind(ans1, matrix(dots, nrow=1L), ans2)
 
@@ -162,17 +168,17 @@
     ans
 }
 
-.csplit_2D_array_data <- function(x, n1, n2, justify, quote=TRUE)
+.csplit_2Darray_data <- function(x, n1, n2, justify, quote=TRUE)
 {
     x_ncol <- ncol(x)
     x_colnames <- colnames(x)
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
 
-    ans1 <- .format_as_character_matrix(x[ , idx1, drop=FALSE], justify,
-                                        quote=quote)
-    ans2 <- .format_as_character_matrix(x[ , idx2, drop=FALSE], justify,
-                                        quote=quote)
+    x1 <- .extract_array_with_dimnames(x, list(NULL, idx1))
+    x2 <- .extract_array_with_dimnames(x, list(NULL, idx2))
+    ans1 <- .format_as_character_matrix(x1, justify, quote=quote)
+    ans2 <- .format_as_character_matrix(x2, justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
     ans <- cbind(ans1, matrix(dots, ncol=1L), ans2)
 
@@ -180,17 +186,17 @@
     ans
 }
 
-.split_2D_array_data <- function(x, m1, m2, n1, n2, justify, quote=TRUE)
+.split_2Darray_data <- function(x, m1, m2, n1, n2, justify, quote=TRUE)
 {
     x_ncol <- ncol(x)
     x_colnames <- colnames(x)
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
 
-    x1 <- x[ , idx1, drop=FALSE]
-    x2 <- x[ , idx2, drop=FALSE]
-    ans1 <- .rsplit_2D_array_data(x1, m1, m2, justify, quote=quote)
-    ans2 <- .rsplit_2D_array_data(x2, m1, m2, justify, quote=quote)
+    x1 <- .extract_array_with_dimnames(x, list(NULL, idx1))
+    x2 <- .extract_array_with_dimnames(x, list(NULL, idx2))
+    ans1 <- .rsplit_2Darray_data(x1, m1, m2, justify, quote=quote)
+    ans2 <- .rsplit_2Darray_data(x2, m1, m2, justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
     ans <- cbind(ans1, matrix(dots, ncol=1L), ans2)
 
@@ -198,7 +204,7 @@
     ans
 }
 
-.prepare_2D_array_sample <- function(x, m1, m2, n1, n2, justify, quote=TRUE)
+.prepare_2Darray_sample <- function(x, m1, m2, n1, n2, justify, quote=TRUE)
 {
     ## An attempt at reducing the nb of columns to display when 'x' has
     ## dimnames so the object fits in getOption("width"). Won't necessarily
@@ -233,11 +239,11 @@
                                                  justify)[idx1]
             }
         } else {
-            ans <- .csplit_2D_array_data(x, n1, n2, justify, quote=quote)
+            ans <- .csplit_2Darray_data(x, n1, n2, justify, quote=quote)
         }
     } else {
         if (x_ncol <= n1 + n2 + 1L) {
-            ans <- .rsplit_2D_array_data(x, m1, m2, justify, quote=quote)
+            ans <- .rsplit_2Darray_data(x, m1, m2, justify, quote=quote)
             ## Only needed because of this bug in base::print.default:
             ##   https://stat.ethz.ch/pipermail/r-devel/2016-March/072479.html
             ## TODO: Remove when the bug is fixed.
@@ -248,18 +254,18 @@
                                                  justify)[idx1]
             }
         } else {
-            ans <- .split_2D_array_data(x, m1, m2, n1, n2, justify, quote=quote)
+            ans <- .split_2Darray_data(x, m1, m2, n1, n2, justify, quote=quote)
         }
     }
     ans
 }
 
-.print_2D_array_data <- function(x, m1, m2, n1, n2, quote=TRUE)
+.print_2Darray_data <- function(x, m1, m2, n1, n2, quote=TRUE)
 {
     stopifnot(length(dim(x)) == 2L)
     right <- type(x) != "character"
     justify <- if (right) "right" else "left"
-    out <- .prepare_2D_array_sample(x, m1, m2, n1, n2, justify, quote=quote)
+    out <- .prepare_2Darray_sample(x, m1, m2, n1, n2, justify, quote=quote)
     print(out, quote=FALSE, right=right, max=length(out))
 }
 
@@ -276,14 +282,15 @@
         s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames,
                                             as.2Dslice=TRUE)
         cat(s, "\n", sep="")
-        slice <- extract_block(x, viewport)
+        index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
+        slice <- .extract_array_with_dimnames(x, index)
         slice <- set_dim(slice, dim(slice)[1:2])
-        .print_2D_array_data(slice, m1, m2, n1, n2, quote=quote)
+        .print_2Darray_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")
     }
 }
 
-.print_nD_array_data <- function(x, n1, n2, quote=TRUE)
+.print_nDarray_data <- function(x, n1, n2, quote=TRUE)
 {
     x_dim <- dim(x)
     x_nrow <- x_dim[[1L]]
@@ -330,29 +337,35 @@
 {
     x_dim <- dim(x)
     if (length(x_dim) == 1L)
-        return(.print_1D_array_data(x, n1, n2, quote=quote))
+        return(.print_1Darray_data(x, n1, n2, quote=quote))
     if (length(x_dim) == 2L) {
         nhead <- get_showHeadLines()
         ntail <- get_showTailLines()
-        return(.print_2D_array_data(x, nhead, ntail, n1, n2, quote=quote))
+        return(.print_2Darray_data(x, nhead, ntail, n1, n2, quote=quote))
     }
-    .print_nD_array_data(x, n1, n2, quote=quote)
+    .print_nDarray_data(x, n1, n2, quote=quote)
 }
 
+array_one_line_summary <- function(x)
+{
+    x_class <- class(x)
+    x_dim <- dim(x)
+    dim_in1string <- paste0(x_dim, collapse=" x ")
+    x_type <- type(x)
+    sprintf("<%s> %s object of type \"%s\"", dim_in1string, x_class, x_type)
+}
+
+### Work on any array-like object that complies with the "seed contract" i.e.
+### that supports dim(), dimnames(), and extract_array().
 show_compact_array <- function(object)
 {
-    object_class <- class(object)
-    object_dim <- dim(object)
-    dim_in1string <- paste0(object_dim, collapse=" x ")
-    object_type <- type(object)
-    cat(sprintf("<%s> %s object of type \"%s\"",
-                dim_in1string, object_class, object_type))
-    if (any(object_dim == 0L)) {
+    cat(array_one_line_summary(object))
+    if (any(dim(object) == 0L)) {
         cat("\n")
         return()
     }
     cat(":\n")
-    if (object_type == "integer") {
+    if (type(object) == "integer") {
         n1 <- n2 <- 4L
     } else {
         n1 <- 3L

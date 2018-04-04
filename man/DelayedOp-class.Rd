@@ -94,7 +94,7 @@ showtree(x)
   DelayedAbind           N  abind()
   }
 
-  All the nodes are array-like objects that must satisfy the \emph{seed
+  All the nodes are array-like objects that must comply with the \emph{seed
   contract} i.e. they must support \code{dim()}, \code{dimnames()}, and
   \code{extract_array()}. See \code{?\link{extract_array}} for more
   information about the \emph{seed contract}.

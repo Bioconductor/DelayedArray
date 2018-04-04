@@ -7,7 +7,7 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### simplify_NULL_dimnames()
+### subset_dimnames()
 ###
 
 simplify_NULL_dimnames <- function(dimnames)
@@ -15,6 +15,29 @@ simplify_NULL_dimnames <- function(dimnames)
     if (all(S4Vectors:::sapply_isNULL(dimnames)))
         return(NULL)
     dimnames
+}
+
+### Like for extract_array(), 'index' is expected to be an unnamed list of
+### subscripts as positive integer vectors, one vector per dimension in 'x'.
+### *Missing* list elements are allowed and represented by NULLs.
+### See extract_array.R for more information.
+subset_dimnames <- function(dimnames, index)
+{
+    stopifnot(is.list(index))
+    if (is.null(dimnames))
+        return(NULL)
+    ndim <- length(index)
+    stopifnot(is.list(dimnames), length(dimnames) == ndim)
+    ## Would mapply() be faster here?
+    ans <- lapply(seq_len(ndim),
+                  function(along) {
+                      dn <- dimnames[[along]]
+                      i <- index[[along]]
+                      if (is.null(dn) || is.null(i))
+                          return(dn)
+                      dn[i]
+                  })
+    simplify_NULL_dimnames(ans)
 }
 
 

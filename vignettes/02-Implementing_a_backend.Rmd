@@ -100,7 +100,7 @@ package.
 
 ## The seed contract
 
-Seed objects are expected to satisfy the "seed contract" i.e. to
+Seed objects are expected to comply with the "seed contract" i.e. to
 support `dim()`, `dimnames()`, and `extract_array()`. This is normally
 done by implementing methods for these generics, but, as we will
 see below, a method is rarely needed for `dim()` or `dimnames()`.

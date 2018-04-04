@@ -8,7 +8,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, and ordinary arrays and
 	data frames.
-Version: 0.5.24
+Version: 0.5.25
 Encoding: UTF-8
 Author: Hervé Pagès
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
@@ -24,8 +24,8 @@ Collate: utils.R
 	bind-arrays.R
 	Array-class.R
 	ArrayGrid-class.R
-	show-utils.R
 	extract_array.R
+	show-utils.R
 	DelayedOp-class.R
 	DelayedArray-class.R
 	realize.R

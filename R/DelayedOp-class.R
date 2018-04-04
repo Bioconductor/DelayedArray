@@ -16,8 +16,8 @@
 ###   DelayedVariadicIsoOp   N  N-ary op that preserves the geometry
 ###   DelayedAbind           N  abind()
 ###
-### All the nodes are array-like objects that must satisfy the "seed contract"
-### i.e. they must support dim(), dimnames(), and extract_array().
+### All the nodes are array-like objects that must comply with the "seed
+### contract" i.e. they must support dim(), dimnames(), and extract_array().
 ###
 
 ### This virtual class and its 6 concrete subclasses are for internal use
@@ -103,7 +103,7 @@ setMethod("showtree", "ANY", function(x) .show_tree(x))
 setClass("DelayedSubset",
     contains="DelayedOp",
     representation(
-        seed="ANY",   # An array-like object expected to satisfy the "seed
+        seed="ANY",   # An array-like object expected to comply with the "seed
                       # contract".
 
         index="list"  # List of subscripts as positive integer vectors, one
@@ -182,21 +182,9 @@ setMethod("summary", "DelayedSubset", summary.DelayedSubset)
 
 setMethod("dim", "DelayedSubset", .get_DelayedSubset_dim)
 
-.get_DelayedSubset_dimnames <- function(x)
-{
-    seed_dimnames <- dimnames(x@seed)
-    ans <- lapply(seq_along(x@index),
-                  function(along) {
-                      dn <- seed_dimnames[[along]]
-                      i <- x@index[[along]]
-                      if (is.null(dn) || is.null(i))
-                          return(dn)
-                      dn[i]
-                  })
-    simplify_NULL_dimnames(ans)
-}
-
-setMethod("dimnames", "DelayedSubset", .get_DelayedSubset_dimnames)
+setMethod("dimnames", "DelayedSubset",
+    function(x) subset_dimnames(dimnames(x@seed), x@index)
+)
 
 .extract_array_from_DelayedSubset <- function(x, index)
 {
@@ -229,8 +217,8 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 setClass("DelayedDimnames",
     contains="DelayedOp",
     representation(
-        seed="ANY",      # An array-like object expected to satisfy the "seed
-                         # contract".
+        seed="ANY",      # An array-like object expected to comply with
+                         # the "seed contract".
 
         dimnames="list"  # List with one list element per seed dimension. Each
                          # list element must be NULL, or a character vector,
@@ -353,7 +341,7 @@ setMethod("extract_array", "DelayedDimnames",
 setClass("DelayedUnaryIsoOp",
     contains="DelayedOp",
     representation(
-        seed="ANY",      # An array-like object expected to satisfy the
+        seed="ANY",      # An array-like object expected to comply with the
                          # "seed contract".
 
         OP="function",   # The function to apply to the seed (e.g. `+` or
@@ -449,8 +437,8 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 setClass("DelayedAperm",
     contains="DelayedOp",
     representation(
-        seed="ANY",                # An array-like object expected to satisfy
-                                   # the "seed contract".
+        seed="ANY",                # An array-like object expected to comply
+                                   # with the "seed contract".
 
         dim_combination="integer"  # Index into dim(seed) specifying the seed
                                    # dimensions to keep and in which order.
@@ -571,7 +559,7 @@ setClass("DelayedVariadicIsoOp",
     contains="DelayedOp",
     representation(
         seeds="list",   # List of conformable array-like objects to combine.
-                        # Each object is expected to satisfy the "seed
+                        # Each object is expected to comply with the "seed
                         # contract".
 
         OP="function",  # The function to use to combine the seeds. It should
@@ -658,7 +646,7 @@ setClass("DelayedAbind",
     contains="DelayedOp",
     representation(
         seeds="list",    # List of array-like objects to bind. Each object
-                         # is expected to satisfy the "seed contract".
+                         # is expected to comply with the "seed contract".
 
         along="integer"  # Single integer indicating the dimension along
                          # which to bind the seeds.
