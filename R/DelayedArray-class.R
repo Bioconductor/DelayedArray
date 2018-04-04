@@ -112,9 +112,10 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 .get_DelayedArray_version <- function(object)
 {
     if (.hasSlot(object, "metaindex") && .hasSlot(object, "is_transposed"))
-        "< 0.5.11"
-    else
-        "current"
+        return("< 0.5.11")
+    if (.hasSlot(object, "index") && .hasSlot(object, "delayed_ops"))
+        return(">= 0.5.11 and < 0.5.24")
+    "current"  # i.e. >= 0.5.24
 }
 
 .update_delayed_ops <- function(delayed_ops)
@@ -154,22 +155,71 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
                 "internal representation from\n",
                 "[updateObject] DelayedArray ", version, ". Updating it ...")
 
-    delayed_ops <- .update_delayed_ops(object@delayed_ops)
-    ans <- new2(class(object), seed=object@seed,
-                               index=object@index,
-                               delayed_ops=delayed_ops,
-                               check=FALSE)
-    if (identical(object@metaindex, seq_along(object@index)) &&
-        identical(object@is_transposed, FALSE))
-        return(ans)
-    if (any(vapply(delayed_ops,
-                   function(delayed_op) delayed_op[[4L]],
-                   logical(1))))
-        stop(wmsg("object is too complex, sorry"))
-    perm <- object@metaindex
-    if (object@is_transposed)
-        perm <- rev(perm)
-    aperm(ans, perm)
+    if (version == "< 0.5.11") {
+        delayed_ops <- .update_delayed_ops(object@delayed_ops)
+        ## THIS DOES NOT WORK ANYMORE! (no more 'index' or 'delayed_ops' slot
+        ## in DelayedArray >= 0.5.24)
+        ans <- new2(class(object), seed=object@seed,
+                                   index=object@index,
+                                   delayed_ops=delayed_ops,
+                                   check=FALSE)
+        if (identical(object@metaindex, seq_along(object@index)) &&
+            identical(object@is_transposed, FALSE))
+            return(ans)
+        if (any(vapply(delayed_ops,
+                       function(delayed_op) delayed_op[[4L]],
+                       logical(1))))
+            stop(wmsg("object is too complex, sorry"))
+        perm <- object@metaindex
+        if (object@is_transposed)
+            perm <- rev(perm)
+        return(aperm(ans, perm))
+    }
+
+    if (version == ">= 0.5.11 and < 0.5.24") {
+        seed <- object@seed
+        seed_dimnames <- dimnames(seed)
+
+        ## Translate 'index' slot as DelayedOp objects (1 DelayedSubset and
+        ## 1 DelayedDimnames) and stash them inside 'seed'.
+
+        index <- lapply(unname(object@index), unname)
+        op <- new2("DelayedSubset", seed=seed, index=index)
+        if (!isNoOp(op))
+            seed <- op
+
+        object_dimnames <- lapply(seq_along(object@index),
+            function(along) {
+                i <- object@index[[along]]
+                if (is.null(i)) seed_dimnames[[along]] else names(i)
+            })
+        if (all(S4Vectors:::sapply_isNULL(object_dimnames)))
+            object_dimnames <- NULL
+
+        op <- new_DelayedDimnames(seed, object_dimnames)
+        if (!isNoOp(op))
+            seed <- op
+
+        ## Translate 'delayed_ops' slot as DelayedUnaryIsoOp objects and
+        ## stash them inside 'seed'.
+
+        for (delayed_op in object@delayed_ops) {
+            OP <- delayed_op[[1L]]
+            Largs <- delayed_op[[2L]]
+            Rargs <- delayed_op[[3L]]
+            Lidx <- Ridx <- integer(0)
+            recycle_along_last_dim <- delayed_op[[4L]]
+            if (recycle_along_last_dim) {
+                Lidx <- if (length(Largs) == 1L) 1L
+                Ridx <- if (length(Rargs) == 1L) 1L
+            }
+            seed <- new_DelayedUnaryIsoOp(seed, OP, Largs, Rargs, Lidx, Ridx)
+        }
+
+        return(DelayedArray(seed))
+    }
+
+    object
 }
 
 setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)

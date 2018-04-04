@@ -24,6 +24,9 @@
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
+### NOT exported for now.
+setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedSubset objects
@@ -62,10 +65,11 @@ setClass("DelayedSubset",
                      "in 'x@seed'"))
     if (!is.null(names(x@index)))
         return(wmsg2("'x@index' should not have names"))
-    ok <- lapply(x@index, function(i) { is.null(i) || is.integer(i) })
+    ok <- lapply(x@index,
+              function(i) {is.null(i) || is.integer(i) && is.null(names(i))})
     if (!all(unlist(ok)))
         return(wmsg2("each list element in 'x@index' must be NULL ",
-                     "or an integer vector"))
+                     "or an integer vector with no names on it"))
     TRUE
 }
 
@@ -92,6 +96,10 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
                     })
     new2("DelayedSubset", seed=seed, index=index)
 }
+
+setMethod("isNoOp", "DelayedSubset",
+    function(x) all(S4Vectors:::sapply_isNULL(x@index))
+)
 
 ### Seed contract.
 
@@ -221,6 +229,11 @@ new_DelayedDimnames <- function(seed=new("array"),
                        })
     new2("DelayedDimnames", seed=seed, dimnames=dimnames)
 }
+
+setMethod("isNoOp", "DelayedDimnames",
+    function(x)
+        all(vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED))
+)
 
 ### Seed contract.
 
@@ -619,4 +632,60 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
 }
 
 setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### updateObject()
+###
+### In DelayedArray 0.5.24, the SeedDimPicker, ConformableSeedCombiner, and
+### SeedBinder classes were renamed DelayedAperm, DelayedVariadicIsoOp, and
+### DelayedAbind, respectively.
+### DelayedArray objects serialized with DelayedArray < 0.5.24 might contain
+### instances of these old classes nested in their "seed" slot so we need to
+### keep them around for now.
+###
+
+setClass("SeedDimPicker", contains="DelayedAperm")
+setClass("ConformableSeedCombiner", contains="DelayedVariadicIsoOp")
+setClass("SeedBinder", contains="DelayedAbind")
+
+setMethod("updateObject", "DelayedOp",
+    function(object, ..., verbose=FALSE)
+    {
+        if (.hasSlot(object, "seed")) {
+            object@seed <- updateObject(object@seed, ..., verbose=verbose)
+        }
+        if (.hasSlot(object, "seeds")) {
+            object@seeds <- lapply(object@seeds,
+                function(seed) updateObject(seed, ..., verbose=verbose))
+        }
+        object
+    }
+)
+
+setMethod("updateObject", "SeedDimPicker",
+    function(object, ..., verbose=FALSE)
+    {
+        class(object) <- "DelayedAperm"
+        callNextMethod()
+    }
+)
+
+setMethod("updateObject", "ConformableSeedCombiner",
+    function(object, ..., verbose=FALSE)
+    {
+        object <- new2("DelayedVariadicIsoOp", seeds=object@seeds,
+                                               OP=object@COMBINING_OP,
+                                               Rargs=object@Rargs)
+        callNextMethod()
+    }
+)
+
+setMethod("updateObject", "SeedBinder",
+    function(object, ..., verbose=FALSE)
+    {
+        class(object) <- "DelayedAbind"
+        callNextMethod()
+    }
+)
 
