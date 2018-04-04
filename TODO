@@ -1,3 +1,5 @@
+- Reconsider honoring 'drop' argument when subsetting a DelayedArray object.
+
 - Use extract_array() instead of [ in show_compact_array() so it can work on
   any array-like object that supports extract_array() (e.g. HDF5ArraySeed
   objects, DelayedOp objects, and other "seed" objects).
