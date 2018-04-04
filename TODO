@@ -1,12 +1,27 @@
-- Support delayed array replication.
-  See https://github.com/Bioconductor/DelayedArray/issues/8
+- Use extract_array() instead of [ in show_compact_array() so it can work on
+  any array-like object that supports extract_array() (e.g. HDF5ArraySeed
+  objects, DelayedOp objects, and other "seed" objects).
+
+- Add "show" methods for the DelayedOp types.
+
+- Add unit tests for all the DelayedOp types.
+
+- Should backend classes (e.g. HDF5Array) be defined as:
+    setClass("HDF5Array",
+        contains="DelayedArray",
+        representation(seed="HDF5ArraySeed")
+    )
+  Then validity method is not needed anymore.
 
 - Document global option DelayedArray.block.size
 
 - Add man page and unit tests for statistical methods defined in
   DelayedArray-stats.R
 
-- Make DelayedArray contain Annotated from S4Vectors.
+- Support delayed array replication.
+  See https://github.com/Bioconductor/DelayedArray/issues/8
+
+- Make DelayedArray contain Annotated from S4Vectors?
 
 - Add more examples to the man pages (using the toy dataset).
 
