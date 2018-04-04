@@ -590,6 +590,9 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 {
     if (missing(x))
         stop("'x' is missing")
+    if (!(missing(drop) || identical(drop, FALSE)))
+        warning(wmsg("the 'drop' argument is ignored when ",
+                     "subsetting a DelayedArray object"))
     Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
     nsubscript <- length(Nindex)
     if (nsubscript != 0L && nsubscript != length(dim(x))) {
