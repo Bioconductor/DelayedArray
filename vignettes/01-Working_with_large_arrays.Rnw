@@ -380,8 +380,8 @@ M4
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-<<>>=
-seed(M4)
+<<eval=FALSE>>=
+seed(M4)  # Error! (more than one seed)
 @
       \end{exampleblock}
     \end{column}
@@ -433,8 +433,8 @@ M6
     \end{column}
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
-<<>>=
-seed(M6)
+<<eval=FALSE>>=
+seed(M6)  # Error! (more than one seed)
 @
       \end{exampleblock}
     \end{column}

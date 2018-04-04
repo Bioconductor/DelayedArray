@@ -190,7 +190,7 @@ setMethod("dimnames", "RleArraySeed",
 
 setAs("SolidRleArraySeed", "Rle", function(from) from@rle)
 
-### In practice this coercion is not used on a RleRealizationSink instance
+### In practice this coercion is not used on an RleRealizationSink instance
 ### but on a *ChunkedRleArraySeed* instance (by the coercion method from
 ### ChunkedRleArraySeed to SolidRleArraySeed defined below in this file).
 setAs("RleRealizationSink", "Rle",
@@ -333,8 +333,8 @@ setMethod("matrixClass", "RleArray", function(x) "RleMatrix")
 
 .validate_RleArray <- function(x)
 {
-    if (!is(seed(x), "RleArraySeed"))
-        return(wmsg2("'seed(x)' must be an RleArraySeed object"))
+    if (!is(x@seed, "RleArraySeed"))
+        return(wmsg2("'x@seed' must be an RleArraySeed object"))
     TRUE
 }
 
@@ -364,7 +364,7 @@ RleArray <- function(rle, dim, dimnames=NULL, chunksize=NULL)
 }
 
 ### Deconstruction.
-setAs("RleArray", "Rle", function(from) as(seed(from), "Rle"))
+setAs("RleArray", "Rle", function(from) as(from@seed, "Rle"))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -421,7 +421,7 @@ setAs("DataFrame", "RleArray", .from_DataFrame_to_RleMatrix)
 {
     ## We mangle the colnames exactly like as.data.frame() would do.
     ans_colnames <- colnames(as.data.frame(from[0L, ]))
-    rle <- as(seed(from), "Rle")
+    rle <- as(from@seed, "Rle")
     partitioning <- PartitioningByEnd(nrow(from) * seq_len(ncol(from)),
                                       names=ans_colnames)
     listData <- as.list(relist(rle, partitioning))

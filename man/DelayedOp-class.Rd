@@ -5,8 +5,6 @@
 \alias{DelayedOp-class}
 \alias{DelayedOp}
 
-\alias{seed,DelayedOp-method}
-\alias{seed<-,DelayedOp-method}
 \alias{path,DelayedOp-method}
 \alias{path<-,DelayedOp-method}
 

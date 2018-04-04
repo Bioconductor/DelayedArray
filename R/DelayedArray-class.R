@@ -189,47 +189,6 @@ setMethod("extract_array", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### seed() getter/setter
-###
-
-setMethod("seed", "DelayedArray", function(x) x@seed)
-
-setReplaceMethod("seed", "DelayedArray",
-    function(x, value)
-    {
-        x@seed <- normalize_seed_replacement_value(value, seed(x))
-        x
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### path() getter/setter
-###
-
-### The path of a DelayedArray object is the path of its seed so path()
-### will work only on a DelayedArray object with a seed that supports path().
-### For example it will work if the seed is an on-disk object (e.g. an
-### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
-### ordinary array or RleArraySeed object).
-setMethod("path", "DelayedArray",
-    function(object, ...) path(seed(object), ...)
-)
-
-### The path() setter sets the path of the seed of a DelayedArray object so
-### it will work out-of-the-box on any DelayedArray object with a seed that
-### supports the path() setter. For example it will work if the seed is an
-### HDF5ArraySeed object.
-setReplaceMethod("path", "DelayedArray",
-    function(object, ..., value)
-    {
-        path(seed(object), ...) <- value
-        object
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Stash delayed ops in a DelayedArray object
 ###
 ### Each "stashing" utility below:
@@ -278,6 +237,102 @@ stash_DelayedAperm <- function(x, perm)
 ### Note that false negatives happen when 'x' carries delayed operations that
 ### do nothing, but that's ok.
 #is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### seed() getter/setter
+###
+
+.IS_NOT_SUPOORTED_ETC <- c(
+    "is not supported on a DelayedArray object with ",
+    "multiple leaf seeds at the moment"
+)
+
+### If 'x' is a DelayedArray object and the tree of DelayedOp objects stored
+### in 'x@seed' is linear, then seed(x) must return the "leaf seed" i.e. the
+### 1st node in the linear tree (starting from 'x@seed', the tree root) that
+### is not a DelayedOp object. This should be the seed that was used by the
+### user to construct the original DelayedArray object.
+### Raise an error if the tree in 'x' is not linear.
+setGeneric("seed", function(x) standardGeneric("seed"))
+
+setMethod("seed", "ANY",
+    function(x)
+    {
+        if (!.hasSlot(x, "seed")) {
+            stopifnot(.hasSlot(x, "seeds"))  # sanity check
+            ## Tree is not linear.
+            stop(wmsg("seed() ", .IS_NOT_SUPOORTED_ETC))
+        }
+        if (is(x@seed, "DelayedOp"))
+            return(seed(x@seed))  # recursive call
+        x@seed  # found leaf seed!
+    }
+)
+
+### If 'x' is a DelayedArray object and the tree of DelayedOp objects stored
+### in 'x@seed' is linear, then the seed() setter must replace the "leaf seed".
+### Raise an error if the tree in 'x' is not linear.
+setGeneric("seed<-", signature="x",
+    function(x, ..., value) standardGeneric("seed<-")
+)
+
+.normalize_seed_replacement_value <- function(value, x_seed)
+{
+    if (!is(value, class(x_seed)))
+        stop(wmsg("supplied seed must be a ", class(x_seed), " object"))
+    if (!identical(dim(value), dim(x_seed)))
+        stop(wmsg("supplied seed must have the same dimensions ",
+                  "as current seed"))
+    if (!identical(dimnames(value), dimnames(x_seed)))
+        stop(wmsg("supplied seed must have the same dimnames ",
+                  "as current seed"))
+    value
+}
+
+setReplaceMethod("seed", "ANY",
+    function(x, value)
+    {
+        if (!.hasSlot(x, "seed")) {
+            stopifnot(.hasSlot(x, "seeds"))  # sanity check
+            ## Tree is not linear.
+            stop(wmsg("the seed() setter ", .IS_NOT_SUPOORTED_ETC))
+        }
+        if (is(x@seed, "DelayedOp")) {
+            seed(x@seed) <- value  # recursive call
+        } else {
+            ## Replace the leaf seed.
+            x@seed <- .normalize_seed_replacement_value(value, x@seed)
+        }
+        x
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### path() getter/setter
+###
+
+### The path of a DelayedArray object is the path of its seed so path()
+### will work only on a DelayedArray object with a seed that supports path().
+### For example it will work if the seed is an on-disk object (e.g. an
+### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
+### ordinary array or RleArraySeed object).
+setMethod("path", "DelayedArray",
+    function(object, ...) path(seed(object), ...)
+)
+
+### The path() setter sets the path of the seed of a DelayedArray object so
+### it will work out-of-the-box on any DelayedArray object with a seed that
+### supports the path() setter. For example it will work if the seed is an
+### HDF5ArraySeed object.
+setReplaceMethod("path", "DelayedArray",
+    function(object, ..., value)
+    {
+        path(seed(object), ...) <- value
+        object
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

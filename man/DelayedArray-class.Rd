@@ -17,20 +17,20 @@
 
 \alias{updateObject,DelayedArray-method}
 
-\alias{seed}
-\alias{seed,DelayedArray-method}
-\alias{seed<-}
-\alias{seed<-,DelayedArray-method}
-
-\alias{path}
-\alias{path,DelayedArray-method}
-\alias{path<-,DelayedArray-method}
-
 \alias{type}
 
 \alias{dim,DelayedArray-method}
 \alias{dimnames,DelayedArray-method}
 \alias{extract_array,DelayedArray-method}
+
+\alias{seed}
+\alias{seed,ANY-method}
+\alias{seed<-}
+\alias{seed<-,ANY-method}
+
+\alias{path}
+\alias{path,DelayedArray-method}
+\alias{path<-,DelayedArray-method}
 
 \alias{aperm}
 \alias{aperm.DelayedArray}

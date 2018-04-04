@@ -28,48 +28,8 @@ setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Default seed() and path() getters/setters
+### path() getter/setter for DelayedOp objects
 ###
-
-setGeneric("seed", function(x) standardGeneric("seed"))
-
-setGeneric("seed<-", signature="x",
-    function(x, ..., value) standardGeneric("seed<-")
-)
-
-.IS_NOT_SUPOORTED_ETC <- c(
-    "is not supported on a DelayedArray object with ",
-    "multiple leaf seeds at the moment"
-)
-
-setMethod("seed", "DelayedOp",
-    function(x)
-    {
-        if (.hasSlot(x, "seeds"))
-            stop(wmsg("seed() ", .IS_NOT_SUPOORTED_ETC))
-        x@seed
-    }
-)
-
-normalize_seed_replacement_value <- function(value, x_seed)
-{
-    if (!is(value, class(x_seed)))
-        stop(wmsg("supplied seed must be a ", class(x_seed), " object"))
-    if (!identical(dim(value), dim(x_seed)))
-        stop(wmsg("supplied seed must have the same dimensions ",
-                  "as current seed"))
-    value
-}
-
-setReplaceMethod("seed", "DelayedOp",
-    function(x, value)
-    {
-        if (.hasSlot(x, "seeds"))
-            stop(wmsg("the seed() setter ", .IS_NOT_SUPOORTED_ETC))
-        x@seed <- normalize_seed_replacement_value(value, seed(x))
-        x
-    }
-)
 
 setMethod("path", "DelayedOp",
     function(object, ...)
