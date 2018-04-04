@@ -35,6 +35,12 @@
 \alias{dimnames,DelayedAbind-method}
 \alias{extract_array,DelayedAbind-method}
 
+% updateObject()
+\alias{updateObject,DelayedOp-method}
+\alias{updateObject,SeedDimPicker-method}
+\alias{updateObject,ConformableSeedCombiner-method}
+\alias{updateObject,SeedBinder-method}
+
 \title{DelayedOp objects}
 
 \description{
