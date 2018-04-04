@@ -5,9 +5,6 @@
 \alias{DelayedOp-class}
 \alias{DelayedOp}
 
-\alias{path,DelayedOp-method}
-\alias{path<-,DelayedOp-method}
-
 % DelayedSubset objects
 \alias{dim,DelayedSubset-method}
 \alias{dimnames,DelayedSubset-method}
@@ -66,8 +63,6 @@
   contract} i.e. they must support \code{dim()}, \code{dimnames()}, and
   \code{extract_array()}. See \code{?\link{extract_array}} for more
   information about the \emph{seed contract}.
-  Unary nodes (i.e. nodes with an outdegree of 1) must also support the
-  \code{seed()} and \code{path()} getters and setters.
 }
 
 \note{

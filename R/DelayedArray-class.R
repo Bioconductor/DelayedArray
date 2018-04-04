@@ -313,19 +313,19 @@ setReplaceMethod("seed", "ANY",
 ### path() getter/setter
 ###
 
-### The path of a DelayedArray object is the path of its seed so path()
-### will work only on a DelayedArray object with a seed that supports path().
-### For example it will work if the seed is an on-disk object (e.g. an
+### The path of a DelayedArray object is the path of its leaf seed. So path()
+### will work on a DelayedArray object only if it works on its leaf seed.
+### For example it will work if its leaf seed is an on-disk object (e.g. an
 ### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
 ### ordinary array or RleArraySeed object).
 setMethod("path", "DelayedArray",
     function(object, ...) path(seed(object), ...)
 )
 
-### The path() setter sets the path of the seed of a DelayedArray object so
-### it will work out-of-the-box on any DelayedArray object with a seed that
-### supports the path() setter. For example it will work if the seed is an
-### HDF5ArraySeed object.
+### The path() setter will work on a DelayedArray object only if it works on
+### its leaf seed. For example it will work if its leaf seed is an on-disk
+### object (e.g. an HDF5ArraySeed object) but not if it's an in-memory object
+### (e.g. an ordinary array or RleArraySeed object).
 setReplaceMethod("path", "DelayedArray",
     function(object, ..., value)
     {

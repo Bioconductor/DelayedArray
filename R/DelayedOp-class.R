@@ -18,47 +18,11 @@
 ###
 ### All the nodes are array-like objects that must satisfy the "seed contract"
 ### i.e. they must support dim(), dimnames(), and extract_array().
-### Unary nodes (i.e. nodes with an outdegree of 1) must also support the
-### seed() and path() getters and setters.
 ###
 
 ### This virtual class and its 6 concrete subclasses are for internal use
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### path() getter/setter for DelayedOp objects
-###
-
-setMethod("path", "DelayedOp",
-    function(object, ...)
-    {
-        if (.hasSlot(object, "seeds"))
-            stop(wmsg("path() ", .IS_NOT_SUPOORTED_ETC))
-        ## The path of a DelayedOp object is the path of its seed so path()
-        ## will work only on a DelayedOp object that has a seed that supports
-        ## path().
-        ## For example it will work if the seed is an on-disk object (e.g. an
-        ## HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
-        ## ordinary array or RleArraySeed object).
-        path(seed(object), ...)
-    }
-)
-
-setReplaceMethod("path", "DelayedOp",
-    function(object, ..., value)
-    {
-        if (.hasSlot(object, "seeds"))
-            stop(wmsg("the path() setter ", .IS_NOT_SUPOORTED_ETC))
-        ## The path() setter sets the supplied path on the seed of the
-        ## DelayedOp object so it will work out-of-the-box on any DelayedOp
-        ## object that has a seed that supports the path() setter.
-        ## For example it will work if the seed is an HDF5ArraySeed object.
-        path(seed(object), ...) <- value
-        object
-    }
-)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
