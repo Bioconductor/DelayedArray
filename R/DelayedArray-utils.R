@@ -70,7 +70,7 @@
 {
     if (!identical(dim(e1), dim(e2)))
         stop("non-conformable arrays")
-    DelayedArray(new_DelayedVariadicIsoOp(e1, e2, OP=.Generic))
+    DelayedArray(new_DelayedVariadicIsoOp(e1@seed, e2@seed, OP=.Generic))
 }
 
 .DelayedArray_Ops <- function(.Generic, e1, e2)

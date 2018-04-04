@@ -248,9 +248,8 @@ setMethod("extract_array", "DelayedArray",
 ###      object 'x' by inserting it in the tree of DelayedOp objects (stored
 ###      in 'x@seed') as the new root node.
 ###
-### Note that these "stashing" utilities are provided only for the *unary*
-### DelayedOp nodes at the moment (see DelayedOp-class.R for a list of all
-### node types).
+### No "stashing" utility for nodes of type DelayedVariadicIsoOp for now.
+### See DelayedOp-class.R for the list of all node types.
 ###
 
 stash_DelayedSubset <- function(x, Nindex)
@@ -274,6 +273,12 @@ stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
 stash_DelayedAperm <- function(x, perm)
 {
     DelayedArray(new_DelayedAperm(x@seed, perm))
+}
+
+stash_DelayedAbind <- function(..., along)
+{
+    seeds <- lapply(unname(list(...)), slot, "seed")
+    DelayedArray(new_DelayedAbind(seeds, along))
 }
 
 
@@ -665,7 +670,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
         stop(wmsg(.subassign_error_msg))
     if (!(is.vector(value) && is.atomic(value) && length(value) == 1L))
         stop(wmsg(.subassign_error_msg))
-    DelayedArray(new_DelayedVariadicIsoOp(x, i, OP=`[<-`,
+    DelayedArray(new_DelayedVariadicIsoOp(x@seed, i@seed, OP=`[<-`,
                                           Rargs=list(value=value)))
 }
 
@@ -788,23 +793,8 @@ setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
 
 ### arbind() and acbind()
 
-.DelayedArray_arbind <- function(...)
-{
-    objects <- unname(list(...))
-    dims <- get_dims_to_bind(objects, 1L)
-    if (is.character(dims))
-        stop(wmsg(dims))
-    DelayedArray(new_DelayedAbind(objects, 1L))
-}
-
-.DelayedArray_acbind <- function(...)
-{
-    objects <- unname(list(...))
-    dims <- get_dims_to_bind(objects, 2L)
-    if (is.character(dims))
-        stop(wmsg(dims))
-    DelayedArray(new_DelayedAbind(objects, 2L))
-}
+.DelayedArray_arbind <- function(...) stash_DelayedAbind(..., along=1L)
+.DelayedArray_acbind <- function(...) stash_DelayedAbind(..., along=2L)
 
 setMethod("arbind", "DelayedArray", .DelayedArray_arbind)
 setMethod("acbind", "DelayedArray", .DelayedArray_acbind)

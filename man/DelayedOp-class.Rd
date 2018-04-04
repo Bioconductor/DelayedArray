@@ -114,20 +114,22 @@ showtree(x)
 }
 
 \examples{
-seed <- matrix(runif(150), nrow=15, ncol=10)
-X <- DelayedArray(seed)
+m1 <- matrix(runif(150), nrow=15, ncol=10)
+X <- DelayedArray(m1)
 showtree(X)
 
 dimnames(X) <- list(letters[1:15], LETTERS[1:10])
 showtree(X)
 
-Y <- cbind(t(X[ , 10:1]), DelayedArray(matrix(1:20, nrow=10)), X[6:15, "A"])
+m2 <- matrix(1:20, nrow=10)
+Y <- cbind(t(X[ , 10:1]), DelayedArray(m2), X[6:15, "A"])
 showtree(Y)
 
 Z <- t(Y[10:1, ])[1:15, ] + 0.4 * X
 showtree(Z)
 showtree(Z@seed@seeds)
-showtree(Z@seed@seeds[[2]])
+showtree(Z@seed@seeds[[2]]@seed)  # reaching to X
+showtree(Z@seed@seeds[[1]]@seed@seed@seed)  # reaching to Y
 }
 
 \keyword{internal}
