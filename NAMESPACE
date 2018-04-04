@@ -4,6 +4,7 @@ importFrom(stats, setNames,
                   dbinom, pbinom, qbinom,
                   dpois, ppois, qpois,
                   dlogis, plogis, qlogis)
+importFrom(stats4, summary)
 import(matrixStats)
 import(BiocGenerics)
 import(S4Vectors)
@@ -68,6 +69,13 @@ S3method(mean, DelayedArray)
 
 S3method(split, DelayedArray)
 
+S3method(summary, DelayedSubset)
+S3method(summary, DelayedDimnames)
+S3method(summary, DelayedUnaryIsoOp)
+S3method(summary, DelayedAperm)
+S3method(summary, DelayedVariadicIsoOp)
+S3method(summary, DelayedAbind)
+
 S3method(t, DelayedMatrix)
 
 ### We also export them thru the export() directive so that (a) they can be
@@ -101,6 +109,13 @@ export(
     mean.DelayedArray,
 
     split.DelayedArray,
+
+    summary.DelayedSubset,
+    summary.DelayedDimnames,
+    summary.DelayedUnaryIsoOp,
+    summary.DelayedAperm,
+    summary.DelayedVariadicIsoOp,
+    summary.DelayedAbind,
 
     t.DelayedMatrix
 )
@@ -141,6 +156,9 @@ exportMethods(
     dbinom, pbinom, qbinom,
     dpois, ppois, qpois,
     dlogis, plogis, qlogis,
+
+    ## Methods for generics defined in the stats4 package:
+    summary,
 
     ## Methods for generics defined in the BiocGenerics package:
     cbind, rbind,
@@ -193,7 +211,7 @@ export(
     extract_array, type, chunkdim,
 
     ## DelayedArray-class.R:
-    matrixClass, DelayedArray, seed, "seed<-", aperm,
+    matrixClass, DelayedArray, showtree, seed, "seed<-", aperm,
 
     ## realize.R:
     chunk_dim, write_block_to_sink, close,
@@ -211,7 +229,7 @@ exportMethods(
     arbind, acbind,
     refdim, isLinear,
     extract_array, type, chunkdim,
-    matrixClass, DelayedArray, seed, "seed<-", aperm,
+    matrixClass, DelayedArray, showtree, seed, "seed<-", aperm,
     chunk_dim, write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,

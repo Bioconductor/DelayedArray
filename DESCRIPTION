@@ -13,7 +13,7 @@ Encoding: UTF-8
 Author: Hervé Pagès
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
-Depends: R (>= 3.4), methods, matrixStats, BiocGenerics (>= 0.25.1),
+Depends: R (>= 3.4), methods, stats4, matrixStats, BiocGenerics (>= 0.25.1),
 	S4Vectors (>= 0.15.3), IRanges (>= 2.11.17), BiocParallel
 Imports: stats
 Suggests: Matrix, HDF5Array, genefilter, SummarizedExperiment, airway, pryr,

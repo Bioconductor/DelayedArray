@@ -29,6 +29,72 @@ setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### showtree()
+###
+### A much more condensed version of str().
+###
+
+setGeneric("showtree", function(x) standardGeneric("showtree"))
+
+.VBAR  <- "│"
+.TEE   <- "├"
+.ELBOW <- "└"
+.HBAR  <- "─"
+
+### 'last.child' can be NA, TRUE, or FALSE. NA means 'x' is the root of the
+### tree.
+.show_tree <- function(x, indent="", last.child=NA)
+{
+    stopifnot(isSingleString(indent))
+    stopifnot(is.logical(last.child), length(last.child) == 1L)
+
+    if (!is.list(x)) {
+
+        ## Display summary line.
+
+        if (is.na(last.child)) {
+            ## No prefix.
+            prefix <- ""
+        } else {
+            ## 3-char prefix
+            prefix <- paste0(if (last.child) .ELBOW else .TEE, .HBAR, " ")
+        }
+        is_leaf <- FALSE
+        if (is(x, "DelayedOp")) {
+            x_as1string <- summary(x)
+        } else {
+            x_as1string <- paste0(class(x), " object")
+            if (!(.hasSlot(x, "seed") || .hasSlot(x, "seeds"))) {
+                is_leaf <- TRUE
+                x_as1string <- paste0("seed: ", x_as1string)
+            }
+        }
+        cat(indent, prefix, x_as1string, "\n", sep="")
+        if (is_leaf)
+            return(invisible(NULL))
+    }
+
+    ## Display children.
+
+    if (!is.na(last.child)) {
+        ## Increase indent by 3 chars.
+        indent <- paste0(indent, if (last.child) " " else .VBAR, "  ")
+    }
+    if (.hasSlot(x, "seed"))
+        .show_tree(x@seed, indent, last.child=TRUE)
+    if (.hasSlot(x, "seeds"))
+        x <- x@seeds
+    if (is.list(x)) {
+        nseed <- length(x)
+        for (i in seq_len(nseed))
+            .show_tree(x[[i]], indent, last.child=(i==nseed))
+    }
+}
+
+setMethod("showtree", "ANY", function(x) .show_tree(x))
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedSubset objects
 ###
 ### Delayed "Multi-dimensional single bracket subsetting".
@@ -100,6 +166,15 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
 setMethod("isNoOp", "DelayedSubset",
     function(x) all(S4Vectors:::sapply_isNULL(x@index))
 )
+
+### S3/S4 combo for summary.DelayedSubset
+
+.DelayedSubset_summary <- function(object) "Subset"
+
+summary.DelayedSubset <-
+    function(object, ...) .DelayedSubset_summary(object, ...)
+
+setMethod("summary", "DelayedSubset", summary.DelayedSubset)
 
 ### Seed contract.
 
@@ -235,6 +310,15 @@ setMethod("isNoOp", "DelayedDimnames",
         all(vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED))
 )
 
+### S3/S4 combo for summary.DelayedDimnames
+
+.DelayedDimnames_summary <- function(object) "Set dimnames"
+
+summary.DelayedDimnames <-
+    function(object, ...) .DelayedDimnames_summary(object, ...)
+
+setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
+
 ### Seed contract.
 
 setMethod("dim", "DelayedDimnames", function(x) dim(x@seed))
@@ -312,6 +396,15 @@ new_DelayedUnaryIsoOp <- function(seed=new("array"),
     new2("DelayedUnaryIsoOp", seed=seed, OP=OP, Largs=Largs, Rargs=Rargs,
                               Lidx=Lidx, Ridx=Ridx)
 }
+
+### S3/S4 combo for summary.DelayedUnaryIsoOp
+
+.DelayedUnaryIsoOp_summary <- function(object) "Unary op"
+
+summary.DelayedUnaryIsoOp <-
+    function(object, ...) .DelayedUnaryIsoOp_summary(object, ...)
+
+setMethod("summary", "DelayedUnaryIsoOp", summary.DelayedUnaryIsoOp)
 
 ### Seed contract.
 
@@ -424,6 +517,15 @@ new_DelayedAperm <- function(seed, perm=NULL)
     new2("DelayedAperm", seed=seed, dim_combination=perm)
 }
 
+### S3/S4 combo for summary.DelayedAperm
+
+.DelayedAperm_summary <- function(object) "Aperm"
+
+summary.DelayedAperm <-
+    function(object, ...) .DelayedAperm_summary(object, ...)
+
+setMethod("summary", "DelayedAperm", summary.DelayedAperm)
+
 ### Seed contract.
 
 .get_DelayedAperm_dim <- function(x)
@@ -520,6 +622,15 @@ new_DelayedVariadicIsoOp <- function(seed=new("array"), ...,
     new2("DelayedVariadicIsoOp", seeds=seeds, OP=OP, Rargs=Rargs)
 }
 
+### S3/S4 combo for summary.DelayedVariadicIsoOp
+
+.DelayedVariadicIsoOp_summary <- function(object) "N-ary op"
+
+summary.DelayedVariadicIsoOp <-
+    function(object, ...) .DelayedVariadicIsoOp_summary(object, ...)
+
+setMethod("summary", "DelayedVariadicIsoOp", summary.DelayedVariadicIsoOp)
+
 ### Seed contract.
 
 setMethod("dim", "DelayedVariadicIsoOp", function(x) dim(x@seeds[[1L]]))
@@ -580,6 +691,15 @@ new_DelayedAbind <- function(seeds, along)
 {
     new2("DelayedAbind", seeds=seeds, along=along)
 }
+
+### S3/S4 combo for summary.DelayedVariadicIsoOp
+
+.DelayedAbind_summary <- function(object) "Abind"
+
+summary.DelayedAbind <-
+    function(object, ...) .DelayedAbind_summary(object, ...)
+
+setMethod("summary", "DelayedAbind", summary.DelayedAbind)
 
 ### Seed contract.
 
