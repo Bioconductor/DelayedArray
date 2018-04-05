@@ -1,10 +1,5 @@
-- Reconsider honoring 'drop' argument when subsetting a DelayedArray object.
-
-- Use extract_array() instead of [ in show_compact_array() so it can work on
-  any array-like object that supports extract_array() (e.g. HDF5ArraySeed
-  objects, DelayedOp objects, and other "seed" objects).
-
-- Add "show" methods for the DelayedOp types.
+- A[A == 1] should work on a 1D DelayedArray object (and return a 1D
+  DelayedArray object).
 
 - Add unit tests for all the DelayedOp types.
 
