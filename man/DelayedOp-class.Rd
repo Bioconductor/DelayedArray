@@ -7,6 +7,7 @@
 
 \alias{showtree}
 \alias{showtree,ANY-method}
+\alias{show,DelayedOp-method}
 
 % DelayedSubset objects
 \alias{summary.DelayedSubset}
@@ -127,9 +128,9 @@ showtree(Y)
 
 Z <- t(Y[10:1, ])[1:15, ] + 0.4 * X
 showtree(Z)
-showtree(Z@seed@seeds)
-showtree(Z@seed@seeds[[2]]@seed)  # reaching to X
-showtree(Z@seed@seeds[[1]]@seed@seed@seed)  # reaching to Y
+Z@seed@seeds
+Z@seed@seeds[[2]]@seed            # reaching to X
+Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
 }
 
 \keyword{internal}

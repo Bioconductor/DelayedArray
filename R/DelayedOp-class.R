@@ -95,6 +95,8 @@ setGeneric("showtree", function(x) standardGeneric("showtree"))
 
 setMethod("showtree", "ANY", function(x) .show_tree(x))
 
+setMethod("show", "DelayedOp", function(object) .show_tree(object))
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedSubset objects
