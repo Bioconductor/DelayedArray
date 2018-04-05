@@ -24,9 +24,15 @@
 
 - Add unit tests for round() and signif() (Math2 group).
 
-- Explore DelayedAtomicVector. Could be used in situation where
+- Explore DelayedAtomicVector. Could be used in situations where
   1D DelayedArray objects are currently used (e.g. VariantExperiment
-  package).
+  package). Then reconsider what subsetting does when 'drop' is TRUE.
+  Should it return the result as an ordinary vector instead of a 1D
+  DelayedArray object? We're not doing this right now because it would
+  be inconvenient for people using 1D DelayedArray objects (it triggers
+  realization when the user probably doesn't want it). But if people
+  switch to DelayedAtomicVector objects then maybe it's ok to make this
+  change.
 
 - Support subsetting an arbitrary object by a DelayedArray or
   DelayedMatrix of type logical.
