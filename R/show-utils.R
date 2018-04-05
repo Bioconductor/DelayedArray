@@ -346,20 +346,17 @@
     .print_nDarray_data(x, n1, n2, quote=quote)
 }
 
-array_one_line_summary <- function(x)
+.array_one_line_summary <- function(x)
 {
-    x_class <- class(x)
-    x_dim <- dim(x)
-    dim_in1string <- paste0(x_dim, collapse=" x ")
-    x_type <- type(x)
-    sprintf("<%s> %s object of type \"%s\"", dim_in1string, x_class, x_type)
+    dim_in1string <- paste0(dim(x), collapse=" x ")
+    sprintf("<%s> %s object of type \"%s\"", dim_in1string, class(x), type(x))
 }
 
 ### Work on any array-like object that complies with the "seed contract" i.e.
 ### that supports dim(), dimnames(), and extract_array().
 show_compact_array <- function(object)
 {
-    cat(array_one_line_summary(object))
+    cat(.array_one_line_summary(object))
     if (any(dim(object) == 0L)) {
         cat("\n")
         return()

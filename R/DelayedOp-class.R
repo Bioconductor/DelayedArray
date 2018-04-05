@@ -34,7 +34,9 @@ setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
 ### A much more condensed version of str().
 ###
 
-setGeneric("showtree", function(x) standardGeneric("showtree"))
+setGeneric("showtree", signature="x",
+    function(x, show.node.dim=TRUE) standardGeneric("showtree")
+)
 
 ### Avoid use of non-ASCII characters in R source code. There must be a much
 ### better way to do this.
@@ -45,7 +47,7 @@ setGeneric("showtree", function(x) standardGeneric("showtree"))
 
 ### 'last.child' can be NA, TRUE, or FALSE. NA means 'x' is the root of the
 ### tree.
-.show_tree <- function(x, indent="", last.child=NA)
+.show_tree <- function(x, indent="", last.child=NA, show.node.dim=TRUE)
 {
     stopifnot(isSingleString(indent))
     stopifnot(is.logical(last.child), length(last.child) == 1L)
@@ -61,6 +63,7 @@ setGeneric("showtree", function(x) standardGeneric("showtree"))
             ## 3-char prefix
             prefix <- paste0(if (last.child) .ELBOW else .TEE, .HBAR, " ")
         }
+
         is_leaf <- FALSE
         if (is(x, "DelayedOp")) {
             x_as1string <- summary(x)
@@ -68,8 +71,13 @@ setGeneric("showtree", function(x) standardGeneric("showtree"))
             x_as1string <- paste0(class(x), " object")
             if (!(.hasSlot(x, "seed") || .hasSlot(x, "seeds"))) {
                 is_leaf <- TRUE
-                x_as1string <- paste0("seed: ", x_as1string)
+                x_as1string <- paste0("[seed] ", x_as1string)
             }
+        }
+        if (show.node.dim) {
+            dim_in1string <- paste0(dim(x), collapse="x")
+            x_as1string <- sprintf("%s %s: %s", dim_in1string, type(x),
+                                                x_as1string)
         }
         cat(indent, prefix, x_as1string, "\n", sep="")
         if (is_leaf)
@@ -83,17 +91,26 @@ setGeneric("showtree", function(x) standardGeneric("showtree"))
         indent <- paste0(indent, if (last.child) " " else .VBAR, "  ")
     }
     if (.hasSlot(x, "seed"))
-        .show_tree(x@seed, indent, last.child=TRUE)
+        .show_tree(x@seed, indent, last.child=TRUE,
+                   show.node.dim=show.node.dim)
     if (.hasSlot(x, "seeds"))
         x <- x@seeds
     if (is.list(x)) {
         nseed <- length(x)
         for (i in seq_len(nseed))
-            .show_tree(x[[i]], indent, last.child=(i==nseed))
+            .show_tree(x[[i]], indent, last.child=(i==nseed),
+                       show.node.dim=show.node.dim)
     }
 }
 
-setMethod("showtree", "ANY", function(x) .show_tree(x))
+setMethod("showtree", "ANY",
+    function(x, show.node.dim=TRUE)
+    {
+        if (!isTRUEorFALSE(show.node.dim))
+            stop("'show.node.dim' must be TRUE or FALSE")
+        .show_tree(x, show.node.dim=show.node.dim)
+    }
+)
 
 setMethod("show", "DelayedOp", function(object) .show_tree(object))
 
@@ -511,7 +528,13 @@ new_DelayedAperm <- function(seed, perm=NULL)
 
 ### S3/S4 combo for summary.DelayedAperm
 
-.DelayedAperm_summary <- function(object) "Aperm"
+.DelayedAperm_summary <- function(object)
+{
+    perm <- as.character(object@dim_combination)
+    if (length(perm) >= 2L)
+        perm <- sprintf("c(%s)", paste0(perm, collapse=","))
+    sprintf("Aperm (perm=%s)", perm)
+}
 
 summary.DelayedAperm <-
     function(object, ...) .DelayedAperm_summary(object, ...)
@@ -686,7 +709,8 @@ new_DelayedAbind <- function(seeds, along)
 
 ### S3/S4 combo for summary.DelayedVariadicIsoOp
 
-.DelayedAbind_summary <- function(object) "Abind"
+.DelayedAbind_summary <-
+    function(object) sprintf("Abind (along=%d)", object@along)
 
 summary.DelayedAbind <-
     function(object, ...) .DelayedAbind_summary(object, ...)

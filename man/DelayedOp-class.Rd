@@ -72,13 +72,17 @@
 }
 
 \usage{
-showtree(x)
+showtree(x, show.node.dim=TRUE)
 }
 
 \arguments{
   \item{x}{
     Typically a \link{DelayedArray} object. Can also be a DelayedOp object
     or a list where each element is a \link{DelayedArray} or DelayedOp object.
+  }
+  \item{show.node.dim}{
+    \code{TRUE} or \code{FALSE}. If \code{TRUE} (the default), the nodes
+    dimensions and data type is displayed.
   }
 }
 
@@ -125,9 +129,11 @@ showtree(X)
 m2 <- matrix(1:20, nrow=10)
 Y <- cbind(t(X[ , 10:1]), DelayedArray(m2), X[6:15, "A"])
 showtree(Y)
+showtree(Y, show.node.dim=FALSE)
 
 Z <- t(Y[10:1, ])[1:15, ] + 0.4 * X
 showtree(Z)
+
 Z@seed@seeds
 Z@seed@seeds[[2]]@seed            # reaching to X
 Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
