@@ -24,7 +24,9 @@
 
 - Add unit tests for round() and signif() (Math2 group).
 
-- Add vignette.
+- Explore DelayedAtomicVector. Could be used in situation where
+  1D DelayedArray objects are currently used (e.g. VariantExperiment
+  package).
 
 - Support subsetting an arbitrary object by a DelayedArray or
   DelayedMatrix of type logical.
