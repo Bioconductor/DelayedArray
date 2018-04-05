@@ -396,7 +396,7 @@ setReplaceMethod("path", "DelayedArray",
 ### Unlike base::aperm(), the method for DelayedArray objects supports
 ### dropping dimensions. Note that only "ineffective" dimensions can be
 ### dropped (i.e. dimensions equal to 1, so dropping them preserves the
-### length). This feature is used by the dim() setter below.
+### length). This feature is used by the "drop" method below.
 ###
 
 setGeneric("aperm", signature="a")
@@ -411,6 +411,21 @@ setGeneric("aperm", signature="a")
 ### S3/S4 combo for aperm.DelayedArray
 aperm.DelayedArray <- function(a, perm, ...) .aperm.DelayedArray(a, perm, ...)
 setMethod("aperm", "DelayedArray", aperm.DelayedArray)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### drop()
+###
+
+setMethod("drop", "DelayedArray",
+    function(x)
+    {
+        perm <- which(dim(x) != 1L)
+        if (length(perm) == 0L)
+            perm <- 1L
+        aperm(x, perm)
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -489,19 +504,6 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
 }
 
 setReplaceMethod("dim", "DelayedArray", .set_DelayedArray_dim)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### drop()
-###
-
-setMethod("drop", "DelayedArray",
-    function(x)
-    {
-        x_dim <- dim(x)
-        set_dim(x, x_dim[x_dim != 1L])
-    }
-)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

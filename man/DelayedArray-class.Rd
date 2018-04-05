@@ -36,12 +36,12 @@
 \alias{aperm.DelayedArray}
 \alias{aperm,DelayedArray-method}
 
+\alias{drop,DelayedArray-method}
+
 \alias{dim<-,DelayedArray-method}
 \alias{dimnames<-,DelayedArray-method}
 \alias{names,DelayedArray-method}
 \alias{names<-,DelayedArray-method}
-
-\alias{drop,DelayedArray-method}
 
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
