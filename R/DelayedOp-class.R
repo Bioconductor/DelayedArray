@@ -124,12 +124,12 @@ setMethod("show", "DelayedOp", function(object) .show_tree(object))
 setClass("DelayedSubset",
     contains="DelayedOp",
     representation(
-        seed="ANY",   # An array-like object expected to comply with the "seed
-                      # contract".
+        seed="ANY",   # The input array-like object. Expected to comply with
+                      # the "seed contract".
 
         index="list"  # List of subscripts as positive integer vectors, one
-                      # per seed dimension. *Missing* list elements are
-                      # allowed and represented by NULLs.
+                      # per dimension in the input. *Missing* list elements
+                      # are allowed and represented by NULLs.
     ),
     prototype(
         seed=new("array"),
@@ -238,12 +238,13 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 setClass("DelayedDimnames",
     contains="DelayedOp",
     representation(
-        seed="ANY",      # An array-like object expected to comply with
-                         # the "seed contract".
+        seed="ANY",      # The input array-like object. Expected to comply
+                         # with the "seed contract".
 
-        dimnames="list"  # List with one list element per seed dimension. Each
-                         # list element must be NULL, or a character vector,
-                         # or special value .INHERIT_FROM_SEED
+        dimnames="list"  # List with one list element per dimension in
+                         # the input. Each list element must be NULL,
+                         # or a character vector, or special value
+                         # .INHERIT_FROM_SEED
     ),
     prototype(
         seed=new("array"),
@@ -362,23 +363,23 @@ setMethod("extract_array", "DelayedDimnames",
 setClass("DelayedUnaryIsoOp",
     contains="DelayedOp",
     representation(
-        seed="ANY",      # An array-like object expected to comply with the
-                         # "seed contract".
+        seed="ANY",      # The input array-like object. Expected to comply
+                         # with the "seed contract".
 
-        OP="function",   # The function to apply to the seed (e.g. `+` or
+        OP="function",   # The function to apply to the input (e.g. `+` or
                          # log). It should act as an isomorphism i.e. always
-                         # return an array parallel to the input array (i.e.
-                         # same dimensions).
+                         # return an array-like object parallel to the input
+                         # (i.e. with the same dimensions).
 
         Largs="list",    # Left arguments to OP i.e. arguments to place
-                         # before the array in the function call.
+                         # before the input array in the function call.
         Rargs="list",    # Right arguments to OP i.e. arguments to place
-                         # after the array in the function call.
+                         # after the input array in the function call.
 
         Lidx="integer",  # Index of left arguments that are parallel to the
-                         # rows of the seed.
+                         # rows of the input.
         Ridx="integer"   # Index of right arguments that are parallel to the
-                         # rows of the seed.
+                         # rows of the input.
     ),
     prototype(
         seed=new("array"),
@@ -458,18 +459,21 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 setClass("DelayedAperm",
     contains="DelayedOp",
     representation(
-        seed="ANY",                # An array-like object expected to comply
-                                   # with the "seed contract".
+        seed="ANY",     # The input array-like object. Expected to comply
+                        # with the "seed contract".
 
-        dim_combination="integer"  # Index into dim(seed) specifying the seed
-                                   # dimensions to keep and in which order.
+        perm="integer"  # Index into dim(seed) specifying the *rearrangement*
+                        # of the dimensions of the input (i.e. which ones to
+                        # keep and in which order).
     ),
     prototype(
         seed=new("array"),
-        dim_combination=1L
+        perm=1L
     )
 )
 
+### The seed is referred to as 'a' in the error messages. This makes them
+### more meaningful for the end user in the context of calling aperm().
 .validate_DelayedAperm <- function(x)
 {
     seed_dim <- dim(x@seed)
@@ -479,58 +483,43 @@ setClass("DelayedAperm",
     if (seed_ndim == 0L)
         return(wmsg2("'x@seed' must have dimensions"))
 
-    ## 'dim_combination' slot.
-    if (length(x@dim_combination) == 0L)
-        return(wmsg2("'x@dim_combination' cannot be empty"))
-    if (S4Vectors:::anyMissingOrOutside(x@dim_combination, 1L, seed_ndim))
-        return(wmsg2("all values in 'x@dim_combination' must be >= 1 ",
-                     "and <= 'seed_ndim'"))
-    if (anyDuplicated(x@dim_combination))
-        return(wmsg2("'x@dim_combination' cannot have duplicates"))
-    if (!all(seed_dim[-x@dim_combination] == 1L))
-        return(wmsg2("dimensions to drop from 'x' must be equal to 1"))
+    ## 'perm' slot.
+    if (length(x@perm) == 0L)
+        return(wmsg2("'perm' cannot be an empty vector"))
+    if (S4Vectors:::anyMissingOrOutside(x@perm, 1L, seed_ndim))
+        return(wmsg2("all values in 'perm' must be >= 1 ",
+                     "and <= 'length(dim(a))'"))
+    if (anyDuplicated(x@perm))
+        return(wmsg2("'perm' cannot have duplicates"))
+    if (!all(seed_dim[-x@perm] == 1L))
+        return(wmsg2("only dimensions equal to 1 can be dropped"))
     TRUE
 }
 
 setValidity2("DelayedAperm", .validate_DelayedAperm)
 
-### Input array is referred to as 'a' in the error messages for consistency
-### with aperm().
 .normarg_perm <- function(perm, a_dim)
 {
+    if (is.null(perm))
+        return(seq_along(a_dim))
     if (!is.numeric(perm))
         stop(wmsg("'perm' must be an integer vector"))
     if (!is.integer(perm))
         perm <- as.integer(perm)
-    if (length(perm) == 0L)
-        stop(wmsg("'perm' cannot be an empty vector"))
-    if (S4Vectors:::anyMissingOrOutside(perm, 1L, length(a_dim)))
-        stop(wmsg("values out of range in 'perm'"))
-    if (anyDuplicated(perm))
-        stop(wmsg("'perm' cannot have duplicates"))
-    if (!all(a_dim[-perm] == 1L))
-        stop(wmsg("dimensions to drop from 'a' must be equal to 1"))
     perm
 }
 
-### Name of argument is 'perm' instead of 'dim_combination' for consistency
-### with aperm().
 new_DelayedAperm <- function(seed, perm=NULL)
 {
-    seed_dim <- dim(seed)
-    if (is.null(perm)) {
-        perm <- seq_along(seed_dim)
-    } else {
-        perm <- .normarg_perm(perm, seed_dim)
-    }
-    new2("DelayedAperm", seed=seed, dim_combination=perm)
+    perm <- .normarg_perm(perm, dim(seed))
+    new2("DelayedAperm", seed=seed, perm=perm)
 }
 
 ### S3/S4 combo for summary.DelayedAperm
 
 .DelayedAperm_summary <- function(object)
 {
-    perm <- as.character(object@dim_combination)
+    perm <- as.character(object@perm)
     if (length(perm) >= 2L)
         perm <- sprintf("c(%s)", paste0(perm, collapse=","))
     sprintf("Aperm (perm=%s)", perm)
@@ -546,7 +535,7 @@ setMethod("summary", "DelayedAperm", summary.DelayedAperm)
 .get_DelayedAperm_dim <- function(x)
 {
     seed_dim <- dim(x@seed)
-    seed_dim[x@dim_combination]
+    seed_dim[x@perm]
 }
 
 setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
@@ -556,7 +545,7 @@ setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
     seed_dimnames <- dimnames(x@seed)
     if (is.null(seed_dimnames))
         return(NULL)
-    simplify_NULL_dimnames(seed_dimnames[x@dim_combination])
+    simplify_NULL_dimnames(seed_dimnames[x@perm])
 }
 
 setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
@@ -565,10 +554,10 @@ setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
 {
     seed_dim <- dim(x@seed)
     seed_index <- rep.int(list(1L), length(seed_dim))
-    seed_index[x@dim_combination] <- index
+    seed_index[x@perm] <- index
     a <- extract_array(x@seed, seed_index)
-    dim(a) <- dim(a)[sort(x@dim_combination)]
-    aperm(a, perm=rank(x@dim_combination))
+    dim(a) <- dim(a)[sort(x@perm)]
+    aperm(a, perm=rank(x@perm))
 }
 
 setMethod("extract_array", "DelayedAperm",
@@ -585,13 +574,15 @@ setMethod("extract_array", "DelayedAperm",
 setClass("DelayedVariadicIsoOp",
     contains="DelayedOp",
     representation(
-        seeds="list",   # List of conformable array-like objects to combine.
-                        # Each object is expected to comply with the "seed
-                        # contract".
+        seeds="list",   # The input array-like objects. Each object is
+                        # expected to comply with the "seed contract".
+                        # The objects must be "conformable" i.e. they must
+                        # all have the same dimensions.
 
-        OP="function",  # The function to use to combine the seeds. It should
-                        # act as an isomorphism i.e. always return an array
-                        # parallel to the input arrays (i.e. same dimensions).
+        OP="function",  # The function to use to combine the input objects.
+                        # Should act as an isomorphism i.e. always return an
+                        # array-like object parallel to the input objects
+                        # (i.e. with the same dimensions).
 
         Rargs="list"    # Additional right arguments to OP.
     ),
@@ -672,11 +663,11 @@ setMethod("extract_array", "DelayedVariadicIsoOp",
 setClass("DelayedAbind",
     contains="DelayedOp",
     representation(
-        seeds="list",    # List of array-like objects to bind. Each object
-                         # is expected to comply with the "seed contract".
+        seeds="list",    # The input array-like objects. Each object is
+                         # expected to comply with the "seed contract".
 
         along="integer"  # Single integer indicating the dimension along
-                         # which to bind the seeds.
+                         # which to bind the input objects.
     ),
     prototype(
         seeds=list(new("array")),
@@ -802,7 +793,8 @@ setMethod("updateObject", "DelayedOp",
 setMethod("updateObject", "SeedDimPicker",
     function(object, ..., verbose=FALSE)
     {
-        class(object) <- "DelayedAperm"
+        object <- new2("DelayedAperm", seed=object@seed,
+                                       perm=object@dim_combination)
         callNextMethod()
     }
 )
