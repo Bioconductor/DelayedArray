@@ -36,10 +36,12 @@ setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
 
 setGeneric("showtree", function(x) standardGeneric("showtree"))
 
-.VBAR  <- "│"
-.TEE   <- "├"
-.ELBOW <- "└"
-.HBAR  <- "─"
+### Avoid use of non-ASCII characters in R source code. There must be a much
+### better way to do this.
+.VBAR  <- rawToChar(as.raw(c(0xe2, 0x94, 0x82)))
+.TEE   <- rawToChar(as.raw(c(0xe2, 0x94, 0x9c)))
+.ELBOW <- rawToChar(as.raw(c(0xe2, 0x94, 0x94)))
+.HBAR  <- rawToChar(as.raw(c(0xe2, 0x94, 0x80)))
 
 ### 'last.child' can be NA, TRUE, or FALSE. NA means 'x' is the root of the
 ### tree.
