@@ -93,7 +93,7 @@ test_DelayedArray_arbind <- function()
     ## of 'R CMD check' but not when running the tests interactively with
     ## DelayedArray:::.test().
     #check_2D_slice <- function(k) {
-    #    slices <- lapply(lapply(TEST_hdf5arrays, `[`, , , k), drop)
+    #    slices <- lapply(TEST_hdf5arrays, `[`, , , k)
     #    target_slice <- do.call(rbind, slices)
     #    checkIdentical(as.matrix(target_slice), as.matrix(current[ , , k]))
     #}
@@ -123,7 +123,7 @@ test_DelayedArray_acbind <- function()
     ## of 'R CMD check' but not when running the tests interactively with
     ## DelayedArray:::.test().
     #check_2D_slice <- function(k) {
-    #    slices <- lapply(lapply(TEST_hdf5arrays, `[`, , , k), drop)
+    #    slices <- lapply(TEST_hdf5arrays, `[`, , , k),
     #    target_slice <- do.call(cbind, slices)
     #    checkIdentical(as.matrix(target_slice), as.matrix(current[ , , k]))
     #}

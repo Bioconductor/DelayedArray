@@ -76,8 +76,7 @@ test_DelayedMatrix_Ops <- function()
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)
 
-    A <- realize(a)[ , , 2]
-    M <- drop(A)
+    M <- realize(a)[ , , 2]
     checkIdentical(toto(m), as.array(toto(M)))
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)

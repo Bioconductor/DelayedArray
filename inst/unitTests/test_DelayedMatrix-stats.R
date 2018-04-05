@@ -44,7 +44,7 @@ test_DelayedMatrix_row_col_summarization <- function()
     ## on an integer matrix
     m <- a1[ , , 1]
     A1 <- realize(a1)
-    M <- drop(A1[ , , 1])
+    M <- A1[ , , 1]
     for (FUN in FUNS) {
         test_row_col_summary(FUN, m, M, block_sizes2)
         test_row_col_summary(FUN, m[ , 0], M[ , 0], block_sizes2)

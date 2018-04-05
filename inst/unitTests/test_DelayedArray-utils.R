@@ -70,7 +70,7 @@ test_DelayedArray_Math_ans_Arith <- function()
     checkIdentical(toto1(m), as.matrix(toto1(M)))
     checkIdentical(t(toto1(m)), as.matrix(toto1(t(M))))
     checkIdentical(t(toto1(m)), as.matrix(t(toto1(M))))
-    M <- drop(A[ , , 2])
+    M <- A[ , , 2]
     checkIdentical(toto1(m), as.matrix(toto1(M)))
     checkIdentical(t(toto1(m)), as.matrix(toto1(t(M))))
     checkIdentical(t(toto1(m)), as.matrix(t(toto1(M))))
@@ -118,7 +118,7 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
         test_delayed_Ops_on_array(.Generic, a, A, m, M)
 
     ## Takes too long and probably not that useful.
-    #M <- drop(A[ , , 2])
+    #M <- A[ , , 2]
     #for (.Generic in c(Arith_members, Compare_members))
     #    test_delayed_Ops_on_array(.Generic, a, A, m, M)
 }

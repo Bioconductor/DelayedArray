@@ -563,7 +563,7 @@ setGeneric("apply", signature="X")
         function(i) {
             Nindex <- vector(mode="list", length=length(X_dim))
             Nindex[[MARGIN]] <- i
-            slice <- subset_by_Nindex(X, Nindex, drop=TRUE)
+            slice <- subset_by_Nindex(X, Nindex, drop=FALSE)
             slice <- set_dim(slice, dim(slice)[-MARGIN])
             FUN(slice, ...)
         })

@@ -126,9 +126,6 @@ b <- toto(a)
 head(b)
 
 B <- toto(A)  # very fast! (operations are delayed)
-B  # still 3 dimensions (subsetting a DelayedArray object never drops
-   # dimensions)
-B <- drop(B)
 B
 
 stopifnot(identical(b, as.array(B)))

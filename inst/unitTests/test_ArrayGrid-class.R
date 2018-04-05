@@ -232,7 +232,7 @@ test_split_and_unsplit_matrix_in_capped_length_blocks <- function()
     A1 <- realize(a1)
 
     m1 <- a1[2, c(9, 3:7), 2, -4]
-    M1a <- drop(A1[2, c(9, 3:7), 2, -4])
+    M1a <- A1[2, c(9, 3:7), 2, -4]
     checkIdentical(m1, as.matrix(M1a))
 
     M1b <- realize(m1)

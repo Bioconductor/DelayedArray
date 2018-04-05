@@ -249,7 +249,7 @@ test_DelayedArray_subsetting <- function()
 
     target1 <- a[99, j, k]
     checkIdentical(target1, as.matrix(A[99, j, k]))
-    B1 <- drop(A[99, j, k])
+    B1 <- A[99, j, k]
     checkIdentical(target1, as.array(B1))
     target <- target1[15:8, c("c", "b")]
     checkIdentical(target, as.array(B1[15:8, c("c", "b")]))
@@ -262,7 +262,7 @@ test_DelayedArray_subsetting <- function()
 
     target2 <- a[i, 22, k]
     checkIdentical(target2, as.matrix(A[i, 22, k]))
-    B2 <- drop(A[i, 22, k])
+    B2 <- A[i, 22, k]
     checkIdentical(target2, as.array(B2))
     target <- target2[15:8, c("c", "b")]
     checkIdentical(target, as.array(B2[15:8, c("c", "b")]))
@@ -275,7 +275,7 @@ test_DelayedArray_subsetting <- function()
 
     target3 <- a[i, j, 5]
     checkIdentical(target3, as.matrix(A[i, j, 5]))
-    B3 <- drop(A[i, j, 5])
+    B3 <- A[i, j, 5]
     checkIdentical(target3, as.array(B3))
     target <- target3[15:8, LETTERS[18:12]]
     checkIdentical(target, as.array(B3[15:8, LETTERS[18:12]]))

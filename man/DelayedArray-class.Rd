@@ -138,13 +138,6 @@ type(x)
           subscript per dimension) returns a DelayedArray object where the
           subsetting is actually delayed. So it's a very light operation.
 
-    \item The \code{drop} argument of the \code{[} operator is ignored i.e.
-          subsetting a DelayedArray object always returns a DelayedArray
-          object with the same number of dimensions as the original object.
-          You need to call \code{drop()} on the subsetted object to actually
-          drop its ineffective dimensions (i.e. the dimensions equal to 1).
-          \code{drop()} is also a delayed operation so is very light.
-
     \item \emph{Linear single bracket subsetting} (a.k.a. 1D-style subsetting,
           that is, subsetting of the form \code{x[i]}) only works if subscript
           \code{i} is a numeric vector at the moment. Furthermore, \code{i}
@@ -218,9 +211,8 @@ stopifnot(identical(a, seed(A)))
 type(A)
 
 ## Multi-dimensional single bracket subsetting:
-m <- a[11:20 , 5, ]        # a matrix
-A[11:20 , 5, ]             # not a DelayedMatrix (still 3 dimensions)
-M <- drop(A[11:20 , 5, ])  # a DelayedMatrix object
+m <- a[11:20 , 5, ]  # a matrix
+M <- A[11:20 , 5, ]  # a DelayedMatrix object
 stopifnot(identical(m, as.array(M)))
 
 ## Linear single bracket subsetting:
@@ -238,9 +230,6 @@ b <- toto(a)
 head(b)
 
 B <- toto(A)  # very fast! (operations are delayed)
-B  # still 3 dimensions (subsetting a DelayedArray object never drops
-   # dimensions)
-B <- drop(B)
 B
 
 cs <- colSums(b)
@@ -278,11 +267,8 @@ is(A3, "DelayedArray")     # TRUE
 seed(A3)                   # an HDF5ArraySeed object
 
 B3 <- toto(A3)             # very fast! (operations are delayed)
-
 B3                         # not an HDF5Array object anymore because
                            # now it carries delayed operations
-B3 <- drop(B3)
-
 CS3 <- colSums(B3)
 stopifnot(identical(cs, CS3))
 

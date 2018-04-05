@@ -127,7 +127,7 @@ dimnames(X) <- list(letters[1:15], LETTERS[1:10])
 showtree(X)
 
 m2 <- matrix(1:20, nrow=10)
-Y <- cbind(t(X[ , 10:1]), DelayedArray(m2), X[6:15, "A"])
+Y <- cbind(t(X[ , 10:1]), DelayedArray(m2), X[6:15, "A", drop=FALSE])
 showtree(Y)
 showtree(Y, show.node.dim=FALSE)
 

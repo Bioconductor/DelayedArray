@@ -597,9 +597,8 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 {
     if (missing(x))
         stop("'x' is missing")
-    if (!(missing(drop) || identical(drop, FALSE)))
-        warning(wmsg("the 'drop' argument is ignored when ",
-                     "subsetting a DelayedArray object"))
+    if (!isTRUEorFALSE(drop))
+        stop("'drop' must be TRUE or FALSE")
     Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
     nsubscript <- length(Nindex)
     if (nsubscript != 0L && nsubscript != length(dim(x))) {
@@ -613,7 +612,10 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     ##     x[i_1, i_2, ..., i_n]
     ##
     ## Return an object of the same class as 'x' (endomorphism).
-    stash_DelayedSubset(x, Nindex)
+    ans <- stash_DelayedSubset(x, Nindex)
+    if (drop)
+        ans <- drop(ans)
+    ans
 }
 
 setMethod("[", "DelayedArray", .subset_DelayedArray)
