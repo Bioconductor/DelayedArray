@@ -368,8 +368,8 @@ setClass("DelayedUnaryIsoOp",
 
         OP="function",   # The function to apply to the input (e.g. `+` or
                          # log). It should act as an isomorphism i.e. always
-                         # return an array-like object parallel to the input
-                         # (i.e. with the same dimensions).
+                         # return an array-like object *parallel* to the input
+                         # (i.e. with the same dimensions as the input).
 
         Largs="list",    # Left arguments to OP i.e. arguments to place
                          # before the input array in the function call.
@@ -463,8 +463,8 @@ setClass("DelayedAperm",
                         # with the "seed contract".
 
         perm="integer"  # Index into dim(seed) specifying the *rearrangement*
-                        # of the dimensions of the input (i.e. which ones to
-                        # keep and in which order).
+                        # of the dimensions i.e. which dimensions of the input
+                        # to keep and in which order.
     ),
     prototype(
         seed=new("array"),
@@ -581,7 +581,7 @@ setClass("DelayedVariadicIsoOp",
 
         OP="function",  # The function to use to combine the input objects.
                         # Should act as an isomorphism i.e. always return an
-                        # array-like object parallel to the input objects
+                        # array-like object *parallel* to the input objects
                         # (i.e. with the same dimensions).
 
         Rargs="list"    # Additional right arguments to OP.
