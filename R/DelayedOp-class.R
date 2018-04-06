@@ -571,6 +571,10 @@ new_DelayedAperm <- function(seed, perm=NULL)
     new2("DelayedAperm", seed=seed, perm=perm)
 }
 
+setMethod("isNoOp", "DelayedAperm",
+    function(x) identical(x@perm, seq_along(dim(x@seed)))
+)
+
 ### S3/S4 combo for summary.DelayedAperm
 
 .DelayedAperm_summary <- function(object)
