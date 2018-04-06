@@ -5,6 +5,9 @@
 \alias{DelayedOp-class}
 \alias{DelayedOp}
 
+\alias{summary.DelayedOp}
+\alias{summary,DelayedOp-method}
+
 % DelayedUnaryOp objects
 \alias{class:DelayedUnaryOp}
 \alias{DelayedUnaryOp-class}

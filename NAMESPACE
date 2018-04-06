@@ -69,6 +69,7 @@ S3method(mean, DelayedArray)
 
 S3method(split, DelayedArray)
 
+S3method(summary, DelayedOp)
 S3method(summary, DelayedSubset)
 S3method(summary, DelayedDimnames)
 S3method(summary, DelayedUnaryIsoOp)
@@ -110,6 +111,7 @@ export(
 
     split.DelayedArray,
 
+    summary.DelayedOp,
     summary.DelayedSubset,
     summary.DelayedDimnames,
     summary.DelayedUnaryIsoOp,

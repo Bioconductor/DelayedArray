@@ -3,26 +3,28 @@
 ### -------------------------------------------------------------------------
 
 
-setClass("DelayedArray",
-    contains="Array",
-    representation(
-        seed="ANY"  # An array-like object expected to comply with the "seed
-                    # contract" i.e. to support dim(), dimnames(), and
-                    # extract_array().
-    ),
-    prototype(
-        seed=new("array")
-    )
-)
+### The "root" node of the tree of DelayedOp objects. Represents a no-op.
+setClass("DelayedArray", contains="DelayedUnaryOp")
+
+setMethod("isNoOp", "DelayedArray", function(x) TRUE)
 
 ### Extending DataTable gives us a few things for free (head(), tail(),
-### etc...). Note that even though DelayedMatrix already extends Array via
-### DelayedArray, we need to make DelayedMatrix a *direct* child of Array
-### and to place Array *before* DataTable in the contains field below. This
-### ensures that method dispatch will pick the method for Array in case a
-### generic has methods defined for Array and DataTable (e.g. as.data.frame()).
+### etc...). Note that even though DelayedMatrix already extends Array (via
+### DelayedArray, DelayedUnaryOp, and DelayedOp) we need to make DelayedMatrix
+### a *direct* child of Array and to place Array *before* DataTable in the
+### 'contains' field below. This ensures that method dispatch will pick the
+### method for Array in case a generic has methods defined for Array and
+### DataTable (e.g. as.data.frame()). Furthermore, it seems that we also need
+### to place all the classes that are in the inheritance path between
+### DelayedArray and Array in the 'contains' field otherwise we get the
+### following error when trying to instantiate a DelayedMatrix object with
+### new("DelayedMatrix"):
+###
+###     Error: C stack usage  7971652 is too close to the limit
+###
 setClass("DelayedMatrix",
-    contains=c("DelayedArray", "Array", "DataTable"),
+    contains=c("DelayedArray", "DelayedUnaryOp", "DelayedOp", "Array",
+               "DataTable"),
     prototype=prototype(
         seed=new("matrix")
     )
@@ -52,22 +54,20 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 ### Validity
 ###
 
-.validate_DelayedArray <- function(x)
-{
-    seed_dim <- dim(x@seed)
-    seed_ndim <- length(seed_dim)
-    if (seed_ndim == 0L)
-        return(wmsg2("the seed of a DelayedArray object must have dimensions"))
-    ## In the context of validObject(), 'class(x)' is always "DelayedArray"
-    ## and not the real class of 'x', which seems to be a bug in validObject().
-    ## This prevents us from doing the check below.
-    #if (seed_ndim == 2L && !is(x, matrixClass(x)))
-    #    return(wmsg2("'x' has 2 dimensions but is not a ",
-    #                 matrixClass(x), " derivative"))
-    TRUE
-}
-
-setValidity2("DelayedArray", .validate_DelayedArray)
+#.validate_DelayedArray <- function(x)
+#{
+#    seed_dim <- dim(x@seed)
+#    seed_ndim <- length(seed_dim)
+#    ## In the context of validObject(), 'class(x)' is always "DelayedArray"
+#    ## and not the real class of 'x', which seems to be a bug in validObject().
+#    ## This prevents us from doing the check below.
+#    if (seed_ndim == 2L && !is(x, matrixClass(x)))
+#        return(wmsg2("'x' has 2 dimensions but is not a ",
+#                     matrixClass(x), " derivative"))
+#    TRUE
+#}
+#
+#setValidity2("DelayedArray", .validate_DelayedArray)
 
 ### TODO: Move this to S4Vectors and make it the validity method for DataTable
 ### object.
@@ -223,19 +223,6 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 }
 
 setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Seed contract
-###
-
-setMethod("dim", "DelayedArray", function(x) dim(x@seed))
-
-setMethod("dimnames", "DelayedArray", function(x) dimnames(x@seed))
-
-setMethod("extract_array", "DelayedArray",
-    function(x, index) extract_array(x@seed, index)
-)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

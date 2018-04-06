@@ -19,10 +19,6 @@
 
 \alias{type}
 
-\alias{dim,DelayedArray-method}
-\alias{dimnames,DelayedArray-method}
-\alias{extract_array,DelayedArray-method}
-
 \alias{seed}
 \alias{seed,ANY-method}
 \alias{seed<-}

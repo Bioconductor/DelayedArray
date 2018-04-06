@@ -27,6 +27,16 @@ setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 ### NOT exported for now.
 setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
 
+setMethod("isNoOp", "DelayedOp", function(x) FALSE)
+
+### S3/S4 combo for summary.DelayedOp
+
+.DelayedOp_summary <- function(object) sprintf("%s object", class(object))
+
+summary.DelayedOp <- function(object, ...) .DelayedOp_summary(object, ...)
+
+setMethod("summary", "DelayedOp", summary.DelayedOp)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedUnaryOp objects
@@ -47,7 +57,7 @@ setClass("DelayedUnaryOp",
 .validate_DelayedUnaryOp <- function(x)
 {
     if (length(dim(x@seed)) == 0L)
-        return(wmsg2("'x@seed' must have dimensions"))
+        return(wmsg2("the supplied seed must have dimensions"))
     TRUE
 }
 
