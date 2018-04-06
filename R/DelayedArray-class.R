@@ -291,7 +291,7 @@ stash_DelayedAbind <- function(..., along)
 
 ### Note that false negatives happen when 'x' carries delayed operations that
 ### do nothing, but that's ok.
-#is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
+is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
