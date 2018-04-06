@@ -545,27 +545,25 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ###
 
 ### Linear single bracket subsetting e.g. x[5].
-### Return an atomic vector.
+### NOT delayed (i.e. return an atomic vector).
 .subset_DelayedArray_by_1Dindex <- function(x, i)
 {
-    if (!is.numeric(i))
-        stop(wmsg("1D-style subsetting of a DelayedArray object only ",
-                  "accepts a numeric subscript at the moment"))
-    if (length(i) == 0L) {
+    x_dim <- dim(x)
+    i_dim <- dim(i)
+    if (identical(x_dim, i_dim) && type(i) == "logical") {
+        i <- which(i)  # calls .DelayedArray_block_which() defined
+                       # in DelayedArray-utils.R
+    } else {
+        i <- normalizeSingleBracketSubscript2(i, length(x))
+    }
+    i_len <- length(i)
+    if (i_len == 0L) {
         ## x0 <- x[integer(0), ..., integer(0)]
-        index <- rep.int(list(integer(0)), length(dim(x)))
+        index <- rep.int(list(integer(0)), length(x_dim))
         x0 <- extract_array(x, index)
         return(as.vector(x0))
     }
-    if (anyNA(i))
-        stop(wmsg("1D-style subsetting of a DelayedArray object does ",
-                  "not support NA indices yet"))
-    if (min(i) < 1L)
-        stop(wmsg("1D-style subsetting of a DelayedArray object only ",
-                  "supports positive indices at the moment"))
-    if (max(i) > length(x))
-        stop(wmsg("subscript contains out-of-bounds indices"))
-    if (length(i) == 1L)
+    if (i_len == 1L)
         return(.get_DelayedArray_element(x, i))
 
     ## We want to walk only on the blocks that we actually need to visit so we
@@ -601,12 +599,18 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         stop("'drop' must be TRUE or FALSE")
     Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
     nsubscript <- length(Nindex)
-    if (nsubscript != 0L && nsubscript != length(dim(x))) {
-        if (nsubscript != 1L)
-            stop("incorrect number of subscripts")
+    if (nsubscript == 0L)
+        return(x)  # no-op
+    x_ndim <- length(dim(x))
+    if (nsubscript == 1L && (x_ndim != 1L || drop)) {
         ## Linear single bracket subsetting e.g. x[5].
+        ## If 'x' is mono-dimensional and 'drop' is FALSE, we switch
+        ## to "multi-dimensional single bracket subsetting" which is
+        ## delayed.
         return(.subset_DelayedArray_by_1Dindex(x, Nindex[[1L]]))
     }
+    if (nsubscript != x_ndim)
+        stop("incorrect number of subscripts")
     ## Multi-dimensional single bracket subsetting
     ##
     ##     x[i_1, i_2, ..., i_n]

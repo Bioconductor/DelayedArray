@@ -217,7 +217,7 @@ stopifnot(identical(m, as.array(M)))
 
 ## Linear single bracket subsetting:
 A[11:20]
-A[which(A <= 1e-5)]
+A[A <= 1e-5]
 
 ## Subassignment:
 A[A < 0.2] <- NA

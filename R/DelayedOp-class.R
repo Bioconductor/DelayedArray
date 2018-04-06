@@ -162,6 +162,28 @@ setClass("DelayedSubset",
 
 setValidity2("DelayedSubset", .validate_DelayedSubset)
 
+normalizeSingleBracketSubscript2 <- function(i, x_len, x_names=NULL)
+{
+    ## We support subsetting by an array-like subscript but only if the
+    ## subscript is mono-dimensional, in which case we call as.vector() on
+    ## it. This will possibly trigger its realization e.g. if it's a
+    ## DelayedArray object.
+    i_dim <- dim(i)
+    if (!is.null(i_dim)) {
+        if (length(i_dim) != 1L)
+            stop(wmsg("subsetting a DelayedArray object with an array-like ",
+                      "subscript is only supported if the subscript has a ",
+                      "single dimension"))
+        i <- as.vector(i)
+    }
+    if (is.null(x_names)) {
+        x <- Rle(0L, x_len)
+    } else {
+        x <- setNames(seq_len(x_len), x_names)
+    }
+    normalizeSingleBracketSubscript(i, x)
+}
+
 ### 'Nindex' must be a "multidimensional subsetting Nindex" (see utils.R).
 new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
 {
@@ -177,9 +199,9 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
                         subscript <- Nindex[[along]]
                         if (is.null(subscript))
                             return(NULL)
-                        x <- seq_len(seed_dim[[along]])
-                        names(x) <- seed_dimnames[[along]]
-                        normalizeSingleBracketSubscript(subscript, x)
+                        normalizeSingleBracketSubscript2(subscript,
+                                                         seed_dim[[along]],
+                                                         seed_dimnames[[along]])
                     })
     new2("DelayedSubset", seed=seed, index=index)
 }
