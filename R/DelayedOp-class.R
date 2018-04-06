@@ -24,6 +24,14 @@
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
+### NOT exported for now.
+setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedUnaryOp objects
+###
+
 setClass("DelayedUnaryOp",
     contains="DelayedOp",
     representation(
@@ -45,6 +53,23 @@ setClass("DelayedUnaryOp",
 
 setValidity2("DelayedUnaryOp", .validate_DelayedUnaryOp)
 
+### Seed contract.
+### Each DelayedUnaryOp derivative inherits these 3 default methods and will
+### typically overwrite at least one of them (otherwise it would be a no-op).
+
+setMethod("dim", "DelayedUnaryOp", function(x) dim(x@seed))
+
+setMethod("dimnames", "DelayedUnaryOp", function(x) dimnames(x@seed))
+
+setMethod("extract_array", "DelayedUnaryOp",
+    function(x, index) extract_array(x@seed, index)
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedNaryOp objects
+###
+
 setClass("DelayedNaryOp",
     contains="DelayedOp",
     representation(
@@ -65,9 +90,6 @@ setClass("DelayedNaryOp",
 }
 
 setValidity2("DelayedNaryOp", .validate_DelayedNaryOp)
-
-### NOT exported for now.
-setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -95,7 +117,6 @@ setGeneric("showtree", signature="x",
     stopifnot(is.logical(last.child), length(last.child) == 1L)
 
     if (!is.list(x)) {
-
         ## Display summary line.
 
         if (is.na(last.child)) {
@@ -106,15 +127,10 @@ setGeneric("showtree", signature="x",
             prefix <- paste0(if (last.child) .ELBOW else .TEE, .HBAR, " ")
         }
 
-        is_leaf <- FALSE
         if (is(x, "DelayedOp")) {
             x_as1string <- summary(x)
         } else {
-            x_as1string <- paste0(class(x), " object")
-            if (!(.hasSlot(x, "seed") || .hasSlot(x, "seeds"))) {
-                is_leaf <- TRUE
-                x_as1string <- paste0("[seed] ", x_as1string)
-            }
+            x_as1string <- sprintf("[seed] % object", class(x))
         }
         if (show.node.dim) {
             dim_in1string <- paste0(dim(x), collapse="x")
@@ -122,7 +138,7 @@ setGeneric("showtree", signature="x",
                                                 x_as1string)
         }
         cat(indent, prefix, x_as1string, "\n", sep="")
-        if (is_leaf)
+        if (!is(x, "DelayedOp"))
             return(invisible(NULL))
     }
 
@@ -132,12 +148,12 @@ setGeneric("showtree", signature="x",
         ## Increase indent by 3 chars.
         indent <- paste0(indent, if (last.child) " " else .VBAR, "  ")
     }
-    if (.hasSlot(x, "seed"))
+    if (is(x, "DelayedUnaryOp")) {
         .show_tree(x@seed, indent, last.child=TRUE,
                    show.node.dim=show.node.dim)
-    if (.hasSlot(x, "seeds"))
-        x <- x@seeds
-    if (is.list(x)) {
+    } else {
+        if (is(x, "DelayedNaryOp"))
+            x <- x@seeds
         nseed <- length(x)
         for (i in seq_len(nseed))
             .show_tree(x[[i]], indent, last.child=(i==nseed),
@@ -383,8 +399,6 @@ setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
 
 ### Seed contract.
 
-setMethod("dim", "DelayedDimnames", function(x) dim(x@seed))
-
 .get_DelayedDimnames_dimnames <- function(x)
 {
     x_dimnames <- x@dimnames
@@ -400,10 +414,6 @@ setMethod("dim", "DelayedDimnames", function(x) dim(x@seed))
 }
 
 setMethod("dimnames", "DelayedDimnames", .get_DelayedDimnames_dimnames)
-
-setMethod("extract_array", "DelayedDimnames",
-    function(x, index) extract_array(x@seed, index)
-)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -483,10 +493,6 @@ summary.DelayedUnaryIsoOp <-
 setMethod("summary", "DelayedUnaryIsoOp", summary.DelayedUnaryIsoOp)
 
 ### Seed contract.
-
-setMethod("dim", "DelayedUnaryIsoOp", function(x) dim(x@seed))
-
-setMethod("dimnames", "DelayedUnaryIsoOp", function(x) dimnames(x@seed))
 
 setMethod("extract_array", "DelayedUnaryIsoOp",
     function(x, index)

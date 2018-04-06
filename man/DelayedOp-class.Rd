@@ -5,6 +5,21 @@
 \alias{DelayedOp-class}
 \alias{DelayedOp}
 
+% DelayedUnaryOp objects
+\alias{class:DelayedUnaryOp}
+\alias{DelayedUnaryOp-class}
+\alias{DelayedUnaryOp}
+
+\alias{dim,DelayedUnaryOp-method}
+\alias{dimnames,DelayedUnaryOp-method}
+\alias{extract_array,DelayedUnaryOp-method}
+
+% DelayedNaryOp objects
+\alias{class:DelayedNaryOp}
+\alias{DelayedNaryOp-class}
+\alias{DelayedNaryOp}
+
+% showtree()
 \alias{showtree}
 \alias{showtree,ANY-method}
 \alias{show,DelayedOp-method}
@@ -19,15 +34,11 @@
 % DelayedDimnames objects
 \alias{summary.DelayedDimnames}
 \alias{summary,DelayedDimnames-method}
-\alias{dim,DelayedDimnames-method}
 \alias{dimnames,DelayedDimnames-method}
-\alias{extract_array,DelayedDimnames-method}
 
 % DelayedUnaryIsoOp objects
 \alias{summary.DelayedUnaryIsoOp}
 \alias{summary,DelayedUnaryIsoOp-method}
-\alias{dim,DelayedUnaryIsoOp-method}
-\alias{dimnames,DelayedUnaryIsoOp-method}
 \alias{extract_array,DelayedUnaryIsoOp-method}
 
 % DelayedAperm objects

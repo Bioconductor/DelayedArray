@@ -122,7 +122,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
 ### 'x' must be an array-like object.
 ### 'FUN' is the callback function to be applied to each block of array-like
 ### object 'x'. It must take at least 1 argument which is the current array
-### block as an ordinay array or matrix.
+### block as an ordinary array or matrix.
 ### 'grid' must be an ArrayGrid object describing the block partitioning
 ### of 'x'. If not supplied, the grid returned by 'defaultGrid(x)' is used.
 ### The effective grid (i.e. 'grid' or 'defaultGrid(x)'), current block number,
