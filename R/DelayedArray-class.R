@@ -207,13 +207,13 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
             OP <- delayed_op[[1L]]
             Largs <- delayed_op[[2L]]
             Rargs <- delayed_op[[3L]]
-            Lidx <- Ridx <- integer(0)
+            Lalong <- Ralong <- NA
             recycle_along_last_dim <- delayed_op[[4L]]
             if (recycle_along_last_dim) {
-                Lidx <- if (length(Largs) == 1L) 1L
-                Ridx <- if (length(Rargs) == 1L) 1L
+                if (length(Largs) == 1L) Lalong <- 1L else Ralong <- 1L
             }
-            seed <- new_DelayedUnaryIsoOp(seed, OP, Largs, Rargs, Lidx, Ridx)
+            seed <- new_DelayedUnaryIsoOp(seed, OP, Largs, Rargs,
+                                                Lalong, Ralong)
         }
 
         return(DelayedArray(seed))
@@ -263,11 +263,11 @@ stash_DelayedDimnames <- function(x, dimnames)
 }
 
 stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
-                                       Lidx=integer(0), Ridx=integer(0))
+                                       Lalong=NA, Ralong=NA)
 {
     DelayedArray(new_DelayedUnaryIsoOp(x@seed,
                                        OP=OP, Largs=Largs, Rargs=Rargs,
-                                       Lidx=Lidx, Ridx=Ridx))
+                                       Lalong=Lalong, Ralong=Ralong))
 }
 
 stash_DelayedAperm <- function(x, perm)
@@ -658,7 +658,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
             stop(wmsg(.filling_error_msg))
         value <- rep(value, length.out=x_nrow)
     }
-    stash_DelayedUnaryIsoOp(x, `[<-`, Rargs=list(value=value), Ridx=1L)
+    stash_DelayedUnaryIsoOp(x, `[<-`, Rargs=list(value=value), Ralong=1L)
 }
 
 .subassign_DelayedArray <- function(x, i, j, ..., value)

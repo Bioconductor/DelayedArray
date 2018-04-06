@@ -392,23 +392,23 @@ setMethod("extract_array", "DelayedDimnames",
 setClass("DelayedUnaryIsoOp",
     contains="DelayedOp",
     representation(
-        seed="ANY",      # The input array-like object. Expected to comply
-                         # with the "seed contract".
+        seed="ANY",        # The input array-like object. Expected to comply
+                           # with the "seed contract".
 
-        OP="function",   # The function to apply to the input (e.g. `+` or
-                         # log). It should act as an isomorphism i.e. always
-                         # return an array-like object *parallel* to the input
-                         # (i.e. with the same dimensions as the input).
+        OP="function",     # The function to apply to the input (e.g. `+` or
+                           # log). It should act as an isomorphism i.e. always
+                           # return an array-like object *parallel* to the
+                           # input (i.e. with the same dimensions as the input).
 
-        Largs="list",    # Left arguments to OP i.e. arguments to place
-                         # before the input array in the function call.
-        Rargs="list",    # Right arguments to OP i.e. arguments to place
-                         # after the input array in the function call.
+        Largs="list",      # Left arguments to OP i.e. arguments to place
+                           # before the input array in the function call.
+        Rargs="list",      # Right arguments to OP i.e. arguments to place
+                           # after the input array in the function call.
 
-        Lidx="integer",  # Index of left arguments that are parallel to the
-                         # rows of the input.
-        Ridx="integer"   # Index of right arguments that are parallel to the
-                         # rows of the input.
+        Lalong="integer",  # One integer (or NA) per left argument indicating
+                           # what dimension the argument is parallel to.
+        Ralong="integer"   # One integer (or NA) per right argument indicating
+                           # what dimension the argument is parallel to.
     ),
     prototype(
         seed=new("array"),
@@ -416,24 +416,42 @@ setClass("DelayedUnaryIsoOp",
     )
 )
 
+.normarg_Lalong_or_Ralong <- function(Lalong, Largs, seed_dim)
+{
+    if (identical(Lalong, NA))
+        return(rep.int(NA_integer_, length(Largs)))
+    if (!(is.numeric(Lalong) && length(Lalong) == length(Largs)))
+        stop(wmsg("'Lalong' must be an integer vector parallel to 'Largs'"))
+    if (!is.integer(Lalong))
+        Lalong <- as.integer(Lalong)
+    non_na_idx <- which(!is.na(Lalong))
+    non_na_Lalong <- Lalong[non_na_idx]
+    if (S4Vectors:::anyMissingOrOutside(non_na_Lalong, 1L, length(seed_dim)))
+        stop(wmsg("all non-NA values in 'Lalong' and 'Ralong' must ",
+                  "be >= 1 and <= 'length(dim(seed))'"))
+    ok <- elementNROWS(Largs[non_na_idx]) == seed_dim[non_na_Lalong]
+    if (!all(ok))
+        stop(wmsg("some arguments in 'Largs' and/or 'Rargs' are not ",
+                  "parallel to the dimension that they go along"))
+    Lalong
+}
+
 new_DelayedUnaryIsoOp <- function(seed=new("array"),
                                   OP=identity, Largs=list(), Rargs=list(),
-                                  Lidx=integer(0), Ridx=integer(0))
+                                  Lalong=NA, Ralong=NA)
 {
     seed_dim <- dim(seed)
     if (length(seed_dim) == 0L)
         stop(wmsg("'seed' must have dimensions"))
 
+    stopifnot(is.list(Largs), is.list(Rargs))
+    Lalong <- .normarg_Lalong_or_Ralong(Lalong, Largs, seed_dim)
+    Ralong <- .normarg_Lalong_or_Ralong(Ralong, Rargs, seed_dim)
+
     OP <- match.fun(OP)
 
-    seed_nrow <- seed_dim[[1L]]
-    stopifnot(is.list(Largs), is.list(Rargs),
-              is.integer(Lidx), is.integer(Ridx),
-              all(elementNROWS(Largs[Lidx]) == seed_nrow),
-              all(elementNROWS(Rargs[Ridx]) == seed_nrow))
-
     new2("DelayedUnaryIsoOp", seed=seed, OP=OP, Largs=Largs, Rargs=Rargs,
-                              Lidx=Lidx, Ridx=Ridx)
+                              Lalong=Lalong, Ralong=Ralong)
 }
 
 ### S3/S4 combo for summary.DelayedUnaryIsoOp
@@ -455,14 +473,23 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
     function(x, index)
     {
         a <- extract_array(x@seed, index)
-        Largs <- x@Largs
-        Rargs <- x@Rargs
-        i1 <- index[[1L]]
-        if (!is.null(i1)) {
-            Largs[x@Lidx] <- lapply(Largs[x@Lidx], extractROWS, i1)
-            Rargs[x@Ridx] <- lapply(Rargs[x@Ridx], extractROWS, i1)
+
+        ## Subset the left and right arguments that go along a dimension.
+        subset_arg <- function(arg, along) {
+            if (is.na(along))
+                return(arg)
+            i <- index[[along]]
+            if (is.null(i))
+                return(arg)
+            extractROWS(arg, i)
         }
+        Largs <- mapply(subset_arg, x@Largs, x@Lalong,
+                        SIMPLIFY=FALSE, USE.NAMES=FALSE)
+        Rargs <- mapply(subset_arg, x@Rargs, x@Ralong,
+                        SIMPLIFY=FALSE, USE.NAMES=FALSE)
+
         ans <- do.call(x@OP, c(Largs, list(a), Rargs))
+
         ## Some operations (e.g. dnorm()) don't propagate the "dim" attribute
         ## if the input array is empty.
         a_dim <- dim(a)

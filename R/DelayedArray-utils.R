@@ -43,8 +43,8 @@
     e2 <- .normarg_Ops_vector_arg(e2, nrow(e1),
                                   e_what="right object",
                                   x_what="first dimension of left object")
-    Ridx <- if (length(e2) == 1L) integer(0) else 1L
-    stash_DelayedUnaryIsoOp(e1, .Generic, Rargs=list(e2), Ridx=Ridx)
+    Ralong <- if (length(e2) == 1L) NA else 1L
+    stash_DelayedUnaryIsoOp(e1, .Generic, Rargs=list(e2), Ralong=Ralong)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e2'.
@@ -61,8 +61,8 @@
     e1 <- .normarg_Ops_vector_arg(e1, nrow(e2),
                                   e_what="left object",
                                   x_what="first dimension of right object")
-    Lidx <- if (length(e1) == 1L) integer(0) else 1L
-    stash_DelayedUnaryIsoOp(e2, .Generic, Largs=list(e1), Lidx=Lidx)
+    Lalong <- if (length(e1) == 1L) NA else 1L
+    stash_DelayedUnaryIsoOp(e2, .Generic, Largs=list(e1), Lalong=Lalong)
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
