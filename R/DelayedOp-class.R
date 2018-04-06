@@ -24,6 +24,48 @@
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
+setClass("DelayedUnaryOp",
+    contains="DelayedOp",
+    representation(
+        "VIRTUAL",
+        seed="ANY"    # The input array-like object. Expected to comply
+                      # with the "seed contract".
+    ),
+    prototype(
+        seed=new("array")
+    )
+)
+
+.validate_DelayedUnaryOp <- function(x)
+{
+    if (length(dim(x@seed)) == 0L)
+        return(wmsg2("'x@seed' must have dimensions"))
+    TRUE
+}
+
+setValidity2("DelayedUnaryOp", .validate_DelayedUnaryOp)
+
+setClass("DelayedNaryOp",
+    contains="DelayedOp",
+    representation(
+        "VIRTUAL",
+        seeds="list"  # The input array-like objects. Each object is
+                      # expected to comply with the "seed contract".
+    ),
+    prototype(
+        seeds=list(new("array"))
+    )
+)
+
+.validate_DelayedNaryOp <- function(x)
+{
+    if (length(x@seeds) == 0L)
+        return(wmsg2("'x@seeds' cannot be empty"))
+    TRUE
+}
+
+setValidity2("DelayedNaryOp", .validate_DelayedNaryOp)
+
 ### NOT exported for now.
 setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
 
@@ -122,32 +164,21 @@ setMethod("show", "DelayedOp", function(object) .show_tree(object))
 ###
 
 setClass("DelayedSubset",
-    contains="DelayedOp",
+    contains="DelayedUnaryOp",
     representation(
-        seed="ANY",   # The input array-like object. Expected to comply with
-                      # the "seed contract".
-
         index="list"  # List of subscripts as positive integer vectors, one
                       # per dimension in the input. *Missing* list elements
                       # are allowed and represented by NULLs.
     ),
     prototype(
-        seed=new("array"),
         index=list(NULL)
     )
 )
 
 .validate_DelayedSubset <- function(x)
 {
-    seed_dim <- dim(x@seed)
-    seed_ndim <- length(seed_dim)
-
-    ## 'seed' slot.
-    if (seed_ndim == 0L)
-        return(wmsg2("'x@seed' must have dimensions"))
-
     ## 'index' slot.
-    if (length(x@index) != seed_ndim)
+    if (length(x@index) != length(dim(x@seed)))
         return(wmsg2("'x@index' must have one list element per dimension ",
                      "in 'x@seed'"))
     if (!is.null(names(x@index)))
@@ -265,18 +296,14 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 .INHERIT_FROM_SEED <- -1L
 
 setClass("DelayedDimnames",
-    contains="DelayedOp",
+    contains="DelayedUnaryOp",
     representation(
-        seed="ANY",      # The input array-like object. Expected to comply
-                         # with the "seed contract".
-
         dimnames="list"  # List with one list element per dimension in
                          # the input. Each list element must be NULL,
                          # or a character vector, or special value
                          # .INHERIT_FROM_SEED
     ),
     prototype(
-        seed=new("array"),
         dimnames=list(.INHERIT_FROM_SEED)
     )
 )
@@ -285,10 +312,6 @@ setClass("DelayedDimnames",
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
-
-    ## 'seed' slot.
-    if (seed_ndim == 0L)
-        return(wmsg2("'x@seed' must have dimensions"))
 
     ## 'dimnames' slot.
     if (length(x@dimnames) != seed_ndim)
@@ -390,11 +413,8 @@ setMethod("extract_array", "DelayedDimnames",
 ###
 
 setClass("DelayedUnaryIsoOp",
-    contains="DelayedOp",
+    contains="DelayedUnaryOp",
     representation(
-        seed="ANY",        # The input array-like object. Expected to comply
-                           # with the "seed contract".
-
         OP="function",     # The function to apply to the input (e.g. `+` or
                            # log). It should act as an isomorphism i.e. always
                            # return an array-like object *parallel* to the
@@ -411,7 +431,6 @@ setClass("DelayedUnaryIsoOp",
                            # what dimension the argument is parallel to.
     ),
     prototype(
-        seed=new("array"),
         OP=identity
     )
 )
@@ -513,17 +532,13 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 ###
 
 setClass("DelayedAperm",
-    contains="DelayedOp",
+    contains="DelayedUnaryOp",
     representation(
-        seed="ANY",     # The input array-like object. Expected to comply
-                        # with the "seed contract".
-
         perm="integer"  # Index into dim(seed) specifying the *rearrangement*
                         # of the dimensions i.e. which dimensions of the input
                         # to keep and in which order.
     ),
     prototype(
-        seed=new("array"),
         perm=1L
     )
 )
@@ -534,10 +549,6 @@ setClass("DelayedAperm",
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
-
-    ## 'seed' slot.
-    if (seed_ndim == 0L)
-        return(wmsg2("'x@seed' must have dimensions"))
 
     ## 'perm' slot.
     if (length(x@perm) == 0L)
@@ -629,16 +640,13 @@ setMethod("extract_array", "DelayedAperm",
 ### DelayedNaryIsoOp objects
 ###
 ### Delayed "N-ary op that preserves the geometry".
+### The input objects must be "conformable" array-like objects i.e. they all
+### must have the same dimensions.
 ###
 
 setClass("DelayedNaryIsoOp",
-    contains="DelayedOp",
+    contains="DelayedNaryOp",
     representation(
-        seeds="list",   # The input array-like objects. Each object is
-                        # expected to comply with the "seed contract".
-                        # The objects must be "conformable" i.e. they must
-                        # all have the same dimensions.
-
         OP="function",  # The function to use to combine the input objects.
                         # Should act as an isomorphism i.e. always return an
                         # array-like object *parallel* to the input objects
@@ -647,7 +655,6 @@ setClass("DelayedNaryIsoOp",
         Rargs="list"    # Additional right arguments to OP.
     ),
     prototype(
-        seeds=list(new("array")),
         OP=identity
     )
 )
@@ -670,8 +677,6 @@ setClass("DelayedNaryIsoOp",
 .validate_DelayedNaryIsoOp <- function(x)
 {
     ## 'seeds' slot.
-    if (length(x@seeds) == 0L)
-        return(wmsg2("'x@seeds' cannot be empty"))
     if (!.objects_are_conformable_arrays(x@seeds))
         return(wmsg2("'x@seeds' must be a list of conformable ",
                      "array-like objects"))
@@ -721,26 +726,18 @@ setMethod("extract_array", "DelayedNaryIsoOp",
 ###
 
 setClass("DelayedAbind",
-    contains="DelayedOp",
+    contains="DelayedNaryOp",
     representation(
-        seeds="list",    # The input array-like objects. Each object is
-                         # expected to comply with the "seed contract".
-
         along="integer"  # Single integer indicating the dimension along
                          # which to bind the input objects.
     ),
     prototype(
-        seeds=list(new("array")),
         along=1L
     )
 )
 
 .validate_DelayedAbind <- function(x)
 {
-    ## 'seeds' slot.
-    if (length(x@seeds) == 0L)
-        return(wmsg2("'x@seeds' cannot be empty"))
-
     ## 'along' slot.
     if (!(isSingleInteger(x@along) && x@along > 0L))
         return(wmsg2("'x@along' must be a single positive integer"))
