@@ -7,6 +7,26 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies
+### of 'x'
+###
+
+set_dim <- function(x, value)
+{
+    if (!identical(dim(x), value))
+        dim(x) <- value
+    x
+}
+
+set_dimnames <- function(x, value)
+{
+    if (!identical(dimnames(x), value))
+        dimnames(x) <- value
+    x
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### subset_dimnames()
 ###
 
@@ -38,76 +58,6 @@ subset_dimnames <- function(dimnames, index)
                       dn[i]
                   })
     simplify_NULL_dimnames(ans)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies
-### of 'x'
-###
-
-set_dim <- function(x, value)
-{
-    if (!identical(dim(x), value))
-        dim(x) <- value
-    x
-}
-
-set_dimnames <- function(x, value)
-{
-    if (!identical(dimnames(x), value))
-        dimnames(x) <- value
-    x
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Used in validity methods
-###
-
-### A modified version of S4Vectors::wmsg() that is better suited for use
-### by validity methods.
-### TODO: Put this in S4Vectors next to wmsg(). Would probably need a better
-### name.
-wmsg2 <- function(...)
-    paste0("\n    ",
-           paste0(strwrap(paste0(c(...), collapse="")), collapse="\n    "))
-
-validate_dim_slot <- function(x, slotname="dim")
-{
-    x_dim <- slot(x, slotname)
-    if (!is.integer(x_dim))
-        return(wmsg2(sprintf("'%s' slot must be an integer vector", slotname)))
-    if (length(x_dim) == 0L)
-        return(wmsg2(sprintf("'%s' slot cannot be empty", slotname)))
-    if (S4Vectors:::anyMissingOrOutside(x_dim, 0L))
-        return(wmsg2(sprintf("'%s' slot cannot contain negative or NA values",
-                             slotname)))
-    TRUE
-}
-
-validate_dimnames_slot <- function(x, dim, slotname="dimnames")
-{
-    x_dimnames <- slot(x, slotname)
-    if (!is.list(x_dimnames))
-        return(wmsg2(sprintf("'%s' slot must be a list", slotname)))
-    if (length(x_dimnames) != length(dim))
-        return(wmsg2(sprintf("'%s' slot must have ", slotname),
-                     "one list element per dimension in the object"))
-    ok <- vapply(seq_along(dim),
-                 function(along) {
-                   dn <- x_dimnames[[along]]
-                   if (is.null(dn))
-                       return(TRUE)
-                   is.character(dn) && length(dn) == dim[[along]]
-                 },
-                 logical(1),
-                 USE.NAMES=FALSE)
-    if (!all(ok))
-        return(wmsg2(sprintf("each list element in '%s' slot ", slotname),
-                     "must be NULL or a character vector along ",
-                     "the corresponding dimension in the object"))
-    TRUE
 }
 
 
@@ -283,5 +233,55 @@ get_rev_index <- function(part_index)
     rev_idx <- integer(length(idx))
     rev_idx[idx] <- seq_along(idx)
     rev_idx
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Used in validity methods
+###
+
+### A modified version of S4Vectors::wmsg() that is better suited for use
+### by validity methods.
+### TODO: Put this in S4Vectors next to wmsg(). Would probably need a better
+### name.
+wmsg2 <- function(...)
+    paste0("\n    ",
+           paste0(strwrap(paste0(c(...), collapse="")), collapse="\n    "))
+
+validate_dim_slot <- function(x, slotname="dim")
+{
+    x_dim <- slot(x, slotname)
+    if (!is.integer(x_dim))
+        return(wmsg2(sprintf("'%s' slot must be an integer vector", slotname)))
+    if (length(x_dim) == 0L)
+        return(wmsg2(sprintf("'%s' slot cannot be empty", slotname)))
+    if (S4Vectors:::anyMissingOrOutside(x_dim, 0L))
+        return(wmsg2(sprintf("'%s' slot cannot contain negative or NA values",
+                             slotname)))
+    TRUE
+}
+
+validate_dimnames_slot <- function(x, dim, slotname="dimnames")
+{
+    x_dimnames <- slot(x, slotname)
+    if (!is.list(x_dimnames))
+        return(wmsg2(sprintf("'%s' slot must be a list", slotname)))
+    if (length(x_dimnames) != length(dim))
+        return(wmsg2(sprintf("'%s' slot must have ", slotname),
+                     "one list element per dimension in the object"))
+    ok <- vapply(seq_along(dim),
+                 function(along) {
+                   dn <- x_dimnames[[along]]
+                   if (is.null(dn))
+                       return(TRUE)
+                   is.character(dn) && length(dn) == dim[[along]]
+                 },
+                 logical(1),
+                 USE.NAMES=FALSE)
+    if (!all(ok))
+        return(wmsg2(sprintf("each list element in '%s' slot ", slotname),
+                     "must be NULL or a character vector along ",
+                     "the corresponding dimension in the object"))
+    TRUE
 }
 
