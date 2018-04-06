@@ -130,7 +130,7 @@ setGeneric("showtree", signature="x",
         if (is(x, "DelayedOp")) {
             x_as1string <- summary(x)
         } else {
-            x_as1string <- sprintf("[seed] % object", class(x))
+            x_as1string <- sprintf("[seed] %s object", class(x))
         }
         if (show.node.dim) {
             dim_in1string <- paste0(dim(x), collapse="x")
