@@ -98,8 +98,16 @@ setGeneric("DelayedArray", function(seed) standardGeneric("DelayedArray"))
 
 setMethod("DelayedArray", "ANY", function(seed) new_DelayedArray(seed))
 
-### Calling DelayedArray() on a DelayedArray object is a no-op.
-setMethod("DelayedArray", "DelayedArray", function(seed) seed)
+setMethod("DelayedArray", "DelayedUnaryOp",
+    function(seed)
+    {
+        if (isNoOp(seed)) {
+            seed <- seed@seed
+            return(callGeneric())
+        }
+        callNextMethod()
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
