@@ -176,10 +176,17 @@ normalizeSingleBracketSubscript2 <- function(i, x_len, x_names=NULL)
                       "single dimension"))
         i <- as.vector(i)
     }
+    ## We create an artificial object 'x' of length 'x_len' with 'x_names' on
+    ## it. normalizeSingleBracketSubscript() will only look at its length and
+    ## names so what the object really is doesn't matter. Hence we make it
+    ## with the smallest possible memory footprint.
+    ## TODO: Change the signature of normalizeSingleBracketSubscript() in
+    ## S4Vectors to take 'x_len' and 'x_names' instead of 'x' so we won't
+    ## have to use this kind of trick.
     if (is.null(x_names)) {
         x <- Rle(0L, x_len)
     } else {
-        x <- setNames(seq_len(x_len), x_names)
+        x <- setNames(raw(x_len), x_names)
     }
     normalizeSingleBracketSubscript(i, x)
 }
