@@ -73,7 +73,7 @@ S3method(summary, DelayedSubset)
 S3method(summary, DelayedDimnames)
 S3method(summary, DelayedUnaryIsoOp)
 S3method(summary, DelayedAperm)
-S3method(summary, DelayedVariadicIsoOp)
+S3method(summary, DelayedNaryIsoOp)
 S3method(summary, DelayedAbind)
 
 S3method(t, DelayedMatrix)
@@ -114,7 +114,7 @@ export(
     summary.DelayedDimnames,
     summary.DelayedUnaryIsoOp,
     summary.DelayedAperm,
-    summary.DelayedVariadicIsoOp,
+    summary.DelayedNaryIsoOp,
     summary.DelayedAbind,
 
     t.DelayedMatrix

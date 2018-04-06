@@ -7,14 +7,14 @@
 ### object. 6 types of nodes are currently supported. Each type is a concrete
 ### DelayedOp subclass:
 ###
-###   Node type      Outdegree  Operation
-###   ---------------------------------------------------------------------
-###   DelayedSubset          1  Multi-dimensional single bracket subsetting
-###   DelayedDimnames        1  Set dimnames
-###   DelayedUnaryIsoOp      1  Unary op that preserves the geometry
-###   DelayedAperm           1  Extended aperm() (can drop dimensions)
-###   DelayedVariadicIsoOp   N  N-ary op that preserves the geometry
-###   DelayedAbind           N  abind()
+###   Node type    Outdegree  Operation
+###   -------------------------------------------------------------------
+###   DelayedSubset        1  Multi-dimensional single bracket subsetting
+###   DelayedDimnames      1  Set dimnames
+###   DelayedUnaryIsoOp    1  Unary op that preserves the geometry
+###   DelayedAperm         1  Extended aperm() (can drop dimensions)
+###   DelayedNaryIsoOp     N  N-ary op that preserves the geometry
+###   DelayedAbind         N  abind()
 ###
 ### All the nodes are array-like objects that must comply with the "seed
 ### contract" i.e. they must support dim(), dimnames(), and extract_array().
@@ -622,12 +622,12 @@ setMethod("extract_array", "DelayedAperm",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### DelayedVariadicIsoOp objects
+### DelayedNaryIsoOp objects
 ###
 ### Delayed "N-ary op that preserves the geometry".
 ###
 
-setClass("DelayedVariadicIsoOp",
+setClass("DelayedNaryIsoOp",
     contains="DelayedOp",
     representation(
         seeds="list",   # The input array-like objects. Each object is
@@ -663,7 +663,7 @@ setClass("DelayedVariadicIsoOp",
     all(dims == first_dim)
 }
 
-.validate_DelayedVariadicIsoOp <- function(x)
+.validate_DelayedNaryIsoOp <- function(x)
 {
     ## 'seeds' slot.
     if (length(x@seeds) == 0L)
@@ -674,34 +674,34 @@ setClass("DelayedVariadicIsoOp",
     TRUE
 }
 
-setValidity2("DelayedVariadicIsoOp", .validate_DelayedVariadicIsoOp)
+setValidity2("DelayedNaryIsoOp", .validate_DelayedNaryIsoOp)
 
-new_DelayedVariadicIsoOp <- function(seed=new("array"), ...,
-                                     OP=identity, Rargs=list())
+new_DelayedNaryIsoOp <- function(seed=new("array"), ...,
+                                 OP=identity, Rargs=list())
 {
     seeds <- unname(list(seed, ...))
     OP <- match.fun(OP)
-    new2("DelayedVariadicIsoOp", seeds=seeds, OP=OP, Rargs=Rargs)
+    new2("DelayedNaryIsoOp", seeds=seeds, OP=OP, Rargs=Rargs)
 }
 
-### S3/S4 combo for summary.DelayedVariadicIsoOp
+### S3/S4 combo for summary.DelayedNaryIsoOp
 
-.DelayedVariadicIsoOp_summary <- function(object) "N-ary op"
+.DelayedNaryIsoOp_summary <- function(object) "N-ary op"
 
-summary.DelayedVariadicIsoOp <-
-    function(object, ...) .DelayedVariadicIsoOp_summary(object, ...)
+summary.DelayedNaryIsoOp <-
+    function(object, ...) .DelayedNaryIsoOp_summary(object, ...)
 
-setMethod("summary", "DelayedVariadicIsoOp", summary.DelayedVariadicIsoOp)
+setMethod("summary", "DelayedNaryIsoOp", summary.DelayedNaryIsoOp)
 
 ### Seed contract.
 
-setMethod("dim", "DelayedVariadicIsoOp", function(x) dim(x@seeds[[1L]]))
+setMethod("dim", "DelayedNaryIsoOp", function(x) dim(x@seeds[[1L]]))
 
-setMethod("dimnames", "DelayedVariadicIsoOp",
+setMethod("dimnames", "DelayedNaryIsoOp",
     function(x) simplify_NULL_dimnames(combine_dimnames(x@seeds))
 )
 
-setMethod("extract_array", "DelayedVariadicIsoOp",
+setMethod("extract_array", "DelayedNaryIsoOp",
     function(x, index)
     {
         arrays <- lapply(x@seeds, extract_array, index)
@@ -754,7 +754,7 @@ new_DelayedAbind <- function(seeds, along)
     new2("DelayedAbind", seeds=seeds, along=along)
 }
 
-### S3/S4 combo for summary.DelayedVariadicIsoOp
+### S3/S4 combo for summary.DelayedAbind
 
 .DelayedAbind_summary <-
     function(object) sprintf("Abind (along=%d)", object@along)
@@ -821,7 +821,7 @@ setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
 ### updateObject()
 ###
 ### In DelayedArray 0.5.24, the SeedDimPicker, ConformableSeedCombiner, and
-### SeedBinder classes were renamed DelayedAperm, DelayedVariadicIsoOp, and
+### SeedBinder classes were renamed DelayedAperm, DelayedNaryIsoOp, and
 ### DelayedAbind, respectively.
 ### DelayedArray objects serialized with DelayedArray < 0.5.24 might contain
 ### instances of these old classes nested in their "seed" slot so we need to
@@ -829,7 +829,7 @@ setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
 ###
 
 setClass("SeedDimPicker", contains="DelayedAperm")
-setClass("ConformableSeedCombiner", contains="DelayedVariadicIsoOp")
+setClass("ConformableSeedCombiner", contains="DelayedNaryIsoOp")
 setClass("SeedBinder", contains="DelayedAbind")
 
 setMethod("updateObject", "DelayedOp",
@@ -858,7 +858,7 @@ setMethod("updateObject", "SeedDimPicker",
 setMethod("updateObject", "ConformableSeedCombiner",
     function(object, ..., verbose=FALSE)
     {
-        object <- new2("DelayedVariadicIsoOp", seeds=object@seeds,
+        object <- new2("DelayedNaryIsoOp", seeds=object@seeds,
                                                OP=object@COMBINING_OP,
                                                Rargs=object@Rargs)
         callNextMethod()

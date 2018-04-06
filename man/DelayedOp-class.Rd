@@ -37,12 +37,12 @@
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
 
-% DelayedVariadicIsoOp objects
-\alias{summary.DelayedVariadicIsoOp}
-\alias{summary,DelayedVariadicIsoOp-method}
-\alias{dim,DelayedVariadicIsoOp-method}
-\alias{dimnames,DelayedVariadicIsoOp-method}
-\alias{extract_array,DelayedVariadicIsoOp-method}
+% DelayedNaryIsoOp objects
+\alias{summary.DelayedNaryIsoOp}
+\alias{summary,DelayedNaryIsoOp-method}
+\alias{dim,DelayedNaryIsoOp-method}
+\alias{dimnames,DelayedNaryIsoOp-method}
+\alias{extract_array,DelayedNaryIsoOp-method}
 
 % DelayedAbind objects
 \alias{summary.DelayedAbind}
@@ -89,14 +89,14 @@ showtree(x, show.node.dim=TRUE)
 \details{
   6 types of nodes are currently supported. Each type is a DelayedOp subclass:
 
-  \preformatted{  Node type      Outdegree  Operation
+  \preformatted{  Node type    Outdegree  Operation
   ---------------------------------------------------------------------
-  DelayedSubset          1  Multi-dimensional single bracket subsetting
-  DelayedDimnames        1  Set dimnames
-  DelayedUnaryIsoOp      1  Unary op that preserves the geometry
-  DelayedAperm           1  Extended aperm() (can drop dimensions)
-  DelayedVariadicIsoOp   N  N-ary op that preserves the geometry
-  DelayedAbind           N  abind()
+  DelayedSubset        1  Multi-dimensional single bracket subsetting
+  DelayedDimnames      1  Set dimnames
+  DelayedUnaryIsoOp    1  Unary op that preserves the geometry
+  DelayedAperm         1  Extended aperm() (can drop dimensions)
+  DelayedNaryIsoOp     N  N-ary op that preserves the geometry
+  DelayedAbind         N  abind()
   }
 
   All the nodes are array-like objects that must comply with the \emph{seed

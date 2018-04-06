@@ -248,7 +248,7 @@ setMethod("extract_array", "DelayedArray",
 ###      object 'x' by inserting it in the tree of DelayedOp objects (stored
 ###      in 'x@seed') as the new root node.
 ###
-### No "stashing" utility for nodes of type DelayedVariadicIsoOp for now.
+### No "stashing" utility for nodes of type DelayedNaryIsoOp for now.
 ### See DelayedOp-class.R for the list of all node types.
 ###
 
@@ -678,8 +678,8 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
         stop(wmsg(.subassign_error_msg))
     if (!(is.vector(value) && is.atomic(value) && length(value) == 1L))
         stop(wmsg(.subassign_error_msg))
-    DelayedArray(new_DelayedVariadicIsoOp(x@seed, i@seed, OP=`[<-`,
-                                          Rargs=list(value=value)))
+    DelayedArray(new_DelayedNaryIsoOp(x@seed, i@seed,
+                                      OP=`[<-`, Rargs=list(value=value)))
 }
 
 setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
