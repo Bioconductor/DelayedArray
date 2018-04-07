@@ -20,9 +20,9 @@
 \alias{type}
 
 \alias{seed}
-\alias{seed,ANY-method}
+\alias{seed,DelayedOp-method}
 \alias{seed<-}
-\alias{seed<-,ANY-method}
+\alias{seed<-,DelayedOp-method}
 
 \alias{path}
 \alias{path,DelayedArray-method}

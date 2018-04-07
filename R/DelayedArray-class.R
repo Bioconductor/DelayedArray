@@ -299,24 +299,26 @@ is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
 )
 
 ### If 'x' is a DelayedArray object and the tree of DelayedOp objects stored
-### in 'x@seed' is linear, then seed(x) must return the "leaf seed" i.e. the
-### 1st node in the linear tree (starting from 'x@seed', the tree root) that
-### is not a DelayedOp object. This should be the seed that was used by the
-### user to construct the original DelayedArray object.
+### in 'x@seed' is linear, then seed(x) will return the "leaf seed" i.e. the
+### 1st node in the linear tree (starting from the tree root) that is not a
+### DelayedOp object. This should be the seed that was used by the user to
+### construct the original DelayedArray object.
 ### Raise an error if the tree in 'x' is not linear.
 setGeneric("seed", function(x) standardGeneric("seed"))
 
-setMethod("seed", "ANY",
+setMethod("seed", "DelayedOp",
     function(x)
     {
-        if (!.hasSlot(x, "seed")) {
-            stopifnot(.hasSlot(x, "seeds"))  # sanity check
+        if (is(x, "DelayedNaryOp")) {
             ## Tree is not linear.
             stop(wmsg("seed() ", .IS_NOT_SUPOORTED_ETC))
         }
-        if (is(x@seed, "DelayedOp"))
-            return(seed(x@seed))  # recursive call
-        x@seed  # found leaf seed!
+        if (is(x@seed, "DelayedOp")) {
+            x <- x@seed
+            return(callGeneric())  # recursive call
+        }
+        ## Found the leaf seed.
+        x@seed
     }
 )
 
@@ -340,20 +342,19 @@ setGeneric("seed<-", signature="x",
     value
 }
 
-setReplaceMethod("seed", "ANY",
+setReplaceMethod("seed", "DelayedOp",
     function(x, value)
     {
-        if (!.hasSlot(x, "seed")) {
-            stopifnot(.hasSlot(x, "seeds"))  # sanity check
+        if (is(x, "DelayedNaryOp")) {
             ## Tree is not linear.
             stop(wmsg("the seed() setter ", .IS_NOT_SUPOORTED_ETC))
         }
         if (is(x@seed, "DelayedOp")) {
             seed(x@seed) <- value  # recursive call
-        } else {
-            ## Replace the leaf seed.
-            x@seed <- .normalize_seed_replacement_value(value, x@seed)
+            return(x)
         }
+        ## Replace the leaf seed.
+        x@seed <- .normalize_seed_replacement_value(value, x@seed)
         x
     }
 )
