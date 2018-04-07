@@ -252,9 +252,9 @@ stash_DelayedSubset <- function(x, Nindex)
     DelayedArray(new_DelayedSubset(x@seed, Nindex))
 }
 
-stash_DelayedDimnames <- function(x, dimnames)
+stash_DelayedAperm <- function(x, perm)
 {
-    DelayedArray(new_DelayedDimnames(x@seed, dimnames))
+    DelayedArray(new_DelayedAperm(x@seed, perm))
 }
 
 stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
@@ -265,9 +265,9 @@ stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
                                        Lalong=Lalong, Ralong=Ralong))
 }
 
-stash_DelayedAperm <- function(x, perm)
+stash_DelayedDimnames <- function(x, dimnames)
 {
-    DelayedArray(new_DelayedAperm(x@seed, perm))
+    DelayedArray(new_DelayedDimnames(x@seed, dimnames))
 }
 
 stash_DelayedAbind <- function(..., along)

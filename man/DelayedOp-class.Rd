@@ -34,22 +34,22 @@
 \alias{dimnames,DelayedSubset-method}
 \alias{extract_array,DelayedSubset-method}
 
-% DelayedDimnames objects
-\alias{summary.DelayedDimnames}
-\alias{summary,DelayedDimnames-method}
-\alias{dimnames,DelayedDimnames-method}
-
-% DelayedUnaryIsoOp objects
-\alias{summary.DelayedUnaryIsoOp}
-\alias{summary,DelayedUnaryIsoOp-method}
-\alias{extract_array,DelayedUnaryIsoOp-method}
-
 % DelayedAperm objects
 \alias{summary.DelayedAperm}
 \alias{summary,DelayedAperm-method}
 \alias{dim,DelayedAperm-method}
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
+
+% DelayedUnaryIsoOp objects
+\alias{summary.DelayedUnaryIsoOp}
+\alias{summary,DelayedUnaryIsoOp-method}
+\alias{extract_array,DelayedUnaryIsoOp-method}
+
+% DelayedDimnames objects
+\alias{summary.DelayedDimnames}
+\alias{summary,DelayedDimnames-method}
+\alias{dimnames,DelayedDimnames-method}
 
 % DelayedNaryIsoOp objects
 \alias{summary.DelayedNaryIsoOp}
@@ -106,9 +106,9 @@ showtree(x, show.node.dim=TRUE)
   \preformatted{  Node type    Outdegree  Operation
   ---------------------------------------------------------------------
   DelayedSubset        1  Multi-dimensional single bracket subsetting
-  DelayedDimnames      1  Set dimnames
-  DelayedUnaryIsoOp    1  Unary op that preserves the geometry
   DelayedAperm         1  Extended aperm() (can drop dimensions)
+  DelayedUnaryIsoOp    1  Unary op that preserves the geometry
+  DelayedDimnames      1  Set dimnames
   DelayedNaryIsoOp     N  N-ary op that preserves the geometry
   DelayedAbind         N  abind()
   }

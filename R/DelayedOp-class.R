@@ -10,9 +10,9 @@
 ###   Node type    Outdegree  Operation
 ###   -------------------------------------------------------------------
 ###   DelayedSubset        1  Multi-dimensional single bracket subsetting
-###   DelayedDimnames      1  Set dimnames
-###   DelayedUnaryIsoOp    1  Unary op that preserves the geometry
 ###   DelayedAperm         1  Extended aperm() (can drop dimensions)
+###   DelayedUnaryIsoOp    1  Unary op that preserves the geometry
+###   DelayedDimnames      1  Set dimnames
 ###   DelayedNaryIsoOp     N  N-ary op that preserves the geometry
 ###   DelayedAbind         N  abind()
 ###
@@ -314,116 +314,116 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### DelayedDimnames objects
+### DelayedAperm objects
 ###
-### Delayed "Set dimnames".
+### Delayed "Extended aperm()" (can drop dimensions).
+### Note that only "ineffective" dimensions can be dropped (i.e. dimensions
+### equal to 1, so dropping them preserves the length).
 ###
 
-.INHERIT_FROM_SEED <- -1L
-
-setClass("DelayedDimnames",
+setClass("DelayedAperm",
     contains="DelayedUnaryOp",
     representation(
-        dimnames="list"  # List with one list element per dimension in
-                         # the input. Each list element must be NULL,
-                         # or a character vector, or special value
-                         # .INHERIT_FROM_SEED
+        perm="integer"  # Index into dim(seed) specifying the *rearrangement*
+                        # of the dimensions i.e. which dimensions of the input
+                        # to keep and in which order.
     ),
     prototype(
-        dimnames=list(.INHERIT_FROM_SEED)
+        perm=1L
     )
 )
 
-.validate_DelayedDimnames <- function(x)
+### The seed is referred to as 'a' in the error messages. This makes them
+### more meaningful for the end user in the context of calling aperm().
+.validate_DelayedAperm <- function(x)
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
 
-    ## 'dimnames' slot.
-    if (length(x@dimnames) != seed_ndim)
-        return(wmsg2("'x@dimnames' must have one list element per dimension ",
-                     "in 'x@seed'"))
-    ok <- mapply(function(dn, d) {
-                     identical(dn, .INHERIT_FROM_SEED) ||
-                     is.null(dn) ||
-                     is.character(dn) && length(dn) == d
-                 },
-                 x@dimnames, seed_dim,
-                 SIMPLIFY=FALSE, USE.NAMES=FALSE)
-    if (!all(unlist(ok)))
-        return(wmsg2("each list element in 'x@dimnames' must be NULL, ",
-                     "or a character vector of length the extent of ",
-                     "the corresponding dimension, or special value ",
-                     .INHERIT_FROM_SEED))
+    ## 'perm' slot.
+    if (length(x@perm) == 0L)
+        return(wmsg2("'perm' cannot be an empty vector"))
+    if (S4Vectors:::anyMissingOrOutside(x@perm, 1L, seed_ndim))
+        return(wmsg2("all values in 'perm' must be >= 1 ",
+                     "and <= 'length(dim(a))'"))
+    if (anyDuplicated(x@perm))
+        return(wmsg2("'perm' cannot have duplicates"))
+    if (!all(seed_dim[-x@perm] == 1L))
+        return(wmsg2("only dimensions equal to 1 can be dropped"))
     TRUE
 }
 
-setValidity2("DelayedDimnames", .validate_DelayedDimnames)
+setValidity2("DelayedAperm", .validate_DelayedAperm)
 
-### TODO: Also make sure that each 'dimnames' list element is either NULL or
-### a character vector of the correct length.
-.normalize_dimnames <- function(dimnames, ndim)
+.normarg_perm <- function(perm, a_dim)
 {
-    if (is.null(dimnames))
-        return(vector("list", length=ndim))
-    if (!is.list(dimnames))
-        stop("the supplied dimnames must be a list")
-    if (length(dimnames) > ndim)
-        stop(wmsg("the supplied dimnames is longer ",
-                  "than the number of dimensions"))
-    if (length(dimnames) < ndim)
-        length(dimnames) <- ndim
-    dimnames
+    if (is.null(perm))
+        return(seq_along(a_dim))
+    if (!is.numeric(perm))
+        stop(wmsg("'perm' must be an integer vector"))
+    if (!is.integer(perm))
+        perm <- as.integer(perm)
+    perm
 }
 
-new_DelayedDimnames <- function(seed=new("array"),
-                                dimnames=list(.INHERIT_FROM_SEED))
+new_DelayedAperm <- function(seed, perm=NULL)
 {
-    seed_dim <- dim(seed)
-    seed_ndim <- length(seed_dim)
-    dimnames <- .normalize_dimnames(dimnames, seed_ndim)
-    seed_dimnames <- dimnames(seed)
-    dimnames <- lapply(seq_len(seed_ndim),
-                       function(along) {
-                           dn <- dimnames[[along]]
-                           if (identical(dn, seed_dimnames[[along]]))
-                               return(.INHERIT_FROM_SEED)
-                           dn
-                       })
-    new2("DelayedDimnames", seed=seed, dimnames=dimnames)
+    perm <- .normarg_perm(perm, dim(seed))
+    new2("DelayedAperm", seed=seed, perm=perm)
 }
 
-setMethod("isNoOp", "DelayedDimnames",
-    function(x)
-        all(vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED))
+setMethod("isNoOp", "DelayedAperm",
+    function(x) identical(x@perm, seq_along(dim(x@seed)))
 )
 
-### S3/S4 combo for summary.DelayedDimnames
+### S3/S4 combo for summary.DelayedAperm
 
-.DelayedDimnames_summary <- function(object) "Set dimnames"
+.DelayedAperm_summary <- function(object)
+{
+    perm <- as.character(object@perm)
+    if (length(perm) >= 2L)
+        perm <- sprintf("c(%s)", paste0(perm, collapse=","))
+    sprintf("Aperm (perm=%s)", perm)
+}
 
-summary.DelayedDimnames <-
-    function(object, ...) .DelayedDimnames_summary(object, ...)
+summary.DelayedAperm <-
+    function(object, ...) .DelayedAperm_summary(object, ...)
 
-setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
+setMethod("summary", "DelayedAperm", summary.DelayedAperm)
 
 ### Seed contract.
 
-.get_DelayedDimnames_dimnames <- function(x)
+.get_DelayedAperm_dim <- function(x)
 {
-    x_dimnames <- x@dimnames
-    seed_dimnames <- dimnames(x@seed)
-    ans <- lapply(seq_along(x_dimnames),
-                  function(along) {
-                      dn <- x_dimnames[[along]]
-                      if (identical(dn, .INHERIT_FROM_SEED))
-                          dn <- seed_dimnames[[along]]
-                      dn
-                  })
-    simplify_NULL_dimnames(ans)
+    seed_dim <- dim(x@seed)
+    seed_dim[x@perm]
 }
 
-setMethod("dimnames", "DelayedDimnames", .get_DelayedDimnames_dimnames)
+setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
+
+.get_DelayedAperm_dimnames <- function(x)
+{
+    seed_dimnames <- dimnames(x@seed)
+    if (is.null(seed_dimnames))
+        return(NULL)
+    simplify_NULL_dimnames(seed_dimnames[x@perm])
+}
+
+setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
+
+.extract_array_from_DelayedAperm <- function(x, index)
+{
+    seed_dim <- dim(x@seed)
+    seed_index <- rep.int(list(1L), length(seed_dim))
+    seed_index[x@perm] <- index
+    a <- extract_array(x@seed, seed_index)
+    dim(a) <- dim(a)[sort(x@perm)]
+    aperm(a, perm=rank(x@perm))
+}
+
+setMethod("extract_array", "DelayedAperm",
+    .extract_array_from_DelayedAperm
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -540,116 +540,116 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### DelayedAperm objects
+### DelayedDimnames objects
 ###
-### Delayed "Extended aperm()" (can drop dimensions).
-### Note that only "ineffective" dimensions can be dropped (i.e. dimensions
-### equal to 1, so dropping them preserves the length).
+### Delayed "Set dimnames".
 ###
 
-setClass("DelayedAperm",
+.INHERIT_FROM_SEED <- -1L
+
+setClass("DelayedDimnames",
     contains="DelayedUnaryOp",
     representation(
-        perm="integer"  # Index into dim(seed) specifying the *rearrangement*
-                        # of the dimensions i.e. which dimensions of the input
-                        # to keep and in which order.
+        dimnames="list"  # List with one list element per dimension in
+                         # the input. Each list element must be NULL,
+                         # or a character vector, or special value
+                         # .INHERIT_FROM_SEED
     ),
     prototype(
-        perm=1L
+        dimnames=list(.INHERIT_FROM_SEED)
     )
 )
 
-### The seed is referred to as 'a' in the error messages. This makes them
-### more meaningful for the end user in the context of calling aperm().
-.validate_DelayedAperm <- function(x)
+.validate_DelayedDimnames <- function(x)
 {
     seed_dim <- dim(x@seed)
     seed_ndim <- length(seed_dim)
 
-    ## 'perm' slot.
-    if (length(x@perm) == 0L)
-        return(wmsg2("'perm' cannot be an empty vector"))
-    if (S4Vectors:::anyMissingOrOutside(x@perm, 1L, seed_ndim))
-        return(wmsg2("all values in 'perm' must be >= 1 ",
-                     "and <= 'length(dim(a))'"))
-    if (anyDuplicated(x@perm))
-        return(wmsg2("'perm' cannot have duplicates"))
-    if (!all(seed_dim[-x@perm] == 1L))
-        return(wmsg2("only dimensions equal to 1 can be dropped"))
+    ## 'dimnames' slot.
+    if (length(x@dimnames) != seed_ndim)
+        return(wmsg2("'x@dimnames' must have one list element per dimension ",
+                     "in 'x@seed'"))
+    ok <- mapply(function(dn, d) {
+                     identical(dn, .INHERIT_FROM_SEED) ||
+                     is.null(dn) ||
+                     is.character(dn) && length(dn) == d
+                 },
+                 x@dimnames, seed_dim,
+                 SIMPLIFY=FALSE, USE.NAMES=FALSE)
+    if (!all(unlist(ok)))
+        return(wmsg2("each list element in 'x@dimnames' must be NULL, ",
+                     "or a character vector of length the extent of ",
+                     "the corresponding dimension, or special value ",
+                     .INHERIT_FROM_SEED))
     TRUE
 }
 
-setValidity2("DelayedAperm", .validate_DelayedAperm)
+setValidity2("DelayedDimnames", .validate_DelayedDimnames)
 
-.normarg_perm <- function(perm, a_dim)
+### TODO: Also make sure that each 'dimnames' list element is either NULL or
+### a character vector of the correct length.
+.normalize_dimnames <- function(dimnames, ndim)
 {
-    if (is.null(perm))
-        return(seq_along(a_dim))
-    if (!is.numeric(perm))
-        stop(wmsg("'perm' must be an integer vector"))
-    if (!is.integer(perm))
-        perm <- as.integer(perm)
-    perm
+    if (is.null(dimnames))
+        return(vector("list", length=ndim))
+    if (!is.list(dimnames))
+        stop("the supplied dimnames must be a list")
+    if (length(dimnames) > ndim)
+        stop(wmsg("the supplied dimnames is longer ",
+                  "than the number of dimensions"))
+    if (length(dimnames) < ndim)
+        length(dimnames) <- ndim
+    dimnames
 }
 
-new_DelayedAperm <- function(seed, perm=NULL)
+new_DelayedDimnames <- function(seed=new("array"),
+                                dimnames=list(.INHERIT_FROM_SEED))
 {
-    perm <- .normarg_perm(perm, dim(seed))
-    new2("DelayedAperm", seed=seed, perm=perm)
+    seed_dim <- dim(seed)
+    seed_ndim <- length(seed_dim)
+    dimnames <- .normalize_dimnames(dimnames, seed_ndim)
+    seed_dimnames <- dimnames(seed)
+    dimnames <- lapply(seq_len(seed_ndim),
+                       function(along) {
+                           dn <- dimnames[[along]]
+                           if (identical(dn, seed_dimnames[[along]]))
+                               return(.INHERIT_FROM_SEED)
+                           dn
+                       })
+    new2("DelayedDimnames", seed=seed, dimnames=dimnames)
 }
 
-setMethod("isNoOp", "DelayedAperm",
-    function(x) identical(x@perm, seq_along(dim(x@seed)))
+setMethod("isNoOp", "DelayedDimnames",
+    function(x)
+        all(vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED))
 )
 
-### S3/S4 combo for summary.DelayedAperm
+### S3/S4 combo for summary.DelayedDimnames
 
-.DelayedAperm_summary <- function(object)
-{
-    perm <- as.character(object@perm)
-    if (length(perm) >= 2L)
-        perm <- sprintf("c(%s)", paste0(perm, collapse=","))
-    sprintf("Aperm (perm=%s)", perm)
-}
+.DelayedDimnames_summary <- function(object) "Set dimnames"
 
-summary.DelayedAperm <-
-    function(object, ...) .DelayedAperm_summary(object, ...)
+summary.DelayedDimnames <-
+    function(object, ...) .DelayedDimnames_summary(object, ...)
 
-setMethod("summary", "DelayedAperm", summary.DelayedAperm)
+setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
 
 ### Seed contract.
 
-.get_DelayedAperm_dim <- function(x)
+.get_DelayedDimnames_dimnames <- function(x)
 {
-    seed_dim <- dim(x@seed)
-    seed_dim[x@perm]
-}
-
-setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
-
-.get_DelayedAperm_dimnames <- function(x)
-{
+    x_dimnames <- x@dimnames
     seed_dimnames <- dimnames(x@seed)
-    if (is.null(seed_dimnames))
-        return(NULL)
-    simplify_NULL_dimnames(seed_dimnames[x@perm])
+    ans <- lapply(seq_along(x_dimnames),
+                  function(along) {
+                      dn <- x_dimnames[[along]]
+                      if (identical(dn, .INHERIT_FROM_SEED))
+                          dn <- seed_dimnames[[along]]
+                      dn
+                  })
+    simplify_NULL_dimnames(ans)
 }
 
-setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
-
-.extract_array_from_DelayedAperm <- function(x, index)
-{
-    seed_dim <- dim(x@seed)
-    seed_index <- rep.int(list(1L), length(seed_dim))
-    seed_index[x@perm] <- index
-    a <- extract_array(x@seed, seed_index)
-    dim(a) <- dim(a)[sort(x@perm)]
-    aperm(a, perm=rank(x@perm))
-}
-
-setMethod("extract_array", "DelayedAperm",
-    .extract_array_from_DelayedAperm
-)
+setMethod("dimnames", "DelayedDimnames", .get_DelayedDimnames_dimnames)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
