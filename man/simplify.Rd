@@ -56,6 +56,7 @@ options(DelayedArray.simplify=FALSE)
 m1 <- matrix(runif(150), nrow=15, ncol=10)
 X <- DelayedArray(m1)
 showtree(X)
+nseed(X)  # the tree is linear
 
 dimnames(X) <- list(letters[1:15], LETTERS[1:10])
 showtree(X)
@@ -64,9 +65,11 @@ m2 <- matrix(1:20, nrow=10)
 Y <- cbind(t(X[ , 10:1]), DelayedArray(m2), X[6:15, "A", drop=FALSE])
 showtree(Y)
 showtree(Y, show.node.dim=FALSE)
+nseed(Y)  # the tree is not linear
 
 Z <- t(Y[10:1, ])[1:15, ] + 0.4 * X
 showtree(Z)
+nseed(Z)
 
 Z@seed@seeds
 Z@seed@seeds[[2]]@seed            # reaching to X

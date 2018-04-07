@@ -19,6 +19,9 @@
 
 \alias{type}
 
+\alias{nseed}
+\alias{nseed,ANY-method}
+
 \alias{seed}
 \alias{seed,DelayedOp-method}
 \alias{seed<-}
@@ -81,6 +84,7 @@
 \usage{
 DelayedArray(seed)  # constructor function
 seed(x)             # seed getter
+nseed(x)            # seed counter
 path(object, ...)   # path getter
 type(x)
 }
@@ -117,7 +121,8 @@ type(x)
 \section{Accessors}{
   DelayedArray objects support the same set of getters as ordinary arrays
   i.e. \code{dim()}, \code{length()}, and \code{dimnames()}.
-  In addition, they support \code{seed()}, \code{path()}, and \code{type()}.
+  In addition, they support \code{seed()}, \code{nseed()}, \code{path()},
+  and \code{type()}.
   \code{type()} is the DelayedArray equivalent of \code{typeof()} (or
   \code{storage.mode()}) for ordinary arrays. Note that, for convenience
   and consistency, \code{type()} also works on ordinary arrays.

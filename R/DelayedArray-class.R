@@ -299,20 +299,42 @@ is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### nseed()
+###
+### Return the number of leaves in the tree of DelayedOp objects contained
+### in a DelayedArray object.
+###
+
+setGeneric("nseed", function(x) standardGeneric("nseed"))
+
+setMethod("nseed", "ANY",
+    function(x)
+    {
+        if (is(x, "DelayedUnaryOp"))
+            return(nseed(x@seed))
+        if (is(x, "DelayedNaryOp"))
+            x <- x@seeds
+        if (is.list(x)) {
+            ans <- sum(vapply(x, nseed, integer(1), USE.NAMES=FALSE))
+            return(ans)
+        }
+        return(1L)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### seed() getter/setter
 ###
 
 .IS_NOT_SUPOORTED_ETC <- c(
     "is not supported on a DelayedArray object with ",
-    "multiple leaf seeds at the moment"
+    "multiple seeds at the moment"
 )
 
-### If 'x' is a DelayedArray object and the tree of DelayedOp objects stored
-### in 'x@seed' is linear, then seed(x) will return the "leaf seed" i.e. the
-### 1st node in the linear tree (starting from the tree root) that is not a
-### DelayedOp object. This should be the seed that was used by the user to
-### construct the original DelayedArray object.
-### Raise an error if the tree in 'x' is not linear.
+### If the tree of DelayedOp objects contained in the DelayedArray object
+### has a single leaf (i.e. if the tree is linear), then seed() returns it.
+### Otherwise, it raises an error.
 setGeneric("seed", function(x) standardGeneric("seed"))
 
 setMethod("seed", "DelayedOp",
@@ -331,9 +353,9 @@ setMethod("seed", "DelayedOp",
     }
 )
 
-### If 'x' is a DelayedArray object and the tree of DelayedOp objects stored
-### in 'x@seed' is linear, then the seed() setter must replace the "leaf seed".
-### Raise an error if the tree in 'x' is not linear.
+### If the tree of DelayedOp objects contained in the DelayedArray object
+### has a single leaf (i.e. if the tree is linear), then the seed() setter
+### replaces it. Otherwise, it raises an error.
 setGeneric("seed<-", signature="x",
     function(x, ..., value) standardGeneric("seed<-")
 )
