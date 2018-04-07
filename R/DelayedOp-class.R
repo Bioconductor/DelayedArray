@@ -392,6 +392,9 @@ setClass("DelayedUnaryIsoOp",
     if (S4Vectors:::anyMissingOrOutside(non_na_Lalong, 1L, length(seed_dim)))
         stop(wmsg("all non-NA values in 'Lalong' and 'Ralong' must ",
                   "be >= 1 and <= 'length(dim(seed))'"))
+    if (any(Lalong != 1L, na.rm=TRUE))
+        stop(wmsg("arguments in 'Largs' and 'Rargs' can only go along ",
+                  "first dimension at the moment"))
     ok <- elementNROWS(Largs[non_na_idx]) == seed_dim[non_na_Lalong]
     if (!all(ok))
         stop(wmsg("some arguments in 'Largs' and/or 'Rargs' are not ",
