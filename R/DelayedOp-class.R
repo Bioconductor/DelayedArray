@@ -502,7 +502,7 @@ new_DelayedUnaryIsoOp <- function(seed=new("array"),
 
 ### S3/S4 combo for summary.DelayedUnaryIsoOp
 
-.DelayedUnaryIsoOp_summary <- function(object) "Unary op"
+.DelayedUnaryIsoOp_summary <- function(object) "Unary iso op"
 
 summary.DelayedUnaryIsoOp <-
     function(object, ...) .DelayedUnaryIsoOp_summary(object, ...)
@@ -511,24 +511,27 @@ setMethod("summary", "DelayedUnaryIsoOp", summary.DelayedUnaryIsoOp)
 
 ### Seed contract.
 
+subset_args <- function(args, along, index)
+{
+    subset_arg <- function(arg, MARGIN) {
+        if (is.na(MARGIN))
+            return(arg)
+        i <- index[[MARGIN]]
+        if (is.null(i))
+            return(arg)
+        extractROWS(arg, i)
+    }
+    mapply(subset_arg, args, along, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+}
+
 setMethod("extract_array", "DelayedUnaryIsoOp",
     function(x, index)
     {
         a <- extract_array(x@seed, index)
 
         ## Subset the left and right arguments that go along a dimension.
-        subset_arg <- function(arg, along) {
-            if (is.na(along))
-                return(arg)
-            i <- index[[along]]
-            if (is.null(i))
-                return(arg)
-            extractROWS(arg, i)
-        }
-        Largs <- mapply(subset_arg, x@Largs, x@Lalong,
-                        SIMPLIFY=FALSE, USE.NAMES=FALSE)
-        Rargs <- mapply(subset_arg, x@Rargs, x@Ralong,
-                        SIMPLIFY=FALSE, USE.NAMES=FALSE)
+        Largs <- subset_args(x@Largs, x@Lalong, index)
+        Rargs <- subset_args(x@Rargs, x@Ralong, index)
 
         ans <- do.call(x@OP, c(Largs, list(a), Rargs))
 
@@ -718,7 +721,7 @@ new_DelayedNaryIsoOp <- function(seed=new("array"), ...,
 
 ### S3/S4 combo for summary.DelayedNaryIsoOp
 
-.DelayedNaryIsoOp_summary <- function(object) "N-ary op"
+.DelayedNaryIsoOp_summary <- function(object) "N-ary iso op"
 
 summary.DelayedNaryIsoOp <-
     function(object, ...) .DelayedNaryIsoOp_summary(object, ...)
