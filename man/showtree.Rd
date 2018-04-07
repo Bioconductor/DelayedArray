@@ -2,7 +2,6 @@
 
 % showtree()
 \alias{showtree}
-\alias{showtree,ANY-method}
 \alias{show,DelayedOp-method}
 
 % simplify()

@@ -10,10 +10,6 @@
 ### A much more condensed version of str().
 ###
 
-setGeneric("showtree", signature="x",
-    function(x, show.node.dim=TRUE) standardGeneric("showtree")
-)
-
 ### Avoid use of non-ASCII characters in R source code. There must be a much
 ### better way to do this.
 .VBAR  <- rawToChar(as.raw(c(0xe2, 0x94, 0x82)))
@@ -23,7 +19,7 @@ setGeneric("showtree", signature="x",
 
 ### 'last.child' can be NA, TRUE, or FALSE. NA means 'x' is the root of the
 ### tree.
-.show_tree <- function(x, indent="", last.child=NA, show.node.dim=TRUE)
+.rec_showtree <- function(x, indent="", last.child=NA, show.node.dim=TRUE)
 {
     stopifnot(isSingleString(indent))
     stopifnot(is.logical(last.child), length(last.child) == 1L)
@@ -61,28 +57,26 @@ setGeneric("showtree", signature="x",
         indent <- paste0(indent, if (last.child) " " else .VBAR, "  ")
     }
     if (is(x, "DelayedUnaryOp")) {
-        .show_tree(x@seed, indent, last.child=TRUE,
-                   show.node.dim=show.node.dim)
+        .rec_showtree(x@seed, indent, last.child=TRUE,
+                      show.node.dim=show.node.dim)
     } else {
         if (is(x, "DelayedNaryOp"))
             x <- x@seeds
         nseed <- length(x)
         for (i in seq_len(nseed))
-            .show_tree(x[[i]], indent, last.child=(i==nseed),
-                       show.node.dim=show.node.dim)
+            .rec_showtree(x[[i]], indent, last.child=(i==nseed),
+                          show.node.dim=show.node.dim)
     }
 }
 
-setMethod("showtree", "ANY",
-    function(x, show.node.dim=TRUE)
-    {
-        if (!isTRUEorFALSE(show.node.dim))
-            stop("'show.node.dim' must be TRUE or FALSE")
-        .show_tree(x, show.node.dim=show.node.dim)
-    }
-)
+showtree <- function(x, show.node.dim=TRUE)
+{
+    if (!isTRUEorFALSE(show.node.dim))
+        stop("'show.node.dim' must be TRUE or FALSE")
+    .rec_showtree(x, show.node.dim=show.node.dim)
+}
 
-setMethod("show", "DelayedOp", function(object) .show_tree(object))
+setMethod("show", "DelayedOp", function(object) .rec_showtree(object))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

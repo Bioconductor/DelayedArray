@@ -186,6 +186,9 @@ export(
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
 
+    ## showtree.R:
+    showtree,
+
     ## realize.R:
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
 
@@ -213,7 +216,7 @@ export(
     extract_array, type, chunkdim,
 
     ## showtree.R:
-    showtree, simplify,
+    simplify,
 
     ## DelayedArray-class.R:
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
@@ -234,7 +237,7 @@ exportMethods(
     arbind, acbind,
     refdim, isLinear,
     extract_array, type, chunkdim,
-    showtree, simplify,
+    simplify,
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
     chunk_dim, write_block_to_sink, close,
     realize,
