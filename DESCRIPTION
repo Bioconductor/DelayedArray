@@ -27,7 +27,7 @@ Collate: utils.R
 	extract_array.R
 	show-utils.R
 	DelayedOp-class.R
-	simplify.R
+	showtree.R
 	DelayedArray-class.R
 	realize.R
 	block_processing.R

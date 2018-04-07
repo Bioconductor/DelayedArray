@@ -212,7 +212,7 @@ export(
     ## extract_array.R:
     extract_array, type, chunkdim,
 
-    ## simplify.R:
+    ## showtree.R:
     showtree, simplify,
 
     ## DelayedArray-class.R:

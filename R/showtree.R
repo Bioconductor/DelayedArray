@@ -1,5 +1,5 @@
 ### =========================================================================
-### Simplify a tree of delayed operations
+### Visualize and simplify a tree of delayed operations
 ### -------------------------------------------------------------------------
 ###
 
@@ -148,6 +148,14 @@ setMethod("simplify", "DelayedAperm",
             if (isNoOp(x1))
                 return(x1@seed)
             return(x1)
+        }
+        if (is(x1, "DelayedUnaryIsoOp") &&
+            all(is.na(x1@Lalong)) && all(is.na(x1@Ralong))) {
+                ## SWAP
+                x@seed <- x1@seed
+                x <- simplify(x)
+                x1@seed <- x
+                return(x1)
         }
         if (is(x1, "DelayedDimnames")) {
             ## SWAP

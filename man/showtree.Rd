@@ -1,4 +1,4 @@
-\name{simplify}
+\name{showtree}
 
 % showtree()
 \alias{showtree}
@@ -13,7 +13,7 @@
 \alias{simplify,DelayedDimnames-method}
 \alias{simplify,DelayedArray-method}
 
-\title{Simplify a tree of delayed operations}
+\title{Visualize and simplify a tree of delayed operations}
 
 \description{
   \code{showtree} can be used to visualize the tree of delayed operations
