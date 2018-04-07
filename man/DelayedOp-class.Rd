@@ -22,11 +22,6 @@
 \alias{DelayedNaryOp-class}
 \alias{DelayedNaryOp}
 
-% showtree()
-\alias{showtree}
-\alias{showtree,ANY-method}
-\alias{show,DelayedOp-method}
-
 % DelayedSubset objects
 \alias{summary.DelayedSubset}
 \alias{summary,DelayedSubset-method}
@@ -81,23 +76,8 @@
   DelayedOp objects are used inside \link{DelayedArray} objects and are not
   intended to be manipulated directly by the end user.
 
-  \code{showtree} can be used to visualize the tree of delayed operations
-  in a \link{DelayedArray} object.
-}
-
-\usage{
-showtree(x, show.node.dim=TRUE)
-}
-
-\arguments{
-  \item{x}{
-    Typically a \link{DelayedArray} object. Can also be a DelayedOp object
-    or a list where each element is a \link{DelayedArray} or DelayedOp object.
-  }
-  \item{show.node.dim}{
-    \code{TRUE} or \code{FALSE}. If \code{TRUE} (the default), the nodes
-    dimensions and data type is displayed.
-  }
+  \code{\link{showtree}} and \code{\link{simplify}} can be used to visualize
+  and simplify this tree.
 }
 
 \details{
@@ -128,29 +108,11 @@ showtree(x, show.node.dim=TRUE)
   \itemize{
     \item \link{DelayedArray} objects.
 
+    \item \code{\link{showtree}} to visualize (and simplify) the tree of
+          delayed operations in a \link{DelayedArray} object.
+
     \item \code{\link{extract_array}}.
   }
 }
 
-\examples{
-m1 <- matrix(runif(150), nrow=15, ncol=10)
-X <- DelayedArray(m1)
-showtree(X)
-
-dimnames(X) <- list(letters[1:15], LETTERS[1:10])
-showtree(X)
-
-m2 <- matrix(1:20, nrow=10)
-Y <- cbind(t(X[ , 10:1]), DelayedArray(m2), X[6:15, "A", drop=FALSE])
-showtree(Y)
-showtree(Y, show.node.dim=FALSE)
-
-Z <- t(Y[10:1, ])[1:15, ] + 0.4 * X
-showtree(Z)
-
-Z@seed@seeds
-Z@seed@seeds[[2]]@seed            # reaching to X
-Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
-}
-
-\keyword{internal}
+\keyword{methods}

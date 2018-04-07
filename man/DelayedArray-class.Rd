@@ -13,7 +13,7 @@
 
 \alias{DelayedArray}
 \alias{DelayedArray,ANY-method}
-\alias{DelayedArray,DelayedUnaryOp-method}
+\alias{DelayedArray,DelayedArray-method}
 
 \alias{updateObject,DelayedArray-method}
 

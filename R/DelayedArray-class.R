@@ -6,8 +6,6 @@
 ### The "root" node of the tree of DelayedOp objects. Represents a no-op.
 setClass("DelayedArray", contains="DelayedUnaryOp")
 
-setMethod("isNoOp", "DelayedArray", function(x) TRUE)
-
 ### Extending DataTable gives us a few things for free (head(), tail(),
 ### etc...). Note that even though DelayedMatrix already extends Array (via
 ### DelayedArray, DelayedUnaryOp, and DelayedOp) we need to make DelayedMatrix
@@ -96,17 +94,24 @@ new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
 
 setGeneric("DelayedArray", function(seed) standardGeneric("DelayedArray"))
 
-setMethod("DelayedArray", "ANY", function(seed) new_DelayedArray(seed))
-
-setMethod("DelayedArray", "DelayedUnaryOp",
+setMethod("DelayedArray", "ANY",
     function(seed)
     {
-        if (isNoOp(seed)) {
-            seed <- seed@seed
-            return(callGeneric())
-        }
-        callNextMethod()
+        if (getOption("DelayedArray.simplify", default=TRUE))
+            seed <- simplify(seed)
+        new_DelayedArray(seed)
     }
+)
+
+setMethod("DelayedArray", "DelayedArray", function(seed) seed)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### simplify()
+###
+
+setMethod("simplify", "DelayedArray",
+    function(x) DelayedArray(simplify(x@seed))
 )
 
 
@@ -249,31 +254,35 @@ setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 
 stash_DelayedSubset <- function(x, Nindex)
 {
-    DelayedArray(new_DelayedSubset(x@seed, Nindex))
+    op <- new_DelayedSubset(x@seed, Nindex)
+    DelayedArray(op)
 }
 
 stash_DelayedAperm <- function(x, perm)
 {
-    DelayedArray(new_DelayedAperm(x@seed, perm))
+    op <- new_DelayedAperm(x@seed, perm)
+    DelayedArray(op)
 }
 
 stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
                                        Lalong=NA, Ralong=NA)
 {
-    DelayedArray(new_DelayedUnaryIsoOp(x@seed,
-                                       OP=OP, Largs=Largs, Rargs=Rargs,
-                                       Lalong=Lalong, Ralong=Ralong))
+    op <- new_DelayedUnaryIsoOp(x@seed, OP=OP, Largs=Largs, Rargs=Rargs,
+                                        Lalong=Lalong, Ralong=Ralong)
+    DelayedArray(op)
 }
 
 stash_DelayedDimnames <- function(x, dimnames)
 {
-    DelayedArray(new_DelayedDimnames(x@seed, dimnames))
+    op <- new_DelayedDimnames(x@seed, dimnames)
+    DelayedArray(op)
 }
 
 stash_DelayedAbind <- function(..., along)
 {
     seeds <- lapply(unname(list(...)), slot, "seed")
-    DelayedArray(new_DelayedAbind(seeds, along))
+    op <- new_DelayedAbind(seeds, along)
+    DelayedArray(op)
 }
 
 
