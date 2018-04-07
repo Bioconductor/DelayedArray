@@ -293,21 +293,28 @@ setMethod("dimnames", "DelayedSubset",
     function(x) subset_dimnames(dimnames(x@seed), x@index)
 )
 
+subset_index <- function(index1, index2)
+{
+    stopifnot(is.list(index1))
+    ndim <- length(index1)
+    stopifnot(is.list(index2), length(index2) == ndim)
+    ## Would mapply() be faster here?
+    lapply(seq_len(ndim),
+           function(along) {
+               i1 <- index1[[along]]
+               i2 <- index2[[along]]
+               if (is.null(i2))
+                   return(i1)
+               if (is.null(i1))
+                   return(i2)
+               i1[i2]
+           })
+}
+
 .extract_array_from_DelayedSubset <- function(x, index)
 {
-    seed_dim <- dim(x@seed)
-    stopifnot(is.list(index), length(index) == length(seed_dim))
-    index2 <- lapply(seq_along(x@index),
-                     function(along) {
-                         i1 <- x@index[[along]]
-                         i2 <- index[[along]]
-                         if (is.null(i2))
-                             return(i1)
-                         if (is.null(i1))
-                             return(i2)
-                         i1[i2]
-                     })
-    extract_array(x@seed, index2)
+    index3 <- subset_index(x@index, index)
+    extract_array(x@seed, index3)
 }
 
 setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
