@@ -141,15 +141,20 @@ setMethod("simplify", "DelayedAperm",
             x1@perm <- x1@perm[x@perm]
             if (isNoOp(x1))
                 return(x1@seed)
-            return(x1)
+            return(simplify(x1))
         }
-        if (is(x1, "DelayedUnaryIsoOp") &&
-            all(is.na(x1@Lalong)) && all(is.na(x1@Ralong))) {
+        if (is(x1, "DelayedUnaryIsoOp")) {
+            set_Lalong_to_NA <- !(x1@Lalong %in% x@perm)
+            set_Ralong_to_NA <- !(x1@Ralong %in% x@perm)
+            if (all(set_Lalong_to_NA) && all(set_Ralong_to_NA)) {
                 ## SWAP
+                x1@Lalong[set_Lalong_to_NA] <- NA_integer_
+                x1@Ralong[set_Lalong_to_NA] <- NA_integer_
                 x@seed <- x1@seed
                 x <- simplify(x)
                 x1@seed <- x
                 return(x1)
+            }
         }
         if (is(x1, "DelayedDimnames")) {
             ## SWAP
