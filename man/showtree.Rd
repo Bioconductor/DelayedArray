@@ -6,6 +6,7 @@
 
 % simplify()
 \alias{simplify}
+\alias{simplify,ANY-method}
 \alias{simplify,DelayedSubset-method}
 \alias{simplify,DelayedAperm-method}
 \alias{simplify,DelayedUnaryIsoOp-method}

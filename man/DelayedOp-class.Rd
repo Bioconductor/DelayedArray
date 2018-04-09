@@ -25,6 +25,10 @@
 \alias{DelayedNaryOp}
 
 % DelayedSubset objects
+\alias{class:DelayedSubset}
+\alias{DelayedSubset-class}
+\alias{DelayedSubset}
+
 \alias{isNoOp,DelayedSubset-method}
 \alias{summary.DelayedSubset}
 \alias{summary,DelayedSubset-method}
@@ -33,6 +37,10 @@
 \alias{extract_array,DelayedSubset-method}
 
 % DelayedAperm objects
+\alias{class:DelayedAperm}
+\alias{DelayedAperm-class}
+\alias{DelayedAperm}
+
 \alias{isNoOp,DelayedAperm-method}
 \alias{summary.DelayedAperm}
 \alias{summary,DelayedAperm-method}
@@ -41,11 +49,19 @@
 \alias{extract_array,DelayedAperm-method}
 
 % DelayedUnaryIsoOp objects
+\alias{class:DelayedUnaryIsoOp}
+\alias{DelayedUnaryIsoOp-class}
+\alias{DelayedUnaryIsoOp}
+
 \alias{summary.DelayedUnaryIsoOp}
 \alias{summary,DelayedUnaryIsoOp-method}
 \alias{extract_array,DelayedUnaryIsoOp-method}
 
 % DelayedDimnames objects
+\alias{class:DelayedDimnames}
+\alias{DelayedDimnames-class}
+\alias{DelayedDimnames}
+
 \alias{isNoOp,DelayedDimnames-method}
 \alias{summary.DelayedDimnames}
 \alias{summary,DelayedDimnames-method}
