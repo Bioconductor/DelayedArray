@@ -35,7 +35,7 @@
 
 \usage{
 showtree(x, show.node.dim=TRUE)
-simplify(x)
+simplify(x, incremental=FALSE)
 summarizeMappingToSeed(x, as.DelayedOp=FALSE)
 }
 
@@ -50,6 +50,9 @@ summarizeMappingToSeed(x, as.DelayedOp=FALSE)
   \item{show.node.dim}{
     \code{TRUE} or \code{FALSE}. If \code{TRUE} (the default), the nodes
     dimensions and data type are displayed.
+  }
+  \item{incremental}{
+    For internal use.
   }
   \item{as.DelayedOp}{
     \code{FALSE} by default. If \code{TRUE}, \code{summarizeMappingToSeed}
@@ -107,10 +110,9 @@ summarizeMappingToSeed(x, as.DelayedOp=FALSE)
 m1 <- matrix(runif(150), nrow=15, ncol=10)
 M1 <- DelayedArray(m1)
 
-## By default, simplify() is automatically called internally on the tree
-## of delayed operations carried by a DelayedArray object each time a
-## delayed operation gets added to it. This can be disabled via a global
-## option:
+## By default, the tree of delayed operations carried by a DelayedArray
+## object gets simplified each time a delayed operation is added to it.
+## This can be disabled via a global option:
 options(DelayedArray.simplify=FALSE)
 M2 <- log(t(M1[5:1, c(TRUE, FALSE)] + 10))[-1, ]
 showtree(M2)
@@ -145,8 +147,6 @@ Z@seed@seeds
 Z@seed@seeds[[2]]@seed            # reaching to M1
 Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
 
-options(DelayedArray.simplify=TRUE)
-
 ## ---------------------------------------------------------------------
 ## summarizeMappingToSeed()
 ## ---------------------------------------------------------------------
@@ -163,6 +163,8 @@ DelayedArray(op)  # same as A from a [, drop(), and aperm() point of
                   # view but the individual array elements are now reset
                   # to their original values i.e. to their values in the
                   # seed
+
+options(DelayedArray.simplify=TRUE)
 }
 
 \keyword{methods}

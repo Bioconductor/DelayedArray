@@ -98,7 +98,7 @@ setMethod("DelayedArray", "ANY",
     function(seed)
     {
         if (getOption("DelayedArray.simplify", default=TRUE))
-            seed <- simplify(seed)
+            seed <- simplify(seed, incremental=TRUE)
         new_DelayedArray(seed)
     }
 )
@@ -234,7 +234,8 @@ setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 ###
 
 setMethod("simplify", "DelayedArray",
-    function(x) DelayedArray(simplify(x@seed))
+    function(x, incremental=FALSE)
+        DelayedArray(simplify(x@seed, incremental=incremental))
 )
 
 

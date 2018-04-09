@@ -83,13 +83,30 @@ setMethod("show", "DelayedOp", function(object) .rec_showtree(object))
 ### simplify()
 ###
 
-setGeneric("simplify", function(x) standardGeneric("simplify"))
+.normarg_incremental <- function(incremental)
+{
+    if (!isTRUEorFALSE(incremental))
+        stop("'incremental' must be TRUE or FALSE")
+    incremental
+}
 
-setMethod("simplify", "ANY", identity)
+setGeneric("simplify", signature="x",
+    function(x, incremental=FALSE) standardGeneric("simplify")
+)
+
+setMethod("simplify", "ANY",
+    function(x, incremental=FALSE)
+    {
+        .normarg_incremental(incremental)
+        x
+    }
+)
 
 setMethod("simplify", "DelayedSubset",
-    function(x)
+    function(x, incremental=FALSE)
     {
+        if (!.normarg_incremental(incremental))
+            x@seed <- simplify(x@seed)
         x1 <- x@seed
         if (isNoOp(x))
             return(x1)
@@ -103,7 +120,7 @@ setMethod("simplify", "DelayedSubset",
             ## SWAP
             x2 <- new_DelayedSubset(x1@seed)
             x2@index[x1@perm] <- x@index
-            x1@seed <- simplify(x2)
+            x1@seed <- simplify(x2, incremental=TRUE)
             return(x1)
         }
         if (is(x1, "DelayedUnaryIsoOp")) {
@@ -111,7 +128,7 @@ setMethod("simplify", "DelayedSubset",
             Largs <- subset_args(x1@Largs, x1@Lalong, x@index)
             Rargs <- subset_args(x1@Rargs, x1@Ralong, x@index)
             x@seed <- x1@seed
-            x <- simplify(x)
+            x <- simplify(x, incremental=TRUE)
             x1 <- BiocGenerics:::replaceSlots(x1, seed=x,
                                                   Largs=Largs,
                                                   Rargs=Rargs)
@@ -121,7 +138,7 @@ setMethod("simplify", "DelayedSubset",
             ## SWAP
             x_dimnames <- dimnames(x)
             x@seed <- x1@seed
-            x <- simplify(x)
+            x <- simplify(x, incremental=TRUE)
             x1 <- new_DelayedDimnames(x, x_dimnames)
             return(x1)
         }
@@ -130,8 +147,10 @@ setMethod("simplify", "DelayedSubset",
 )
 
 setMethod("simplify", "DelayedAperm",
-    function(x)
+    function(x, incremental=FALSE)
     {
+        if (!.normarg_incremental(incremental))
+            x@seed <- simplify(x@seed)
         x1 <- x@seed
         if (isNoOp(x))
             return(x1)
@@ -140,7 +159,7 @@ setMethod("simplify", "DelayedAperm",
             x1@perm <- x1@perm[x@perm]
             if (isNoOp(x1))
                 return(x1@seed)
-            return(simplify(x1))
+            return(simplify(x1, incremental=TRUE))
         }
         if (is(x1, "DelayedUnaryIsoOp")) {
             set_Lalong_to_NA <- !(x1@Lalong %in% x@perm)
@@ -150,7 +169,7 @@ setMethod("simplify", "DelayedAperm",
                 x1@Lalong[set_Lalong_to_NA] <- NA_integer_
                 x1@Ralong[set_Ralong_to_NA] <- NA_integer_
                 x@seed <- x1@seed
-                x <- simplify(x)
+                x <- simplify(x, incremental=TRUE)
                 x1@seed <- x
                 return(x1)
             }
@@ -159,7 +178,7 @@ setMethod("simplify", "DelayedAperm",
             ## SWAP
             x_dimnames <- dimnames(x)
             x@seed <- x1@seed
-            x <- simplify(x)
+            x <- simplify(x, incremental=TRUE)
             x1 <- new_DelayedDimnames(x, x_dimnames)
             return(x1)
         }
@@ -168,8 +187,10 @@ setMethod("simplify", "DelayedAperm",
 )
 
 setMethod("simplify", "DelayedUnaryIsoOp",
-    function(x)
+    function(x, incremental=FALSE)
     {
+        if (!.normarg_incremental(incremental))
+            x@seed <- simplify(x@seed)
         x1 <- x@seed
         if (is(x1, "DelayedDimnames")) {
             ## SWAP
@@ -182,8 +203,10 @@ setMethod("simplify", "DelayedUnaryIsoOp",
 )
 
 setMethod("simplify", "DelayedDimnames",
-    function(x)
+    function(x, incremental=FALSE)
     {
+        if (!.normarg_incremental(incremental))
+            x@seed <- simplify(x@seed)
         x1 <- x@seed
         if (isNoOp(x))
             return(x1)
