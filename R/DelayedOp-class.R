@@ -243,7 +243,7 @@ subset_index <- function(x, index)
 
 .extract_array_from_DelayedSubset <- function(x, index)
 {
-    index2 <- subset_index(x@index, index)
+    index2 <- subset_index(x, index)
     extract_array(x@seed, index2)
 }
 
