@@ -111,10 +111,11 @@ setMethod("simplify", "DelayedSubset",
         if (isNoOp(x))
             return(x1)
         if (is(x1, "DelayedSubset")) {
-            ## SQUASH
-            index <- subset_index(x1, x@index)
-            x <- new2("DelayedSubset", seed=x1@seed, index=index)
-            return(x)
+            ## SQUASH + REMOVE IF NO-OP
+            x1@index <- subset_index(x1, x@index)
+            if (isNoOp(x1))
+                return(x1@seed)
+            return(x1)
         }
         if (is(x1, "DelayedAperm")) {
             ## SWAP
