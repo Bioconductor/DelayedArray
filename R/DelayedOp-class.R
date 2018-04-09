@@ -136,6 +136,29 @@ setClass("DelayedSubset",
 
 setValidity2("DelayedSubset", .validate_DelayedSubset)
 
+subset_DelayedSubset <- function(x, index)
+{
+    stopifnot(is(x, "DelayedSubset"))
+    x_ndim <- length(x@index)
+    stopifnot(is.list(index), length(index) == x_ndim)
+    seed_dim <- dim(x@seed)
+    ## Would mapply() be faster here?
+    x@index <- lapply(seq_len(x_ndim),
+        function(along) {
+            i0 <- x@index[[along]]
+            i <- index[[along]]
+            if (is.null(i))
+                return(i0)
+            if (is.null(i0))
+                return(i)
+            ans <- i0[i]
+            if (is_sequence(ans, seed_dim[[along]]))
+                return(NULL)
+            ans
+        })
+    x
+}
+
 normalizeSingleBracketSubscript2 <- function(i, x_len, x_names=NULL)
 {
     ## We support subsetting by an array-like subscript but only if the
@@ -185,9 +208,8 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
                                 return(NULL)
                             d <- seed_dim[[along]]
                             i <- normalizeSingleBracketSubscript2(subscript,
-                                                d,
-                                                seed_dimnames[[along]])
-                            if (length(i) == d && identical(i, seq_len(d)))
+                                                d, seed_dimnames[[along]])
+                            if (is_sequence(i, d))
                                 return(NULL)
                             i
                         })
@@ -218,33 +240,10 @@ setMethod("dimnames", "DelayedSubset",
     function(x) subset_dimnames(dimnames(x@seed), x@index)
 )
 
-subset_index <- function(x, index)
-{
-    stopifnot(is(x, "DelayedSubset"))
-    x_ndim <- length(x@index)
-    stopifnot(is.list(index), length(index) == x_ndim)
-    seed_dim <- dim(x@seed)
-    ## Would mapply() be faster here?
-    lapply(seq_len(x_ndim),
-           function(along) {
-               i0 <- x@index[[along]]
-               i <- index[[along]]
-               if (is.null(i))
-                   return(i0)
-               if (is.null(i0))
-                   return(i)
-               ans <- i0[i]
-               d <- seed_dim[[along]]
-               if (length(ans) == d && identical(ans, seq_len(d)))
-                   return(NULL)
-               ans
-           })
-}
-
 .extract_array_from_DelayedSubset <- function(x, index)
 {
-    index2 <- subset_index(x, index)
-    extract_array(x@seed, index2)
+    x <- subset_DelayedSubset(x, index)
+    extract_array(x@seed, x@index)
 }
 
 setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)

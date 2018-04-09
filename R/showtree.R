@@ -112,7 +112,7 @@ setMethod("simplify", "DelayedSubset",
             return(x1)
         if (is(x1, "DelayedSubset")) {
             ## SQUASH + REMOVE IF NO-OP
-            x1@index <- subset_index(x1, x@index)
+            x1 <- subset_DelayedSubset(x1, x@index)
             if (isNoOp(x1))
                 return(x1@seed)
             return(x1)
