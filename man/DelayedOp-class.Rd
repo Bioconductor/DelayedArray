@@ -5,6 +5,8 @@
 \alias{DelayedOp-class}
 \alias{DelayedOp}
 
+\alias{isNoOp}
+
 \alias{summary.DelayedOp}
 \alias{summary,DelayedOp-method}
 
@@ -23,6 +25,7 @@
 \alias{DelayedNaryOp}
 
 % DelayedSubset objects
+\alias{isNoOp,DelayedSubset-method}
 \alias{summary.DelayedSubset}
 \alias{summary,DelayedSubset-method}
 \alias{dim,DelayedSubset-method}
@@ -30,6 +33,7 @@
 \alias{extract_array,DelayedSubset-method}
 
 % DelayedAperm objects
+\alias{isNoOp,DelayedAperm-method}
 \alias{summary.DelayedAperm}
 \alias{summary,DelayedAperm-method}
 \alias{dim,DelayedAperm-method}
@@ -42,6 +46,7 @@
 \alias{extract_array,DelayedUnaryIsoOp-method}
 
 % DelayedDimnames objects
+\alias{isNoOp,DelayedDimnames-method}
 \alias{summary.DelayedDimnames}
 \alias{summary,DelayedDimnames-method}
 \alias{dimnames,DelayedDimnames-method}
@@ -80,6 +85,16 @@
   and simplify this tree.
 }
 
+\usage{
+isNoOp(x)
+}
+
+\arguments{
+  \item{x}{
+    A DelayedSubset, DelayedAperm, or DelayedDimnames object.
+  }
+}
+
 \details{
   6 types of nodes are currently supported. Each type is a DelayedOp subclass:
 
@@ -97,6 +112,10 @@
   contract} i.e. they must support \code{dim()}, \code{dimnames()}, and
   \code{extract_array()}. See \code{?\link{extract_array}} for more
   information about the \emph{seed contract}.
+
+  \code{isNoOp()} can be called on a DelayedSubset, DelayedAperm, or
+  DelayedDimnames object and will return \code{TRUE} if the object
+  represents a no-op.
 }
 
 \note{

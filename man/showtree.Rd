@@ -69,30 +69,32 @@ summarizeMappingToSeed(x, as.DelayedOp=FALSE)
   is affected by the following delayed operations carried by \code{x}:
   \code{[}, \code{drop()}, and \code{aperm()}.
   \code{x} can carry any number of each of these operations in any order but
-  their net result can be described by a \emph{reduced sequence} made of at
-  most 3 operations: a single \code{[}, followed by a single \code{drop()},
-  followed by a single \code{aperm()}. Any or all of these operations can be
-  missing in the \emph{reduced sequence}.
+  their net result can be described by a \emph{net subsetting} followed by
+  a \emph{net dimension rearrangement}.
 
   \code{summarizeMappingToSeed(x)} returns an object that represents the
-  \emph{reduced sequence}. This object can be used to map the elements of
-  \code{x} to their corresponding element in \code{seed(x)}.
+  \emph{net subsetting} and \emph{net dimension rearrangement}. This object
+  can be used to map the elements of \code{x} to their corresponding element
+  in \code{seed(x)}.
 
   By default (i.e. if \code{as.DelayedOp} is \code{FALSE}), this object is
-  a list of subscripts, one per dimension in the seed. Each subscript can
+  a list of subscripts that describes the \emph{net subsetting}. The list
+  contains one subscript per dimension in the seed. Each subscript can
   be either a vector of positive integers or a \code{NULL}. A \code{NULL}
-  indicates a missing subscript. This list describes the \code{[} operation
-  in the \emph{reduced sequence}. If the \emph{reduced sequence} also contains
-  a \code{drop()} or/and \code{aperm()} operation, the combination of the 2
-  operations is described in a \code{dimmap} attribute added to the list.
-  This attribute is an integer vector parallel to \code{dim(x)} and reporting
-  how the dimensions of \code{x} are mapped to the dimensions of its seed.
+  indicates a missing subscript.
+  The \emph{net dimension rearrangement} is described in a \code{dimmap}
+  attribute added to the list. This attribute is an integer vector parallel
+  to \code{dim(x)} that reports how the dimensions of \code{x} are mapped
+  to the dimensions of its seed. If there is no \emph{net dimension
+  rearrangement}, that is, if \code{dim(x)} is parallel to
+  \code{dim(seed(x))}, the list has no \code{dimmap} attribute.
 
   If \code{as.DelayedOp} is \code{TRUE}, \code{summarizeMappingToSeed(x)}
   returns a linear tree with 2 \link{DelayedOp} nodes and a leaf node. The
   leaf node is the seed. Walking the tree from the seed, the 2 \link{DelayedOp}
   nodes are a \link{DelayedSubset} node followed by a \link{DelayedAperm}
-  node.
+  node. The former represents the \emph{net subsetting} and the latter the
+  \emph{net dimension rearrangement}. Each of them can be a no-op.
 }
 
 \seealso{
@@ -150,19 +152,45 @@ Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
 ## ---------------------------------------------------------------------
 ## summarizeMappingToSeed()
 ## ---------------------------------------------------------------------
-a <- array(1:24, 4:2)
-A <- t((DelayedArray(a)[ , -1, ] / 100)[ , , 2] + 99:96)[2 , , drop=FALSE]
-A
-showtree(A)
+a <- array(1:120, c(4, 5, 2))
+M <- aperm(DelayedArray(a)[ , -1, ] / 100)[ , , 3] + 99:98
+M
+showtree(M)
 
-summarizeMappingToSeed(A)
+summarizeMappingToSeed(M)  # 1st dimension was dropped, 2nd and 3rd
+                           # dimension were permuted (transposition)
 
-op <- summarizeMappingToSeed(A, as.DelayedOp=TRUE)
-op  # 2 nested delayed operations
-DelayedArray(op)  # same as A from a [, drop(), and aperm() point of
-                  # view but the individual array elements are now reset
-                  # to their original values i.e. to their values in the
-                  # seed
+op2 <- summarizeMappingToSeed(M, as.DelayedOp=TRUE)
+op2                # 2 nested delayed operations
+op1 <- op2@seed
+class(op1)         # DelayedSubset
+class(op2)         # DelayedAperm
+op1@index
+op2@perm
+
+DelayedArray(op2)  # same as M from a [, drop(), and aperm() point of
+                   # view but the individual array elements are now reset
+                   # to their original values i.e. to the values they
+                   # have in the seed
+
+## A simple function that returns TRUE if a DelayedArray object carries
+## no "net subsetting" and no "net dimension rearrangement":
+is_aligned_with_seed <- function(x)
+{
+    if (nseed(x) != 1L)
+        return(FALSE)
+    op2 <- summarizeMappingToSeed(x, as.DelayedOp=TRUE)
+    op1 <- op2@seed
+    isNoOp(op1) && isNoOp(op2)
+}
+
+M <- DelayedArray(a[ , , 1])
+is_aligned_with_seed(log(M + 11:14) > 3)            # TRUE
+is_aligned_with_seed(M[4:1, ])                      # FALSE
+is_aligned_with_seed(M[4:1, ][4:1, ])               # TRUE
+is_aligned_with_seed(t(M))                          # FALSE
+is_aligned_with_seed(t(t(M)))                       # TRUE
+is_aligned_with_seed(t(0.5 * t(M[4:1, ])[ , 4:1]))  # TRUE
 
 options(DelayedArray.simplify=TRUE)
 }
