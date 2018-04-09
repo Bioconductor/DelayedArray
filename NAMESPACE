@@ -216,7 +216,7 @@ export(
     extract_array, type, chunkdim,
 
     ## showtree.R:
-    simplify,
+    simplify, summarizeMappingToSeed,
 
     ## DelayedArray-class.R:
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
@@ -237,7 +237,7 @@ exportMethods(
     arbind, acbind,
     refdim, isLinear,
     extract_array, type, chunkdim,
-    simplify,
+    simplify, summarizeMappingToSeed,
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
     chunk_dim, write_block_to_sink, close,
     realize,

@@ -165,25 +165,29 @@ normalizeSingleBracketSubscript2 <- function(i, x_len, x_names=NULL)
     normalizeSingleBracketSubscript(i, x)
 }
 
-### 'Nindex' must be a "multidimensional subsetting Nindex" (see utils.R).
-new_DelayedSubset <- function(seed=new("array"), Nindex=list(NULL))
+### 'Nindex' must be a "multidimensional subsetting Nindex" (see utils.R)
+### or NULL.
+new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
 {
     seed_dim <- dim(seed)
     seed_ndim <- length(seed_dim)
-    stopifnot(is.list(Nindex), length(Nindex) == seed_ndim)
-
-    ## Normalize 'Nindex' i.e. check and turn its non-NULL list elements into
-    ## positive integer vectors.
-    seed_dimnames <- dimnames(seed)
-    index <- lapply(seq_len(seed_ndim),
-                    function(along) {
-                        subscript <- Nindex[[along]]
-                        if (is.null(subscript))
-                            return(NULL)
-                        normalizeSingleBracketSubscript2(subscript,
-                                                         seed_dim[[along]],
-                                                         seed_dimnames[[along]])
-                    })
+    if (is.null(Nindex)) {
+        index <- rep.int(list(NULL), seed_ndim)
+    } else {
+        stopifnot(is.list(Nindex), length(Nindex) == seed_ndim)
+        ## Normalize 'Nindex' i.e. check and turn its non-NULL list elements
+        ## into positive integer vectors.
+        seed_dimnames <- dimnames(seed)
+        index <- lapply(seq_len(seed_ndim),
+                        function(along) {
+                            subscript <- Nindex[[along]]
+                            if (is.null(subscript))
+                                return(NULL)
+                            normalizeSingleBracketSubscript2(subscript,
+                                           seed_dim[[along]],
+                                           seed_dimnames[[along]])
+                        })
+    }
     new2("DelayedSubset", seed=seed, index=index)
 }
 
@@ -248,7 +252,7 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 setClass("DelayedAperm",
     contains="DelayedUnaryOp",
     representation(
-        perm="integer"  # Index into dim(seed) specifying the *rearrangement*
+        perm="integer"  # Index into dim(seed) describing the *rearrangement*
                         # of the dimensions i.e. which dimensions of the input
                         # to keep and in which order.
     ),

@@ -101,9 +101,8 @@ setMethod("simplify", "DelayedSubset",
         }
         if (is(x1, "DelayedAperm")) {
             ## SWAP
-            index2 <- rep.int(list(NULL), length(dim(x1@seed)))
-            index2[x1@perm] <- x@index
-            x2 <- new2("DelayedSubset", seed=x1@seed, index=index2)
+            x2 <- new_DelayedSubset(x1@seed)
+            x2@index[x1@perm] <- x@index
             x1@seed <- simplify(x2)
             return(x1)
         }
@@ -196,6 +195,77 @@ setMethod("simplify", "DelayedDimnames",
             return(x)
         }
         x
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### summarizeMappingToSeed()
+###
+### Only supported if nseed() == 1
+###
+### The mapping between the elements of a DelayedArray object 'x' and the
+### elements of its seed is affected by the following delayed operations
+### carried by 'x': [, drop(), and aperm().
+### 'x' can carry any number of each of these operations in any order but
+### their net result can be described by a "reduced sequence" made of at
+### most 3 operations: a single [, followed by a single drop(), followed
+### by a single aperm(). Any or all of these operations can be missing in
+### the "reduced sequence".
+###
+### summarizeMappingToSeed() returns an object that represents the
+### "reduced sequence". This object can be used to map the elements of 'x'
+### to their corresponding element in its seed.
+###
+### The object is a list of subscripts, one per dimension in the seed. Each
+### subscript can be either a vector of positive integers or a NULL. A NULL
+### indicates a missing subscript. This list describes the [ operation in
+### the "reduced sequence". If the "reduced sequence" also contains a drop()
+### or/and aperm() operation, the combination of the 2 operations is described
+### in a "perm" attribute that is set on the list. This attribute is an
+### integer vector that describes how to map the dimensions of 'x' to the
+### dimensions of its seed.
+
+IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
+    "is not supported on a DelayedArray object with multiple seeds at the ",
+    "moment. Note that you can check the number of seeds with nseed()."
+)
+
+### Remove nodes that represent unary isomorphic ops (i.e. nodes of type
+### DelayedUnaryIsoOp and DelayedDimnames) from a linear tree. Raise an error
+### if the tree is not linear.
+.remove_iso_ops <- function(x)
+{
+    if (!is(x, "DelayedOp"))
+        return(x)
+    if (is(x, "DelayedNaryOp")) {
+        ## Tree is not linear.
+        stop(wmsg("summarizeMappingToSeed() ",
+                  IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
+    }
+    x1 <- .remove_iso_ops(x@seed)
+    if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedDimnames")) {
+        x <- x1
+    } else {
+        x@seed <- x1
+    }
+    x
+}
+
+setGeneric("summarizeMappingToSeed",
+    function(x) standardGeneric("summarizeMappingToSeed")
+)
+
+setMethod("summarizeMappingToSeed", "ANY",
+    function(x)
+    {
+        ans <- simplify(.remove_iso_ops(x))
+        if (!is(ans, "DelayedAperm"))
+            ans <- new_DelayedAperm(ans)
+        x1 <- ans@seed
+        if (!is(x1, "DelayedSubset"))
+            ans@seed <- new_DelayedSubset(x1)
+        ans
     }
 )
 

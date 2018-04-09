@@ -107,15 +107,6 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### simplify()
-###
-
-setMethod("simplify", "DelayedArray",
-    function(x) DelayedArray(simplify(x@seed))
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### updateObject()
 ###
 ### Internal representation of DelayedArray objects has changed in
@@ -239,6 +230,28 @@ setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### simplify()
+###
+
+setMethod("simplify", "DelayedArray",
+    function(x) DelayedArray(simplify(x@seed))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### summarizeMappingToSeed()
+###
+
+setMethod("summarizeMappingToSeed", "DelayedArray",
+    function(x)
+    {
+        x <- x@seed
+        callGeneric()
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Stash delayed ops in a DelayedArray object
 ###
 ### Each "stashing" utility below:
@@ -327,11 +340,6 @@ setMethod("nseed", "ANY",
 ### seed() getter/setter
 ###
 
-.IS_NOT_SUPOORTED_ETC <- c(
-    "is not supported on a DelayedArray object with ",
-    "multiple seeds at the moment"
-)
-
 ### If the tree of DelayedOp objects contained in the DelayedArray object
 ### has a single leaf (i.e. if the tree is linear), then seed() returns it.
 ### Otherwise, it raises an error.
@@ -342,14 +350,13 @@ setMethod("seed", "DelayedOp",
     {
         if (is(x, "DelayedNaryOp")) {
             ## Tree is not linear.
-            stop(wmsg("seed() ", .IS_NOT_SUPOORTED_ETC))
+            stop(wmsg("seed() ", IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
         }
-        if (is(x@seed, "DelayedOp")) {
-            x <- x@seed
-            return(callGeneric())  # recursive call
-        }
-        ## Found the leaf seed.
-        x@seed
+        x1 <- x@seed
+        if (!is(x1, "DelayedOp"))
+            return(x1)  ## found the leaf seed
+        x <- x1
+        callGeneric()  # recursive call
     }
 )
 
@@ -378,14 +385,15 @@ setReplaceMethod("seed", "DelayedOp",
     {
         if (is(x, "DelayedNaryOp")) {
             ## Tree is not linear.
-            stop(wmsg("the seed() setter ", .IS_NOT_SUPOORTED_ETC))
+            stop(wmsg("the seed() setter ", IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
         }
-        if (is(x@seed, "DelayedOp")) {
-            seed(x@seed) <- value  # recursive call
+        x1 <- x@seed
+        if (!is(x1, "DelayedOp")) {
+            ## Replace the leaf seed.
+            x@seed <- .normalize_seed_replacement_value(value, x1)
             return(x)
         }
-        ## Replace the leaf seed.
-        x@seed <- .normalize_seed_replacement_value(value, x@seed)
+        seed(x@seed) <- value  # recursive call
         x
     }
 )

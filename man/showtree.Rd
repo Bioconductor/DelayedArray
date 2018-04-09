@@ -12,6 +12,11 @@
 \alias{simplify,DelayedDimnames-method}
 \alias{simplify,DelayedArray-method}
 
+% summarizeMappingToSeed()
+\alias{summarizeMappingToSeed}
+\alias{summarizeMappingToSeed,ANY-method}
+\alias{summarizeMappingToSeed,DelayedArray-method}
+
 \title{Visualize and simplify a tree of delayed operations}
 
 \description{
