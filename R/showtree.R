@@ -148,7 +148,7 @@ setMethod("simplify", "DelayedAperm",
             if (all(set_Lalong_to_NA) && all(set_Ralong_to_NA)) {
                 ## SWAP
                 x1@Lalong[set_Lalong_to_NA] <- NA_integer_
-                x1@Ralong[set_Lalong_to_NA] <- NA_integer_
+                x1@Ralong[set_Ralong_to_NA] <- NA_integer_
                 x@seed <- x1@seed
                 x <- simplify(x)
                 x1@seed <- x
