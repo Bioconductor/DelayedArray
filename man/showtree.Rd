@@ -13,10 +13,10 @@
 \alias{simplify,DelayedDimnames-method}
 \alias{simplify,DelayedArray-method}
 
-% summarizeMappingToSeed()
-\alias{summarizeMappingToSeed}
-\alias{summarizeMappingToSeed,ANY-method}
-\alias{summarizeMappingToSeed,DelayedArray-method}
+% netSubsetAndAperm()
+\alias{netSubsetAndAperm}
+\alias{netSubsetAndAperm,ANY-method}
+\alias{netSubsetAndAperm,DelayedArray-method}
 
 \title{Visualize and simplify a tree of delayed operations}
 
@@ -30,14 +30,15 @@
 
   \code{simplify} can be used to simplify this tree.
 
-  \code{summarizeMappingToSeed} summarizes the mapping between the elements
-  of a \link{DelayedArray} object and the elements of its seed.
+  \code{netSubsetAndAperm} returns an object that represents the \emph{net
+  subsetting} and \emph{net dimension rearrangement} of all the operations
+  in this tree.
 }
 
 \usage{
 showtree(x, show.node.dim=TRUE)
 simplify(x, incremental=FALSE)
-summarizeMappingToSeed(x, as.DelayedOp=FALSE)
+netSubsetAndAperm(x, as.DelayedOp=FALSE)
 }
 
 \arguments{
@@ -56,14 +57,13 @@ summarizeMappingToSeed(x, as.DelayedOp=FALSE)
     For internal use.
   }
   \item{as.DelayedOp}{
-    \code{FALSE} by default. If \code{TRUE}, \code{summarizeMappingToSeed}
-    returns a linear tree with 2 \link{DelayedOp} nodes.
+    \code{TRUE} or \code{FALSE}. Control the form of the returned object.
     See details below.
   }
 }
 
 \details{
-  \code{summarizeMappingToSeed} is only supported on a \link{DelayedArray}
+  \code{netSubsetAndAperm} is only supported on a \link{DelayedArray}
   object \code{x} with a single seed i.e. if \code{nseed(x) == 1}.
 
   The mapping between the elements of \code{x} and the elements of its seed
@@ -73,7 +73,7 @@ summarizeMappingToSeed(x, as.DelayedOp=FALSE)
   their net result can always be described by a \emph{net subsetting}
   followed by a \emph{net dimension rearrangement}.
 
-  \code{summarizeMappingToSeed(x)} returns an object that represents the
+  \code{netSubsetAndAperm(x)} returns an object that represents the
   \emph{net subsetting} and \emph{net dimension rearrangement}.
   The \code{as.DelayedOp} argument controls in what form this object should
   be returned:
@@ -156,28 +156,28 @@ Z@seed@seeds[[2]]@seed            # reaching to M1
 Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
 
 ## ---------------------------------------------------------------------
-## summarizeMappingToSeed()
+## netSubsetAndAperm()
 ## ---------------------------------------------------------------------
 a <- array(1:120, c(4, 5, 2))
 M <- aperm(DelayedArray(a)[ , -1, ] / 100)[ , , 3] + 99:98
 M
 showtree(M)
 
-summarizeMappingToSeed(M)  # 1st dimension was dropped, 2nd and 3rd
-                           # dimension were permuted (transposition)
+netSubsetAndAperm(M)  # 1st dimension was dropped, 2nd and 3rd
+                      # dimension were permuted (transposition)
 
-op2 <- summarizeMappingToSeed(M, as.DelayedOp=TRUE)
-op2                # 2 nested delayed operations
+op2 <- netSubsetAndAperm(M, as.DelayedOp=TRUE)
+op2                   # 2 nested delayed operations
 op1 <- op2@seed
-class(op1)         # DelayedSubset
-class(op2)         # DelayedAperm
+class(op1)            # DelayedSubset
+class(op2)            # DelayedAperm
 op1@index
 op2@perm
 
-DelayedArray(op2)  # same as M from a [, drop(), and aperm() point of
-                   # view but the individual array elements are now reset
-                   # to their original values i.e. to the values they
-                   # have in the seed
+DelayedArray(op2)     # same as M from a [, drop(), and aperm() point of
+                      # view but the individual array elements are now
+                      # reset to their original values i.e. to the values
+                      # they have in the seed
 
 ## A simple function that returns TRUE if a DelayedArray object carries
 ## no "net subsetting" and no "net dimension rearrangement":
@@ -185,7 +185,7 @@ is_aligned_with_seed <- function(x)
 {
     if (nseed(x) != 1L)
         return(FALSE)
-    op2 <- summarizeMappingToSeed(x, as.DelayedOp=TRUE)
+    op2 <- netSubsetAndAperm(x, as.DelayedOp=TRUE)
     op1 <- op2@seed
     isNoOp(op1) && isNoOp(op2)
 }

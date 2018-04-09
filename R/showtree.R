@@ -224,7 +224,7 @@ setMethod("simplify", "DelayedDimnames",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### summarizeMappingToSeed()
+### netSubsetAndAperm()
 ###
 ### Only supported if nseed() == 1
 ###
@@ -243,7 +243,7 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
         return(x)
     if (is(x, "DelayedNaryOp")) {
         ## Tree is not linear.
-        stop(wmsg("summarizeMappingToSeed() ",
+        stop(wmsg("netSubsetAndAperm() ",
                   IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
     }
     x1 <- .remove_iso_ops(x@seed)
@@ -255,11 +255,11 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
     x
 }
 
-setGeneric("summarizeMappingToSeed", signature="x",
-    function(x, as.DelayedOp=FALSE) standardGeneric("summarizeMappingToSeed")
+setGeneric("netSubsetAndAperm", signature="x",
+    function(x, as.DelayedOp=FALSE) standardGeneric("netSubsetAndAperm")
 )
 
-setMethod("summarizeMappingToSeed", "ANY",
+setMethod("netSubsetAndAperm", "ANY",
     function(x, as.DelayedOp=FALSE)
     {
         if (!isTRUEorFALSE(as.DelayedOp))

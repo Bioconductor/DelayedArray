@@ -240,10 +240,10 @@ setMethod("simplify", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### summarizeMappingToSeed()
+### netSubsetAndAperm()
 ###
 
-setMethod("summarizeMappingToSeed", "DelayedArray",
+setMethod("netSubsetAndAperm", "DelayedArray",
     function(x, as.DelayedOp=FALSE)
     {
         x <- x@seed

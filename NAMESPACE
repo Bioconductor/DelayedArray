@@ -219,7 +219,7 @@ export(
     isNoOp,
 
     ## showtree.R:
-    simplify, summarizeMappingToSeed,
+    simplify, netSubsetAndAperm,
 
     ## DelayedArray-class.R:
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
@@ -241,7 +241,7 @@ exportMethods(
     refdim, isLinear,
     extract_array, type, chunkdim,
     isNoOp,
-    simplify, summarizeMappingToSeed,
+    simplify, netSubsetAndAperm,
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
     chunk_dim, write_block_to_sink, close,
     realize,
