@@ -204,27 +204,6 @@ setMethod("simplify", "DelayedDimnames",
 ###
 ### Only supported if nseed() == 1
 ###
-### The mapping between the elements of a DelayedArray object 'x' and the
-### elements of its seed is affected by the following delayed operations
-### carried by 'x': [, drop(), and aperm().
-### 'x' can carry any number of each of these operations in any order but
-### their net result can be described by a "reduced sequence" made of at
-### most 3 operations: a single [, followed by a single drop(), followed
-### by a single aperm(). Any or all of these operations can be missing in
-### the "reduced sequence".
-###
-### summarizeMappingToSeed() returns an object that represents the
-### "reduced sequence". This object can be used to map the elements of 'x'
-### to their corresponding element in its seed.
-###
-### The object is a list of subscripts, one per dimension in the seed. Each
-### subscript can be either a vector of positive integers or a NULL. A NULL
-### indicates a missing subscript. This list describes the [ operation in
-### the "reduced sequence". If the "reduced sequence" also contains a drop()
-### or/and aperm() operation, the combination of the 2 operations is described
-### in a "perm" attribute that is set on the list. This attribute is an
-### integer vector that describes how to map the dimensions of 'x' to the
-### dimensions of its seed.
 
 IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
     "is not supported on a DelayedArray object with multiple seeds at the ",
@@ -252,19 +231,26 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
     x
 }
 
-setGeneric("summarizeMappingToSeed",
-    function(x) standardGeneric("summarizeMappingToSeed")
+setGeneric("summarizeMappingToSeed", signature="x",
+    function(x, as.DelayedOp=FALSE) standardGeneric("summarizeMappingToSeed")
 )
 
 setMethod("summarizeMappingToSeed", "ANY",
-    function(x)
+    function(x, as.DelayedOp=FALSE)
     {
-        ans <- simplify(.remove_iso_ops(x))
-        if (!is(ans, "DelayedAperm"))
-            ans <- new_DelayedAperm(ans)
-        x1 <- ans@seed
+        if (!isTRUEorFALSE(as.DelayedOp))
+            stop("'as.DelayedOp' must be TRUE or FALSE")
+        reduced <- simplify(.remove_iso_ops(x))
+        if (!is(reduced, "DelayedAperm"))
+            reduced <- new_DelayedAperm(reduced)
+        x1 <- reduced@seed
         if (!is(x1, "DelayedSubset"))
-            ans@seed <- new_DelayedSubset(x1)
+            reduced@seed <- new_DelayedSubset(x1)
+        if (as.DelayedOp)
+            return(reduced)
+        ans <- reduced@seed@index
+        if (!isNoOp(reduced))
+            attr(ans, "dimmap") <- reduced@perm
         ans
     }
 )

@@ -243,7 +243,7 @@ setMethod("simplify", "DelayedArray",
 ###
 
 setMethod("summarizeMappingToSeed", "DelayedArray",
-    function(x)
+    function(x, as.DelayedOp=FALSE)
     {
         x <- x@seed
         callGeneric()
