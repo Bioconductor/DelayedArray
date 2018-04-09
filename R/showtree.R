@@ -112,7 +112,7 @@ setMethod("simplify", "DelayedSubset",
             return(x1)
         if (is(x1, "DelayedSubset")) {
             ## SQUASH
-            index <- subset_index(x1@index, x@index)
+            index <- subset_index(x1, x@index)
             x <- new2("DelayedSubset", seed=x1@seed, index=index)
             return(x)
         }
