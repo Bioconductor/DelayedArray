@@ -143,8 +143,8 @@ isNoOp(x)
   \itemize{
     \item \link{DelayedArray} objects.
 
-    \item \code{\link{showtree}} to visualize (and simplify) the tree of
-          delayed operations in a \link{DelayedArray} object.
+    \item \code{\link{showtree}} to visualize, simplify, and inspect the
+          tree of delayed operations in a \link{DelayedArray} object.
 
     \item \code{\link{extract_array}}.
   }

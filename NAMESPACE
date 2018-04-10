@@ -187,7 +187,7 @@ export(
     ArbitraryArrayGrid, RegularArrayGrid,
 
     ## showtree.R:
-    showtree,
+    showtree, contentIsPristine,
 
     ## realize.R:
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,

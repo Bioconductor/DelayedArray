@@ -13,12 +13,15 @@
 \alias{simplify,DelayedDimnames-method}
 \alias{simplify,DelayedArray-method}
 
+% contentIsPristine()
+\alias{contentIsPristine}
+
 % netSubsetAndAperm()
 \alias{netSubsetAndAperm}
 \alias{netSubsetAndAperm,ANY-method}
 \alias{netSubsetAndAperm,DelayedArray-method}
 
-\title{Visualize and simplify a tree of delayed operations}
+\title{Visualize, simplify, and inspect a tree of delayed operations}
 
 \description{
   NOTE: The tools documented in this man page are primarily intended for
@@ -30,6 +33,9 @@
 
   \code{simplify} can be used to simplify this tree.
 
+  \code{contentIsPristine} can be used to know whether the operations in
+  this tree alter the original values of the array elements.
+
   \code{netSubsetAndAperm} returns an object that represents the \emph{net
   subsetting} and \emph{net dimension rearrangement} of all the operations
   in this tree.
@@ -38,6 +44,8 @@
 \usage{
 showtree(x, show.node.dim=TRUE)
 simplify(x, incremental=FALSE)
+
+contentIsPristine(x)
 netSubsetAndAperm(x, as.DelayedOp=FALSE)
 }
 
@@ -156,6 +164,23 @@ Z@seed@seeds[[2]]@seed            # reaching to M1
 Z@seed@seeds[[1]]@seed@seed@seed  # reaching to Y
 
 ## ---------------------------------------------------------------------
+## contentIsPristine()
+## ---------------------------------------------------------------------
+a <- array(1:120, c(4, 5, 2))
+A <- DelayedArray(a)
+
+stopifnot(contentIsPristine(A))
+stopifnot(contentIsPristine(A[1, , ]))
+stopifnot(contentIsPristine(t(A[1, , ])))
+stopifnot(contentIsPristine(cbind(A[1, , ], A[2, , ])))
+dimnames(A) <- list(LETTERS[1:4], letters[1:5], NULL)
+stopifnot(contentIsPristine(A))
+
+contentIsPristine(log(A))     # FALSE
+contentIsPristine(A - 11:14)  # FALSE
+contentIsPristine(A * A)      # FALSE
+
+## ---------------------------------------------------------------------
 ## netSubsetAndAperm()
 ## ---------------------------------------------------------------------
 a <- array(1:120, c(4, 5, 2))
@@ -178,6 +203,7 @@ DelayedArray(op2)     # same as M from a [, drop(), and aperm() point of
                       # view but the individual array elements are now
                       # reset to their original values i.e. to the values
                       # they have in the seed
+stopifnot(contentIsPristine(DelayedArray(op2)))
 
 ## A simple function that returns TRUE if a DelayedArray object carries
 ## no "net subsetting" and no "net dimension rearrangement":

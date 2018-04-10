@@ -62,9 +62,9 @@
     } else {
         if (is(x, "DelayedNaryOp"))
             x <- x@seeds
-        nseed <- length(x)
-        for (i in seq_len(nseed))
-            .rec_showtree(x[[i]], indent, last.child=(i==nseed),
+        nchildren <- length(x)
+        for (i in seq_len(nchildren))
+            .rec_showtree(x[[i]], indent, last.child=(i==nchildren),
                           show.node.dim=show.node.dim)
     }
 }
@@ -221,6 +221,34 @@ setMethod("simplify", "DelayedDimnames",
         x
     }
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### contentIsPristine()
+###
+
+### Return FALSE if the tree contains any DelayedUnaryIsoOp or
+### DelayedNaryIsoOp node.
+contentIsPristine <- function(x)
+{
+    if (!is.list(x)) {
+        if (!is(x, "DelayedOp"))
+            return(TRUE)
+        if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedNaryIsoOp"))
+            return(FALSE)
+        if (is(x, "DelayedUnaryOp")) {
+            x <- list(x@seed)
+        } else {
+            x <- x@seeds
+        }
+    }
+    nchildren <- length(x)
+    for (i in seq_len(nchildren)) {
+        if (!contentIsPristine(x[[i]]))
+            return(FALSE)
+    }
+    TRUE
+}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
