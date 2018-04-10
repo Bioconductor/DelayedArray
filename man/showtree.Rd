@@ -101,14 +101,29 @@ netSubsetAndAperm(x, as.DelayedOp=FALSE)
     \item If \code{as.DelayedOp} is \code{TRUE}, the returned object is a
           linear tree with 2 \link{DelayedOp} nodes and a leaf node. The
           leaf node is the seed of \code{x}. Walking the tree from the seed,
-          the 2 \link{DelayedOp} nodes are a \link{DelayedSubset} node
-          followed by a \link{DelayedAperm} node. The former represents the
-          \emph{net subsetting} and the latter the \emph{net dimension
-          rearrangement}. Each of them can be a no-op.
+          the 2 \link{DelayedOp} nodes are of type \link{DelayedSubset} and
+          \link{DelayedAperm}, in that order (this reflects the order in
+          which the operations apply). More precisely, the returned object
+          is a \link{DelayedAperm} object with one child (the
+          \link{DelayedSubset} object), and one grandchid (the seed of
+          \code{x}).
+          The \link{DelayedSubset} and \link{DelayedAperm} nodes represent
+          the \emph{net subsetting} and \emph{net dimension rearrangement},
+          respectively. Either or both of them can be a no-op.
   }
+  Note that the returned object describes how the elements of \code{x} map
+  to their corresponding element in \code{seed(x)}.
+}
 
-  The returned object can be used to map the elements of \code{x} to their
-  corresponding element in \code{seed(x)}.
+\value{
+  The simplified object for \code{simplify}.
+
+  \code{TRUE} or \code{FALSE} for \code{contentIsPristine}.
+
+  An ordinary list (possibly with the \code{dimmap} attribute on it) for
+  \code{netSubsetAndAperm}. Unless \code{as.DelayedOp} is set to \code{TRUE},
+  in which case a \link{DelayedAperm} object is returned (see Details
+  section above for more information).
 }
 
 \seealso{
