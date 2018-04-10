@@ -34,7 +34,7 @@
   \code{simplify} can be used to simplify this tree.
 
   \code{contentIsPristine} can be used to know whether the operations in
-  this tree alter the original values of the array elements.
+  this tree leave the values of the array elements intact or not.
 
   \code{netSubsetAndAperm} returns an object that represents the \emph{net
   subsetting} and \emph{net dimension rearrangement} of all the operations
