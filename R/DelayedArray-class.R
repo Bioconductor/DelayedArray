@@ -83,7 +83,7 @@ setValidity2("DelayedMatrix", .validate_DelayedMatrix)
 ### Constructor
 ###
 
-### NOT exported but used in HDF5Array!
+### Low-level constructor. Not intended to be used directly by the end user.
 new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
 {
     seed_ndim <- length(dim(seed))

@@ -11,6 +11,7 @@
 \alias{coerce,DelayedArray,DelayedMatrix-method}
 \alias{coerce,DelayedMatrix,DelayedArray-method}
 
+\alias{new_DelayedArray}
 \alias{DelayedArray}
 \alias{DelayedArray,ANY-method}
 \alias{DelayedArray,DelayedArray-method}

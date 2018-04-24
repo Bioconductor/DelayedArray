@@ -226,12 +226,11 @@ Define a `matrixClass` method for ADSArray objects as follow:
     setMethod("matrixClass", "ADSArray", function(x) "ADSMatrix")
 
 `matrixClass` is a generic function defined in the _DelayedArray_ package.
-When passed an ADSArraySeed object, internal constructor
-`DelayedArray:::new_DelayedArray` (see below) will generally return
-an ADSArray *instance*, except when the ADSArraySeed object is
-2-dimensional, in which case it needs to return an ADSMatrix *instance*.
-It will obtain the name of the class of the object to return (`"ADSMatrix"`
-in this case) by calling `matrixClass`.
+When passed an ADSArraySeed object, low-level constructor `new_DelayedArray`
+(see below) will generally return an ADSArray *instance*, except when the
+ADSArraySeed object is 2-dimensional, in which case it needs to return an
+ADSMatrix *instance*. It will obtain the name of the class of the object to
+return (`"ADSMatrix"` in this case) by calling `matrixClass`.
 
 Also coercion from ADSArray to ADSMatrix needs to be supported with:
 
@@ -262,7 +261,7 @@ achieve this is to define the following coercion method:
 Add a `DelayedArray` method for ADSArraySeed objects that does:
 
     setMethod("DelayedArray", "ADSArraySeed",
-        function(seed) DelayedArray:::new_DelayedArray(seed, Class="ADSArray")
+        function(seed) new_DelayedArray(seed, Class="ADSArray")
     )
 
 Now you should be able to construct an ADSArray object with:

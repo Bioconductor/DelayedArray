@@ -189,6 +189,9 @@ export(
     ## showtree.R:
     showtree, contentIsPristine,
 
+    ## DelayedArray-class.R:
+    new_DelayedArray,
+
     ## realize.R:
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
 
