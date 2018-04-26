@@ -49,11 +49,65 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### What internals a DelayedArray object is using?
+###
+### Internal representation of DelayedArray objects has changed in
+### DelayedArray 0.5.11 (went from 5 slots to 3), then again in DelayedArray
+### 0.5.24 (went from 3 slots to only 1):
+###   - Internals v0: 5 slots (DelayedArray < 0.5.11)
+###   - Internals v1: 3 slots (DelayedArray >= 0.5.11 and < 0.5.24)
+###   - Internals v2: 1 slot  (DelayedArray >= 0.5.24)
+###
+### The helpers below detect the internals version used by an object. These
+### helpers are used in the validity and "show" methods for DelayedArray
+### objects.
+###
+
+.get_DelayedArray_internals_version <- function(object)
+{
+    if (.hasSlot(object, "metaindex") && .hasSlot(object, "is_transposed"))
+        return(0L)
+    if (.hasSlot(object, "index") && .hasSlot(object, "delayed_ops"))
+        return(1L)
+    return(2L)
+}
+
+.get_pkgversion_from_internals_version <- function(internals_version)
+{
+    switch(sprintf("v%d", internals_version),
+           v0="< 0.5.11",
+           v1=">= 0.5.11 and < 0.5.24",
+           v2="current", # i.e. >= 0.5.24
+           stop("invalid internals version"))
+}
+
+.get_DelayedArray_pkgversion <- function(object)
+{
+    internals_version <- .get_DelayedArray_internals_version(object)
+    .get_pkgversion_from_internals_version(internals_version)
+}
+
+.not_current_msg <- function(object, pkgversion)
+{
+    c(class(object), " object uses internal representation from ",
+      "DelayedArray\n  ", pkgversion, " and cannot be displayed ",
+      "or used. Please update it with:\n\n",
+      "      object <- updateObject(object, verbose=TRUE)\n\n",
+      "  and re-serialize it.")
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
 ###
 
-#.validate_DelayedArray <- function(x)
-#{
+.validate_DelayedArray <- function(x)
+{
+    pkgversion <- .get_DelayedArray_pkgversion(x)
+    if (pkgversion != "current") {
+        msg <- paste0(.not_current_msg(x, pkgversion), collapse="")
+        return(paste("\n ", msg))
+    }
 #    seed_dim <- dim(x@seed)
 #    seed_ndim <- length(seed_dim)
 #    ## In the context of validObject(), 'class(x)' is always "DelayedArray"
@@ -62,10 +116,10 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 #    if (seed_ndim == 2L && !is(x, matrixClass(x)))
 #        return(wmsg2("'x' has 2 dimensions but is not a ",
 #                     matrixClass(x), " derivative"))
-#    TRUE
-#}
-#
-#setValidity2("DelayedArray", .validate_DelayedArray)
+    TRUE
+}
+
+setValidity2("DelayedArray", .validate_DelayedArray)
 
 ### TODO: Move this to S4Vectors and make it the validity method for DataTable
 ### object.
@@ -109,26 +163,11 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### updateObject()
 ###
-### Internal representation of DelayedArray objects has changed in
-### DelayedArray 0.5.11 (went from 5 slots to 3), then again in DelayedArray
-### 0.5.24 (went from 3 slots to only 1):
-###   - Internals 0: 5 slots (DelayedArray < 0.5.11)
-###   - Internals 1: 3 slots (DelayedArray >= 0.5.11 and < 0.5.24)
-###   - Internals 2: 1 slot  (DelayedArray >= 0.5.24)
-### updateObject() must be able to update from internals 0 to 2 and from
-### internals 1 to 2.
+### updateObject() must be able to update from internals v0 to v2 and from
+### internals v1 to v2.
 ###
 
-.get_DelayedArray_version <- function(object)
-{
-    if (.hasSlot(object, "metaindex") && .hasSlot(object, "is_transposed"))
-        return("< 0.5.11")
-    if (.hasSlot(object, "index") && .hasSlot(object, "delayed_ops"))
-        return(">= 0.5.11 and < 0.5.24")
-    "current"  # i.e. >= 0.5.24
-}
-
-### Reflect internals 1.
+### Reflect internals v1.
 setClass("DelayedArray1",
     contains="DelayedArray",
     representation(
@@ -146,7 +185,7 @@ setClass("DelayedArray1",
     )
 )
 
-.from_internals_1_to_2 <- function(object1)
+.from_internals_v1_to_v2 <- function(object1)
 {
     seed <- object1@seed
     seed_dimnames <- dimnames(seed)
@@ -208,14 +247,14 @@ setClass("DelayedArray1",
     delayed_ops
 }
 
-.from_internals_0_to_2 <- function(object0)
+.from_internals_v0_to_v2 <- function(object0)
 {
     delayed_ops <- .update_delayed_ops(object0@delayed_ops)
     object1 <- new2("DelayedArray1", seed=object0@seed,
                                      index=object0@index,
                                      delayed_ops=delayed_ops,
                                      check=FALSE)
-    object2 <- .from_internals_1_to_2(object1)
+    object2 <- .from_internals_v1_to_v2(object1)
 
     if (identical(object0@metaindex, seq_along(object0@index)) &&
         identical(object0@is_transposed, FALSE))
@@ -236,9 +275,10 @@ setClass("DelayedArray1",
 {
     object@seed <- updateObject(object@seed, verbose=verbose)
 
-    version <- .get_DelayedArray_version(object)
+    internals_version <- .get_DelayedArray_internals_version(object)
+    pkgversion <- .get_pkgversion_from_internals_version(internals_version)
 
-    if (version == "current") {
+    if (pkgversion == "current") {
         if (verbose)
             message("[updateObject] Internal representation of ",
                     class(object), " object is current.\n",
@@ -249,13 +289,14 @@ setClass("DelayedArray1",
     if (verbose)
         message("[updateObject] ", class(object), " object uses ",
                 "internal representation from\n",
-                "[updateObject] DelayedArray ", version, ". Updating it ...")
+                "[updateObject] DelayedArray ", pkgversion, ". ",
+                "Updating it ...")
 
-    if (version == ">= 0.5.11 and < 0.5.24")
-        return(.from_internals_1_to_2(object))
+    if (internals_version == 1L)
+        return(.from_internals_v1_to_v2(object))
 
-    if (version == "< 0.5.11")
-        return(.from_internals_0_to_2(object))
+    if (internals_version == 0L)
+        return(.from_internals_v0_to_v2(object))
 
     object
 }
@@ -816,12 +857,9 @@ setMethod("[[", "DelayedArray",
 setMethod("show", "DelayedArray",
     function(object)
     {
-        version <- .get_DelayedArray_version(object)
-        if (version != "current")
-            stop(class(object), " object uses internal representation from ",
-                 "DelayedArray ", version, "\n  and cannot be displayed or ",
-                 "used. Please update it with:\n",
-                 "    object <- updateObject(object, verbose=TRUE)")
+        pkgversion <- .get_DelayedArray_pkgversion(object)
+        if (pkgversion != "current")
+            stop(.not_current_msg(object, pkgversion))
         show_compact_array(object)
     }
 )
