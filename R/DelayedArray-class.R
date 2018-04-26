@@ -110,7 +110,13 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
 ### updateObject()
 ###
 ### Internal representation of DelayedArray objects has changed in
-### DelayedArray 0.5.11 (Bioc 3.7).
+### DelayedArray 0.5.11 (went from 5 slots to 3), then again in DelayedArray
+### 0.5.24 (went from 3 slots to only 1):
+###   - Internals 0: 5 slots (DelayedArray < 0.5.11)
+###   - Internals 1: 3 slots (DelayedArray >= 0.5.11 and < 0.5.24)
+###   - Internals 2: 1 slot  (DelayedArray >= 0.5.24)
+### updateObject() must be able to update from internals 0 to 2 and from
+### internals 1 to 2.
 ###
 
 .get_DelayedArray_version <- function(object)
@@ -120,6 +126,68 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
     if (.hasSlot(object, "index") && .hasSlot(object, "delayed_ops"))
         return(">= 0.5.11 and < 0.5.24")
     "current"  # i.e. >= 0.5.24
+}
+
+### Reflect internals 1.
+setClass("DelayedArray1",
+    contains="DelayedArray",
+    representation(
+        index="list",       # List (possibly named) of subscripts as
+                            # positive integer vectors, one vector per
+                            # seed dimension. *Missing* list elements
+                            # are allowed and represented by NULLs.
+
+        delayed_ops="list"  # List of delayed operations. See below
+                            # for the details.
+    ),
+    prototype(
+        seed=new("array"),
+        index=list(NULL)
+    )
+)
+
+.from_internals_1_to_2 <- function(object1)
+{
+    seed <- object1@seed
+    seed_dimnames <- dimnames(seed)
+
+    ## Translate 'index' slot as DelayedOp objects (1 DelayedSubset and
+    ## 1 DelayedDimnames) and stash them inside 'seed'.
+
+    index <- lapply(unname(object1@index), unname)
+    op <- new2("DelayedSubset", seed=seed, index=index)
+    if (!isNoOp(op))
+        seed <- op
+
+    object1_dimnames <- lapply(seq_along(object1@index),
+        function(along) {
+            i <- object1@index[[along]]
+            if (is.null(i)) seed_dimnames[[along]] else names(i)
+        })
+    if (all(S4Vectors:::sapply_isNULL(object1_dimnames)))
+        object1_dimnames <- NULL
+
+    op <- new_DelayedDimnames(seed, object1_dimnames)
+    if (!isNoOp(op))
+        seed <- op
+
+    ## Translate 'delayed_ops' slot as DelayedUnaryIsoOp objects and
+    ## stash them inside 'seed'.
+
+    for (delayed_op in object1@delayed_ops) {
+        OP <- delayed_op[[1L]]
+        Largs <- delayed_op[[2L]]
+        Rargs <- delayed_op[[3L]]
+        Lalong <- Ralong <- NA
+        recycle_along_last_dim <- delayed_op[[4L]]
+        if (recycle_along_last_dim) {
+            if (length(Largs) == 1L) Lalong <- 1L else Ralong <- 1L
+        }
+        seed <- new_DelayedUnaryIsoOp(seed, OP, Largs, Rargs,
+                                            Lalong, Ralong)
+    }
+
+    DelayedArray(seed)
 }
 
 .update_delayed_ops <- function(delayed_ops)
@@ -138,6 +206,30 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
         delayed_ops[[i]] <- delayed_op
     }
     delayed_ops
+}
+
+.from_internals_0_to_2 <- function(object0)
+{
+    delayed_ops <- .update_delayed_ops(object0@delayed_ops)
+    object1 <- new2("DelayedArray1", seed=object0@seed,
+                                     index=object0@index,
+                                     delayed_ops=delayed_ops,
+                                     check=FALSE)
+    object2 <- .from_internals_1_to_2(object1)
+
+    if (identical(object0@metaindex, seq_along(object0@index)) &&
+        identical(object0@is_transposed, FALSE))
+        return(object2)
+
+    if (any(vapply(delayed_ops,
+                   function(delayed_op) delayed_op[[4L]],
+                   logical(1))))
+        stop(wmsg("object is too complex, sorry"))
+
+    perm <- object0@metaindex
+    if (object0@is_transposed)
+        perm <- rev(perm)
+    aperm(object2, perm)
 }
 
 .updateObject_DelayedArray <- function(object, ..., verbose=FALSE)
@@ -159,69 +251,11 @@ setMethod("DelayedArray", "DelayedArray", function(seed) seed)
                 "internal representation from\n",
                 "[updateObject] DelayedArray ", version, ". Updating it ...")
 
-    if (version == "< 0.5.11") {
-        delayed_ops <- .update_delayed_ops(object@delayed_ops)
-        ## THIS DOES NOT WORK ANYMORE! (no more 'index' or 'delayed_ops' slot
-        ## in DelayedArray >= 0.5.24)
-        ans <- new2(class(object), seed=object@seed,
-                                   index=object@index,
-                                   delayed_ops=delayed_ops,
-                                   check=FALSE)
-        if (identical(object@metaindex, seq_along(object@index)) &&
-            identical(object@is_transposed, FALSE))
-            return(ans)
-        if (any(vapply(delayed_ops,
-                       function(delayed_op) delayed_op[[4L]],
-                       logical(1))))
-            stop(wmsg("object is too complex, sorry"))
-        perm <- object@metaindex
-        if (object@is_transposed)
-            perm <- rev(perm)
-        return(aperm(ans, perm))
-    }
+    if (version == ">= 0.5.11 and < 0.5.24")
+        return(.from_internals_1_to_2(object))
 
-    if (version == ">= 0.5.11 and < 0.5.24") {
-        seed <- object@seed
-        seed_dimnames <- dimnames(seed)
-
-        ## Translate 'index' slot as DelayedOp objects (1 DelayedSubset and
-        ## 1 DelayedDimnames) and stash them inside 'seed'.
-
-        index <- lapply(unname(object@index), unname)
-        op <- new2("DelayedSubset", seed=seed, index=index)
-        if (!isNoOp(op))
-            seed <- op
-
-        object_dimnames <- lapply(seq_along(object@index),
-            function(along) {
-                i <- object@index[[along]]
-                if (is.null(i)) seed_dimnames[[along]] else names(i)
-            })
-        if (all(S4Vectors:::sapply_isNULL(object_dimnames)))
-            object_dimnames <- NULL
-
-        op <- new_DelayedDimnames(seed, object_dimnames)
-        if (!isNoOp(op))
-            seed <- op
-
-        ## Translate 'delayed_ops' slot as DelayedUnaryIsoOp objects and
-        ## stash them inside 'seed'.
-
-        for (delayed_op in object@delayed_ops) {
-            OP <- delayed_op[[1L]]
-            Largs <- delayed_op[[2L]]
-            Rargs <- delayed_op[[3L]]
-            Lalong <- Ralong <- NA
-            recycle_along_last_dim <- delayed_op[[4L]]
-            if (recycle_along_last_dim) {
-                if (length(Largs) == 1L) Lalong <- 1L else Ralong <- 1L
-            }
-            seed <- new_DelayedUnaryIsoOp(seed, OP, Largs, Rargs,
-                                                Lalong, Ralong)
-        }
-
-        return(DelayedArray(seed))
-    }
+    if (version == "< 0.5.11")
+        return(.from_internals_0_to_2(object))
 
     object
 }
