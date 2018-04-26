@@ -69,13 +69,37 @@
 ### extract_array() generic and methods
 ###
 
+.contact_author_msg <- function(Class)
+{
+    msg <- c("Please contact the author of the ", Class, " class")
+    class_package <- attr(Class, "package")
+    if (!is.null(class_package))
+        msg <- c(msg, " (defined in the ", class_package, " package)")
+    c(msg, " about this and point him/her to the man page for ",
+           "extract_array() in the DelayedArray package (?extract_array).")
+}
+
 ### 'index' is expected to be an unnamed list of subscripts as positive
 ### integer vectors, one vector per dimension in 'x'. *Missing* list elements
 ### are allowed and represented by NULLs.
 ### The "extract_array" methods don't need to support anything else.
 ### They must return an ordinary array. No need to propagate the dimnames.
 setGeneric("extract_array", signature="x",
-    function(x, index) standardGeneric("extract_array")
+    function(x, index)
+    {
+        ans <- standardGeneric("extract_array")
+        if (!is.array(ans))
+            stop(wmsg("The \"extract_array\" method for ", class(x), " ",
+                      "objects didn't return an ordinary array. ",
+                      "extract_array() should always return an ordinary ",
+                      "array. ", .contact_author_msg(class(x))))
+        expected_dim <- get_Nindex_lengths(index, dim(x))
+        if (!identical(dim(ans), expected_dim))
+            stop(wmsg("The \"extract_array\" method for ", class(x), " ",
+                      "objects returned an array with incorrect ",
+                      "dimensions. ", .contact_author_msg(class(x))))
+        ans
+    }
 )
 
 setMethod("extract_array", "ANY",

@@ -46,7 +46,7 @@
   \link[S4Vectors]{DataFrame} objects and other array-like objects.
 
   The \code{DelayedArray()} constructor function will accept any seed that
-  satisfies the \emph{seed contract} i.e. that supports \code{dim()},
+  complies with the \emph{seed contract} i.e. that supports \code{dim()},
   \code{dimnames()}, and \code{extract_array()}.
 }
 
