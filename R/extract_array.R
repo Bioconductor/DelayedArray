@@ -87,13 +87,16 @@
 setGeneric("extract_array", signature="x",
     function(x, index)
     {
+        x_dim <- dim(x)
+        if (is.null(x_dim))
+            stop(wmsg("first argument to extract_array() must have dimensions"))
         ans <- standardGeneric("extract_array")
         if (!is.array(ans))
             stop(wmsg("The \"extract_array\" method for ", class(x), " ",
                       "objects didn't return an ordinary array. ",
                       "extract_array() should always return an ordinary ",
                       "array. ", .contact_author_msg(class(x))))
-        expected_dim <- get_Nindex_lengths(index, dim(x))
+        expected_dim <- get_Nindex_lengths(index, x_dim)
         if (!identical(dim(ans), expected_dim))
             stop(wmsg("The \"extract_array\" method for ", class(x), " ",
                       "objects returned an array with incorrect ",
