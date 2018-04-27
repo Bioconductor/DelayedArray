@@ -99,7 +99,9 @@ type(x)
     An array-like object.
   }
   \item{x, object}{
-    A DelayedArray object.
+    A DelayedArray object. For \code{type()}, \code{x} can also be any
+    array-like object, that is, any object for which \code{dim(x)} is not
+    NULL.
   }
   \item{...}{
     Additional arguments passed to methods.
@@ -130,7 +132,9 @@ type(x)
   and \code{type()}.
   \code{type()} is the DelayedArray equivalent of \code{typeof()} (or
   \code{storage.mode()}) for ordinary arrays. Note that, for convenience
-  and consistency, \code{type()} also works on ordinary arrays.
+  and consistency, \code{type()} also supports ordinary arrays and, more
+  generally, any array-like object, that is, any object \code{x} for which
+  \code{dim(x)} is not NULL.
 
   \code{dimnames()}, \code{seed()}, and \code{path()} also work as setters.
 }

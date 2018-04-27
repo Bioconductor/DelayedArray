@@ -167,8 +167,12 @@ setMethod("type", "array", function(x) typeof(x))
 setMethod("type", "ANY",
     function(x)
     {
+        x_dim <- dim(x)
+        if (is.null(x_dim))
+            stop(wmsg("type() only supports array-like objects. ",
+                      "See ?type in the DelayedArray package."))
         ## x0 <- x[integer(0), ..., integer(0)]
-        index <- rep.int(list(integer(0)), length(dim(x)))
+        index <- rep.int(list(integer(0)), length(x_dim))
         x0 <- extract_array(x, index)
         type(x0)
     }
