@@ -18,6 +18,10 @@
 
 \alias{updateObject,DelayedArray-method}
 
+\alias{dim,DelayedArray-method}
+\alias{dimnames,DelayedArray-method}
+\alias{extract_array,DelayedArray-method}
+
 \alias{type}
 
 \alias{nseed}

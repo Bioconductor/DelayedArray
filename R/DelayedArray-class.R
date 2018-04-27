@@ -49,7 +49,7 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### What internals a DelayedArray object is using?
+### Check the internals of a DelayedArray object
 ###
 ### Internal representation of DelayedArray objects has changed in
 ### DelayedArray 0.5.11 (went from 5 slots to 3), then again in DelayedArray
@@ -87,13 +87,20 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
     .get_pkgversion_from_internals_version(internals_version)
 }
 
-.not_current_msg <- function(object, pkgversion)
+.msg_for_old_internals <- function(object, pkgversion)
 {
-    c(class(object), " object uses internal representation from ",
-      "DelayedArray\n  ", pkgversion, " and cannot be displayed ",
-      "or used. Please update it with:\n\n",
-      "      object <- updateObject(object, verbose=TRUE)\n\n",
-      "  and re-serialize it.")
+    paste0(class(object), " object uses internal representation ",
+           "from DelayedArray\n  ", pkgversion, " and cannot be displayed ",
+           "or used. Please update it with:\n\n",
+           "      object <- updateObject(object, verbose=TRUE)\n\n",
+           "  and re-serialize it.")
+}
+
+.check_DelayedArray_internals <- function(object)
+{
+    pkgversion <- .get_DelayedArray_pkgversion(object)
+    if (pkgversion != "current")
+        stop(.msg_for_old_internals(object, pkgversion))
 }
 
 
@@ -104,10 +111,8 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 .validate_DelayedArray <- function(x)
 {
     pkgversion <- .get_DelayedArray_pkgversion(x)
-    if (pkgversion != "current") {
-        msg <- paste0(.not_current_msg(x, pkgversion), collapse="")
-        return(paste("\n ", msg))
-    }
+    if (pkgversion != "current")
+        return(paste0("\n  ", .msg_for_old_internals(x, pkgversion)))
 #    seed_dim <- dim(x@seed)
 #    seed_ndim <- length(seed_dim)
 #    ## In the context of validObject(), 'class(x)' is always "DelayedArray"
@@ -302,6 +307,38 @@ setClass("DelayedArray1",
 }
 
 setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+### We overwrite the methods for DelayedUnaryOp objects only to detect
+### DelayedArray objects with old internals.
+###
+
+setMethod("dim", "DelayedArray",
+    function(x)
+    {
+        .check_DelayedArray_internals(x)
+        callNextMethod()
+    }
+)
+
+setMethod("dimnames", "DelayedArray",
+    function(x)
+    {
+        .check_DelayedArray_internals(x)
+        callNextMethod()
+    }
+)
+
+setMethod("extract_array", "DelayedArray",
+    function(x, index)
+    {
+        .check_DelayedArray_internals(x)
+        callNextMethod()
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -857,9 +894,7 @@ setMethod("[[", "DelayedArray",
 setMethod("show", "DelayedArray",
     function(object)
     {
-        pkgversion <- .get_DelayedArray_pkgversion(object)
-        if (pkgversion != "current")
-            stop(.not_current_msg(object, pkgversion))
+        .check_DelayedArray_internals(object)
         show_compact_array(object)
     }
 )
