@@ -12,9 +12,8 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-# Implementing A DelayedArray Backend
 
-## Introduction
+# Introduction
 
 The DelayedArray framework currently supports the HDF5 on-disk backend
 (via the _HDF5Array_ package) but can be extended to support other on-disk
@@ -46,9 +45,9 @@ Don't hesitate to look at the source of the
 for a real example of DelayedArray on-disk backend implementation.
 
 
-## Implementing the seed class
+# Implementing the seed class
 
-### Class definition
+## Class definition
 
 A "seed object" should store at least the path or URL to the file. If the
 file format allows storing more than one array per file, then the seed object
@@ -77,7 +76,7 @@ connections don't work properly in the context of a fork (e.g. when
 processing the seed object in parallel) and tend to break when serializing
 the object.
 
-### Constructor
+## Constructor
 
 It is highly recommended to provide a "seed constructor" e.g.:
 
@@ -99,7 +98,7 @@ of the _ADSArray_ package:
 and adding _tools_ to the `Imports` field of the DESCRIPTION file of the
 package.
 
-### The seed contract
+## The seed contract
 
 Seed objects are expected to comply with the "seed contract" i.e. to
 support `dim()`, `dimnames()`, and `extract_array()`. This is normally
@@ -169,7 +168,7 @@ Finally note that subscripts are allowed to contain duplicated indices
 so things like `extract_array(seed, list(c(1:3, 3:1), 2L))` need to be
 supported.
 
-### What to import?
+## What to import?
 
 Make sure the NAMESPACE file of the _ADSArray_ package contains at least
 the following imports:
@@ -192,7 +191,7 @@ Add _methods_, _BiocGenerics_, and _DelayedArray_ to the `Depends` field
 of the DESCRIPTION file of the package, and _tools_, _S4Vectors_, and
 _IRanges_ to its `Imports` field.
 
-### Testing
+## Testing
 
 Make sure to export the ADSArraySeed class, its constructor, and the
 `dim`, `dimnames`, and `extract_array` methods.
@@ -202,11 +201,11 @@ in a DelayedArray object with `DelayedArray(seed)`, and this should return
 a fully functional DelayedArray object.
 
 
-## Implementing high-level classes ADSArray and ADSMatrix
+# Implementing high-level classes ADSArray and ADSMatrix
 
 These classes are not strictly needed but add a nice level of convenience.
 
-### Class definitions
+## Class definitions
 
 An ADSArray or ADSMatrix object is a DelayedArray derivative that doesn't
 carry delayed operations yet. As soon as the user will start operating on it,
@@ -220,7 +219,7 @@ So just:
 
     setClass("ADSMatrix", contains=c("DelayedMatrix", "ADSArray"))
 
-### Going from ADSArray to ADSMatrix
+## Going from ADSArray to ADSMatrix
 
 Define a `matrixClass` method for ADSArray objects as follow:
 
@@ -248,7 +247,7 @@ ADSMatrix:
 Without the above coercion method, `as(x, "ADSMatrix")` would silently
 return an invalid ADSMatrix object.
 
-### Going from ADSMatrix to ADSArray
+## Going from ADSMatrix to ADSArray
 
 The user should not be able to degrade an ADSMatrix object to an ADSArray
 object so `as(x, "ADSArray", strict=TRUE)` should fail or be a no-op
@@ -257,7 +256,7 @@ achieve this is to define the following coercion method:
 
     setAs("ADSMatrix", "ADSArray", function(from) from)  # no-op
 
-### Constructor
+## Constructor
 
 Add a `DelayedArray` method for ADSArraySeed objects that does:
 
@@ -293,7 +292,7 @@ with something like:
         DelayedArray(seed)
     }
 
-### Validity method
+## Validity method
 
 It's also highly recommended to define a validity method for ADSArray objects:
 
@@ -306,13 +305,13 @@ It's also highly recommended to define a validity method for ADSArray objects:
 
     setValidity2("ADSArray", .validate_ADSArray)
 
-### What to export?
+## What to export?
 
 Make sure to export the ADSArray and ADSMatrix classes, the `ADSArray`
 constructor, and the `coerce` methods.
 
 
-## Testing
+# Testing
 
 Install the _ADSArray_ package and load it in a fresh R session:
 
