@@ -258,6 +258,8 @@ stopifnot(identical(as.array(P1), as.array(P2)))
 ## MATRIX ROW/COL SUMMARIZATION
 ## ---------------------------------------------------------------------
 
+## All these operations are block-processed.
+
 rowSums(M1)
 colSums(M1)
 
