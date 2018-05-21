@@ -697,8 +697,12 @@ setClass("DelayedAbind",
 .validate_DelayedAbind <- function(x)
 {
     ## 'along' slot.
-    if (!(isSingleInteger(x@along) && x@along > 0L))
+    if (!(isSingleInteger(x@along) && x@along >= 1L))
         return(wmsg2("'x@along' must be a single positive integer"))
+    ndim <- length(dim(x@seeds[[1L]]))
+    if (ndim < x@along)
+        return(wmsg2("the array-like objects to bind must have at least ",
+                     x@along, " dimensions for this binding operation"))
 
     dims <- get_dims_to_bind(x@seeds, x@along)
     if (is.character(dims))

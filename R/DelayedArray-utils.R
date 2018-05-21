@@ -4,6 +4,40 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Binding
+###
+### We only support binding DelayedArray objects along the rows or the cols
+### at the moment. No binding along an arbitrary dimension yet! (i.e. no
+### "abind" method yet)
+###
+
+.DelayedArray_arbind <- function(...)
+{
+    objects <- list(...)
+    stash_DelayedAbind(objects[[1L]], objects[-1L], along=1L)
+}
+
+.DelayedArray_acbind <- function(...)
+{
+    objects <- list(...)
+    stash_DelayedAbind(objects[[1L]], objects[-1L], along=2L)
+}
+
+setMethod("arbind", "DelayedArray", .DelayedArray_arbind)
+setMethod("acbind", "DelayedArray", .DelayedArray_acbind)
+
+### Argument 'deparse.level' is ignored.
+setMethod("rbind", "DelayedArray", .DelayedArray_arbind)
+setMethod("cbind", "DelayedArray", .DelayedArray_acbind)
+
+### Arguments 'use.names', 'ignore.mcols', and 'check' are ignored.
+setMethod("bindROWS", "DelayedArray",
+    function(x, objects=list(), use.names=TRUE, ignore.mcols=FALSE, check=TRUE)
+        stash_DelayedAbind(x, objects, along=1L)
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "Ops" group generics
 ###
 ### Arith members: "+", "-", "*", "/", "^", "%%", "%/%"

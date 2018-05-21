@@ -200,7 +200,7 @@ setAs("RleRealizationSink", "Rle",
         if (length(from@chunks) == 0L)
             return(ans)
         list_of_Rles <- c(list(ans), unname(as.list(from@chunks, sorted=TRUE)))
-        do.call("c", list_of_Rles)
+        do.call(c, list_of_Rles)
     }
 )
 

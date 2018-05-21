@@ -19,7 +19,7 @@
            dimnames=list(paste0("M3x", 1:5), NULL, paste0("M3z", 1:4)))
 )
 
-test_DelayedMatrix_rbind_cbind <- function()
+test_DelayedMatrix_arbind_acbind <- function()
 {
     m1 <- .TEST_matrices[[1]]
     m2 <- .TEST_matrices[[2]]
@@ -29,29 +29,33 @@ test_DelayedMatrix_rbind_cbind <- function()
     M3 <- realize(m3)
 
     target <- rbind(a=m1, b=m2, c=m3)
-    current <- rbind(a=M1, b=M2, c=M3)
+    current <- arbind(a=M1, b=M2, c=M3)
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.matrix(current))
+    checkIdentical(current, rbind(a=M1, b=M2, c=M3))
+    checkIdentical(current, bindROWS(M1, list(M2, M3)))
 
-    current <- cbind(a=t(M1), b=t(M2), c=t(M3))
+    current <- acbind(a=t(M1), b=t(M2), c=t(M3))
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(t(target), as.matrix(current))
+    checkIdentical(current, cbind(a=t(M1), b=t(M2), c=t(M3)))
 
     ## unary form
 
-    target <- rbind(a=m1)
-    current <- rbind(a=M1)
+    current <- arbind(a=M1)
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
-    checkIdentical(target, as.matrix(current))
+    checkIdentical(m1, as.matrix(current))
+    checkIdentical(current, rbind(a=M1))
+    checkIdentical(current, bindROWS(M1))
 
-    target <- cbind(a=m1)
-    current <- cbind(a=M1)
+    current <- acbind(a=M1)
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
-    checkIdentical(target, as.matrix(current))
+    checkIdentical(m1, as.matrix(current))
+    checkIdentical(current, cbind(a=M1))
 
     ## with empty matrices
 
@@ -61,22 +65,28 @@ test_DelayedMatrix_rbind_cbind <- function()
     M2 <- realize(m2)
 
     target <- rbind(a=m1, a=m2)
-    current <- rbind(a=M1, b=M2)
+    current <- arbind(a=M1, b=M2)
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.matrix(current))
+    checkIdentical(current, rbind(a=M1, b=M2))
+    checkIdentical(current, bindROWS(M1, list(M2)))
 
     target <- rbind(a=m2, a=m1)
-    current <- rbind(a=M2, b=M1)
+    current <- arbind(a=M2, b=M1)
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.matrix(current))
+    checkIdentical(current, rbind(a=M2, b=M1))
+    checkIdentical(current, bindROWS(M2, list(M1)))
 
     target <- rbind(a=m1, a=m1)
-    current <- rbind(a=M1, b=M1)
+    current <- arbind(a=M1, b=M1)
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.matrix(current))
+    checkIdentical(current, rbind(a=M1, b=M1))
+    checkIdentical(current, bindROWS(M1, list(M1)))
 }
 
 test_DelayedArray_arbind <- function()
@@ -88,6 +98,8 @@ test_DelayedArray_arbind <- function()
     checkTrue(is(current, "DelayedArray"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.array(current))
+    checkIdentical(current, do.call(rbind, TEST_hdf5arrays))
+    checkIdentical(current, bindROWS(TEST_hdf5arrays[[1]], TEST_hdf5arrays[-1]))
 
     ## For some mysterious reason, the code below fails in the context
     ## of 'R CMD check' but not when running the tests interactively with
@@ -98,6 +110,39 @@ test_DelayedArray_arbind <- function()
     #    checkIdentical(as.matrix(target_slice), as.matrix(current[ , , k]))
     #}
     #for (k in seq_len(dim(current)[[3L]])) check_2D_slice(k)
+
+    ## on 1D arrays
+    a1 <- array(11:15, 5, dimnames=list(LETTERS[1:5]))
+    A1 <- DelayedArray(a1)
+    current <- arbind(A1)                      # unary
+    checkTrue(is(current, "DelayedArray"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkIdentical(a1, as.array(current))
+    checkIdentical(current, rbind(A1))
+    checkIdentical(current, bindROWS(A1))
+    b1 <- array(letters[1:3])
+    B1 <- DelayedArray(b1)
+    a1b1 <- arbind(a1, b1)
+    current <- arbind(A1, B1)                  # binary
+    checkTrue(is(current, "DelayedArray"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkIdentical(a1b1, as.array(current))
+    checkIdentical(current, rbind(A1, B1))
+    checkIdentical(current, bindROWS(A1, list(B1)))
+    b1a1 <- arbind(b1, a1)
+    current <- arbind(B1, A1)                  # binary
+    checkTrue(is(current, "DelayedArray"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkIdentical(b1a1, as.array(current))
+    checkIdentical(current, rbind(B1, A1))
+    checkIdentical(current, bindROWS(B1, list(A1)))
+    a1b1a1 <- arbind(a1, b1, a1)
+    current <- arbind(A1, B1, A1)              # ternary
+    checkTrue(is(current, "DelayedArray"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkIdentical(a1b1a1, as.array(current))
+    checkIdentical(current, rbind(A1, B1, A1))
+    checkIdentical(current, bindROWS(A1, list(B1, A1)))
 }
 
 test_DelayedArray_acbind <- function()
@@ -118,6 +163,8 @@ test_DelayedArray_acbind <- function()
     checkTrue(is(current, "DelayedArray"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.array(current))
+    current2 <- do.call(cbind, TEST_hdf5arrays)
+    checkIdentical(current, current2)
 
     ## For some mysterious reason, the code below fails in the context
     ## of 'R CMD check' but not when running the tests interactively with
@@ -128,5 +175,19 @@ test_DelayedArray_acbind <- function()
     #    checkIdentical(as.matrix(target_slice), as.matrix(current[ , , k]))
     #}
     #for (k in seq_len(dim(current)[[3L]])) check_2D_slice(k)
+
+    ## acbind() is not supported on 1D DelayedArray objects
+    a1 <- array(11:15, 5, dimnames=list(LETTERS[1:5]))
+    A1 <- DelayedArray(a1)
+    checkException(acbind(A1))          # unary
+    checkException(cbind(A1))
+    b1 <- array(letters[1:3])
+    B1 <- DelayedArray(b1)
+    checkException(acbind(A1, B1))      # binary
+    checkException(cbind(A1, B1))
+    checkException(acbind(B1, A1))      # binary
+    checkException(cbind(B1, A1))
+    checkException(acbind(A1, B1, A1))  # ternary
+    checkException(cbind(A1, B1, A1))
 }
 

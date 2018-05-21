@@ -9,12 +9,16 @@
 ### objects are bindable. Otherwise return a character vector describing why
 ### the objects are not bindable. This design allows the function to be used
 ### in the context of a validity method.
-### NOT exported but used in the HDF5Array package.
-get_dims_to_bind <- function(objects, no.check.along)
+get_dims_to_bind <- function(objects, along)
 {
+    if (!(isSingleInteger(along) && along >= 1L))
+        stop("'along' must be a single positive integer")
     dims <- lapply(objects, dim)
     ndims <- lengths(dims)
     ndim <- ndims[[1L]]
+    if (ndim < along)
+        stop(wmsg("the array-like objects to bind must have at least ",
+                  along, " dimensions for this binding operation"))
     if (!all(ndims == ndim))
         return(c("all the objects to bind must have ",
                  "the same number of dimensions"))
@@ -22,7 +26,7 @@ get_dims_to_bind <- function(objects, no.check.along)
     if (is.null(tmp))
         return("the objects to bind have no dimensions")
     dims <- matrix(tmp, nrow=ndim)
-    tmp <- dims[-no.check.along, , drop=FALSE]
+    tmp <- dims[-along, , drop=FALSE]
     if (!all(tmp == tmp[ , 1L]))
         return("the objects to bind have incompatible dimensions")
     dims
@@ -31,6 +35,8 @@ get_dims_to_bind <- function(objects, no.check.along)
 ### Combine the dims the rbind/cbind way.
 combine_dims_along <- function(dims, along)
 {
+    stopifnot(is.matrix(dims),
+              isSingleInteger(along), along >= 1L, along <= nrow(dims))
     ans_dim <- dims[ , 1L]
     ans_dim[[along]] <- sum(dims[along, ])
     ans_dim
@@ -60,6 +66,8 @@ combine_dimnames <- function(objects)
 ### NOT exported but used in the HDF5Array package.
 combine_dimnames_along <- function(objects, dims, along)
 {
+    stopifnot(is.matrix(dims),
+              isSingleInteger(along), along >= 1L, along <= nrow(dims))
     dimnames <- combine_dimnames(objects)
     along_names <- lapply(objects, function(x) dimnames(x)[[along]])
     along_names_lens <- lengths(along_names)
@@ -119,19 +127,16 @@ combine_dimnames_along <- function(objects, dims, along)
 ### NOT exported but used in the HDF5Array package.
 simple_abind <- function(..., along)
 {
-    objects <- list(...)
-    object_is_NULL <- S4Vectors:::sapply_isNULL(objects)
-    if (any(object_is_NULL))
-        objects <- objects[!object_is_NULL]
+    objects <- S4Vectors:::delete_NULLs(list(...))
     if (length(objects) == 0L)
         return(NULL)
-    if (length(objects) == 1L)
-        return(objects[[1L]])
 
     ## Check dim compatibility.
-    dims <- get_dims_to_bind(objects, no.check.along=along)
+    dims <- get_dims_to_bind(objects, along)
     if (is.character(dims))
         stop(wmsg(dims))
+    if (length(objects) == 1L)
+        return(objects[[1L]])
 
     ## Perform the binding.
     block_lens <- dims[along, ]

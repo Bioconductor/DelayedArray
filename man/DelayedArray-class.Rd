@@ -62,16 +62,6 @@
 \alias{split.DelayedArray}
 \alias{split,DelayedArray,ANY-method}
 
-\alias{rbind}
-\alias{rbind,DelayedMatrix-method}
-\alias{rbind,DelayedArray-method}
-\alias{arbind,DelayedArray-method}
-
-\alias{cbind}
-\alias{cbind,DelayedMatrix-method}
-\alias{cbind,DelayedArray-method}
-\alias{acbind,DelayedArray-method}
-
 % Internal stuff
 \alias{matrixClass}
 \alias{matrixClass,DelayedArray-method}
@@ -172,12 +162,6 @@ type(x)
   Single value replacement (\code{x[[...]] <- value}) is not supported.
 }
 
-\section{Binding}{
-  Binding DelayedArray objects along the rows (or columns) is supported
-  via the \code{rbind} and \code{arbind} (or \code{cbind} and \code{acbind})
-  methods for DelayedArray objects. All these operations are delayed.
-}
-
 \seealso{
   \itemize{
     \item \code{\link{type}} to get the type of the elements of an array-like
@@ -191,12 +175,6 @@ type(x)
 
     \item \link{DelayedArray-stats} for statistical functions on
           DelayedArray objects.
-
-    \item \code{\link[base]{cbind}} in the \pkg{base} package for
-          rbind/cbind'ing ordinary arrays.
-
-    \item \code{\link{acbind}} in this package (\pkg{DelayedArray}) for
-          arbind/acbind'ing ordinary arrays.
 
     \item \link{RleArray} objects.
 
@@ -305,37 +283,7 @@ D
 ## See '?realize' for more information about "realization backends".
 
 ## ---------------------------------------------------------------------
-## E. BIND DelayedArray OBJECTS
-## ---------------------------------------------------------------------
-
-## rbind/cbind
-
-library(HDF5Array)
-toy_h5 <- system.file("extdata", "toy.h5", package="HDF5Array")
-h5ls(toy_h5)
-
-M1 <- HDF5Array(toy_h5, "M1")
-M2 <- HDF5Array(toy_h5, "M2")
-
-M12 <- rbind(M1, t(M2))
-M12
-colMeans(M12)
-
-## arbind/acbind
-
-example(acbind)  # to create arrays a1, a2, a3
-
-A1 <- DelayedArray(a1)
-A2 <- DelayedArray(a2)
-A3 <- DelayedArray(a3)
-A <- arbind(A1, A2, A3)
-A
-
-## Sanity check:
-stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
-
-## ---------------------------------------------------------------------
-## F. MODIFY THE PATH OF A DelayedArray OBJECT
+## E. MODIFY THE PATH OF A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 ## This can be useful if the file containing the array data is on a
 ## shared partition but the exact path to the partition depends on the
@@ -343,6 +291,7 @@ stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
 ## For example:
 
 \dontrun{
+library(HDF5Array)
 A <- HDF5Array("/path/to/lab_data/my_precious_data.h5")
 path(A)
 
@@ -373,7 +322,7 @@ A
 }
 
 ## ---------------------------------------------------------------------
-## G. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
+## F. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 \dontrun{
 library(Matrix)

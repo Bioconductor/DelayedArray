@@ -4,6 +4,14 @@
 
 % DelayedArray utils
 
+\alias{arbind,DelayedArray-method}
+\alias{acbind,DelayedArray-method}
+\alias{rbind}
+\alias{cbind}
+\alias{rbind,DelayedArray-method}
+\alias{cbind,DelayedArray-method}
+\alias{bindROWS,DelayedArray-method}
+
 \alias{+,DelayedArray,missing-method}
 \alias{-,DelayedArray,missing-method}
 
@@ -96,6 +104,7 @@
 
   Delayed operations:
   \itemize{
+    \item \code{rbind} and \code{cbind}
     \item all the members of the \code{\link[methods]{Ops}},
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups
     \item \code{sweep}
@@ -106,7 +115,6 @@
           \code{grepl}, \code{sub}, \code{gsub}
     \item \code{pmax2} and \code{pmin2}
     \item \code{t}
-    \item \code{rbind} and \code{cbind} (documented in \link{DelayedArray})
     \item statistical functions like \code{dnorm}, \code{dbinom}, \code{dpois},
           and \code{dlogis} (for the Normal, Binomial, Poisson, and Logistic
           distribution, respectively) and related functions (documented in
@@ -130,6 +138,13 @@
 
 \seealso{
   \itemize{
+    \item \code{\link[base]{cbind}} in the \pkg{base} package for
+          rbind/cbind'ing ordinary arrays.
+
+    \item \code{\link{arbind}} and \code{\link{acbind}} in this package
+          (\pkg{DelayedArray}) for binding ordinary arrays of arbitrary
+          dimensions along their rows or columns.
+
     \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
           \code{\link[base]{mean}}, \code{\link[base]{apply}},
           and \code{\link[base]{\%*\%}} in the \pkg{base} package for the
@@ -163,22 +178,43 @@
 }
 
 \examples{
+## ---------------------------------------------------------------------
+## BIND DelayedArray OBJECTS
+## ---------------------------------------------------------------------
+
 library(HDF5Array)
 toy_h5 <- system.file("extdata", "toy.h5", package="HDF5Array")
 h5ls(toy_h5)
 
 M1 <- HDF5Array(toy_h5, "M1")
-range(M1)
-M1 >= 0.5 & M1 < 0.75
-log(M1)
-
 M2 <- HDF5Array(toy_h5, "M2")
-pmax2(M2, 0)
 
-sweep(M2, 2, colMeans(M2))
+M12 <- rbind(M1, t(M2))        # delayed
+M12
+colMeans(M12)                  # block-processed
 
-M3 <- rbind(M1, t(M2))
-M3
+example(arbind)  # to create arrays a1, a2, a3
+
+A1 <- DelayedArray(a1)
+A2 <- DelayedArray(a2)
+A3 <- DelayedArray(a3)
+A <- rbind(A1, A2, A3)         # delayed
+A
+
+## Sanity check:
+stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
+
+## ---------------------------------------------------------------------
+## MORE OPERATIONS
+## ---------------------------------------------------------------------
+
+range(M1)                      # block-processed
+M1 >= 0.5 & M1 < 0.75          # delayed
+log(M1)                        # delayed
+
+pmax2(M2, 0)                   # delayed
+
+sweep(M2, 2, colMeans(M2))     # delayed
 
 ## ---------------------------------------------------------------------
 ## MATRIX MULTIPLICATION

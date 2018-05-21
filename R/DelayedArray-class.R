@@ -380,12 +380,14 @@ setMethod("netSubsetAndAperm", "DelayedArray",
 
 stash_DelayedSubset <- function(x, Nindex)
 {
+    stopifnot(is(x, "DelayedArray"))
     op <- new_DelayedSubset(x@seed, Nindex)
     DelayedArray(op)
 }
 
 stash_DelayedAperm <- function(x, perm)
 {
+    stopifnot(is(x, "DelayedArray"))
     op <- new_DelayedAperm(x@seed, perm)
     DelayedArray(op)
 }
@@ -393,6 +395,7 @@ stash_DelayedAperm <- function(x, perm)
 stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
                                        Lalong=NA, Ralong=NA)
 {
+    stopifnot(is(x, "DelayedArray"))
     op <- new_DelayedUnaryIsoOp(x@seed, OP=OP, Largs=Largs, Rargs=Rargs,
                                         Lalong=Lalong, Ralong=Ralong)
     DelayedArray(op)
@@ -400,13 +403,16 @@ stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
 
 stash_DelayedDimnames <- function(x, dimnames)
 {
+    stopifnot(is(x, "DelayedArray"))
     op <- new_DelayedDimnames(x@seed, dimnames)
     DelayedArray(op)
 }
 
-stash_DelayedAbind <- function(..., along)
+stash_DelayedAbind <- function(x, objects, along)
 {
-    seeds <- lapply(unname(list(...)), slot, "seed")
+    stopifnot(is(x, "DelayedArray"))
+    objects <- S4Vectors:::prepare_objects_to_bind(x, objects)
+    seeds <- lapply(c(list(x), objects), slot, "seed")
     op <- new_DelayedAbind(seeds, along)
     DelayedArray(op)
 }
@@ -932,54 +938,4 @@ setMethod("splitAsList", "DelayedArray",
 split.DelayedArray <- function(x, f, drop=FALSE, ...)
     splitAsList(x, f, drop=drop, ...)
 setMethod("split", c("DelayedArray", "ANY"), split.DelayedArray)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Binding
-###
-### We only support binding DelayedArray objects along the rows or the cols
-### at the moment. No binding along an arbitrary dimension yet! (i.e. no
-### "abind" method yet)
-###
-
-### arbind() and acbind()
-
-.DelayedArray_arbind <- function(...) stash_DelayedAbind(..., along=1L)
-.DelayedArray_acbind <- function(...) stash_DelayedAbind(..., along=2L)
-
-setMethod("arbind", "DelayedArray", .DelayedArray_arbind)
-setMethod("acbind", "DelayedArray", .DelayedArray_acbind)
-
-### rbind() and cbind()
-
-setMethod("rbind", "DelayedMatrix", .DelayedArray_arbind)
-setMethod("cbind", "DelayedMatrix", .DelayedArray_acbind)
-
-.as_DelayedMatrix_objects <- function(objects)
-{
-    lapply(objects,
-        function(object) {
-            if (length(dim(object)) != 2L)
-                stop(wmsg("cbind() and rbind() are not supported on ",
-                          "DelayedArray objects that don't have exactly ",
-                          "2 dimensions. Please use acbind() or arbind() ",
-                          "instead."))
-            as(object, "DelayedMatrix")
-        })
-}
-
-.DelayedArray_rbind <- function(...)
-{
-    objects <- .as_DelayedMatrix_objects(list(...))
-    do.call("rbind", objects)
-}
-
-.DelayedArray_cbind <- function(...)
-{
-    objects <- .as_DelayedMatrix_objects(list(...))
-    do.call("cbind", objects)
-}
-
-setMethod("rbind", "DelayedArray", .DelayedArray_rbind)
-setMethod("cbind", "DelayedArray", .DelayedArray_cbind)
 

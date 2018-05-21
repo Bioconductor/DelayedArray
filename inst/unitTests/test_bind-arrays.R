@@ -47,6 +47,18 @@ test_arbind <- function()
         checkIdentical(target_slice, current[ , , k])
     }
     for (k in seq_len(dim(current)[[3L]])) check_2D_slice(k)
+
+    ## on 1D arrays
+    a1 <- array(11:15, 5, dimnames=list(LETTERS[1:5]))
+    checkIdentical(a1, arbind(a1))                      # unary
+    b1 <- array(letters[1:3])
+    target <- array(c(a1, b1), 8, dimnames=list(c(LETTERS[1:5], rep("", 3))))
+    checkIdentical(target, arbind(a1, b1))              # binary
+    target <- array(c(b1, a1), 8, dimnames=list(c(rep("", 3), LETTERS[1:5])))
+    checkIdentical(target, arbind(b1, a1))              # binary
+    a1b1a1 <- arbind(a1, b1, a1)                        # ternary
+    checkIdentical(arbind(a1, arbind(b1, a1)), a1b1a1)
+    checkIdentical(arbind(arbind(a1, b1), a1), a1b1a1)
 }
 
 test_acbind <- function()
@@ -92,5 +104,13 @@ test_acbind <- function()
         checkIdentical(target_slice, current[ , , k])
     }
     for (k in seq_len(dim(current)[[3L]])) check_2D_slice(k)
+
+    ## acbind() is not supported on 1D arrays
+    a1 <- array(11:15, 5, dimnames=list(LETTERS[1:5]))
+    checkException(acbind(a1))          # unary
+    b1 <- array(letters[1:3])
+    checkException(acbind(a1, b1))      # binary
+    checkException(acbind(b1, a1))      # binary
+    checkException(acbind(a1, b1, a1))  # ternary
 }
 
