@@ -25,7 +25,7 @@ setGeneric("getArrayElement", signature="x",
 
 ### Return an integer vector parallel to 'dim' and guaranteed to contain no
 ### out-of-bounds subscripts.
-.from_linear_to_multi_subscript <- function(i, dim)
+from_linear_to_multi_subscript <- function(i, dim)
 {
     stopifnot(isSingleInteger(i))
     if (i < 1L || i > prod(dim))
@@ -65,7 +65,7 @@ setMethod("[[", "Array",
                 stop("some subscripts are out of bounds")
         } else {
             ## Translate linear subsetting into multi-dimensional subsetting.
-            subscripts <- .from_linear_to_multi_subscript(Nindex[[1L]], x_dim)
+            subscripts <- from_linear_to_multi_subscript(Nindex[[1L]], x_dim)
         }
         getArrayElement(x, subscripts)
     }

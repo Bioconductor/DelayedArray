@@ -371,3 +371,32 @@ show_compact_array <- function(object)
     .print_array_data(object, n1, n2)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### showAsCell()
+###
+
+### A re-implementation of S4Vectors:::.showAsCell_array() that avoids doing
+### the "reshaping" of the object. Should work on any array-like object that
+### supports extract_array().
+.showAsCell_array_like <- function(object)
+{
+    dim1 <- dim(object)[-1L]
+    p1 <- prod(dim1)
+    if (p1 == 0L)
+        return(rep.int("", nrow(object)))
+    first_cols <- lapply(seq_len(min(p1, 3L)),
+        function(i1) {
+            subscripts <- from_linear_to_multi_subscript(i1, dim1)
+            index <- c(list(NULL), as.list(subscripts))
+            as.character(extract_array(object, index))
+        }
+    )
+    ans <- do.call(paste, c(first_cols, list(sep=":")))
+    if (p1 > 3L)
+        ans <- paste0(ans, ":...")
+    ans
+}
+
+setMethod("showAsCell", "Array", .showAsCell_array_like)
+

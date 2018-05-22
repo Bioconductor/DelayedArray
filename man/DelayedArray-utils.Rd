@@ -181,7 +181,12 @@
 ## ---------------------------------------------------------------------
 ## BIND DelayedArray OBJECTS
 ## ---------------------------------------------------------------------
+## DelayedArray objects can be bound along their 1st (rows) or 2nd
+## (columns) dimension with rbind() or cbind(). These operations are
+## equivalent to arbind() and acbind(), respectively, and are all
+## delayed.
 
+## On 2D objects:
 library(HDF5Array)
 toy_h5 <- system.file("extdata", "toy.h5", package="HDF5Array")
 h5ls(toy_h5)
@@ -193,16 +198,52 @@ M12 <- rbind(M1, t(M2))        # delayed
 M12
 colMeans(M12)                  # block-processed
 
+## On objects with more than 2 dimensions:
 example(arbind)  # to create arrays a1, a2, a3
 
 A1 <- DelayedArray(a1)
 A2 <- DelayedArray(a2)
 A3 <- DelayedArray(a3)
-A <- rbind(A1, A2, A3)         # delayed
-A
+A123 <- rbind(A1, A2, A3)      # delayed
+A123
 
-## Sanity check:
-stopifnot(identical(arbind(a1, a2, a3), as.array(A)))
+## On 1D objects:
+v1 <- array(11:15, 5, dimnames=list(LETTERS[1:5]))
+v2 <- array(letters[1:3])
+V1 <- DelayedArray(v1)
+V2 <- DelayedArray(v2)
+V12 <- rbind(V1, V2)
+V12
+
+\dontrun{cbind(V1, V2)  # Error! (the objects to cbind() must have at least 2
+               # dimensions)
+}
+
+## Note that base::rbind() and base::cbind() do something completely
+## different on ordinary arrays that are not matrices. They treat them
+## as if they were vectors:
+rbind(a1, a2, a3)
+cbind(a1, a2, a3)
+rbind(v1, v2)
+cbind(v1, v2)
+
+## Also note that DelayedArray objects of arbitrary dimensions can be
+## stored inside a DataFrame object as long as they all have the same
+## first dimension (nrow()):
+DF <- DataFrame(M=I(tail(M1, n=5)), A=I(A3), V=I(V1))
+DF[-3, ]
+DF2 <- rbind(DF, DF)
+DF2$V
+
+## Sanity checks:
+m1 <- as.matrix(M1)
+m2 <- as.matrix(M2)
+stopifnot(identical(rbind(m1, t(m2)), as.matrix(M12)))
+stopifnot(identical(arbind(a1, a2, a3), as.array(A123)))
+stopifnot(identical(arbind(v1, v2), as.array(V12)))
+stopifnot(identical(rbind(DF$M, DF$M), DF2$M))
+stopifnot(identical(rbind(DF$A, DF$A), DF2$A))
+stopifnot(identical(rbind(DF$V, DF$V), DF2$V))
 
 ## ---------------------------------------------------------------------
 ## MORE OPERATIONS
