@@ -11,16 +11,17 @@
 \alias{coerce,DelayedArray,DelayedMatrix-method}
 \alias{coerce,DelayedMatrix,DelayedArray-method}
 
+\alias{dim,DelayedArray-method}
+\alias{dimnames,DelayedArray-method}
+\alias{extract_array,DelayedArray-method}
+
 \alias{new_DelayedArray}
 \alias{DelayedArray}
 \alias{DelayedArray,ANY-method}
 \alias{DelayedArray,DelayedArray-method}
+\alias{DelayedArray,DelayedOp-method}
 
 \alias{updateObject,DelayedArray-method}
-
-\alias{dim,DelayedArray-method}
-\alias{dimnames,DelayedArray-method}
-\alias{extract_array,DelayedArray-method}
 
 \alias{type}
 
@@ -227,7 +228,6 @@ stopifnot(identical(cs, CS))
 ## ---------------------------------------------------------------------
 ## B. WRAP A DataFrame OBJECT IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
-
 ## Generate random coverage and score along an imaginary chromosome:
 cov <- Rle(sample(20, 5000, replace=TRUE), sample(6, 5000, replace=TRUE))
 score <- Rle(sample(100, nrun(cov), replace=TRUE), runLength(cov))

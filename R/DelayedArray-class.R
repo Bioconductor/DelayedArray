@@ -139,6 +139,38 @@ setValidity2("DelayedMatrix", .validate_DelayedMatrix)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+### We overwrite the methods for DelayedUnaryOp objects only to detect
+### DelayedArray objects with old internals.
+###
+
+setMethod("dim", "DelayedArray",
+    function(x)
+    {
+        .check_DelayedArray_internals(x)
+        callNextMethod()
+    }
+)
+
+setMethod("dimnames", "DelayedArray",
+    function(x)
+    {
+        .check_DelayedArray_internals(x)
+        callNextMethod()
+    }
+)
+
+setMethod("extract_array", "DelayedArray",
+    function(x, index)
+    {
+        .check_DelayedArray_internals(x)
+        callNextMethod()
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
 
@@ -153,16 +185,56 @@ new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
 
 setGeneric("DelayedArray", function(seed) standardGeneric("DelayedArray"))
 
-setMethod("DelayedArray", "ANY",
+setMethod("DelayedArray", "ANY", function(seed) new_DelayedArray(seed))
+
+setMethod("DelayedArray", "DelayedArray", function(seed) seed)
+
+setMethod("DelayedArray", "DelayedOp",
     function(seed)
     {
-        if (getOption("DelayedArray.simplify", default=TRUE))
+        if (getOption("DelayedArray.simplify", default=TRUE)) {
             seed <- simplify(seed, incremental=TRUE)
+            if (!is(seed, "DelayedOp"))
+                return(DelayedArray(seed))
+        }
         new_DelayedArray(seed)
     }
 )
 
-setMethod("DelayedArray", "DelayedArray", function(seed) seed)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Pristine objects
+###
+### A pristine DelayedArray object is an object that does not carry any
+### delayed operation.
+###
+
+### Note that false negatives happen when 'x' carries delayed operations that
+### do nothing, but that's ok.
+is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### simplify()
+###
+
+setMethod("simplify", "DelayedArray",
+    function(x, incremental=FALSE)
+        DelayedArray(simplify(x@seed, incremental=incremental))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### netSubsetAndAperm()
+###
+
+setMethod("netSubsetAndAperm", "DelayedArray",
+    function(x, as.DelayedOp=FALSE)
+    {
+        x <- x@seed
+        callGeneric()
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -310,61 +382,6 @@ setMethod("updateObject", "DelayedArray", .updateObject_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Seed contract
-###
-### We overwrite the methods for DelayedUnaryOp objects only to detect
-### DelayedArray objects with old internals.
-###
-
-setMethod("dim", "DelayedArray",
-    function(x)
-    {
-        .check_DelayedArray_internals(x)
-        callNextMethod()
-    }
-)
-
-setMethod("dimnames", "DelayedArray",
-    function(x)
-    {
-        .check_DelayedArray_internals(x)
-        callNextMethod()
-    }
-)
-
-setMethod("extract_array", "DelayedArray",
-    function(x, index)
-    {
-        .check_DelayedArray_internals(x)
-        callNextMethod()
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### simplify()
-###
-
-setMethod("simplify", "DelayedArray",
-    function(x, incremental=FALSE)
-        DelayedArray(simplify(x@seed, incremental=incremental))
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### netSubsetAndAperm()
-###
-
-setMethod("netSubsetAndAperm", "DelayedArray",
-    function(x, as.DelayedOp=FALSE)
-    {
-        x <- x@seed
-        callGeneric()
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Stash delayed ops in a DelayedArray object
 ###
 ### Each "stashing" utility below:
@@ -416,18 +433,6 @@ stash_DelayedAbind <- function(x, objects, along)
     op <- new_DelayedAbind(seeds, along)
     DelayedArray(op)
 }
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Pristine objects
-###
-### A pristine DelayedArray object is an object that does not carry any
-### delayed operation.
-###
-
-### Note that false negatives happen when 'x' carries delayed operations that
-### do nothing, but that's ok.
-is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
