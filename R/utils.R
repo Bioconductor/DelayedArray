@@ -121,7 +121,7 @@ expand_Nindex_RangeNSBS <- function(Nindex)
         Nindex <- expand_Nindex_RangeNSBS(Nindex)
 
     ## Replace NULLs with list elements of class "name".
-    subscripts <- rep.int(alist(foo=), length(Nindex))
+    subscripts <- rep.int(list(quote(expr=)), length(Nindex))
     names(subscripts ) <- names(Nindex)
     not_missing_idx <- which(!S4Vectors:::sapply_isNULL(Nindex))
     subscripts[not_missing_idx] <- Nindex[not_missing_idx]
