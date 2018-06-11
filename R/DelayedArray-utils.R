@@ -368,12 +368,10 @@ setMethod("gsub", c(x="DelayedArray"),
 ### Used in unit tests!
 .DelayedArray_block_anyNA <- function(x, recursive=FALSE)
 {
-    APPLY <- anyNA
-    COMBINE <- function(b, block, init, reduced) { init || reduced }
+    FUN <- function(block, init) {anyNA(block) || init}
     init <- FALSE
     BREAKIF <- identity
-
-    block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
+    blockReduce(FUN, x, init, BREAKIF)
 }
 
 setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
@@ -390,12 +388,13 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
         stop("'arr.ind' must be TRUE or FALSE")
     if (!isTRUEorFALSE(useNames))
         stop("'useNames' must be TRUE or FALSE")
-    APPLY <- base::which
-    COMBINE <- function(b, block, init, reduced) {
-        if (length(reduced) != 0L) {
-            reduced <- reduced + init[["offset"]]
-            part_number <- sprintf("%010d", b)
-            init[[part_number]] <- reduced
+
+    FUN <- function(block, init) {
+        reduced_block <- base::which(block)
+        if (length(reduced_block) != 0L) {
+            reduced_block <- reduced_block + init[["offset"]]
+            part_number <- sprintf("%010d", currentBlockId(block))
+            init[[part_number]] <- reduced_block
         }
         init[["offset"]] <- init[["offset"]] + length(block)
         init
@@ -409,7 +408,7 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
     init <- new.env(parent=emptyenv())
     init[["offset"]] <- offset
 
-    init <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init)
+    init <- blockReduce(FUN, x, init)
     stopifnot(identical(x_len, init[["offset"]]))  # sanity check
     rm(list="offset", envir=init)
 
@@ -455,19 +454,15 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
     objects <- .collect_objects(x, ...)
 
     GENERIC <- match.fun(.Generic)
-    APPLY <- function(block) {
+
+    FUN <- function(block, init) {
         ## We get a warning if 'block' is empty (which can't happen, blocks
         ## can't be empty) or if 'na.rm' is TRUE and 'block' contains only
         ## NA's or NaN's.
-        reduced <- tryCatch(GENERIC(block, na.rm=na.rm), warning=identity)
-        if (is(reduced, "warning"))
+        reduced_block <- tryCatch(GENERIC(block, na.rm=na.rm), warning=identity)
+        if (is(reduced_block, "warning") && is.null(init))
             return(NULL)
-        reduced
-    }
-    COMBINE <- function(b, block, init, reduced) {
-        if (is.null(init) && is.null(reduced))
-            return(NULL)
-        GENERIC(init, reduced)
+        GENERIC(reduced_block, init)
     }
     init <- NULL
     BREAKIF <- function(init) {
@@ -484,7 +479,7 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
     }
 
     for (x in objects)
-        init <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
+        init <- blockReduce(FUN, x, init, BREAKIF)
     if (is.null(init))
         init <- GENERIC()
     init
@@ -507,19 +502,18 @@ setMethod("Summary", "DelayedArray",
         stop("\"mean\" method for DelayedArray objects ",
              "does not support the 'trim' argument yet")
 
-    APPLY <- function(block) {
+    FUN <- function(block, init) {
         tmp <- as.vector(block, mode="numeric")
         block_sum <- sum(tmp, na.rm=na.rm)
         block_nval <- length(tmp)
         if (na.rm)
             block_nval <- block_nval - sum(is.na(tmp))
-        c(block_sum, block_nval)
+        c(block_sum, block_nval) + init
     }
-    COMBINE <- function(b, block, init, reduced) { init + reduced }
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])
 
-    ans <- block_APPLY_and_COMBINE(x, APPLY, COMBINE, init, BREAKIF)
+    ans <- blockReduce(FUN, x, init, BREAKIF)
     ans[[1L]] / ans[[2L]]
 }
 

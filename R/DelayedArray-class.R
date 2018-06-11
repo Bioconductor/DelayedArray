@@ -726,7 +726,7 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         return(.get_DelayedArray_element(x, i))
 
     ## We want to walk only on the blocks that we actually need to visit so we
-    ## don't use block_APPLY() or family because they walk on all the blocks.
+    ## don't use blockApply() because it walks on all the blocks.
 
     grid <- defaultGrid(x)
     nblock <- length(grid)

@@ -196,7 +196,8 @@ export(
     supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
 
     ## block_processing.R:
-    defaultGrid, blockApply, effectiveGrid, currentBlockId, currentViewport,
+    defaultGrid, blockApply, blockReduce,
+    effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,
 
     ## RleArray-class.R:

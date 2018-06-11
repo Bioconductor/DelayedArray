@@ -72,7 +72,7 @@ set_verbose_block_processing <- function(verbose)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Walking on the blocks
 ###
-### 3 utility functions to process array-like objects by block.
+### 2 utility functions to process array-like objects by block.
 ###
 
 .as_array_or_matrix <- function(x)
@@ -80,32 +80,6 @@ set_verbose_block_processing <- function(verbose)
     if (length(dim(x)) == 2L)
         return(as.matrix(x))
     as.array(x)
-}
-
-### An lapply-like function.
-block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
-{
-    APPLY <- match.fun(APPLY)
-    grid <- defaultGrid(x, max_block_len)
-    nblock <- length(grid)
-    lapply(seq_len(nblock),
-        function(b) {
-            if (get_verbose_block_processing())
-                message("Processing block ", b, "/", nblock, " ... ",
-                        appendLF=FALSE)
-            viewport <- grid[[b]]
-            block <- extract_block(x, viewport)
-            if (!is.array(block))
-                block <- .as_array_or_matrix(block)
-            block_ans <- APPLY(block, ...)
-            if (!is.null(sink)) {
-                write_block_to_sink(block_ans, sink, viewport)
-                block_ans <- NULL
-            }
-            if (get_verbose_block_processing())
-                message("OK")
-            block_ans
-        })
 }
 
 .normarg_grid <- function(grid, x)
@@ -162,6 +136,36 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
     )
 }
 
+### A Reduce-like function. Not parallelized yet.
+blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
+{
+    FUN <- match.fun(FUN)
+    if (!is.null(BREAKIF))
+        BREAKIF <- match.fun(BREAKIF)
+    grid <- .normarg_grid(grid, x)
+    nblock <- length(grid)
+    for (b in seq_len(nblock)) {
+        if (get_verbose_block_processing())
+            message("Processing block ", b, "/", nblock, " ... ",
+                    appendLF=FALSE)
+        viewport <- grid[[b]]
+        block <- extract_block(x, viewport)
+        if (!is.array(block))
+            block <- .as_array_or_matrix(block)
+        attr(block, "from_grid") <- grid
+        attr(block, "block_id") <- b
+        init <- FUN(block, init)
+        if (get_verbose_block_processing())
+            message("OK")
+        if (!is.null(BREAKIF) && BREAKIF(init)) {
+            if (get_verbose_block_processing())
+                message("BREAK condition encountered")
+            break
+        }
+    }
+    init
+}
+
 effectiveGrid <- function(block)
 {
     if (!is.array(block))
@@ -184,6 +188,39 @@ currentBlockId <- function(block)
 
 currentViewport <- function(block)
     effectiveGrid(block)[[currentBlockId(block)]]
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### OLD - Walking on the blocks
+### OLD -
+### OLD - 3 utility functions to process array-like objects by block.
+### OLD -
+
+### An lapply-like function.
+block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
+{
+    APPLY <- match.fun(APPLY)
+    grid <- defaultGrid(x, max_block_len)
+    nblock <- length(grid)
+    lapply(seq_len(nblock),
+        function(b) {
+            if (get_verbose_block_processing())
+                message("Processing block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            viewport <- grid[[b]]
+            block <- extract_block(x, viewport)
+            if (!is.array(block))
+                block <- .as_array_or_matrix(block)
+            block_ans <- APPLY(block, ...)
+            if (!is.null(sink)) {
+                write_block_to_sink(block_ans, sink, viewport)
+                block_ans <- NULL
+            }
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
+        })
+}
 
 ### A mapply-like function for conformable arrays.
 block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
