@@ -236,44 +236,6 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
     block_APPLY(x, APPLY, ..., sink=sink, max_block_len=max_block_len)
 }
 
-### A mapply-like function for conformable arrays.
-block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
-{
-    MAPPLY <- match.fun(MAPPLY)
-    dots <- unname(list(...))
-    dims <- vapply(dots, dim, integer(2))
-    if (!all(dims == dims[ , 1L]))
-        stop("non-conformable arrays")
-    if (is.null(max_block_len)) {
-        types <- unlist(lapply(dots, type))
-        max_block_len <- min(get_max_block_length(types))
-    }
-    grid <- defaultGrid(x, max_block_len)
-    nblock <- length(grid)
-    lapply(seq_len(nblock),
-        function(b) {
-            if (get_verbose_block_processing())
-                message("Processing block ", b, "/", nblock, " ... ",
-                        appendLF=FALSE)
-            viewport <- grid[[b]]
-            blocks <- lapply(dots,
-                function(x) {
-                    block <- extract_block(x, viewport)
-                    if (!is.array(block))
-                        block <- .as_array_or_matrix(block)
-                    block
-                })
-            block_ans <- do.call(MAPPLY, blocks)
-            if (!is.null(sink)) {
-                write_block_to_sink(block_ans, sink, viewport)
-                block_ans <- NULL
-            }
-            if (get_verbose_block_processing())
-                message("OK")
-            block_ans
-        })
-}
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Block by block realization of an array-like object
