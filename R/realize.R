@@ -13,21 +13,13 @@
 ###   1) A constructor function that takes argument 'dim', 'dimnames', and
 ###      'type'.
 ###   2) "dim" and "dimnames" methods.
-###   3) A "chunk_dim" method (optional).
-###   4) A "write_block_to_sink" method.
-###   5) A "close" method (optional).
-###   6) Coercion to DelayedArray.
+###   3) A "write_block_to_sink" method.
+###   4) A "close" method (optional).
+###   5) Coercion to DelayedArray.
 ### See the arrayRealizationSink class below, or the RleRealizationSink class
 ### in RleArray-class.R, or the HDF5RealizationSink class in the HDF5Array
 ### package for examples of concrete RealizationSink subclasses.
 setClass("RealizationSink", representation("VIRTUAL"))
-
-setGeneric("chunk_dim", function(x) standardGeneric("chunk_dim"))
-
-### The default "chunk_dim" method for RealizationSink objects returns NULL
-### (i.e. no chunking i.e. implicit chunks of dimensions rep(1, length(dim(x)))
-### i.e. 1 array element per chunk).
-setMethod("chunk_dim", "RealizationSink", function(x) NULL)
 
 ### 'block', 'sink', and 'viewport' are expected to be an ordinary array, a
 ### RealizationSink, and a Viewport object, respectively. They must satisfy:

@@ -3,8 +3,6 @@
 \alias{class:RealizationSink}
 \alias{RealizationSink-class}
 
-\alias{chunk_dim}
-\alias{chunk_dim,RealizationSink-method}
 \alias{write_block_to_sink}
 
 \alias{close,RealizationSink-method}
