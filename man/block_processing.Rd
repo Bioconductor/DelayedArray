@@ -12,7 +12,7 @@
 
 \alias{write_array_to_sink}
 
-\title{Block processing of an array}
+\title{Block processing of an array-like object}
 
 \description{
   A set of utilities for processing an array-like object block by block.
@@ -68,6 +68,8 @@ currentViewport(block)
 \seealso{
   \itemize{
     \item \link{DelayedArray} objects.
+
+    \item \code{\link{chunkgrid}}.
 
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.

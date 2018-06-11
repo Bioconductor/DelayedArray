@@ -31,13 +31,6 @@
 \alias{as.raw.Array}
 \alias{as.raw,Array-method}
 
-\alias{chunkdim}
-\alias{chunkdim,ANY-method}
-
-\alias{class:integer_OR_NULL}
-\alias{integer_OR_NULL-class}
-\alias{integer_OR_NULL}
-
 \title{extract_array}
 
 \description{
@@ -104,4 +97,7 @@ type(x)
   }
 }
 
+\examples{
+## Coming soon...
+}
 \keyword{internal}

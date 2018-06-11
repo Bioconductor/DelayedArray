@@ -165,11 +165,11 @@ type(x)
 
 \seealso{
   \itemize{
-    \item \code{\link{type}} to get the type of the elements of an array-like
-          object.
-
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
+
+    \item \link{block_processing} for more information about block-processing
+          of an array-like object.
 
     \item \link{DelayedArray-utils} for common operations on DelayedArray
           objects.

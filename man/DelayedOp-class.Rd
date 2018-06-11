@@ -18,7 +18,6 @@
 \alias{dim,DelayedUnaryOp-method}
 \alias{dimnames,DelayedUnaryOp-method}
 \alias{extract_array,DelayedUnaryOp-method}
-\alias{chunkdim,DelayedUnaryOp-method}
 
 % DelayedNaryOp objects
 \alias{class:DelayedNaryOp}
@@ -36,7 +35,6 @@
 \alias{dim,DelayedSubset-method}
 \alias{dimnames,DelayedSubset-method}
 \alias{extract_array,DelayedSubset-method}
-\alias{chunkdim,DelayedSubset-method}
 
 % DelayedAperm objects
 \alias{class:DelayedAperm}
@@ -49,7 +47,6 @@
 \alias{dim,DelayedAperm-method}
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
-\alias{chunkdim,DelayedAperm-method}
 
 % DelayedUnaryIsoOp objects
 \alias{class:DelayedUnaryIsoOp}

@@ -73,8 +73,6 @@ setMethod("extract_array", "DelayedUnaryOp",
     function(x, index) extract_array(x@seed, index)
 )
 
-setMethod("chunkdim", "DelayedUnaryOp", function(x) chunkdim(x@seed))
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedNaryOp objects
@@ -250,20 +248,6 @@ setMethod("dimnames", "DelayedSubset",
 
 setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 
-.get_DelayedSubset_chunkdim <- function(x)
-{
-    seed_chunkdim <- chunkdim(x@seed)
-    if (is.null(seed_chunkdim))
-        return(NULL)
-    ok <- lapply(seq_along(seed_chunkdim),
-              function(i) {seed_chunkdim[[i]] <= 1L || is.null(x@index[[i]])})
-    if (!all(unlist(ok)))
-        return(NULL)
-    pmin(seed_chunkdim, dim(x))
-}
-
-setMethod("chunkdim", "DelayedSubset", .get_DelayedSubset_chunkdim)
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedAperm objects
@@ -376,14 +360,6 @@ setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
 setMethod("extract_array", "DelayedAperm",
     .extract_array_from_DelayedAperm
 )
-
-.get_DelayedAperm_chunkdim <- function(x)
-{
-    seed_chunkdim <- chunkdim(x@seed)
-    seed_chunkdim[x@perm]
-}
-
-setMethod("chunkdim", "DelayedAperm", .get_DelayedAperm_chunkdim)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
