@@ -222,6 +222,20 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
         })
 }
 
+### A convenience wrapper around block_APPLY() to process a matrix-like
+### object by block of columns.
+colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
+{
+    x_dim <- dim(x)
+    if (length(x_dim) != 2L)
+        stop("'x' must be a matrix-like object")
+    APPLY <- match.fun(APPLY)
+    ## We're going to walk along the columns so need to increase the block
+    ## length so each block is made of at least one column.
+    max_block_len <- max(get_max_block_length(type(x)), x_dim[[1L]])
+    block_APPLY(x, APPLY, ..., sink=sink, max_block_len=max_block_len)
+}
+
 ### A mapply-like function for conformable arrays.
 block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
 {
@@ -258,68 +272,6 @@ block_MAPPLY <- function(MAPPLY, ..., sink=NULL, max_block_len=NULL)
                 message("OK")
             block_ans
         })
-}
-
-### A Reduce-like function.
-block_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init,
-                                       BREAKIF=NULL, max_block_len=NULL)
-{
-    APPLY <- match.fun(APPLY)
-    COMBINE <- match.fun(COMBINE)
-    if (!is.null(BREAKIF))
-        BREAKIF <- match.fun(BREAKIF)
-    grid <- defaultGrid(x, max_block_len)
-    nblock <- length(grid)
-    for (b in seq_len(nblock)) {
-        if (get_verbose_block_processing())
-            message("Processing block ", b, "/", nblock, " ... ",
-                    appendLF=FALSE)
-        block <- extract_block(x, grid[[b]])
-        if (!is.array(block))
-            block <- .as_array_or_matrix(block)
-        reduced <- APPLY(block)
-        init <- COMBINE(b, block, init, reduced)
-        if (get_verbose_block_processing())
-            message("OK")
-        if (!is.null(BREAKIF) && BREAKIF(init)) {
-            if (get_verbose_block_processing())
-                message("BREAK condition encountered")
-            break
-        }
-    }
-    init
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Walking on the blocks of columns
-###
-### 2 convenience wrappers around block_APPLY() and block_APPLY_and_COMBINE()
-### to process a matrix-like object by block of columns.
-###
-
-colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
-{
-    x_dim <- dim(x)
-    if (length(x_dim) != 2L)
-        stop("'x' must be a matrix-like object")
-    APPLY <- match.fun(APPLY)
-    ## We're going to walk along the columns so need to increase the block
-    ## length so each block is made of at least one column.
-    max_block_len <- max(get_max_block_length(type(x)), x_dim[[1L]])
-    block_APPLY(x, APPLY, ..., sink=sink, max_block_len=max_block_len)
-}
-
-colblock_APPLY_and_COMBINE <- function(x, APPLY, COMBINE, init)
-{
-    x_dim <- dim(x)
-    if (length(x_dim) != 2L)
-        stop("'x' must be a matrix-like object")
-    ## We're going to walk along the columns so need to increase the block
-    ## length so each block is made of at least one column.
-    max_block_len <- max(get_max_block_length(type(x)), x_dim[[1L]])
-    block_APPLY_and_COMBINE(x, APPLY, COMBINE, init,
-                            max_block_len=max_block_len)
 }
 
 
