@@ -544,6 +544,7 @@ setMethod("downsample", "ArbitraryArrayGrid",
             x@tickmarks,
             lengths(x@tickmarks),
             ratio,
+            SIMPLIFY=FALSE,
             USE.NAMES=FALSE
         )
         ArbitraryArrayGrid(ans_tickmarks)

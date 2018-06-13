@@ -225,10 +225,27 @@ m2
 ## 'ratio' vector (one integer per dimension). We call this operation
 ## "downsampling. It can be seen as reducing the "resolution" of a grid
 ## by the specified ratio (if we think of the grid elements as pixels).
-
 downsample(grid2, 2)
 downsample(grid2, 3)
 downsample(grid2, 4)
+
+## Downsampling preserves the dimensions of the reference array:
+stopifnot(identical(refdim(downsample(grid2, 2)), refdim(grid2)))
+stopifnot(identical(refdim(downsample(grid2, 3)), refdim(grid2)))
+stopifnot(identical(refdim(downsample(grid2, 4)), refdim(grid2)))
+
+## A big enough ratio will eventually produce the coarsest possible grid
+## i.e. a grid with a single grid element covering the entire reference
+## array:
+grid4 <- downsample(grid2, 7)
+length(grid4)
+grid4[[1L]]
+stopifnot(identical(dim(grid4[[1L]]), refdim(grid4)))
+
+## Downsampling by a ratio of 1 is a no-op:
 stopifnot(identical(downsample(grid2, 1), grid2))
+
+## Using one ratio per dimension:
+downsample(grid2, c(2, 1))
 }
 \keyword{internal}
