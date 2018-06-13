@@ -260,6 +260,24 @@ setClass("RegularArrayGrid",
     )
 }
 
+### Get length of biggest viewport in ArbitraryArrayGrid object 'x'.
+.get_ArbitraryArrayGrid_maxlength <- function(x)
+{
+    ans <- prod(.get_ArbitraryArrayGrid_max_spacings(x))
+    if (ans <= .Machine$integer.max)
+        ans <- as.integer(ans)
+    ans
+}
+
+### Get length of biggest viewport in RegularArrayGrid object 'x'.
+.get_RegularArrayGrid_maxlength <- function(x)
+{
+    ans <- prod(x@spacings)
+    if (ans <= .Machine$integer.max)
+        ans <- as.integer(ans)
+    ans
+}
+
 .get_RegularArrayGrid_dim <- function(refdim, spacings)
 {
     ans <- refdim %/% spacings + (refdim %% spacings != 0L)
@@ -295,8 +313,8 @@ setClass("RegularArrayGrid",
     if (!all(ok))
         return(wmsg2("each list element in 'tickmarks' slot must be a ",
                      "sorted integer vector of non-negative values"))
-    max_spacings <- .get_ArbitraryArrayGrid_max_spacings(x)
-    if (prod(max_spacings) > .Machine$integer.max)
+    x_maxlen <- .get_ArbitraryArrayGrid_maxlength(x)
+    if (x_maxlen > .Machine$integer.max)
         return(wmsg2("grid is too coarse (all grid elements must have a ",
                      "length <= .Machine$integer.max)"))
     TRUE
@@ -322,7 +340,8 @@ setValidity2("ArbitraryArrayGrid", .validate_ArbitraryArrayGrid)
     if (any(x_spacings == 0L & x_refdim != 0L))
         return(wmsg2("values in 'spacings' slot cannot be 0 unless their ",
                      "corresponding value in 'refdim' slot is also 0"))
-    if (prod(x_spacings) > .Machine$integer.max)
+    x_maxlen <- .get_RegularArrayGrid_maxlength(x)
+    if (x_maxlen > .Machine$integer.max)
         return(wmsg2("grid is too coarse (all grid elements must have a ",
                      "length <= .Machine$integer.max)"))
     TRUE
@@ -443,6 +462,14 @@ setMethod("lengths", "ArrayGrid",
         ans
     }
 )
+
+### Equivalent to 'max(lengths(x))' except that when 'x' is an ArrayGrid
+### object this can be computed without computing 'lengths(x)' first so is
+### very efficient.
+setGeneric("maxlength", function(x) standardGeneric("maxlength"))
+setMethod("maxlength", "ANY", function(x) max(lengths(x)))
+setMethod("maxlength", "ArbitraryArrayGrid", .get_ArbitraryArrayGrid_maxlength)
+setMethod("maxlength", "RegularArrayGrid", .get_RegularArrayGrid_maxlength)
 
 ### Show
 

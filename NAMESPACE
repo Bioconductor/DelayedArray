@@ -214,7 +214,7 @@ export(
     arbind, acbind,
 
     ## ArrayGrid-class.R:
-    refdim, downsample, isLinear,
+    refdim, maxlength, downsample, isLinear,
 
     ## extract_array.R:
     extract_array, type,
@@ -245,7 +245,7 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
-    refdim, downsample, isLinear,
+    refdim, maxlength, downsample, isLinear,
     extract_array, type,
     isNoOp,
     simplify, netSubsetAndAperm,

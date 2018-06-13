@@ -36,6 +36,10 @@
 \alias{as.character.ArrayGrid}
 \alias{as.character,ArrayGrid-method}
 \alias{lengths,ArrayGrid-method}
+\alias{maxlength}
+\alias{maxlength,ANY-method}
+\alias{maxlength,ArbitraryArrayGrid-method}
+\alias{maxlength,RegularArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
 \alias{downsample}
@@ -107,38 +111,55 @@ downsample(x, ratio=1L)
 
 \examples{
 ## ---------------------------------------------------------------------
-## ArrayGrid OBJECTS
+## A. ArrayGrid OBJECTS
 ## ---------------------------------------------------------------------
 
 ## Create a regularly-spaced grid on top of a 3700 x 100 x 33 array:
-grid <- RegularArrayGrid(c(3700L, 100L, 33L), c(250L, 100L, 10L))
+grid1 <- RegularArrayGrid(c(3700L, 100L, 33L), c(250L, 100L, 10L))
 
 ## Dimensions of the reference array:
-refdim(grid)
+refdim(grid1)
 
 ## Number of grid elements along each dimension of the reference array:
-dim(grid)
+dim(grid1)
 
 ## Total number of grid elements:
-length(grid)
+length(grid1)
 
 ## First element in the grid:
-grid[[1L]]            # same as grid[[1L, 1L, 1L]]
+grid1[[1L]]             # same as grid1[[1L, 1L, 1L]]
 
 ## Last element in the grid:
-grid[[length(grid)]]  # same as grid[[15L, 1L, 4L]]
+grid1[[length(grid1)]]  # same as grid1[[15L, 1L, 4L]]
 
 ## Lengths of the grid elements:
-lengths(grid)
+lengths(grid1)
+stopifnot(sum(lengths(grid1)) == prod(refdim(grid1)))
 
-stopifnot(prod(refdim(grid)) == sum(lengths(grid)))
+maxlength(grid1)        # does not need to compute lengths(grid1)) first
+                        # so is more efficient than max(lengths(grid1))
+stopifnot(maxlength(grid1) == max(lengths(grid1)))
+
+## Create an arbitrary-spaced grid on top of a 15 x 9 matrix:
+grid2 <- ArbitraryArrayGrid(list(c(2L, 7:10, 13L, 15L), c(5:6, 6L, 9L)))
+refdim(grid2)
+dim(grid2)
+length(grid2)
+grid2[[1L]]             # same as grid2[[1L, 1L]]
+grid2[[length(grid2)]]  # same as grid2[[15L, 9L]]
+lengths(grid2)
+stopifnot(sum(lengths(grid2)) == prod(refdim(grid2)))
+
+maxlength(grid2)        # does not need to compute lengths(grid2)) first
+                        # so is more efficient than max(lengths(grid2))
+stopifnot(maxlength(grid2) == max(lengths(grid2)))
 
 ## ---------------------------------------------------------------------
-## ArrayViewport OBJECTS
+## B. ArrayViewport OBJECTS
 ## ---------------------------------------------------------------------
 
 ## Grid elements are ArrayViewport objects:
-class(grid[[1L]])
+class(grid1[[1L]])
 
 m0 <- matrix(1:30, ncol=5)
 
@@ -168,15 +189,15 @@ viewport2 <- ArrayViewport(dim(m0), IRanges(c(1, 3), width=block_dim))
 replace_block(m0, viewport2, block1 + 100L)
 
 ## Using a grid:
-grid <- RegularArrayGrid(dim(m0), spacings=c(3L, 2L))
-grid
-extract_block(m0, grid[[3L]])
-extract_block(m0, grid[[1L, 3L]])
+grid3 <- RegularArrayGrid(dim(m0), spacings=c(3L, 2L))
+grid3
+extract_block(m0, grid3[[3L]])
+extract_block(m0, grid3[[1L, 3L]])
 
 ## Walk on the grid, colum by column:
 m1 <- m0
-for (b in seq_along(grid)) {
-    viewport <- grid[[b]]
+for (b in seq_along(grid3)) {
+    viewport <- grid3[[b]]
     block <- extract_block(m1, viewport)
     block <- b * 1000L + block
     m1 <- replace_block(m1, viewport, block)
@@ -185,9 +206,9 @@ m1
 
 ## Walk on the grid, row by row:
 m2 <- m0
-for (i in seq_len(dim(grid)[[1]])) {
-  for (j in seq_len(dim(grid)[[2]])) {
-    viewport <- grid[[i, j]]
+for (i in seq_len(dim(grid3)[[1]])) {
+  for (j in seq_len(dim(grid3)[[2]])) {
+    viewport <- grid3[[i, j]]
     block <- extract_block(m2, viewport)
     block <- (i * 10L + j) * 1000L + block
     m2 <- replace_block(m2, viewport, block)
@@ -196,7 +217,7 @@ for (i in seq_len(dim(grid)[[1]])) {
 m2
 
 ## ---------------------------------------------------------------------
-## DOWNSAMPLING AN ArrayGrid OBJECT
+## C. DOWNSAMPLING AN ArrayGrid OBJECT
 ## ---------------------------------------------------------------------
 ## The elements (ArrayViewport) of an ArrayGrid object can be replaced
 ## with bigger elements obtained by merging adjacent elements. How many
@@ -205,9 +226,9 @@ m2
 ## "downsampling. It can be seen as reducing the "resolution" of a grid
 ## by the specified ratio (if we think of the grid elements as pixels).
 
-grid <- ArbitraryArrayGrid(list(c(2L, 7:10, 13L, 15L), c(5:6, 6L, 9L)))
-downsample(grid, 2)
-downsample(grid, 3)
-stopifnot(identical(downsample(grid, 1), grid))
+downsample(grid2, 2)
+downsample(grid2, 3)
+downsample(grid2, 4)
+stopifnot(identical(downsample(grid2, 1), grid2))
 }
 \keyword{internal}
