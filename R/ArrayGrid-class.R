@@ -566,18 +566,18 @@ setMethod("downsample", "RegularArrayGrid",
 ###
 ### Typically used to create a regular grid with a first block that is as
 ### close as possible to an hypercube and that has a length as close as
-### possibe to (but not bigger than) 'max_block_len'.
+### possibe to (but not bigger than) 'block_maxlen'.
 ### NOT exported but used in HDF5Array!
 get_spacings_for_hypercube_capped_length_blocks <-
-    function(refdim, max_block_len)
+    function(refdim, block_maxlen)
 {
-    if (!isSingleNumber(max_block_len))
-        stop("'max_block_len' must be a single integer")
-    if (!is.integer(max_block_len))
-        max_block_len <- as.integer(max_block_len)
+    if (!isSingleNumber(block_maxlen))
+        stop("'block_maxlen' must be a single integer")
+    if (!is.integer(block_maxlen))
+        block_maxlen <- as.integer(block_maxlen)
 
     p <- prod(refdim)
-    if (p <= max_block_len)
+    if (p <= block_maxlen)
         return(refdim)
 
     spacings <- refdim
@@ -585,7 +585,7 @@ get_spacings_for_hypercube_capped_length_blocks <-
     while (TRUE) {
         is_max <- spacings == L
         not_max_spacings <- spacings[!is_max]
-        L <- (max_block_len / prod(not_max_spacings)) ^ (1 / sum(is_max))
+        L <- (block_maxlen / prod(not_max_spacings)) ^ (1 / sum(is_max))
         if (length(not_max_spacings) == 0L)
             break
         L2 <- max(not_max_spacings)
@@ -600,9 +600,9 @@ get_spacings_for_hypercube_capped_length_blocks <-
     for (along in which(is_max)[order(q[is_max])]) {
         spacings[[along]] <- spacings[[along]] + 1L
         p <- prod(spacings)
-        if (p == max_block_len)
+        if (p == block_maxlen)
             break
-        if (p > max_block_len) {
+        if (p > block_maxlen) {
             spacings[[along]] <- spacings[[along]] - 1L
             break
         }
@@ -644,24 +644,24 @@ setMethod("isLinear", "ArrayGrid",
 )
 
 ### Typically used to create a regular grid with linear blocks of length as
-### close as possibe to (but not bigger than) 'max_block_len'.
+### close as possibe to (but not bigger than) 'block_maxlen'.
 ### NOT exported but used in HDF5Array!
-get_spacings_for_linear_capped_length_blocks <- function(refdim, max_block_len)
+get_spacings_for_linear_capped_length_blocks <- function(refdim, block_maxlen)
 {
-    if (!isSingleNumber(max_block_len))
-        stop("'max_block_len' must be a single integer")
-    if (!is.integer(max_block_len))
-        max_block_len <- as.integer(max_block_len)
+    if (!isSingleNumber(block_maxlen))
+        stop("'block_maxlen' must be a single integer")
+    if (!is.integer(block_maxlen))
+        block_maxlen <- as.integer(block_maxlen)
 
     p <- cumprod(refdim)
-    w <- which(p <= max_block_len)
+    w <- which(p <= block_maxlen)
     N <- if (length(w) == 0L) 1L else w[[length(w)]] + 1L
     if (N > length(refdim))
         return(refdim)
     if (N == 1L) {
-        by <- max_block_len
+        by <- block_maxlen
     } else {
-        by <- max_block_len %/% as.integer(p[[N - 1L]])
+        by <- block_maxlen %/% as.integer(p[[N - 1L]])
     }
     c(head(refdim, n=N-1L), by, rep.int(1L, length(refdim)-N))
 }
@@ -673,30 +673,30 @@ get_spacings_for_linear_capped_length_blocks <- function(refdim, max_block_len)
 
 ### Used in the DelayedMatrixStats package!
 get_spacings_for_capped_length_blocks <-
-    function(refdim, max_block_len, block_shape=c("hypercube", "linear"))
+    function(refdim, block_maxlen, block_shape=c("hypercube", "linear"))
 {
     block_shape <- match.arg(block_shape)
     FUN <- switch(block_shape,
                   hypercube=get_spacings_for_hypercube_capped_length_blocks,
                   linear=get_spacings_for_linear_capped_length_blocks,
                   stop("unsupported 'block_shape'"))
-    FUN(refdim, max_block_len)
+    FUN(refdim, block_maxlen)
 }
 
 make_RegularArrayGrid_of_capped_length_blocks <-
-    function(refdim, max_block_len, block_shape=c("hypercube", "linear"))
+    function(refdim, block_maxlen, block_shape=c("hypercube", "linear"))
 {
     spacings <- get_spacings_for_capped_length_blocks(
-                    refdim, max_block_len, block_shape=block_shape)
+                    refdim, block_maxlen, block_shape=block_shape)
     RegularArrayGrid(refdim, spacings)
 }
 
 ### Used in unit tests.
 split_array_in_capped_length_blocks <-
-    function(x, max_block_len, block_shape=c("hypercube", "linear"))
+    function(x, block_maxlen, block_shape=c("hypercube", "linear"))
 {
     grid <- make_RegularArrayGrid_of_capped_length_blocks(
-                        dim(x), max_block_len, block_shape=block_shape)
+                        dim(x), block_maxlen, block_shape=block_shape)
     lapply(grid, function(viewport) extract_block(x, viewport))
 }
 
@@ -705,11 +705,11 @@ split_array_in_capped_length_blocks <-
 ### split_array_in_capped_length_blocks( , block_shape="hypercube") as
 ### an *ordinary* array. So if 'x' is an ordinary array, then:
 ###
-###   blocks <- split_array_in_capped_length_blocks(x, max_block_len,
+###   blocks <- split_array_in_capped_length_blocks(x, block_maxlen,
 ###                                                 block_shape="hypercube")
 ###   unsplit_array_from_hypercube_blocks(blocks, x)
 ###
-### should be a no-op for any 'max_block_len' <= 'length(x)'.
+### should be a no-op for any 'block_maxlen' <= 'length(x)'.
 unsplit_array_from_hypercube_blocks <- function(blocks, x)
 {
     stop("Not ready yet")
@@ -720,11 +720,11 @@ unsplit_array_from_hypercube_blocks <- function(blocks, x)
 ### split_array_in_capped_length_blocks( , block_shape="linear") as
 ### an *ordinary* array. So if 'x' is an ordinary array, then:
 ###
-###   blocks <- split_array_in_capped_length_blocks(x, max_block_len,
+###   blocks <- split_array_in_capped_length_blocks(x, block_maxlen,
 ###                                                 block_shape="linear")
 ###   unsplit_array_from_linear_blocks(blocks, x)
 ###
-### should be a no-op for any 'max_block_len' <= 'length(x)'.
+### should be a no-op for any 'block_maxlen' <= 'length(x)'.
 unsplit_array_from_linear_blocks <- function(blocks, x)
 {
     ans <- combine_array_objects(blocks)

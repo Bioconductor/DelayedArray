@@ -7,7 +7,7 @@
 
 
 ### Default block size in bytes.
-DEFAULT_BLOCK_SIZE <- 4500000L  # 4.5 Mb
+DEFAULT_BLOCK_SIZE <- 45000000L  # 45 Mb
 
 ### Atomic type sizes in bytes.
 .TYPE_SIZES <- c(
@@ -21,8 +21,8 @@ DEFAULT_BLOCK_SIZE <- 4500000L  # 4.5 Mb
     raw=1L
 )
 
-### Used in HDF5Array!
-get_max_block_length <- function(type)
+### NOT exported but used in HDF5Array!
+get_default_block_maxlength <- function(type)
 {
     type_size <- .TYPE_SIZES[type]
     idx <- which(is.na(type_size))
@@ -33,32 +33,63 @@ get_max_block_length <- function(type)
     }
     block_size <- getOption("DelayedArray.block.size",
                             default=DEFAULT_BLOCK_SIZE)
-    as.integer(block_size / type_size)
+    if (!isSingleNumber(block_size) || block_size < 1)
+        stop(wmsg("global option DelayedArray.block.size must be a ",
+                  "single number >= 1"))
+    ans <- block_size / type_size
+    if (ans > .Machine$integer.max)
+        stop(wmsg("Default block length is too big. Blocks of ",
+                  "length > .Machine$integer.max are not supported yet. ",
+                  "Please reduce the default block length by setting global ",
+                  "option DelayedArray.block.size to a smaller value."))
+    max(as.integer(ans), 1L)
+}
+
+### Guaranteed to return an integer >= 1.
+.normarg_block.maxlength <- function(block.maxlength, type)
+{
+    if (is.null(block.maxlength))
+        return(get_default_block_maxlength(type))
+    if (!isSingleNumber(block.maxlength))
+        stop(wmsg("'block.maxlength' must be a single integer or NULL"))
+    if (block.maxlength < 1)
+        stop(wmsg("'block.maxlength' cannot be < 1"))
+    if (block.maxlength > .Machine$integer.max)
+        stop(wmsg("'block.maxlength' is too big. Blocks of ",
+                  "length > .Machine$integer.max are not supported yet. ",
+                  "Please specify a smaller 'block.maxlength'."))
+    as.integer(block.maxlength)
 }
 
 ### Return a regular grid with linear blocks of length as close as possibe to
-### (but not bigger than) 'max.block.length'.
+### (but not bigger than) 'block.maxlength'.
 ### TODO: Add 'block.shape' argument.
-defaultGrid <- function(x, max.block.length=NULL)
+defaultGrid <- function(x, block.maxlength=NULL)
+#                           block.shape=c("hypercube", "linear"))
 {
-    if (is.null(max.block.length)) {
-        max_block_len <- get_max_block_length(type(x))
-    } else {
-        if (!isSingleNumber(max.block.length))
-            stop("'max.block.length' must be a single integer or NULL")
-        max_block_len <- as.integer(max.block.length)
+    block_maxlen <- .normarg_block.maxlength(block.maxlength, type(x))
+    block_shape <- "linear"
+    chunk_grid <- NULL
+    #block_shape <- match.arg(block.shape)
+    #chunk_grid <- chunkgrid(x)
+    if (is.null(chunk_grid)) {
+        ans <- make_RegularArrayGrid_of_capped_length_blocks(
+                           dim(x), block_maxlen, block_shape=block_shape)
+        return(ans)
     }
-    make_RegularArrayGrid_of_capped_length_blocks(dim(x), max_block_len,
-                                                  block_shape="linear")
+    chunks_per_block <- max(block_maxlen %/% maxlength(chunk_grid), 1L)
+    ratio <- get_spacings_for_capped_length_blocks(
+                 dim(chunk_grid), chunks_per_block, block_shape=block_shape)
+    downsample(chunk_grid, ratio)
 }
 
-### Used in HDF5Array!
+### NOT exported but used in HDF5Array!
 get_verbose_block_processing <- function()
 {
     getOption("DelayedArray.verbose.block.processing", default=FALSE)
 }
 
-### Used in HDF5Array!
+### NOT exported but used in HDF5Array!
 set_verbose_block_processing <- function(verbose)
 {
     if (!isTRUEorFALSE(verbose))
@@ -197,10 +228,10 @@ currentViewport <- function(block)
 ### OLD -
 
 ### An lapply-like function.
-block_APPLY <- function(x, APPLY, ..., sink=NULL, max_block_len=NULL)
+block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
 {
     APPLY <- match.fun(APPLY)
-    grid <- defaultGrid(x, max_block_len)
+    grid <- defaultGrid(x, block_maxlen)
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -232,8 +263,8 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
     APPLY <- match.fun(APPLY)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
-    max_block_len <- max(get_max_block_length(type(x)), x_dim[[1L]])
-    block_APPLY(x, APPLY, ..., sink=sink, max_block_len=max_block_len)
+    block_maxlen <- max(get_default_block_maxlength(type(x)), x_dim[[1L]])
+    block_APPLY(x, APPLY, ..., sink=sink, block_maxlen=block_maxlen)
 }
 
 

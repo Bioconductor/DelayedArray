@@ -22,7 +22,7 @@
 blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
-defaultGrid(x, max.block.length=NULL)
+defaultGrid(x, block.maxlength=NULL)
 effectiveGrid(block)
 currentBlockId(block)
 currentViewport(block)
@@ -53,7 +53,7 @@ currentViewport(block)
   \item{BREAKIF}{
     Coming soon...
   }
-  \item{max.block.length}{
+  \item{block.maxlength}{
     Coming soon...
   }
   \item{block}{
