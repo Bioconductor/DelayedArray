@@ -182,6 +182,9 @@ exportMethods(
 ###
 
 export(
+    ## linearInd.R:
+    linearInd,
+
     ## ArrayGrid-class.R:
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
