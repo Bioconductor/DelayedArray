@@ -46,15 +46,16 @@ setGeneric("chunkdim",
                       "values. ", .contact_author_msg(class(x))))
         if (!all(ans <= x_dim))
             stop(wmsg("The \"chunkdim\" method for ", class(x), " objects ",
-                      "returned chunk dimensions that are not <= the ",
+                      "returned chunk dimensions that are not <= their ",
                       "corresponding dimension in 'x'. ",
                       .contact_author_msg(class(x))))
         if (any(ans == 0L & x_dim != 0L))
             stop(wmsg("The \"chunkdim\" method for ", class(x), " objects ",
                       "returned an integer vector with illegal zeros. ",
                       "chunkdim() should always return an integer vector with ",
-                      "non-zero values unless the corresponding values in ",
-                      "'dim(x)' are zeros. ", .contact_author_msg(class(x))))
+                      "non-zero values unless the zero values correspond to ",
+                      "dimensions in 'x' that are also zero. ",
+                      .contact_author_msg(class(x))))
         if (prod(ans) > .Machine$integer.max)
             stop(wmsg("The \"chunkdim\" method for ", class(x), " objects ",
                       "returned chunk dimensions that are too big. The ",

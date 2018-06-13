@@ -13,6 +13,16 @@ is_sequence <- function(x, length)
     length(x) == length && identical(x, seq_len(length))
 }
 
+### TODO: This should also probably be moved to S4Vectors.
+seq2 <- function(to, by)
+{
+    stopifnot(isSingleNumber(to), isSingleNumber(by))
+    ans <- seq_len(to %/% by) * by
+    if (to %% by != 0L)
+        ans <- c(ans, to)
+    ans
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies

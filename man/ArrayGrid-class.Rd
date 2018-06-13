@@ -38,6 +38,10 @@
 \alias{lengths,ArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
+\alias{downsample}
+\alias{downsample,ArbitraryArrayGrid-method}
+\alias{downsample,RegularArrayGrid-method}
+
 \alias{isLinear}
 \alias{isLinear,ArrayViewport-method}
 \alias{isLinear,ArrayGrid-method}
@@ -46,7 +50,59 @@
 
 \description{
   ArrayGrid and ArrayViewport objects are used internally to support
-  block processing of array-like objects.
+  block processing of an array-like object.
+}
+
+\usage{
+ArbitraryArrayGrid(tickmarks)
+RegularArrayGrid(refdim, spacings=refdim)
+
+downsample(x, ratio=1L)
+}
+
+\arguments{
+  \item{tickmarks}{
+    A list of integer vectors, one along each dimension of the reference
+    array, representing the tickmarks along that dimension. Each integer
+    vector must be sorted in ascending order. NAs or negative values are
+    not allowed.
+  }
+  \item{refdim}{
+    An integer vector containing the dimensions of the reference array.
+  }
+  \item{spacings}{
+    An integer vector specifying the grid spacing along each dimension.
+  }
+  \item{x}{
+    An ArrayGrid object.
+  }
+  \item{ratio}{
+    An integer vector specifying the ratio of the downsampling along
+    each dimension. Can be of length 1, in which case the same ratio is
+    used along all the dimensions.
+  }
+}
+
+\value{
+  An ArbitraryArrayGrid instance for \code{ArbitraryArrayGrid()}.
+
+  A RegularArrayGrid instance for \code{RegularArrayGrid()}.
+
+  An ArrayGrid object on the same reference array than \code{x}
+  for \code{downsample()}.
+}
+
+\seealso{
+  \itemize{
+    \item \link{block_processing} for more information about block-processing
+          of an array-like object.
+
+    \item \code{\link{chunkgrid}}.
+
+    \item \link{DelayedArray} objects.
+
+    \item \link[base]{array} objects in base R.
+  }
 }
 
 \examples{
@@ -138,5 +194,20 @@ for (i in seq_len(dim(grid)[[1]])) {
   }
 }
 m2
+
+## ---------------------------------------------------------------------
+## DOWNSAMPLING AN ArrayGrid OBJECT
+## ---------------------------------------------------------------------
+## The elements (ArrayViewport) of an ArrayGrid object can be replaced
+## with bigger elements obtained by merging adjacent elements. How many
+## adjacent elements to merge along each dimension is specified via the
+## 'ratio' vector (one integer per dimension). We call this operation
+## "downsampling. It can be seen as reducing the "resolution" of a grid
+## by the specified ratio (if we think of the grid elements as pixels).
+
+grid <- ArbitraryArrayGrid(list(c(2L, 7:10, 13L, 15L), c(5:6, 6L, 9L)))
+downsample(grid, 2)
+downsample(grid, 3)
+stopifnot(identical(downsample(grid, 1), grid))
 }
 \keyword{internal}

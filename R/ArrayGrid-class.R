@@ -253,9 +253,11 @@ setClass("RegularArrayGrid",
 .get_ArbitraryArrayGrid_max_spacings <- function(x)
 {
     vapply(seq_along(x@tickmarks),
-           function(along)
-               max(0L, .get_ArbitraryArrayGrid_spacings_along(x, along)),
-           integer(1))
+        function(along)
+            max(0L, .get_ArbitraryArrayGrid_spacings_along(x, along)),
+        integer(1),
+        USE.NAMES=FALSE
+    )
 }
 
 .get_RegularArrayGrid_dim <- function(refdim, spacings)
@@ -315,11 +317,11 @@ setValidity2("ArbitraryArrayGrid", .validate_ArbitraryArrayGrid)
         return(wmsg2("'spacings' and 'refdim' slots must have ",
                      "the same length"))
     if (!all(x_spacings <= x_refdim))
-        return(wmsg2("values in 'spacings' slot must be <= the ",
-                     "corresponding values in 'refdim' slot"))
+        return(wmsg2("values in 'spacings' slot must be <= their ",
+                     "corresponding value in 'refdim' slot"))
     if (any(x_spacings == 0L & x_refdim != 0L))
-        return(wmsg2("values in 'spacings' slot cannot be 0 unless the ",
-                     "corresponding values in 'refdim' slot are 0"))
+        return(wmsg2("values in 'spacings' slot cannot be 0 unless their ",
+                     "corresponding value in 'refdim' slot is also 0"))
     if (prod(x_spacings) > .Machine$integer.max)
         return(wmsg2("grid is too coarse (all grid elements must have a ",
                      "length <= .Machine$integer.max)"))
@@ -332,10 +334,12 @@ setValidity2("RegularArrayGrid", .validate_RegularArrayGrid)
 setMethod("refdim", "ArbitraryArrayGrid",
     function(x)
     {
-        mapply(function(tm, tm_len) if (tm_len == 0L) 0L else tm[[tm_len]],
-               x@tickmarks,
-               lengths(x@tickmarks),
-               USE.NAMES=FALSE)
+        mapply(
+            function(tm, tm_len) if (tm_len == 0L) 0L else tm[[tm_len]],
+            x@tickmarks,
+            lengths(x@tickmarks),
+            USE.NAMES=FALSE
+        )
     }
 )
 
@@ -386,12 +390,14 @@ setMethod("getArrayElement", "ArbitraryArrayGrid",
     function(x, subscripts)
     {
         x_refdim <- refdim(x)
-        ans_end <- mapply(`[[`, x@tickmarks, subscripts)
+        ans_end <- mapply(`[[`, x@tickmarks, subscripts, USE.NAMES=FALSE)
         ans_width <- mapply(
             function(along, i)
                 .get_ArbitraryArrayGrid_spacings_along(x, along)[[i]],
             seq_along(x_refdim),
-            subscripts)
+            subscripts,
+            USE.NAMES=FALSE
+        )
         ans_ranges <- IRanges(end=ans_end, width=ans_width)
         ArrayViewport(x_refdim, ans_ranges)
     }
@@ -447,7 +453,8 @@ setMethod("lengths", "ArrayGrid",
         function(viewport)
             make_string_from_ArrayViewport(viewport,
                                            with.brackets=with.brackets),
-        character(1)
+        character(1),
+        USE.NAMES=FALSE
     )
     array(data, dim(x))
 }
@@ -463,6 +470,65 @@ setMethod("show", "ArrayGrid",
             "on a ", refdim_in1string, " array:\n", sep="")
         ## Turn 'object' into a character array.
         print(as.character(object, TRUE), quote=FALSE)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### downsample() generic and methods
+###
+### Reduce the "resolution" of a grid by the specified ratio.
+### Act as an endomorphism.
+###
+
+setGeneric("downsample", signature="x",
+    function(x, ratio=1L) standardGeneric("downsample")
+)
+
+.normarg_ratio <- function(ratio, x_dim)
+{
+    if (!is.numeric(ratio))
+        stop(wmsg("'ratio' must be an integer vector"))
+    if (!is.integer(ratio))
+        ratio <- as.integer(ratio)
+    ndim <- length(x_dim)
+    if (length(ratio) != 1L && length(ratio) != ndim)
+        stop(wmsg("'length(ratio)' must be 1 or the sane as 'length(dim(x))'"))
+    if (S4Vectors:::anyMissingOrOutside(ratio, 0L))
+        stop(wmsg("'ratio' cannot contain negative or NA values"))
+    if (length(ratio) != ndim)
+        ratio <- rep.int(ratio, ndim)
+    if (any(ratio == 0L & x_dim != 0L))
+        stop(wmsg("values in 'ratio' cannot be 0 unless their ",
+                  "corresponding dimension in 'x' is also 0"))
+    ratio
+}
+
+setMethod("downsample", "ArbitraryArrayGrid",
+    function(x, ratio=1L)
+    {
+        ratio <- .normarg_ratio(ratio, dim(x))
+        ans_tickmarks <- mapply(
+            function(tm, tm_len, r) {
+                if (tm_len == 0L)
+                    return(integer(0))
+                tm[seq2(tm_len, r)]
+            },
+            x@tickmarks,
+            lengths(x@tickmarks),
+            ratio,
+            USE.NAMES=FALSE
+        )
+        ArbitraryArrayGrid(ans_tickmarks)
+    }
+)
+
+setMethod("downsample", "RegularArrayGrid",
+    function(x, ratio=1L)
+    {
+        ratio <- .normarg_ratio(ratio, dim(x))
+        ans_spacings <- pmin(x@spacings * ratio, refdim(x))
+        RegularArrayGrid(refdim(x), ans_spacings)
     }
 )
 
