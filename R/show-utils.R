@@ -387,7 +387,7 @@ show_compact_array <- function(object)
         return(rep.int("", nrow(object)))
     first_cols <- lapply(seq_len(min(p1, 3L)),
         function(i1) {
-            subscripts <- from_linear_to_multi_subscript(i1, dim1)
+            subscripts <- arrayInd(i1, dim1)
             index <- c(list(NULL), as.list(subscripts))
             as.character(extract_array(object, index))
         }

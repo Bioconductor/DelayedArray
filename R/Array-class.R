@@ -23,27 +23,10 @@ setGeneric("getArrayElement", signature="x",
     function(x, subscripts) standardGeneric("getArrayElement")
 )
 
-### Return an integer vector parallel to 'dim' and guaranteed to contain no
-### out-of-bounds subscripts.
-from_linear_to_multi_subscript <- function(i, dim)
-{
-    stopifnot(isSingleInteger(i))
-    if (i < 1L || i > prod(dim))
-        stop("subscript is out of bounds")
-    i <- i - 1L
-    subscripts <- integer(length(dim))
-    for (along in seq_along(dim)) {
-        d <- dim[[along]]
-        subscripts[[along]] <- offset <- i %% d
-        i <- (i - offset) %/% d
-    }
-    subscripts + 1L
-}
-
 ### Support multi-dimensional and linear subsetting.
-### FIXME: Linear subsetting should support a single *numeric* subscript.
-### FIXME: Multi-dimensional subsetting should support things like
-###        x[[5, 15, 2]] and x[["E", 15, "b"]].
+### TODO: Multi-dimensional subsetting should support things like
+###       x[[5, 15, 2]] and x[["E", 15, "b"]].
+### TODO: Linear subsetting should support a single *numeric* subscript.
 setMethod("[[", "Array",
     function(x, i, j, ...)
     {
@@ -60,12 +43,19 @@ setMethod("[[", "Array",
             stop(wmsg("each subscript must be a single integer ",
                       "when subsetting an ", class(x), " object with [["))
         if (nsubscript == x_ndim) {
+            ## Multi-dimensional subsetting.
             subscripts <- unlist(Nindex, use.names=FALSE)
             if (!(all(subscripts >= 1L) && all(subscripts <= x_dim)))
                 stop("some subscripts are out of bounds")
         } else {
-            ## Translate linear subsetting into multi-dimensional subsetting.
-            subscripts <- from_linear_to_multi_subscript(Nindex[[1L]], x_dim)
+            ## Linear subsetting.
+            ## We turn this into a multi-dimensional subsetting by
+            ## transforming the user-supplied linear index into an array
+            ## (i.e. multi-dimensional) index.
+            i <- Nindex[[1L]]
+            if (i < 1L || i > prod(x_dim))
+                stop("subscript is out of bounds")
+            subscripts <- as.integer(arrayInd(i, x_dim))
         }
         getArrayElement(x, subscripts)
     }
