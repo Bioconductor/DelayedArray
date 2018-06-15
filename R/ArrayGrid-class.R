@@ -433,7 +433,7 @@ setMethod("getArrayElement", "RegularArrayGrid",
     }
 )
 
-### lengths()
+### dims() and lengths()
 
 ### NOT exported.
 setGeneric("get_spacings_along", signature="x",
@@ -446,18 +446,40 @@ setMethod("get_spacings_along", "RegularArrayGrid",
     .get_RegularArrayGrid_spacings_along
 )
 
-### Equivalent to 'vapply(x, length, integer(1))' but faster.
+### Equivalent to 't(vapply(x, dim, refdim(x)))' but faster.
+setGeneric("dims", function(x) standardGeneric("dims"))
+
+setMethod("dims", "ArrayGrid",
+    function(x)
+    {
+        ans <- as.matrix(get_spacings_along(x, 1L))
+        x_ndim <- length(refdim(x))
+        if (x_ndim >= 2L) {
+            for (along in 2:x_ndim) {
+                spacings_along <- get_spacings_along(x, along)
+                ans <- cbind(apply(ans, 2L, rep.int, length(spacings_along)),
+                             rep(spacings_along, each=nrow(ans)))
+            }
+        }
+        ans
+    }
+)
+
+### Equivalent to 'vapply(x, length, integer(1))' or to 'rowProds(dims(x))'
+### but faster.
 ### The sum of the hyper-volumes of all the grid elements should be equal
 ### to the hyper-volume of the reference array.
 ### More concisely: sum(lengths(x)) should be equal to 'prod(refdim(x))'.
 setMethod("lengths", "ArrayGrid",
-    function (x, use.names=TRUE)
+    function(x, use.names=TRUE)
     {
         ans <- get_spacings_along(x, 1L)
         x_ndim <- length(refdim(x))
         if (x_ndim >= 2L) {
-            for (along in 2:x_ndim)
-              ans <- ans * rep(get_spacings_along(x, along), each=length(ans))
+            for (along in 2:x_ndim) {
+                spacings_along <- get_spacings_along(x, along)
+                ans <- ans * rep(spacings_along, each=length(ans))
+            }
         }
         ans
     }

@@ -35,6 +35,8 @@
 \alias{dim,RegularArrayGrid-method}
 \alias{as.character.ArrayGrid}
 \alias{as.character,ArrayGrid-method}
+\alias{dims}
+\alias{dims,ArrayGrid-method}
 \alias{lengths,ArrayGrid-method}
 \alias{maxlength}
 \alias{maxlength,ANY-method}
@@ -172,8 +174,11 @@ grid1[[1L]]             # same as grid1[[1L, 1L, 1L]]
 ## Last element in the grid:
 grid1[[length(grid1)]]  # same as grid1[[15L, 1L, 4L]]
 
+## Dimensions of the grid elements:
+dims(grid1)             # one row per grid element
+
 ## Lengths of the grid elements:
-lengths(grid1)
+lengths(grid1)          # same as rowProds(dims(grid1))
 stopifnot(sum(lengths(grid1)) == prod(refdim(grid1)))
 
 maxlength(grid1)        # does not need to compute lengths(grid1)) first
