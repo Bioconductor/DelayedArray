@@ -205,12 +205,17 @@ stopifnot(maxlength(grid1) == max(lengths(grid1)))
 
 ## Create an arbitrary-spaced grid on top of a 15 x 9 matrix:
 grid2 <- ArbitraryArrayGrid(list(c(2L, 7:10, 13L, 15L), c(5:6, 6L, 9L)))
+
 refdim(grid2)
 dim(grid2)
 length(grid2)
 grid2[[1L]]             # same as grid2[[1L, 1L]]
 grid2[[length(grid2)]]  # same as grid2[[15L, 9L]]
+
 lengths(grid2)
+array(lengths(grid2), dim(grid2))  # display the grid element lengths in
+                                   # an array of same shape as grid2
+
 stopifnot(sum(lengths(grid2)) == prod(refdim(grid2)))
 
 maxlength(grid2)        # does not need to compute lengths(grid2)) first
@@ -292,6 +297,22 @@ aind <- rbind(c( 2, 5),  # bottom right corner of 1st grid element
 
 mapToGrid(aind, grid2)
 mapToGrid(aind, grid2, linear=TRUE)
+
+## Map all the valid positions:
+all_positions <- seq_len(prod(refdim(grid2)))
+aind <- arrayInd(all_positions, refdim(grid2))
+majmin <- data.frame(mapToGrid(aind, grid2, linear=TRUE))
+majmin
+
+## Sanity checks:
+min_by_maj <- split(majmin$minor,
+                    factor(majmin$major, levels=seq_along(grid2)))
+stopifnot(identical(lengths(min_by_maj, use.names=FALSE), lengths(grid2)))
+stopifnot(
+  all(mapply(DelayedArray:::is_sequence,
+             min_by_maj,
+             lengths(min_by_maj)))
+)
 
 ## More mapping:
 grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))
