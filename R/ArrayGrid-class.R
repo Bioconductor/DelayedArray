@@ -539,18 +539,18 @@ setMethod("mapToGrid", "ArbitraryArrayGrid",
         ndim <- length(grid@tickmarks)
         aind <- normarg_aind(aind, ndim)
         major <- lapply(seq_len(ndim),
-            function(j) {
-                findInterval(aind[ , j], grid@tickmarks[[j]] + 1L) + 1L
+            function(along) {
+                findInterval(aind[ , along], grid@tickmarks[[along]] + 1L) + 1L
             }
         )
         minor <- lapply(seq_len(ndim),
-            function(j) {
-                tm <- grid@tickmarks[[j]]
+            function(along) {
+                tm <- grid@tickmarks[[along]]
                 tm_len <- length(tm)
                 if (tm_len == 0L)
                     return(integer(0))
                 offset <- c(0L, tm[-tm_len])
-                aind[ , j] - offset[major[[j]]]
+                aind[ , along] - offset[major[[along]]]
             }
         )
         list(major=do.call(cbind, major), minor=do.call(cbind, minor))

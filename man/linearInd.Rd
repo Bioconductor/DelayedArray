@@ -30,6 +30,10 @@ linearInd(aind, dim)
   }
   \item{dim}{
     An integer vector containing the dimensions of the underlying array.
+
+    Note that \code{dim} can also be an integer matrix, in which case it
+    must have the same shape as \code{aind}, that is, 1 row per row in
+    \code{aind} and 1 column per dimension.
   }
 }
 
@@ -56,7 +60,20 @@ aind <- rbind(c(1, 1, 1),
 
 linearInd(aind, 4:2)
 
-dim <- sample(50L, 6L, replace=TRUE)
+## With a matrix of dimensions:
+
+aind <- rbind(c(1, 2),
+              c(1, 2),
+              c(1, 2))
+dims <- rbind(c(4L, 3L),
+              c(5L, 3L),
+              c(6L, 3L))
+
+linearInd(aind, dims)
+
+## Sanity checks:
+
+dim <- c(33:30, 45L, 30L)
 stopifnot(linearInd(rep(1, 6), dim) == 1)
 stopifnot(linearInd(dim, dim) == prod(dim))
 
