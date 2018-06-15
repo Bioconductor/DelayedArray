@@ -2,12 +2,12 @@
 
 \alias{linearInd}
 
-\title{Turn array indices into linear indices}
+\title{Converting array indices into linear indices}
 
 \description{
-  \code{linearInd} performs the reverse transformation of
-  \code{base::\link[base]{arrayInd}} i.e. it transforms array
-  indices into linear indices.
+  \code{linearInd} performs the reverse conversion of
+  \code{base::\link[base]{arrayInd}}, that is, it converts so-called
+  \emph{array indices} (i.e. n-uplets) into \emph{linear indices}.
 }
 
 \usage{
@@ -16,14 +16,16 @@ linearInd(aind, dim)
 
 \arguments{
   \item{aind}{
-    A numeric vector or matrix.
+    Typically a numeric matrix like one returned by
+    \code{base::\link[base]{arrayInd}}, that is, a matrix where
+    each row is an n-uplet representing an array index.
+    Each array index must describe a position relative to the
+    implicit array i.e. to the array whose dimensions are specified
+    via the \code{dim} argument.
 
-    If a vector, it must have one element per dimension in the underlying
-    array. It will be treated like a 1-row matrix.
-
-    If a matrix, it must be like one returned by
-    \code{base::\link[base]{arrayInd}} i.e. it must have one row per
-    array index and one column per dimension in the underlying array.
+    For convenience, \code{aind} can also be specified as a vector with
+    one element per dimension in the implicit array, in which case it will
+    be treated like a 1-row matrix.
 
     Note that no bounds checking is performed, that is, values in the j-th
     column of \code{aind} can be < 1 or > \code{dim[j]}.
@@ -46,7 +48,7 @@ linearInd(aind, dim)
 
 \seealso{
   \code{\link[base]{arrayInd}} in the \pkg{base} package for the reverse
-  transformation.
+  conversion.
 }
 
 \examples{

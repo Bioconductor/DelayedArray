@@ -67,7 +67,7 @@
 ArbitraryArrayGrid(tickmarks)
 RegularArrayGrid(refdim, spacings=refdim)
 
-mapToGrid(aind, grid)
+mapToGrid(aind, grid, linear=FALSE)
 
 downsample(x, ratio=1L)
 }
@@ -86,15 +86,15 @@ downsample(x, ratio=1L)
     An integer vector specifying the grid spacing along each dimension.
   }
   \item{aind}{
-    A numeric vector or matrix containing array indices relative to
-    the reference array of the grid.
+    Typically a numeric matrix like one returned by
+    \code{base::\link[base]{arrayInd}}, that is, a matrix where
+    each row is an n-uplet representing an array index.
+    Each array index must describe a position relative to the
+    reference array of \code{grid}.
 
-    If a vector, it must have one element per dimension in \code{grid}.
-    It will be treated like a 1-row matrix.
-
-    If a matrix, it must be like one returned by
-    \code{base::\link[base]{arrayInd}} i.e. it must have one row per
-    array index and one column per dimension in \code{grid}.
+    For convenience, \code{aind} can also be specified as a vector with
+    one element per dimension in \code{grid}, in which case it will be
+    treated like a 1-row matrix.
 
     Note that no bounds checking is performed, that is, values in the j-th
     column of \code{aind} can be < 1 or > \code{refdim(grid)[j]}. What
@@ -102,6 +102,12 @@ downsample(x, ratio=1L)
   }
   \item{grid, x}{
     An ArrayGrid object.
+  }
+  \item{linear}{
+    \code{TRUE} or \code{FALSE}. By default (i.e. when \code{linear} is
+    \code{FALSE}), the major and minor indices are returned as array
+    indices (i.e. as n-uplets). When \code{linear} is set to \code{TRUE},
+    they are returned as linear indices.
   }
   \item{ratio}{
     An integer vector specifying the ratio of the downsampling along
@@ -111,28 +117,39 @@ downsample(x, ratio=1L)
 }
 
 \value{
-  For \code{ArbitraryArrayGrid()}: An ArbitraryArrayGrid instance.
+  \itemize{
+    \item For \code{ArbitraryArrayGrid()}: An ArbitraryArrayGrid instance.
 
-  For \code{RegularArrayGrid()}: A RegularArrayGrid instance.
+    \item For \code{RegularArrayGrid()}: A RegularArrayGrid instance.
 
-  For \code{mapToGrid()}: A list with 2 components, \code{major} and
-  \code{minor}.
-  Each row in input matrix \code{aind} is an n-uplet that contains the
-  coordinates of a position relative to the reference array of \code{grid}.
-  The 2 components of the returned list are integer matrices of the same
-  dimensions as the input matrix. A row in the \code{major} (or \code{minor})
-  matrix is called a "major n-uplet" (or "minor n-uplet").
-  So for each "input position" (i.e. for each row in the input matrix),
-  2 n-uplets are returned: the "major n-uplet" and the "minor n-uplet".
-  The "major n-uplet" contains the coordinates of the "input position"
-  \emph{in the grid coordinate system}, that is, the coordinates of the
-  grid element where the position falls in.
-  The "minor n-uplet" represents where exactly the "input position" falls
-  \emph{inside} the grid element reported by the "major n-uplet". The
-  coordinates in the "minor n-uplet" are \emph{relative} to this grid element.
+    \item For \code{mapToGrid()}: A list with 2 components, \code{major}
+          and \code{minor}.
 
-  For \code{downsample()}: An ArrayGrid object on the same reference array
-  than \code{x}.
+          Each row in input matrix \code{aind} is an n-uplet that contains
+          the coordinates of a position relative to the reference array of
+          \code{grid}.
+
+          By default (i.e. when \code{linear} is \code{FALSE}), the 2
+          components of the returned list are integer matrices of the same
+          dimensions as the input matrix. A row in the \code{major} (or
+          \code{minor}) matrix is called a "major n-uplet" (or "minor n-uplet").
+          So for each "input position" (i.e. for each row in the input matrix),
+          2 n-uplets are returned: the "major n-uplet" and the "minor n-uplet".
+          The "major n-uplet" contains the coordinates of the "input position"
+          \emph{in the grid coordinate system}, that is, the coordinates of the
+          grid element where the position falls in.
+          The "minor n-uplet" represents where exactly the "input position"
+          falls \emph{inside} the grid element reported by the "major n-uplet".
+          The coordinates in the "minor n-uplet" are \emph{relative} to this
+          grid element.
+
+          When \code{linear} is \code{TRUE}, the \code{major} and \code{minor}
+          components are returned as linear indices. In this case, both are
+          integer vectors containing 1 linear index per "input position".
+
+    \item For \code{downsample()}: An ArrayGrid object on the same reference
+          array than \code{x}.
+  }
 }
 
 \seealso{
@@ -144,8 +161,9 @@ downsample(x, ratio=1L)
 
     \item \link{DelayedArray} objects.
 
-    \item \code{\link[base]{arrayInd}} in the \pkg{base} package and
-          \code{\link{linearInd}} in this package (\pkg{DelayedArray}).
+    \item \code{\link{linearInd}} in this package (\pkg{DelayedArray})
+          and \code{\link[base]{arrayInd}} in the \pkg{base} package
+          for converting between array indices and linear indices.
 
     \item \link[base]{array} objects in base R.
   }
@@ -265,11 +283,17 @@ m2
 ## C. mapToGrid()
 ## ---------------------------------------------------------------------
 
-mapToGrid(c(2, 5), grid2)   # bottom right corner of 1st grid element
-mapToGrid(c(3, 1), grid2)   # top left corner of 2nd grid element
-mapToGrid(c(14, 9), grid2)  # top right corner of last grid element
-mapToGrid(c(15, 7), grid2)  # bottom left corner of last grid element
+## Map positions relative to the reference array of grid2 to grid2:
+aind <- rbind(c( 2, 5),  # bottom right corner of 1st grid element
+              c( 3, 1),  # top left corner of 2nd grid element
+              c(14, 9),  # top right corner of last grid element
+              c(15, 7),  # bottom left corner of last grid element
+              c(15, 9))  # bottom right corner of last grid element
 
+mapToGrid(aind, grid2)
+mapToGrid(aind, grid2, linear=TRUE)
+
+## More mapping:
 grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))
 aind <- rbind(c( 1,  1),
               c( 2,  1),
@@ -278,7 +302,9 @@ aind <- rbind(c( 1,  1),
               c(16,  2),
               c(16, 10),
               c(27, 18))
+
 mapToGrid(aind, grid4)
+mapToGrid(aind, grid4, linear=TRUE)
 
 ## ---------------------------------------------------------------------
 ## D. DOWNSAMPLING AN ArrayGrid OBJECT
