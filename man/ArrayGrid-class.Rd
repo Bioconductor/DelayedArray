@@ -308,11 +308,7 @@ majmin
 min_by_maj <- split(majmin$minor,
                     factor(majmin$major, levels=seq_along(grid2)))
 stopifnot(identical(lengths(min_by_maj, use.names=FALSE), lengths(grid2)))
-stopifnot(
-  all(mapply(DelayedArray:::is_sequence,
-             min_by_maj,
-             lengths(min_by_maj)))
-)
+stopifnot(all(mapply(isSequence, min_by_maj, lengths(min_by_maj))))
 
 ## More mapping:
 grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))

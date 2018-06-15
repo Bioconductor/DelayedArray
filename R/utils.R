@@ -5,15 +5,9 @@
 ### Nothing in this file is exported.
 ###
 
-### TODO: Move this to S4Vectors and implment it in C. Does not need to
-### create 'seq_len(d)' and will be able to do early bailout.
-is_sequence <- function(x, length)
-{
-    stopifnot(is.integer(x), isSingleInteger(length))
-    length(x) == length && identical(x, seq_len(length))
-}
 
-### TODO: This should also probably be moved to S4Vectors.
+### TODO: This should probably go to S4Vectors (but maybe find a better name
+### for it first).
 seq2 <- function(to, by)
 {
     stopifnot(isSingleNumber(to), isSingleNumber(by))

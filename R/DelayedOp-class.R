@@ -152,7 +152,7 @@ subset_DelayedSubset <- function(x, index)
             if (is.null(i0))
                 return(i)
             ans <- i0[i]
-            if (is_sequence(ans, seed_dim[[along]]))
+            if (isSequence(ans, of.length=seed_dim[[along]]))
                 return(NULL)
             ans
         })
@@ -209,7 +209,7 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
                 d <- seed_dim[[along]]
                 i <- normalizeSingleBracketSubscript2(subscript,
                                     d, seed_dimnames[[along]])
-                if (is_sequence(i, d))
+                if (isSequence(i, of.length=d))
                     return(NULL)
                 i
             })
