@@ -1,5 +1,5 @@
 ### =========================================================================
-### chunkgrid()
+### chunkGrid()
 ### -------------------------------------------------------------------------
 ###
 
@@ -93,15 +93,15 @@ setMethod("chunkdim", "DelayedAperm", .get_DelayedAperm_chunkdim)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### chunkgrid() generic and methods
+### chunkGrid() generic and methods
 ###
-### chunkgrid(x) must return NULL or an ArrayGrid object defining a grid on
+### chunkGrid(x) must return NULL or an ArrayGrid object defining a grid on
 ### reference array x.
 ###
 
-setGeneric("chunkgrid", function(x) standardGeneric("chunkgrid"))
+setGeneric("chunkGrid", function(x) standardGeneric("chunkGrid"))
 
-setMethod("chunkgrid", "ANY",
+setMethod("chunkGrid", "ANY",
     function(x)
     {
         x_chunkdim <- chunkdim(x)

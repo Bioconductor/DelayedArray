@@ -71,7 +71,7 @@ defaultGrid <- function(x, block.maxlength=NULL)
     block_shape <- "linear"
     chunk_grid <- NULL
     #block_shape <- match.arg(block.shape)
-    #chunk_grid <- chunkgrid(x)
+    #chunk_grid <- chunkGrid(x)
     if (is.null(chunk_grid)) {
         ans <- make_RegularArrayGrid_of_capped_length_blocks(
                            dim(x), block_maxlen, block_shape=block_shape)

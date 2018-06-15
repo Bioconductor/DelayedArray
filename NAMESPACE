@@ -26,7 +26,7 @@ exportClasses(
     ## DelayedArray-class.R:
     DelayedArray, DelayedMatrix,
 
-    ## chunkgrid.R:
+    ## chunkGrid.R:
     integer_OR_NULL,
 
     ## realize.R:
@@ -231,8 +231,8 @@ export(
     ## DelayedArray-class.R:
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
 
-    ## chunkgrid.R:
-    chunkdim, chunkgrid,
+    ## chunkGrid.R:
+    chunkdim, chunkGrid,
 
     ## realize.R:
     write_block_to_sink, close,
@@ -253,7 +253,7 @@ exportMethods(
     isNoOp,
     simplify, netSubsetAndAperm,
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
-    chunkdim, chunkgrid,
+    chunkdim, chunkGrid,
     write_block_to_sink, close,
     realize,
     pmax2, pmin2, apply,

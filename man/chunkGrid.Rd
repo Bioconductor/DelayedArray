@@ -1,4 +1,4 @@
-\name{chunkgrid}
+\name{chunkGrid}
 
 \alias{class:integer_OR_NULL}
 \alias{integer_OR_NULL-class}
@@ -10,18 +10,18 @@
 \alias{chunkdim,DelayedSubset-method}
 \alias{chunkdim,DelayedAperm-method}
 
-\alias{chunkgrid}
-\alias{chunkgrid,ANY-method}
+\alias{chunkGrid}
+\alias{chunkGrid,ANY-method}
 
-\title{chunkgrid}
+\title{chunkGrid}
 
 \description{
-  \code{chunkgrid} and \code{chunkdim} are internal generic functions not
+  \code{chunkGrid} and \code{chunkdim} are internal generic functions not
   aimed to be used directly by the user.
 }
 
 \usage{
-chunkgrid(x)
+chunkGrid(x)
 chunkdim(x)
 }
 
@@ -36,7 +36,7 @@ chunkdim(x)
 }
 
 \value{
-  \code{chunkgrid} returns NULL or an \link{ArrayGrid} object defining a
+  \code{chunkGrid} returns NULL or an \link{ArrayGrid} object defining a
   grid on reference array \code{x}.
 
   \code{chunkdim} returns NULL or the chunk dimensions in an integer vector

@@ -30,7 +30,7 @@ Collate: utils.R
 	DelayedOp-class.R
 	showtree.R
 	DelayedArray-class.R
-	chunkgrid.R
+	chunkGrid.R
 	realize.R
 	block_processing.R
 	DelayedArray-utils.R

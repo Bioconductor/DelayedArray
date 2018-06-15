@@ -69,7 +69,7 @@ currentViewport(block)
   \itemize{
     \item \link{DelayedArray} objects.
 
-    \item \code{\link{chunkgrid}}.
+    \item \code{\link{chunkGrid}}.
 
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.

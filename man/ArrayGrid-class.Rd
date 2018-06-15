@@ -138,7 +138,7 @@ downsample(x, ratio=1L)
     \item \link{block_processing} for more information about block-processing
           of an array-like object.
 
-    \item \code{\link{chunkgrid}}.
+    \item \code{\link{chunkGrid}}.
 
     \item \link{DelayedArray} objects.
 
