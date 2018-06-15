@@ -447,8 +447,6 @@ setMethod("get_spacings_along", "RegularArrayGrid",
 )
 
 ### Equivalent to 't(vapply(x, dim, refdim(x)))' but faster.
-setGeneric("dims", function(x) standardGeneric("dims"))
-
 setMethod("dims", "ArrayGrid",
     function(x)
     {

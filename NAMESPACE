@@ -163,6 +163,7 @@ exportMethods(
     summary,
 
     ## Methods for generics defined in the BiocGenerics package:
+    dims,
     cbind, rbind,
     grepl,
     path, "path<-",
@@ -217,7 +218,7 @@ export(
     arbind, acbind,
 
     ## ArrayGrid-class.R:
-    refdim, dims, maxlength, mapToGrid, downsample, isLinear,
+    refdim, maxlength, mapToGrid, downsample, isLinear,
 
     ## extract_array.R:
     extract_array, type,
@@ -248,7 +249,7 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
-    refdim, dims, maxlength, mapToGrid, downsample, isLinear,
+    refdim, maxlength, mapToGrid, downsample, isLinear,
     extract_array, type,
     isNoOp,
     simplify, netSubsetAndAperm,

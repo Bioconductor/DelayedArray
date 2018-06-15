@@ -715,6 +715,8 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     } else {
         i <- normalizeSingleBracketSubscript2(i, length(x))
     }
+    ## From now on 'i' is an integer vector representing a linear index of
+    ## valid positions in 'x'.
     i_len <- length(i)
     if (i_len == 0L) {
         ## x0 <- x[integer(0), ..., integer(0)]
@@ -725,10 +727,17 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     if (i_len == 1L)
         return(.get_DelayedArray_element(x, i))
 
-    ## We want to walk only on the blocks that we actually need to visit so we
-    ## don't use blockApply() because it walks on all the blocks.
-
+    ## We don't want to use blockApply() here because it would walk on the
+    ## entire grid of blocks, which is not necessary. We only need to walk
+    ## on the blocks touched by linear index 'i', that is, on the blocks
+    ## that contain array elements located at the positions corresponding
+    ## to linear index 'i'.
     grid <- defaultGrid(x)
+    major_minor <- mapToGrid(i, grid)
+    touched_blocks <- linearInd(major_minor$major)
+
+    minor <- major_minor$minor
+
     nblock <- length(grid)
 
     breakpoints <- cumsum(lengths(grid))
@@ -920,7 +929,7 @@ setMethod("show", "DelayedArray",
 
 ### Note that combining arrays with c() is NOT an endomorphism!
 setMethod("c", "DelayedArray",
-    function (x, ..., recursive=FALSE)
+    function(x, ..., recursive=FALSE)
     {
         if (!identical(recursive, FALSE))
             stop(wmsg("\"c\" method for DelayedArray objects ",
