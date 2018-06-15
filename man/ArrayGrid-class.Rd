@@ -42,6 +42,10 @@
 \alias{maxlength,RegularArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
+\alias{mapToGrid}
+\alias{mapToGrid,ArbitraryArrayGrid-method}
+\alias{mapToGrid,RegularArrayGrid-method}
+
 \alias{downsample}
 \alias{downsample,ArbitraryArrayGrid-method}
 \alias{downsample,RegularArrayGrid-method}
@@ -61,6 +65,8 @@
 ArbitraryArrayGrid(tickmarks)
 RegularArrayGrid(refdim, spacings=refdim)
 
+mapToGrid(aind, grid)
+
 downsample(x, ratio=1L)
 }
 
@@ -77,7 +83,22 @@ downsample(x, ratio=1L)
   \item{spacings}{
     An integer vector specifying the grid spacing along each dimension.
   }
-  \item{x}{
+  \item{aind}{
+    A numeric vector or matrix containing array indices relative to
+    the reference array of the grid.
+
+    If a vector, it must have one element per dimension in \code{grid}.
+    It will be treated like a 1-row matrix.
+
+    If a matrix, it must be like one returned by
+    \code{base::\link[base]{arrayInd}} i.e. it must have one row per
+    array index and one column per dimension in \code{grid}.
+
+    Note that no bounds checking is performed, that is, values in the j-th
+    column of \code{aind} can be < 1 or > \code{refdim(grid)[j]}. What
+    those values will be mapped to is undefined.
+  }
+  \item{grid, x}{
     An ArrayGrid object.
   }
   \item{ratio}{
@@ -88,12 +109,28 @@ downsample(x, ratio=1L)
 }
 
 \value{
-  An ArbitraryArrayGrid instance for \code{ArbitraryArrayGrid()}.
+  For \code{ArbitraryArrayGrid()}: An ArbitraryArrayGrid instance.
 
-  A RegularArrayGrid instance for \code{RegularArrayGrid()}.
+  For \code{RegularArrayGrid()}: A RegularArrayGrid instance.
 
-  An ArrayGrid object on the same reference array than \code{x}
-  for \code{downsample()}.
+  For \code{mapToGrid()}: A list with 2 components, \code{major} and
+  \code{minor}.
+  Each row in input matrix \code{aind} is an n-uplet that contains the
+  coordinates of a position relative to the reference array of \code{grid}.
+  The 2 components of the returned list are integer matrices of the same
+  dimensions as the input matrix. A row in the \code{major} (or \code{minor})
+  matrix is called a "major n-uplet" (or "minor n-uplet").
+  So for each "input position" (i.e. for each row in the input matrix),
+  2 n-uplets are returned: the "major n-uplet" and the "minor n-uplet".
+  The "major n-uplet" contains the coordinates of the "input position"
+  \emph{in the grid coordinate system}, that is, the coordinates of the
+  grid element where the position falls in.
+  The "minor n-uplet" represents where exactly the "input position" falls
+  \emph{inside} the grid element reported by the "major n-uplet". The
+  coordinates in the "minor n-uplet" are \emph{relative} to this grid element.
+
+  For \code{downsample()}: An ArrayGrid object on the same reference array
+  than \code{x}.
 }
 
 \seealso{
@@ -104,6 +141,9 @@ downsample(x, ratio=1L)
     \item \code{\link{chunkgrid}}.
 
     \item \link{DelayedArray} objects.
+
+    \item \code{\link[base]{arrayInd}} in the \pkg{base} package and
+          \code{\link{linearInd}} in this package (\pkg{DelayedArray}).
 
     \item \link[base]{array} objects in base R.
   }
@@ -217,7 +257,27 @@ for (i in seq_len(dim(grid3)[[1]])) {
 m2
 
 ## ---------------------------------------------------------------------
-## C. DOWNSAMPLING AN ArrayGrid OBJECT
+## C. mapToGrid()
+## ---------------------------------------------------------------------
+
+mapToGrid(c(2, 5), grid2)   # bottom right corner of 1st grid element
+mapToGrid(c(3, 1), grid2)   # top left corner of 2nd grid element
+mapToGrid(c(14, 9), grid2)  # top right corner of last grid element
+mapToGrid(c(15, 7), grid2)  # bottom left corner of last grid element
+
+## Map all the elements of the reference array to the grid:
+grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))
+aind <- rbind(c( 1,  1),
+              c( 2,  1),
+              c( 3,  1),
+              c(16,  1),
+              c(16,  2),
+              c(16, 10),
+              c(27, 18))
+mapToGrid(aind, grid4)
+
+## ---------------------------------------------------------------------
+## D. DOWNSAMPLING AN ArrayGrid OBJECT
 ## ---------------------------------------------------------------------
 ## The elements (ArrayViewport) of an ArrayGrid object can be replaced
 ## with bigger elements obtained by merging adjacent elements. How many
@@ -237,10 +297,10 @@ stopifnot(identical(refdim(downsample(grid2, 4)), refdim(grid2)))
 ## A big enough ratio will eventually produce the coarsest possible grid
 ## i.e. a grid with a single grid element covering the entire reference
 ## array:
-grid4 <- downsample(grid2, 7)
-length(grid4)
-grid4[[1L]]
-stopifnot(identical(dim(grid4[[1L]]), refdim(grid4)))
+grid5 <- downsample(grid2, 7)
+length(grid5)
+grid5[[1L]]
+stopifnot(identical(dim(grid5[[1L]]), refdim(grid5)))
 
 ## Downsampling by a ratio of 1 is a no-op:
 stopifnot(identical(downsample(grid2, 1), grid2))

@@ -6,7 +6,7 @@
 ###
 
 ### Return an integer matrix with 1 column per dimension.
-.normarg_aind <- function(aind, ndim)
+normarg_aind <- function(aind, ndim)
 {
     if (!is.numeric(aind))
         stop(wmsg("'aind' must be a numeric vector or matrix"))
@@ -28,14 +28,14 @@
 }
 
 ### 'aind' must be a numeric vector or matrix (a vector is treated
-### as a 1-row matrix).
+### like a 1-row matrix).
 ### Return an integer vector with one element per row in 'aind'.
 linearInd <- function(aind, dim)
 {
     if (!is.integer(dim) || S4Vectors:::anyMissingOrOutside(dim, 0L))
         stop(wmsg("'dim' must be vector of non-negative integers"))
     ndim <- length(dim)
-    aind <- .normarg_aind(aind, ndim)
+    aind <- normarg_aind(aind, ndim)
     if (ndim == 0L) {
         ans <- integer(nrow(aind))
     } else {

@@ -19,7 +19,7 @@ linearInd(aind, dim)
     A numeric vector or matrix.
 
     If a vector, it must have one element per dimension in the underlying
-    array. It will be treated as a 1-row matrix.
+    array. It will be treated like a 1-row matrix.
 
     If a matrix, it must be like one returned by
     \code{base::\link[base]{arrayInd}} i.e. it must have one row per

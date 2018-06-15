@@ -502,6 +502,54 @@ setMethod("show", "ArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### mapToGrid() generic and methods
+###
+
+### 'aind' must be a numeric vector or matrix (a vector is treated
+### like a 1-row matrix).
+setGeneric("mapToGrid", signature="grid",
+    function(aind, grid) standardGeneric("mapToGrid")
+)
+
+setMethod("mapToGrid", "ArbitraryArrayGrid",
+    function(aind, grid)
+    {
+        ndim <- length(grid@tickmarks)
+        aind <- normarg_aind(aind, ndim)
+        major <- lapply(seq_len(ndim),
+            function(j) {
+                findInterval(aind[ , j], grid@tickmarks[[j]] + 1L) + 1L
+            }
+        )
+        minor <- lapply(seq_len(ndim),
+            function(j) {
+                tm <- grid@tickmarks[[j]]
+                tm_len <- length(tm)
+                if (tm_len == 0L)
+                    return(integer(0))
+                offset <- c(0L, tm[-tm_len])
+                aind[ , j] - offset[major[[j]]]
+            }
+        )
+        list(major=do.call(cbind, major), minor=do.call(cbind, minor))
+    }
+)
+
+setMethod("mapToGrid", "RegularArrayGrid",
+    function(aind, grid)
+    {
+        ndim <- length(grid@spacings)
+        aind <- normarg_aind(aind, ndim)
+        d <- rep(grid@spacings, each=nrow(aind))
+        aind0 <- aind - 1L  # 0-based indices
+        major <- 1L + aind0 %/% d
+        minor <- 1L + aind0 %% d
+        list(major=major, minor=minor)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### downsample() generic and methods
 ###
 ### Reduce the "resolution" of a grid by the specified ratio.
