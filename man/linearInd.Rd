@@ -40,10 +40,10 @@ linearInd(aind, dim)
 }
 
 \value{
-  A single integer if \code{aind} is a vector.
-
   An integer vector with one element per row in \code{aind} if
   \code{aind} is a matrix.
+
+  A single integer if \code{aind} is a vector.
 }
 
 \seealso{
@@ -52,6 +52,10 @@ linearInd(aind, dim)
 }
 
 \examples{
+dim <- 4:2
+linearInd(c(4, 3, 1), dim)
+linearInd(c(4, 3, 2), dim)
+
 aind <- rbind(c(1, 1, 1),
               c(2, 1, 1),
               c(3, 1, 1),
@@ -60,16 +64,17 @@ aind <- rbind(c(1, 1, 1),
               c(1, 1, 2),
               c(4, 3, 2))
 
-linearInd(aind, 4:2)
+linearInd(aind, dim)
 
 ## With a matrix of dimensions:
 
-aind <- rbind(c(1, 2),
-              c(1, 2),
-              c(1, 2))
 dims <- rbind(c(4L, 3L),
               c(5L, 3L),
               c(6L, 3L))
+
+aind <- rbind(c(1,  2),
+              c(1,  2),
+              c(1,  2))
 
 linearInd(aind, dims)
 
