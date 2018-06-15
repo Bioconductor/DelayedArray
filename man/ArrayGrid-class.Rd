@@ -265,7 +265,6 @@ mapToGrid(c(3, 1), grid2)   # top left corner of 2nd grid element
 mapToGrid(c(14, 9), grid2)  # top right corner of last grid element
 mapToGrid(c(15, 7), grid2)  # bottom left corner of last grid element
 
-## Map all the elements of the reference array to the grid:
 grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))
 aind <- rbind(c( 1,  1),
               c( 2,  1),
