@@ -212,6 +212,7 @@ length(grid2)
 grid2[[1L]]             # same as grid2[[1L, 1L]]
 grid2[[length(grid2)]]  # same as grid2[[15L, 9L]]
 
+dims(grid2)
 lengths(grid2)
 array(lengths(grid2), dim(grid2))  # display the grid element lengths in
                                    # an array of same shape as grid2
@@ -221,6 +222,20 @@ stopifnot(sum(lengths(grid2)) == prod(refdim(grid2)))
 maxlength(grid2)        # does not need to compute lengths(grid2)) first
                         # so is more efficient than max(lengths(grid2))
 stopifnot(maxlength(grid2) == max(lengths(grid2)))
+
+## Highest resolution grid:
+Hgrid <- RegularArrayGrid(6:4, c(1, 1, 1))
+Hgrid
+dim(Hgrid)              # same as refdim(Hgrid)
+stopifnot(identical(dim(Hgrid), refdim(Hgrid)))
+stopifnot(all(lengths(Hgrid) == 1))
+
+## Lowest resolution grid:
+Lgrid <- RegularArrayGrid(6:4, 6:4)
+Lgrid
+stopifnot(all(dim(Lgrid) == 1))
+stopifnot(identical(dim(Lgrid[[1L]]), refdim(Lgrid)))
+stopifnot(identical(dims(Lgrid), matrix(refdim(Lgrid), nrow=1)))
 
 ## ---------------------------------------------------------------------
 ## B. ArrayViewport OBJECTS

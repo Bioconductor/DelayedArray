@@ -455,8 +455,10 @@ setMethod("dims", "ArrayGrid",
         if (x_ndim >= 2L) {
             for (along in 2:x_ndim) {
                 spacings_along <- get_spacings_along(x, along)
-                ans <- cbind(apply(ans, 2L, rep.int, length(spacings_along)),
-                             rep(spacings_along, each=nrow(ans)))
+                ans <- cbind(
+                    S4Vectors:::rep.int_along_ROWS(ans, length(spacings_along)),
+                    rep(spacings_along, each=nrow(ans))
+                )
             }
         }
         ans
