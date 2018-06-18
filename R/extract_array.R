@@ -154,6 +154,28 @@ setMethod("extract_array", "DataFrame",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### 2 convenience wrappers around extract_array()
+###
+
+### Perform extract_array(x, list(integer(0), ..., integer(0))).
+### 'x' is **trusted** to be an array-like object.
+extract_empty_array <- function(x)
+{
+    index <- rep.int(list(integer(0)), length(dim(x)))
+    extract_array(x, index)
+}
+
+### For extracting a single array element.
+### 'x' is **trusted** to be an array-like object.
+extract_array_element <- function(x, i)
+{
+    i <- normalizeDoubleBracketSubscript(i, x)
+    index <- as.list(arrayInd(i, dim(x)))
+    as.vector(extract_array(x, index))
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### type() generic and default method
 ###
 
@@ -171,10 +193,7 @@ setMethod("type", "ANY",
         if (is.null(x_dim))
             stop(wmsg("type() only supports array-like objects. ",
                       "See ?type in the DelayedArray package."))
-        ## x0 <- x[integer(0), ..., integer(0)]
-        index <- rep.int(list(integer(0)), length(x_dim))
-        x0 <- extract_array(x, index)
-        type(x0)
+        type(extract_empty_array(x))
     }
 )
 

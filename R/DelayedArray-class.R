@@ -702,61 +702,56 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### [
 ###
+### Multi-dimensional form (e.g. x[3:1, , 6]) is delayed.
+### Linear form (e.g. x[5:2]) is NOT delayed.
+###
 
-### Linear single bracket subsetting e.g. x[5].
-### NOT delayed (i.e. return an atomic vector).
-.subset_DelayedArray_by_1Dindex <- function(x, i)
+### Linear single bracket subsetting e.g. x[5:2]. NOT delayed!
+### Return an atomic vector.
+### 'x' is **trusted** to be an array-like object.
+### 'i' is **trusted** to be an integer vector representing a linear index of
+### valid positions in 'x'.
+.extract_vector <- function(x, i, grid=NULL)
 {
-    x_dim <- dim(x)
-    i_dim <- dim(i)
-    if (identical(x_dim, i_dim) && type(i) == "logical") {
-        i <- which(i)  # calls .DelayedArray_block_which() defined
-                       # in DelayedArray-utils.R
-    } else {
-        i <- normalizeSingleBracketSubscript2(i, length(x))
-    }
-    ## From now on 'i' is an integer vector representing a linear index of
-    ## valid positions in 'x'.
     i_len <- length(i)
-    if (i_len == 0L) {
-        ## x0 <- x[integer(0), ..., integer(0)]
-        index <- rep.int(list(integer(0)), length(x_dim))
-        x0 <- extract_array(x, index)
-        return(as.vector(x0))
-    }
+    if (i_len == 0L)
+        return(as.vector(extract_empty_array(x)))
     if (i_len == 1L)
-        return(.get_DelayedArray_element(x, i))
+        return(extract_array_element(x, i))
 
     ## We don't want to use blockApply() here because it would walk on the
     ## entire grid of blocks, which is not necessary. We only need to walk
     ## on the blocks touched by linear index 'i', that is, on the blocks
     ## that contain array elements located at the positions corresponding
     ## to linear index 'i'.
-    grid <- defaultGrid(x)
-    major_minor <- mapToGrid(i, grid)
-    touched_blocks <- linearInd(major_minor$major)
-
-    minor <- major_minor$minor
-
+    grid <- normarg_grid(grid, x)
     nblock <- length(grid)
-
-    breakpoints <- cumsum(lengths(grid))
-    part_idx <- get_part_index(i, breakpoints)
-    split_part_idx <- split_part_index(part_idx, length(breakpoints))
-    block_idx <- which(lengths(split_part_idx) != 0L)  # blocks to visit
-    res <- lapply(block_idx, function(b) {
+    majmin <- mapToGrid(arrayInd(i, dim(x)), grid, linear=TRUE)
+    minor_by_block <- split(majmin$minor, majmin$major)
+    res <- lapply(seq_along(minor_by_block),
+        function(k) {
+            b <- as.integer(names(minor_by_block)[[k]])
+            m <- minor_by_block[[k]]
             if (get_verbose_block_processing())
                 message("Visiting block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
-            block <- extract_block(x, grid[[b]])
-            if (!is.array(block))
-                block <- as.array(block)
-            block_ans <- block[split_part_idx[[b]]]
+            ## We don't need to load the entire block if there is only 1
+            ## value to extract from it.
+            #if (length(m) <= 1L) {
+            if (FALSE) {
+                i2 <- mapToRef(list(major=b, minor=m), grid, linear=TRUE)
+                block_ans <- extract_array_element(x, i2)
+            } else {
+                block <- extract_block(x, grid[[b]])
+                if (!is.array(block))
+                    block <- as.array(block)
+                block_ans <- block[m]
+            }
             if (get_verbose_block_processing())
                 message("OK")
             block_ans
     })
-    unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
+    unsplit(res, majmin$major)
 }
 
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
@@ -769,20 +764,27 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
     nsubscript <- length(Nindex)
     if (nsubscript == 0L)
         return(x)  # no-op
-    x_ndim <- length(dim(x))
+    x_dim <- dim(x)
+    x_ndim <- length(x_dim)
     if (nsubscript == 1L && (x_ndim != 1L || drop)) {
-        ## Linear single bracket subsetting e.g. x[5].
+        ## Linear single bracket subsetting e.g. x[5:2]. NOT delayed!
         ## If 'x' is mono-dimensional and 'drop' is FALSE, we switch
         ## to "multi-dimensional single bracket subsetting" which is
         ## delayed.
-        return(.subset_DelayedArray_by_1Dindex(x, Nindex[[1L]]))
+        i <- Nindex[[1L]]
+        if (identical(x_dim, dim(i)) && type(i) == "logical") {
+            i <- which(i)  # calls .DelayedArray_block_which() defined
+                           # in DelayedArray-utils.R
+        } else {
+            i <- normalizeSingleBracketSubscript2(i, length(x))
+        }
+        ## From now on 'i' is an integer vector representing a linear index
+        ## of valid positions in 'x'.
+        return(.extract_vector(x, i))
     }
     if (nsubscript != x_ndim)
         stop("incorrect number of subscripts")
-    ## Multi-dimensional single bracket subsetting
-    ##
-    ##     x[i_1, i_2, ..., i_n]
-    ##
+    ## Multi-dimensional single bracket subsetting e.g. x[3:1, , 6]. Delayed!
     ## Return an object of the same class as 'x' (endomorphism).
     ans <- stash_DelayedSubset(x, Nindex)
     if (drop)
@@ -884,13 +886,6 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
 ### objects. Then remove the method below and update DelayedArray-class.Rd
 ###
 
-.get_DelayedArray_element <- function(x, i)
-{
-    i <- normalizeDoubleBracketSubscript(i, x)
-    index <- as.list(arrayInd(i, dim(x)))
-    as.vector(extract_array(x, index))
-}
-
 ### Only support linear subsetting at the moment.
 ### TODO: Support multi-dimensional subsetting e.g. x[[5, 15, 2]] or
 ### x[["E", 15, "b"]].
@@ -902,7 +897,7 @@ setMethod("[[", "DelayedArray",
             dots <- dots[names(dots) != "exact"]
         if (!missing(j) || length(dots) > 0L)
             stop("incorrect number of subscripts")
-        .get_DelayedArray_element(x, i)
+        extract_array_element(x, i)
     }
 )
 

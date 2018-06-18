@@ -106,14 +106,7 @@ set_verbose_block_processing <- function(verbose)
 ### 2 utility functions to process array-like objects by block.
 ###
 
-.as_array_or_matrix <- function(x)
-{
-    if (length(dim(x)) == 2L)
-        return(as.matrix(x))
-    as.array(x)
-}
-
-.normarg_grid <- function(grid, x)
+normarg_grid <- function(grid, x)
 {
     if (is.null(grid))
         return(defaultGrid(x))
@@ -122,6 +115,13 @@ set_verbose_block_processing <- function(verbose)
     if (!identical(refdim(grid), dim(x)))
         stop(wmsg("'grid' is incompatible with 'x'"))
     grid
+}
+
+.as_array_or_matrix <- function(x)
+{
+    if (length(dim(x)) == 2L)
+        return(as.matrix(x))
+    as.array(x)
 }
 
 ### 'x' must be an array-like object.
@@ -144,7 +144,7 @@ set_verbose_block_processing <- function(verbose)
 blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 {
     FUN <- match.fun(FUN)
-    grid <- .normarg_grid(grid, x)
+    grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     bplapply(seq_len(nblock),
         function(b) {
@@ -173,7 +173,7 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
     FUN <- match.fun(FUN)
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
-    grid <- .normarg_grid(grid, x)
+    grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
