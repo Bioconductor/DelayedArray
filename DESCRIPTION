@@ -25,6 +25,7 @@ Collate: utils.R
 	bind-arrays.R
 	Array-class.R
 	ArrayGrid-class.R
+	mapToGrid.R
 	extract_array.R
 	show-utils.R
 	DelayedOp-class.R

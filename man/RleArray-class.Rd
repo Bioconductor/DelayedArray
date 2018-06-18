@@ -147,5 +147,5 @@ C <- as(rle_list, "RleArray")
 C
 stopifnot(identical(as(C, "RleList"), rle_list))
 }
-\keyword{methods}
 \keyword{classes}
+\keyword{methods}

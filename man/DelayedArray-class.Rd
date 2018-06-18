@@ -375,5 +375,5 @@ stopifnot(all.equal(row_normalized_p1, row_normalized_p2))
 options(DelayedArray.block.size=10e6)
 }
 }
-\keyword{methods}
 \keyword{classes}
+\keyword{methods}
