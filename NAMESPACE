@@ -221,7 +221,7 @@ export(
     refdim, maxlength, downsample, isLinear,
 
     ## mapToGrid.R:
-    mapToGrid,
+    mapToGrid, mapToRef,
 
     ## extract_array.R:
     extract_array, type,
@@ -253,7 +253,7 @@ export(
 exportMethods(
     arbind, acbind,
     refdim, maxlength, downsample, isLinear,
-    mapToGrid,
+    mapToGrid, mapToRef,
     extract_array, type,
     isNoOp,
     simplify, netSubsetAndAperm,

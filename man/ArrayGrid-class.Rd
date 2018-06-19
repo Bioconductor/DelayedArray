@@ -102,8 +102,8 @@ downsample(x, ratio=1L)
 
 \seealso{
   \itemize{
-    \item \code{\link{mapToGrid}} for mapping reference positions to grid
-          positions and vice-versa.
+    \item \code{\link{mapToGrid}} for mapping reference array positions to
+          grid positions and vice-versa.
 
     \item \link{block_processing} for more information about block-processing
           of an array-like object.

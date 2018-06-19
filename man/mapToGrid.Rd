@@ -4,15 +4,22 @@
 \alias{mapToGrid,ArbitraryArrayGrid-method}
 \alias{mapToGrid,RegularArrayGrid-method}
 
-\title{Map reference positions to grid positions and vice-versa}
+\alias{mapToRef}
+\alias{mapToRef,ArbitraryArrayGrid-method}
+\alias{mapToRef,RegularArrayGrid-method}
+
+\title{Map reference array positions to grid positions and vice-versa}
 
 \description{
-  Use \code{mapToGrid()} to map a set of reference positions to grid positions.
+  Use \code{mapToGrid()} to map a set of reference array positions to
+  grid positions.
   Use \code{mapToRef()} for the reverse mapping.
 }
 
 \usage{
 mapToGrid(aind, grid, linear=FALSE)
+
+mapToRef(major, minor, grid, linear=FALSE)
 }
 
 \arguments{
@@ -35,10 +42,17 @@ mapToGrid(aind, grid, linear=FALSE)
     An ArrayGrid object.
   }
   \item{linear}{
-    \code{TRUE} or \code{FALSE}. By default (i.e. when \code{linear} is
-    \code{FALSE}), the major and minor indices are returned as array
-    indices (i.e. as n-uplets). When \code{linear} is set to \code{TRUE},
-    they are returned as linear indices.
+    \code{TRUE} or \code{FALSE}. Controls the format of the output for
+    \code{mapToGrid} and the input for \code{mapToRef}.
+
+    By default (i.e. when \code{linear} is \code{FALSE}), the major and minor
+    indices returned by \code{mapToGrid} (or taken by \code{mapToRef}) are
+    \emph{array indices} (i.e. n-uplets). When \code{linear} is set to
+    \code{TRUE}, they are returned (or taken) as \emph{linear indices}.
+  }
+  \item{major, minor}{
+    The \code{major} and \code{minor} components as returned by
+    \code{mapToGrid}.
   }
 }
 
@@ -91,15 +105,25 @@ mapToGrid(aind, grid, linear=FALSE)
 ## Create an arbitrary-spaced grid on top of a 15 x 9 matrix:
 grid2 <- ArbitraryArrayGrid(list(c(2L, 7:10, 13L, 15L), c(5:6, 6L, 9L)))
 
-## Create a set of reference positions:
+## Create a set of reference array positions:
 aind <- rbind(c( 2, 5),  # bottom right corner of 1st grid element
               c( 3, 1),  # top left corner of 2nd grid element
               c(14, 9),  # top right corner of last grid element
               c(15, 7),  # bottom left corner of last grid element
               c(15, 9))  # bottom right corner of last grid element
 
-mapToGrid(aind, grid2)
-mapToGrid(aind, grid2, linear=TRUE)
+## Map them to grid positions:
+majmin <- mapToGrid(aind, grid2)
+majmin
+
+## Reverse mapping:
+aind2 <- mapToRef(majmin$major, majmin$minor, grid2)
+stopifnot(all.equal(aind2, aind))
+
+majmin <- mapToGrid(aind, grid2, linear=TRUE)
+majmin
+aind2 <- mapToRef(majmin$major, majmin$minor, grid2, linear=TRUE)
+stopifnot(all.equal(aind2, aind))
 
 ## Map all the valid positions:
 all_positions <- seq_len(prod(refdim(grid2)))
@@ -112,6 +136,8 @@ min_by_maj <- split(majmin$minor,
                     factor(majmin$major, levels=seq_along(grid2)))
 stopifnot(identical(lengths(min_by_maj, use.names=FALSE), lengths(grid2)))
 stopifnot(all(mapply(isSequence, min_by_maj, lengths(min_by_maj))))
+aind2 <- mapToRef(majmin$major, majmin$minor, grid2, linear=TRUE)
+stopifnot(identical(aind2, aind))
 
 ## More mapping:
 grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))
