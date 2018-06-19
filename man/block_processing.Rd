@@ -22,7 +22,9 @@
 blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
-defaultGrid(x, block.maxlength=NULL)
+defaultGrid(x, block.maxlength=NULL, chunk.grid=NULL,
+               block.shape=c("hypercube", "linear"))
+
 effectiveGrid(block)
 currentBlockId(block)
 currentViewport(block)
@@ -56,6 +58,12 @@ currentViewport(block)
   \item{block.maxlength}{
     Coming soon...
   }
+  \item{chunk.grid}{
+    Coming soon...
+  }
+  \item{block.shape}{
+    Coming soon...
+  }
   \item{block}{
     Coming soon...
   }
@@ -77,6 +85,20 @@ currentViewport(block)
 }
 
 \examples{
-## Coming soon...
+m <- matrix(runif(500), ncol=10)
+
+defaultGrid(m, block.maxlength=25)
+defaultGrid(m, block.maxlength=10)
+defaultGrid(m, block.maxlength=20)
+defaultGrid(m, block.maxlength=75)
+defaultGrid(m, block.maxlength=100)
+
+defaultGrid(m, block.maxlength=25, block.shape="linear")
+defaultGrid(m, block.maxlength=10, block.shape="linear")
+defaultGrid(m, block.maxlength=20, block.shape="linear")
+defaultGrid(m, block.maxlength=75, block.shape="linear")
+defaultGrid(m, block.maxlength=100, block.shape="linear")
+
+## More to come soon...
 }
 \keyword{methods}

@@ -108,7 +108,7 @@ type(x)
   \emph{on disk} e.g. by calling \code{\link[HDF5Array]{writeHDF5Array}} on
   it (this function is defined in the \pkg{HDF5Array} package) or coercing it
   to an \link[HDF5Array]{HDF5Array} object with \code{as(x, "HDF5Array")}.
-  Other on-disk backends can be supported. This uses a block-processing
+  Other on-disk backends can be supported. This uses a block processing
   strategy so that the full object is not realized at once in memory. Instead
   the object is processed block by block i.e. the blocks are realized in
   memory and written to disk one at a time.
@@ -168,7 +168,7 @@ type(x)
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
 
-    \item \link{block_processing} for more information about block-processing
+    \item \link{block_processing} for more information about block processing
           of an array-like object.
 
     \item \link{DelayedArray-utils} for common operations on DelayedArray

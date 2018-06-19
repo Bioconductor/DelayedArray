@@ -386,40 +386,12 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
 {
     if (!isTRUEorFALSE(arr.ind))
         stop("'arr.ind' must be TRUE or FALSE")
-    if (!isTRUEorFALSE(useNames))
-        stop("'useNames' must be TRUE or FALSE")
-
-    FUN <- function(block, init) {
-        reduced_block <- base::which(block)
-        if (length(reduced_block) != 0L) {
-            reduced_block <- reduced_block + init[["offset"]]
-            part_number <- sprintf("%010d", currentBlockId(block))
-            init[[part_number]] <- reduced_block
-        }
-        init[["offset"]] <- init[["offset"]] + length(block)
-        init
-    }
-    offset <- 0L
-    ## If 'x' is a "long array" (i.e. longer than 2^31), we use an offset of
-    ## type double to avoid integer overflow.
-    x_len <- length(x)
-    if (is.double(x_len))
-        offset <- as.double(offset)
-    init <- new.env(parent=emptyenv())
-    init[["offset"]] <- offset
-
-    init <- blockReduce(FUN, x, init)
-    stopifnot(identical(x_len, init[["offset"]]))  # sanity check
-    rm(list="offset", envir=init)
-
-    if (length(init) == 0L) {
-        ans <- if (is.integer(x_len)) integer(0) else numeric(0)
-    } else {
-        ans <- unlist(as.list(init, sorted=TRUE),
-                      recursive=FALSE, use.names=FALSE)
-    }
-    if (arr.ind)
-        ans <- arrayInd(ans, dim(x), dimnames(x), useNames=useNames)
+    if (!identical(useNames, TRUE))
+        warning(wmsg("'useNames' is ignored when 'x' is ",
+                     "a DelayedArray object or derivative"))
+    ans <- block_which(x)
+    if (!arr.ind)
+        ans <- linearInd(ans, dim(x))
     ans
 }
 

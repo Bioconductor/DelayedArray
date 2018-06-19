@@ -706,54 +706,6 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
 ### Linear form (e.g. x[5:2]) is NOT delayed.
 ###
 
-### Linear single bracket subsetting e.g. x[5:2]. NOT delayed!
-### Return an atomic vector.
-### 'x' is **trusted** to be an array-like object.
-### 'i' is **trusted** to be an integer vector representing a linear index of
-### valid positions in 'x'.
-.extract_vector <- function(x, i, grid=NULL)
-{
-    i_len <- length(i)
-    if (i_len == 0L)
-        return(as.vector(extract_empty_array(x)))
-    if (i_len == 1L)
-        return(extract_array_element(x, i))
-
-    ## We don't want to use blockApply() here because it would walk on the
-    ## entire grid of blocks, which is not necessary. We only need to walk
-    ## on the blocks touched by linear index 'i', that is, on the blocks
-    ## that contain array elements located at the positions corresponding
-    ## to linear index 'i'.
-    grid <- normarg_grid(grid, x)
-    nblock <- length(grid)
-    majmin <- mapToGrid(arrayInd(i, dim(x)), grid, linear=TRUE)
-    minor_by_block <- split(majmin$minor, majmin$major)
-    res <- lapply(seq_along(minor_by_block),
-        function(k) {
-            b <- as.integer(names(minor_by_block)[[k]])
-            m <- minor_by_block[[k]]
-            if (get_verbose_block_processing())
-                message("Visiting block ", b, "/", nblock, " ... ",
-                        appendLF=FALSE)
-            ## We don't need to load the entire block if there is only 1
-            ## value to extract from it.
-            #if (length(m) <= 1L) {
-            if (FALSE) {
-                i2 <- mapToRef(list(major=b, minor=m), grid, linear=TRUE)
-                block_ans <- extract_array_element(x, i2)
-            } else {
-                block <- extract_block(x, grid[[b]])
-                if (!is.array(block))
-                    block <- as.array(block)
-                block_ans <- block[m]
-            }
-            if (get_verbose_block_processing())
-                message("OK")
-            block_ans
-    })
-    unsplit(res, majmin$major)
-}
-
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
 {
     if (missing(x))
@@ -773,14 +725,13 @@ setReplaceMethod("names", "DelayedArray", .set_DelayedArray_names)
         ## delayed.
         i <- Nindex[[1L]]
         if (identical(x_dim, dim(i)) && type(i) == "logical") {
-            i <- which(i)  # calls .DelayedArray_block_which() defined
-                           # in DelayedArray-utils.R
+            i <- block_which(i)
         } else {
             i <- normalizeSingleBracketSubscript2(i, length(x))
         }
         ## From now on 'i' is an integer vector representing a linear index
         ## of valid positions in 'x'.
-        return(.extract_vector(x, i))
+        return(block_extract_array_elements(x, i))
     }
     if (nsubscript != x_ndim)
         stop("incorrect number of subscripts")

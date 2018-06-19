@@ -172,22 +172,26 @@ test_DelayedArray_which <- function()
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
     A <- realize(a)
 
-    target <- which(a)
+    target1 <- which(a)
+    target2 <- which(a, arr.ind=TRUE, useNames=FALSE)
     for (block_size in block_sizes2) {
         options(DelayedArray.block.size=block_size)
-        checkIdentical(target, which(A))
-        checkIdentical(target, DelayedArray_block_which(a))
+        checkIdentical(target1, which(A))
+        checkIdentical(target2, which(A, arr.ind=TRUE))
+        checkIdentical(target1, DelayedArray_block_which(a))
     }
 
     a <- a1 == -1L    # all FALSE
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
     A <- realize(a)
 
-    target <- integer(0)
+    target1 <- integer(0)
+    target2 <- matrix(integer(0), ncol=3)
     for (block_size in block_sizes2) {
         options(DelayedArray.block.size=block_size)
-        checkIdentical(target, which(A))
-        checkIdentical(target, DelayedArray_block_which(a))
+        checkIdentical(target1, which(A))
+        checkIdentical(target2, which(A, arr.ind=TRUE))
+        checkIdentical(target1, DelayedArray_block_which(a))
     }
 }
 

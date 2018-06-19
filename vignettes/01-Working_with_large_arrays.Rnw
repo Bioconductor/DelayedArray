@@ -289,8 +289,8 @@ object_size(as(m, "HDF5Matrix"))
   \begin{block}{}
     \begin{itemize}
       \item {\bf delayed operations}
-      \item {\bf block-processing} (behind the scene)
-      \item TODO: multicore block-processing (sequential only at the moment)
+      \item {\bf block processing} (behind the scene)
+      \item TODO: multicore block processing (sequential only at the moment)
     \end{itemize}
   \end{block}
 \end{frame}

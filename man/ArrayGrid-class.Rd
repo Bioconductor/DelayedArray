@@ -122,7 +122,7 @@ downsample(x, ratio=1L)
 ## ---------------------------------------------------------------------
 
 ## Create a regularly-spaced grid on top of a 3700 x 100 x 33 array:
-grid1 <- RegularArrayGrid(c(3700L, 100L, 33L), c(250L, 100L, 10L))
+grid1 <- RegularArrayGrid(c(3700, 100, 33), c(250, 100, 10))
 
 ## Dimensions of the reference array:
 refdim(grid1)
@@ -170,14 +170,14 @@ maxlength(grid2)        # does not need to compute lengths(grid2)) first
                         # so is more efficient than max(lengths(grid2))
 stopifnot(maxlength(grid2) == max(lengths(grid2)))
 
-## Highest resolution grid:
+## Max (i.e. highest) resolution grid:
 Hgrid <- RegularArrayGrid(6:4, c(1, 1, 1))
 Hgrid
 dim(Hgrid)              # same as refdim(Hgrid)
 stopifnot(identical(dim(Hgrid), refdim(Hgrid)))
 stopifnot(all(lengths(Hgrid) == 1))
 
-## Lowest resolution grid:
+## Min (i.e. lowest) resolution grid:
 Lgrid <- RegularArrayGrid(6:4, 6:4)
 Lgrid
 stopifnot(all(dim(Lgrid) == 1))
@@ -277,6 +277,15 @@ stopifnot(identical(downsample(grid2, 1), grid2))
 
 ## Using one ratio per dimension:
 downsample(grid2, c(2, 1))
+
+## Downsample a max resolution grid:
+refdim <- c(45, 16, 20)
+grid5 <- RegularArrayGrid(refdim, c(1, 1, 1))
+ratio <- c(6, 1, 3)
+stopifnot(identical(
+    downsample(grid5, ratio),
+    RegularArrayGrid(refdim, ratio)
+))
 }
 \keyword{classes}
 \keyword{methods}

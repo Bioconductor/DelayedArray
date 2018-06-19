@@ -1,8 +1,6 @@
 ### =========================================================================
-### Internal utilities for block processing an array
+### Block processing utilities
 ### -------------------------------------------------------------------------
-###
-### Unless stated otherwise, nothing in this file is exported.
 ###
 
 
@@ -61,20 +59,49 @@ get_default_block_maxlength <- function(type)
     as.integer(block.maxlength)
 }
 
-### Return a regular grid with linear blocks of length as close as possibe to
-### (but not bigger than) 'block.maxlength'.
-### TODO: Add 'block.shape' argument.
-defaultGrid <- function(x, block.maxlength=NULL)
-#                           block.shape=c("hypercube", "linear"))
+.normarg_chunk.grid <- function(chunk.grid, x)
 {
+    if (is.null(chunk.grid))
+        return(chunkGrid(x))
+    if (!is(chunk.grid, "ArrayGrid"))
+        stop(wmsg("'chunk.grid' must be NULL or an ArrayGrid object"))
+    if (!identical(refdim(chunk.grid), dim(x)))
+        stop(wmsg("'chunk.grid' is incompatible with 'x'"))
+    chunk.grid
+}
+
+### Return an "optimal" grid for block processing.
+### The grid is returned as an ArrayGrid object on reference array 'x'.
+### The grid elements define the blocks that will be used for processing 'x'
+### by block. The grid is "optimal" in the sense that:
+###  - It's "compatible" with the chunk grid (i.e. with 'chunkGrid(x)' or
+###    with the chunk grid supplied via the 'chunk.grid' argument), that is,
+###    the chunks are contained in the blocks. Said otherwise, chunks never
+###    cross block boundaries.
+###  - Its "resolution" is such that the blocks have a length that is as
+###    close as possibe to (but does not exceed) 'block.maxlength'.
+###    An exception is when some chunks are already >= 'block.maxlength',
+###    in which case the returned grid is the same as the chunk grid.
+### Note that the returned grid is regular (i.e. RegularArrayGrid object)
+### unless the chunk grid is not regular (i.e. is an ArbitraryArrayGrid
+### object).
+defaultGrid <- function(x, block.maxlength=NULL,
+                           chunk.grid=NULL,
+                           block.shape=c("hypercube", "linear"))
+{
+    x_dim <- dim(x)
+    if (is.null(x_dim))
+        stop(wmsg("'x' must have dimensions"))
     block_maxlen <- .normarg_block.maxlength(block.maxlength, type(x))
-    block_shape <- "linear"
-    chunk_grid <- NULL
-    #block_shape <- match.arg(block.shape)
-    #chunk_grid <- chunkGrid(x)
+    chunk_grid <- .normarg_chunk.grid(chunk.grid, x)
+    block_shape <- match.arg(block.shape)
+    ## If 'x' is empty, we return a grid with a single (empty) block that
+    ## has the dimensions of 'x'.
+    if (any(x_dim == 0L))
+        return(RegularArrayGrid(x_dim))
     if (is.null(chunk_grid)) {
         ans <- make_RegularArrayGrid_of_capped_length_blocks(
-                           dim(x), block_maxlen, block_shape=block_shape)
+                           x_dim, block_maxlen, block_shape=block_shape)
         return(ans)
     }
     chunks_per_block <- max(block_maxlen %/% maxlength(chunk_grid), 1L)
@@ -106,7 +133,7 @@ set_verbose_block_processing <- function(verbose)
 ### 2 utility functions to process array-like objects by block.
 ###
 
-normarg_grid <- function(grid, x)
+.normarg_grid <- function(grid, x)
 {
     if (is.null(grid))
         return(defaultGrid(x))
@@ -144,7 +171,7 @@ normarg_grid <- function(grid, x)
 blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 {
     FUN <- match.fun(FUN)
-    grid <- normarg_grid(grid, x)
+    grid <- .normarg_grid(grid, x)
     nblock <- length(grid)
     bplapply(seq_len(nblock),
         function(b) {
@@ -173,7 +200,7 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
     FUN <- match.fun(FUN)
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
-    grid <- normarg_grid(grid, x)
+    grid <- .normarg_grid(grid, x)
     nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())
@@ -222,16 +249,101 @@ currentViewport <- function(block)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### block_which()
+###
+
+### Return a numeric matrix like one returned by base::arrayInd(), that is,
+### a matrix where each row is an n-uplet representing an array index.
+### 'x' is **trusted** to be a logical array-like object.
+block_which <- function(x, grid=NULL)
+{
+    FUN <- function(block) {
+        b <- currentBlockId(block)
+        m <- base::which(block)
+        mapToRef(rep.int(b, length(m)), m, effectiveGrid(block), linear=TRUE)
+    }
+    block_results <- blockApply(x, FUN, grid=grid)
+    aind <- do.call(rbind, block_results)
+    aind_as_list <- lapply(ncol(aind):1, function(j) aind[ , j])
+    oo <- do.call(order, aind_as_list)
+    aind[oo, , drop=FALSE]
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### block_extract_array_elements()
+###
+
+### Linear single bracket subsetting (e.g. x[5:2]) of an array-like object.
+### Return an atomic vector.
+### 'x' is **trusted** to be an array-like object.
+### 'i' is **trusted** to be an integer vector representing a linear index
+### of valid positions in 'x'.
+block_extract_array_elements <- function(x, i, grid=NULL)
+{
+    i_len <- length(i)
+    if (i_len == 0L)
+        return(as.vector(extract_empty_array(x)))
+    if (i_len == 1L)
+        return(extract_array_element(x, i))
+
+    ## We don't want to use blockApply() here because it would walk on the
+    ## entire grid of blocks, which is not necessary. We only need to walk
+    ## on the blocks touched by linear index 'i', that is, on the blocks
+    ## that contain array elements located at the positions corresponding
+    ## to linear index 'i'.
+    grid <- .normarg_grid(grid, x)
+    nblock <- length(grid)
+    x_dim <- dim(x)
+    majmin <- mapToGrid(arrayInd(i, x_dim), grid, linear=TRUE)
+    minor_by_block <- split(majmin$minor, majmin$major)
+    res <- lapply(seq_along(minor_by_block),
+        function(k) {
+            b <- as.integer(names(minor_by_block)[[k]])
+            m <- minor_by_block[[k]]
+            if (get_verbose_block_processing())
+                message("Visiting block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            ## We don't need to load the entire block if there is only 1
+            ## value to extract from it.
+            if (length(m) == 1L) {
+                i2 <- linearInd(mapToRef(b, m, grid, linear=TRUE), x_dim)
+                block_ans <- extract_array_element(x, i2)
+            } else {
+                block <- extract_block(x, grid[[b]])
+                if (!is.array(block))
+                    block <- as.array(block)
+                block_ans <- block[m]
+            }
+            if (get_verbose_block_processing())
+                message("OK")
+            block_ans
+    })
+    unsplit(res, majmin$major)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### OLD - Walking on the blocks
 ### OLD -
 ### OLD - 3 utility functions to process array-like objects by block.
 ### OLD -
+### OLD - Still used by write_array_to_sink() below and by the
+### OLD - DelayedMatrixStats package.
 
 ### An lapply-like function.
 block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
 {
     APPLY <- match.fun(APPLY)
-    grid <- defaultGrid(x, block_maxlen)
+    x_dim <- dim(x)
+    if (any(x_dim == 0L)) {
+        chunk_grid <- NULL
+    } else {
+        ## Using chunks of length 1 (i.e. max resolution chunk grid) is just
+        ## a trick to make sure that defaultGrid() returns linear blocks.
+        chunk_grid <- RegularArrayGrid(x_dim, rep.int(1L, length(x_dim)))
+    }
+    grid <- defaultGrid(x, block_maxlen, chunk_grid, block.shape="linear")
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {
@@ -272,7 +384,6 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
 ### Block by block realization of an array-like object
 ###
 
-### Exported!
 ### Split the array-like object into blocks, then realize and write one block
 ### at a time to disk.
 write_array_to_sink <- function(x, sink)
