@@ -50,6 +50,9 @@
 \alias{anyNA,DelayedArray-method}
 \alias{which,DelayedArray-method}
 
+\alias{range.DelayedArray}
+\alias{range,DelayedArray-method}
+
 \alias{mean.DelayedArray}
 \alias{mean,DelayedArray-method}
 

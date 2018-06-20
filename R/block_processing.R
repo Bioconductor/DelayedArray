@@ -76,7 +76,7 @@ get_default_block_maxlength <- function(type)
 ### by block. The grid is "optimal" in the sense that:
 ###  - It's "compatible" with the chunk grid (i.e. with 'chunkGrid(x)' or
 ###    with the chunk grid supplied via the 'chunk.grid' argument), that is,
-###    the chunks are contained in the blocks. Said otherwise, chunks never
+###    the chunks are contained in the blocks. In other words, chunks never
 ###    cross block boundaries.
 ###  - Its "resolution" is such that the blocks have a length that is as
 ###    close as possibe to (but does not exceed) 'block.maxlength'.

@@ -67,6 +67,8 @@ S3method(as.vector, Array)
 
 S3method(mean, DelayedArray)
 
+S3method(range, DelayedArray)
+
 S3method(split, DelayedArray)
 
 S3method(summary, DelayedOp)
@@ -108,6 +110,8 @@ export(
     as.vector.Array,
 
     mean.DelayedArray,
+
+    range.DelayedArray,
 
     split.DelayedArray,
 

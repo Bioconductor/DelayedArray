@@ -407,31 +407,33 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
 .collect_objects <- function(x, ...)
 {
     if (missing(x)) {
-        objects <- unname(list(...))
+        objects <- list(...)
     } else {
-        objects <- unname(list(x, ...))
+        objects <- list(x, ...)
     }
-    NULL_idx <- which(S4Vectors:::sapply_isNULL(objects))
-    if (length(NULL_idx) != 0L)
-        objects <- objects[-NULL_idx]
-    is_array_like <- function(x) is(x, "DelayedArray") || is.array(x)
+    objects <- unname(S4Vectors:::delete_NULLs(objects))
+    is_array_like <- function(x) is(x, "Array") || is.array(x)
     if (!all(vapply(objects, is_array_like, logical(1))))
         stop("the supplied objects must be array-like objects (or NULLs)")
     objects
 }
 
 ### Used in unit tests!
-.DelayedArray_block_Summary <- function(.Generic, x, ..., na.rm=FALSE)
+### Note that the specified grid must be compatible with 'x' and all the
+### objects in '...'.
+.block_Summary <- function(.Generic, x, ..., na.rm=FALSE, grid=NULL)
 {
+    GENERIC <- match.fun(.Generic)
     objects <- .collect_objects(x, ...)
 
-    GENERIC <- match.fun(.Generic)
-
     FUN <- function(block, init) {
-        ## We get a warning if 'block' is empty (which can't happen, blocks
-        ## can't be empty) or if 'na.rm' is TRUE and 'block' contains only
-        ## NA's or NaN's.
-        reduced_block <- tryCatch(GENERIC(block, na.rm=na.rm), warning=identity)
+        ## We get a warning if 'block' is empty (which should happen only
+        ## when 'x' itself is empty, in which case blockReduce() uses a
+        ## single block that has the dimensions of 'x') or if 'na.rm' is TRUE
+        ## and 'block' contains only NA's or NaN's.
+        ## We use tryCatch() to catch these warnings.
+        reduced_block <- tryCatch(GENERIC(block, na.rm=na.rm),
+                                  warning=identity)
         if (is(reduced_block, "warning") && is.null(init))
             return(NULL)
         GENERIC(reduced_block, init)
@@ -441,9 +443,10 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
         if (is.null(init))
             return(FALSE)
         switch(.Generic,
-            max=         is.na(init) || init == Inf,
-            min=         is.na(init) || init == -Inf,
-            range=       is.na(init[[1L]]) || all(init == c(-Inf, Inf)),
+            max=         is.na(init) || (na.rm && init ==  Inf),
+            min=         is.na(init) || (na.rm && init == -Inf),
+            range=       is.na(init[[1L]]) ||
+                             (na.rm && all(init == c(-Inf, Inf))),
             sum=, prod=  is.na(init),
             any=         identical(init, TRUE),
             all=         identical(init, FALSE),
@@ -451,7 +454,7 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
     }
 
     for (x in objects)
-        init <- blockReduce(FUN, x, init, BREAKIF)
+        init <- blockReduce(FUN, x, init, BREAKIF, grid)
     if (is.null(init))
         init <- GENERIC()
     init
@@ -459,7 +462,47 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
 
 setMethod("Summary", "DelayedArray",
     function(x, ..., na.rm=FALSE)
-        .DelayedArray_block_Summary(.Generic, x, ..., na.rm=na.rm)
+        .block_Summary(.Generic, x, ..., na.rm=na.rm)
+)
+
+### S3/S4 combo for range.DelayedArray
+### We override the "range" method defined above via the "Summary" method
+### because we want to support the 'finite' argument like S3 method
+### base::range.default() does.
+### Note that the specified grid must be compatible with all the objects
+### in '...'.
+range.DelayedArray <- function(..., na.rm=FALSE, finite=FALSE, grid=NULL)
+{
+    objects <- .collect_objects(...)
+
+    FUN <- function(block, init) {
+        ## See .block_Summary() above for why we use tryCatch().
+        reduced_block <- tryCatch(range(block, na.rm=na.rm, finite=finite),
+                                  warning=identity)
+        if (is(reduced_block, "warning") && is.null(init))
+            return(NULL)
+        range(reduced_block, init)
+    }
+    init <- NULL
+    BREAKIF <- function(init) {
+        if (is.null(init))
+            return(FALSE)
+        is.na(init[[1L]]) || (na.rm && all(init == c(-Inf, Inf)))
+    }
+
+    for (x in objects)
+        init <- blockReduce(FUN, x, init, BREAKIF, grid)
+    if (is.null(init))
+        init <- range()
+    init
+}
+
+### The signature of all the members of the S4 "Summary" group generic is
+### 'x, ..., na.rm' (see getGeneric("range")) which means that the S4 methods
+### cannot add arguments after 'na.rm'. So we add the 'finite' argument before.
+setMethod("range", "DelayedArray",
+    function(x, ..., finite=FALSE, na.rm=FALSE)
+        range.DelayedArray(x, ..., na.rm=na.rm, finite=finite)
 )
 
 
