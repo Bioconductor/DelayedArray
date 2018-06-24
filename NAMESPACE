@@ -1,3 +1,5 @@
+useDynLib(DelayedArray)
+
 import(methods)
 importFrom(stats, setNames,
                   dnorm, pnorm, qnorm,

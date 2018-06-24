@@ -2,7 +2,6 @@
 ### Bind arrays with an arbitrary number of dimensions along an arbitrary
 ### dimension
 ### -------------------------------------------------------------------------
-###
 
 
 ### Return a matrix with one row per dim and one column per object if the
@@ -89,30 +88,22 @@ combine_dimnames_along <- function(objects, dims, along)
 ### 'objects' is assumed to be a list of vector-like objects.
 ### 'block_lens' is assumed to be an integer vector parallel to 'objects'
 ### specifying the block length for each object in 'objects'. In addition the
-### length of 'object[[i]]' must be 'k * block_lens[[i]]' (k is the same for
-### all the objects).
+### length of 'object[[i]]' must be 'nblock * block_lens[[i]]' ('nblock' is
+### the same for all the objects).
 .intertwine_blocks <- function(objects, block_lens)
 {
-    data <- unlist(objects, recursive=FALSE, use.names=FALSE)
+    x0 <- unlist(lapply(objects, `[`, 0L), use.names=FALSE)
     objects_lens <- lengths(objects)
     if (all(objects_lens == 0L))
-        return(data)
+        return(x0)
 
-    k <- objects_lens %/% block_lens
-    k <- unique(k[!is.na(k)])
-    stopifnot(length(k) == 1L)  # sanity check
+    objects <- S4Vectors:::prepare_objects_to_bind(x0, objects)
 
-    nobject <- length(objects)
-    objects_cumlens <- cumsum(objects_lens)
-    ranges <- lapply(seq_len(nobject),
-        function(i) {
-            width <- block_lens[[i]]
-            offset <- if (i == 1L) 0L else objects_cumlens[[i - 1L]]
-            successiveIRanges(rep.int(width, k), from=offset + 1L)
-        })
-    ranges <- do.call(c, ranges)
-    i <- as.vector(matrix(seq_len(nobject * k), nrow=nobject, byrow=TRUE))
-    extractROWS(data, ranges[i])
+    nblock <- objects_lens %/% block_lens
+    nblock <- unique(nblock[!is.na(nblock)])
+    stopifnot(length(nblock) == 1L)  # sanity check
+
+    .Call("abind", objects, nblock, PACKAGE="DelayedArray")
 }
 
 ### A stripped-down version of abind::abind().
@@ -124,7 +115,6 @@ combine_dimnames_along <- function(objects, dims, along)
 ###   (b) Performance: simple_abind() has a little bit more overhead than
 ###       abind::abind(). This makes it slower on small objects. However it
 ###       tends to be slightly faster on big objects.
-### NOT exported but used in the HDF5Array package.
 simple_abind <- function(..., along)
 {
     objects <- S4Vectors:::delete_NULLs(list(...))
