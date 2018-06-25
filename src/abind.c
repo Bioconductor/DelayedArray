@@ -46,13 +46,13 @@ static long long int get_xnum_val(SEXP x, R_xlen_t i)
  * abind()
  */
 
-SEXP abind(SEXP objects, SEXP nblock)
+SEXP abind(SEXP objects, SEXP nblock, SEXP ans_dim)
 {
 	int nobject;
 	long long int nblock0, i, j, ans_offset, ans_block_nelt, block_nelt;
 	R_xlen_t object_len, ans_len;
 	SEXPTYPE ans_type;
-	SEXP object, ans;
+	SEXP object, ans, dim;
 
 	if (!isVectorList(objects))  // IS_LIST() is broken
 		error("'objects' must be a list");
@@ -97,7 +97,11 @@ SEXP abind(SEXP objects, SEXP nblock)
 		}
 		ans_offset += block_nelt;
 	}
-	UNPROTECT(1);
+
+	/* Set "dim" attribute on 'ans'. */
+	dim = PROTECT(duplicate(ans_dim));
+	SET_DIM(ans, dim);
+	UNPROTECT(2);
 	return ans;
 }
 

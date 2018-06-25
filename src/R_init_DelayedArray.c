@@ -6,7 +6,7 @@
 static const R_CallMethodDef callMethods[] = {
 
 /* abind.c */
-	CALLMETHOD_DEF(abind, 2),
+	CALLMETHOD_DEF(abind, 3),
 
 	{NULL, NULL, 0}
 };

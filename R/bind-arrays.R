@@ -90,20 +90,25 @@ combine_dimnames_along <- function(objects, dims, along)
 ### specifying the block length for each object in 'objects'. In addition the
 ### length of 'object[[i]]' must be 'nblock * block_lens[[i]]' ('nblock' is
 ### the same for all the objects).
-.intertwine_blocks <- function(objects, block_lens)
+.intertwine_blocks <- function(objects, block_lens, ans_dim)
 {
     x0 <- unlist(lapply(objects, `[`, 0L), use.names=FALSE)
     objects_lens <- lengths(objects)
     if (all(objects_lens == 0L))
-        return(x0)
+        return(set_dim(x0, ans_dim))
 
-    objects <- S4Vectors:::prepare_objects_to_bind(x0, objects)
+    idx <- which(vapply(objects,
+        function(object) { typeof(object) != typeof(x0) },
+        logical(1),
+        USE.NAMES=FALSE))
+    if (length(idx) != 0L)
+        objects[idx] <- lapply(objects[idx], `storage.mode<-`, typeof(x0))
 
     nblock <- objects_lens %/% block_lens
     nblock <- unique(nblock[!is.na(nblock)])
     stopifnot(length(nblock) == 1L)  # sanity check
 
-    .Call("abind", objects, nblock, PACKAGE="DelayedArray")
+    .Call("abind", objects, nblock, ans_dim, PACKAGE="DelayedArray")
 }
 
 ### A stripped-down version of abind::abind().
@@ -112,9 +117,14 @@ combine_dimnames_along <- function(objects, dims, along)
 ###       consistent with base::rbind() and base::cbind(). This is not the
 ###       case for abind::abind() which does some strange things with the
 ###       dimnames.
-###   (b) Performance: simple_abind() has a little bit more overhead than
-###       abind::abind(). This makes it slower on small objects. However it
-###       tends to be slightly faster on big objects.
+###   (b) Performance: simple_abind() is much faster than abind::abind()
+###       (between 3x and 15x). Also note that in the 'along=1L' and 'along=2L'
+###       cases, it's generally as fast (and most of the time faster) than
+###       base::rbind() and base::cbind().
+###       For example, with 'x <- matrix(1:30000000, nrow=5000)',
+###       'simple_abind(m, m, m, along=1L)' is 14x faster than
+###       'abind::abind(m, m, m, along=1L)' and 11x faster than
+###       'base::rbind(m, m, m)'.
 simple_abind <- function(..., along)
 {
     objects <- S4Vectors:::delete_NULLs(list(...))
@@ -132,10 +142,8 @@ simple_abind <- function(..., along)
     block_lens <- dims[along, ]
     for (n in seq_len(along - 1L))
         block_lens <- block_lens * dims[n, ]
-    ans <- .intertwine_blocks(objects, block_lens)
-
-    ## Set the dim.
-    ans <- set_dim(ans, combine_dims_along(dims, along))
+    ans <- .intertwine_blocks(objects, block_lens,
+                              combine_dims_along(dims, along))
 
     ## Combine and set the dimnames.
     set_dimnames(ans, combine_dimnames_along(objects, dims, along))
