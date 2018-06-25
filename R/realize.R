@@ -13,24 +13,13 @@
 ###   1) A constructor function that takes argument 'dim', 'dimnames', and
 ###      'type'.
 ###   2) "dim" and "dimnames" methods.
-###   3) A "write_block_to_sink" method.
+###   3) A "write_block" method.
 ###   4) A "close" method (optional).
 ###   5) Coercion to DelayedArray.
 ### See the arrayRealizationSink class below, or the RleRealizationSink class
 ### in RleArray-class.R, or the HDF5RealizationSink class in the HDF5Array
-### package for examples of concrete RealizationSink subclasses.
+### package, for examples of concrete RealizationSink subclasses.
 setClass("RealizationSink", representation("VIRTUAL"))
-
-### 'block', 'sink', and 'viewport' are expected to be an ordinary array, a
-### RealizationSink, and a Viewport object, respectively. They must satisfy:
-###
-###    stopifnot(identical(dim(sink), refdim(viewport)),
-###              identical(dim(block), dim(viewport)))
-###
-### Just to be safe, methods should perform this sanity check.
-setGeneric("write_block_to_sink", signature="sink",
-    function(block, sink, viewport) standardGeneric("write_block_to_sink")
-)
 
 setGeneric("close")
 
@@ -75,14 +64,12 @@ arrayRealizationSink <- function(dim, dimnames=NULL, type="double")
     sink
 }
 
-setMethod("write_block_to_sink", "arrayRealizationSink",
-    function(block, sink, viewport)
+setMethod("write_block", "arrayRealizationSink",
+    function(x, viewport, block)
     {
-        stopifnot(identical(dim(sink), refdim(viewport)),
-                  identical(dim(block), dim(viewport)))
-        result <- .get_arrayRealizationSink_result(sink)
-        result <- replace_block(result, viewport, block)
-        .set_arrayRealizationSink_result(sink, result)
+        result <- .get_arrayRealizationSink_result(x)
+        result <- write_block(result, viewport, block)
+        .set_arrayRealizationSink_result(x, result)
     }
 )
 

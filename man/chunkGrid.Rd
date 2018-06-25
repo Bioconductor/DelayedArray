@@ -45,7 +45,7 @@ chunkdim(x)
 
 \seealso{
   \itemize{
-    \item \link{block_processing} for more information about block-processing
+    \item \link{block_processing} for more information about block processing
           of an array-like object.
 
     \item \link{DelayedArray} objects.

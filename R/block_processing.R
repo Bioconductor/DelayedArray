@@ -128,6 +128,50 @@ set_verbose_block_processing <- function(verbose)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### read_block() and write_block() generics
+###
+
+### Must return an ordinay array.
+setGeneric("read_block", signature="x",
+    function(x, viewport)
+    {
+        stopifnot(is(viewport, "ArrayViewport"),
+                  identical(refdim(viewport), dim(x)))
+        ans <- standardGeneric("read_block")
+        check_returned_array(ans, dim(viewport), "read_block", class(x))
+    }
+)
+
+### Must return 'x' (possibly modified if it's an in-memory object).
+setGeneric("write_block", signature="x",
+    function(x, viewport, block)
+    {
+        stopifnot(is(viewport, "ArrayViewport"),
+                  identical(refdim(viewport), dim(x)),
+                  is.array(block),
+                  identical(dim(block), dim(viewport)))
+        standardGeneric("write_block")
+    }
+)
+
+setMethod("read_block", "ANY",
+    function(x, viewport)
+    {
+        index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
+        extract_array(x, index)
+    }
+)
+
+setMethod("write_block", "ANY",
+    function(x, viewport, block)
+    {
+        Nindex <- makeNindexFromArrayViewport(viewport)
+        replace_by_Nindex(x, Nindex, block)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Walking on the blocks
 ###
 ### 2 utility functions to process array-like objects by block.
@@ -142,13 +186,6 @@ set_verbose_block_processing <- function(verbose)
     if (!identical(refdim(grid), dim(x)))
         stop(wmsg("'grid' is incompatible with 'x'"))
     grid
-}
-
-.as_array_or_matrix <- function(x)
-{
-    if (length(dim(x)) == 2L)
-        return(as.matrix(x))
-    as.array(x)
 }
 
 ### 'x' must be an array-like object.
@@ -179,9 +216,7 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
             viewport <- grid[[b]]
-            block <- extract_block(x, viewport)
-            if (!is.array(block))
-                block <- .as_array_or_matrix(block)
+            block <- read_block(x, viewport)
             attr(block, "from_grid") <- grid
             attr(block, "block_id") <- b
             block_ans <- FUN(block, ...)
@@ -207,9 +242,7 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
             message("Processing block ", b, "/", nblock, " ... ",
                     appendLF=FALSE)
         viewport <- grid[[b]]
-        block <- extract_block(x, viewport)
-        if (!is.array(block))
-            block <- .as_array_or_matrix(block)
+        block <- read_block(x, viewport)
         attr(block, "from_grid") <- grid
         attr(block, "block_id") <- b
         init <- FUN(block, init)
@@ -310,9 +343,7 @@ block_extract_array_elements <- function(x, i, grid=NULL)
                 i2 <- linearInd(mapToRef(b, m, grid, linear=TRUE), x_dim)
                 block_ans <- extract_array_element(x, i2)
             } else {
-                block <- extract_block(x, grid[[b]])
-                if (!is.array(block))
-                    block <- as.array(block)
+                block <- read_block(x, grid[[b]])
                 block_ans <- block[m]
             }
             if (get_verbose_block_processing())
@@ -351,12 +382,10 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
                 message("Processing block ", b, "/", nblock, " ... ",
                         appendLF=FALSE)
             viewport <- grid[[b]]
-            block <- extract_block(x, viewport)
-            if (!is.array(block))
-                block <- .as_array_or_matrix(block)
+            block <- read_block(x, viewport)
             block_ans <- APPLY(block, ...)
             if (!is.null(sink)) {
-                write_block_to_sink(block_ans, sink, viewport)
+                write_block(sink, viewport, block_ans)
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())

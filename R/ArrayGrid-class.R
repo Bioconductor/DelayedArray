@@ -173,24 +173,6 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
     Nindex
 }
 
-### 2 utilities for extracting/replacing blocks from/in an array-like object
-
-extract_block <- function(x, viewport)
-{
-    stopifnot(identical(dim(x), refdim(viewport)))
-    Nindex <- makeNindexFromArrayViewport(viewport)
-    subset_by_Nindex(x, Nindex)
-}
-
-### Return the modified array.
-replace_block <- function(x, viewport, block)
-{
-    stopifnot(identical(dim(x), refdim(viewport)),
-              identical(dim(viewport), dim(block)))
-    Nindex <- makeNindexFromArrayViewport(viewport)
-    replace_by_Nindex(x, Nindex, block)
-}
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### ArrayGrid objects
@@ -711,45 +693,5 @@ make_RegularArrayGrid_of_capped_length_blocks <-
     spacings <- get_spacings_for_capped_length_blocks(
                     refdim, block_maxlen, block_shape=block_shape)
     RegularArrayGrid(refdim, spacings)
-}
-
-### Used in unit tests.
-split_array_in_capped_length_blocks <-
-    function(x, block_maxlen, block_shape=c("hypercube", "linear"))
-{
-    grid <- make_RegularArrayGrid_of_capped_length_blocks(
-                        dim(x), block_maxlen, block_shape=block_shape)
-    lapply(grid, function(viewport) extract_block(x, viewport))
-}
-
-### Used in unit tests.
-### Rebuild the original array from the blocks obtained with
-### split_array_in_capped_length_blocks( , block_shape="hypercube") as
-### an *ordinary* array. So if 'x' is an ordinary array, then:
-###
-###   blocks <- split_array_in_capped_length_blocks(x, block_maxlen,
-###                                                 block_shape="hypercube")
-###   unsplit_array_from_hypercube_blocks(blocks, x)
-###
-### should be a no-op for any 'block_maxlen' <= 'length(x)'.
-unsplit_array_from_hypercube_blocks <- function(blocks, x)
-{
-    stop("Not ready yet")
-}
-
-### Used in unit tests.
-### Rebuild the original array from the blocks obtained with
-### split_array_in_capped_length_blocks( , block_shape="linear") as
-### an *ordinary* array. So if 'x' is an ordinary array, then:
-###
-###   blocks <- split_array_in_capped_length_blocks(x, block_maxlen,
-###                                                 block_shape="linear")
-###   unsplit_array_from_linear_blocks(blocks, x)
-###
-### should be a no-op for any 'block_maxlen' <= 'length(x)'.
-unsplit_array_from_linear_blocks <- function(blocks, x)
-{
-    ans <- combine_array_objects(blocks)
-    set_dim(ans, dim(x))
 }
 

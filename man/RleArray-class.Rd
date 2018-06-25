@@ -37,7 +37,7 @@
 \alias{RleArray}
 \alias{coerce,RleArray,Rle-method}
 
-\alias{write_block_to_sink,RleRealizationSink-method}
+\alias{write_block,RleRealizationSink-method}
 \alias{coerce,RleRealizationSink,RleArray-method}
 \alias{coerce,RleRealizationSink,DelayedArray-method}
 \alias{coerce,ANY,RleArray-method}

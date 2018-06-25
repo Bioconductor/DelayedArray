@@ -79,6 +79,20 @@
            "extract_array() in the DelayedArray package (?extract_array).")
 }
 
+check_returned_array <- function(ans, expected_dim, .Generic, x_class)
+{
+    if (!is.array(ans))
+        stop(wmsg("The \"", .Generic, "\" method for ", x_class, " ",
+                  "objects didn't return an ordinary array. ",
+                  .Generic, "() should always return an ordinary ",
+                  "array. ", .contact_author_msg(x_class)))
+    if (!identical(dim(ans), expected_dim))
+        stop(wmsg("The \"", .Generic, "\" method for ", x_class, " ",
+                  "objects returned an array with incorrect ",
+                  "dimensions. ", .contact_author_msg(x_class)))
+    ans
+}
+
 ### 'index' is expected to be an unnamed list of subscripts as positive
 ### integer vectors, one vector per dimension in 'x'. *Missing* list elements
 ### are allowed and represented by NULLs.
@@ -91,17 +105,8 @@ setGeneric("extract_array", signature="x",
         if (is.null(x_dim))
             stop(wmsg("first argument to extract_array() must have dimensions"))
         ans <- standardGeneric("extract_array")
-        if (!is.array(ans))
-            stop(wmsg("The \"extract_array\" method for ", class(x), " ",
-                      "objects didn't return an ordinary array. ",
-                      "extract_array() should always return an ordinary ",
-                      "array. ", .contact_author_msg(class(x))))
         expected_dim <- get_Nindex_lengths(index, x_dim)
-        if (!identical(dim(ans), expected_dim))
-            stop(wmsg("The \"extract_array\" method for ", class(x), " ",
-                      "objects returned an array with incorrect ",
-                      "dimensions. ", .contact_author_msg(class(x))))
-        ans
+        check_returned_array(ans, expected_dim, "extract_array", class(x))
     }
 )
 

@@ -371,13 +371,16 @@ setAs("RleArray", "Rle", function(from) as(from@seed, "Rle"))
 ### Realization as an RleArray object
 ###
 
-setMethod("write_block_to_sink", "RleRealizationSink",
-    function(block, sink, viewport)
+### WARNING: This method assumes that the blocks are "linear" and being
+### written in order. Even though this is still the case, this will change
+### soon and this change will break it!
+### FIXME: The method below must write the block to 'x' at the location
+### specified by the supplied 'viewport'.
+setMethod("write_block", "RleRealizationSink",
+    function(x, viewport, block)
     {
-        stopifnot(identical(dim(sink), refdim(viewport)),
-                  identical(dim(block), dim(viewport)))
         ## 'viewport' is ignored!
-        .append_Rle_to_sink(Rle(block), sink)
+        .append_Rle_to_sink(Rle(block), x)
     }
 )
 

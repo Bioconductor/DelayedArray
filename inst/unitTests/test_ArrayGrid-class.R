@@ -198,36 +198,40 @@ test_get_spacings_for_hypercube_capped_length_blocks <- function()
     checkIdentical(refdim, current)
 }
 
-test_split_and_unsplit_array_in_capped_length_blocks <- function()
+### We do "linear blocks" only because they are the easiest to unsplit.
+.split_array_by_block <- function(x, block.maxlength)
 {
-    split_array_in_capped_length_blocks <-
-        DelayedArray:::split_array_in_capped_length_blocks
-    unsplit_array_from_linear_blocks <-
-        DelayedArray:::unsplit_array_from_linear_blocks
+    grid <- defaultGrid(x, block.maxlength,
+                        chunk.grid=NULL, block.shape="linear")
+    lapply(grid, function(viewport) read_block(x, viewport))
+}
 
+### A simple unsplit() that works only because the blocks are assumed to
+### be "linear".
+.unsplit_array_by_block <- function(blocks, x)
+{
+    ans <- DelayedArray:::combine_array_objects(blocks)
+    DelayedArray:::set_dim(ans, dim(x))
+}
+
+test_split_and_unsplit_array <- function()
+{
     a1 <- array(1:300, c(3, 10, 2, 5))
     A1 <- realize(a1)
 
     for (block_maxlen in c(1:7, 29:31, 39:40, 59:60, 119:120)) {
-        blocks <- split_array_in_capped_length_blocks(a1, block_maxlen,
-                                                          block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, a1)
+        blocks <- .split_array_by_block(a1, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, a1)
         checkIdentical(a1, current)
 
-        blocks <- split_array_in_capped_length_blocks(A1, block_maxlen,
-                                                          block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, A1)
+        blocks <- .split_array_by_block(A1, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, A1)
         checkIdentical(a1, current)
     }
 }
 
-test_split_and_unsplit_matrix_in_capped_length_blocks <- function()
+test_split_and_unsplit_matrix <- function()
 {
-    split_array_in_capped_length_blocks <-
-        DelayedArray:::split_array_in_capped_length_blocks
-    unsplit_array_from_linear_blocks <-
-        DelayedArray:::unsplit_array_from_linear_blocks
-
     a1 <- array(1:300, c(3, 10, 2, 5))
     A1 <- realize(a1)
 
@@ -246,34 +250,28 @@ test_split_and_unsplit_matrix_in_capped_length_blocks <- function()
     checkIdentical(tm1, as.matrix(tM1b))
 
     for (block_maxlen in seq_len(length(m1) * 2L)) {
-        blocks <- split_array_in_capped_length_blocks(m1, block_maxlen,
-                                                      block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, m1)
+        blocks <- .split_array_by_block(m1, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, m1)
         checkIdentical(m1, current)
 
-        blocks <- split_array_in_capped_length_blocks(M1a, block_maxlen,
-                                                      block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, M1a)
+        blocks <- .split_array_by_block(M1a, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, M1a)
         checkIdentical(m1, current)
 
-        blocks <- split_array_in_capped_length_blocks(M1b, block_maxlen,
-                                                      block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, M1b)
+        blocks <- .split_array_by_block(M1b, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, M1b)
         checkIdentical(m1, current)
 
-        blocks <- split_array_in_capped_length_blocks(tm1, block_maxlen,
-                                                      block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, tm1)
+        blocks <- .split_array_by_block(tm1, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, tm1)
         checkIdentical(tm1, current)
 
-        blocks <- split_array_in_capped_length_blocks(tM1a, block_maxlen,
-                                                      block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, tM1a)
+        blocks <- .split_array_by_block(tM1a, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, tM1a)
         checkIdentical(tm1, current)
 
-        blocks <- split_array_in_capped_length_blocks(tM1b, block_maxlen,
-                                                      block_shape="linear")
-        current <- unsplit_array_from_linear_blocks(blocks, tM1b)
+        blocks <- .split_array_by_block(tM1b, block_maxlen)
+        current <- .unsplit_array_by_block(blocks, tM1b)
         checkIdentical(tm1, current)
     }
 }

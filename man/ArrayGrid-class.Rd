@@ -102,11 +102,11 @@ downsample(x, ratio=1L)
 
 \seealso{
   \itemize{
+    \item \link{block_processing} for more information about block processing
+          of an array-like object.
+
     \item \code{\link{mapToGrid}} for mapping reference array positions to
           grid positions and vice-versa.
-
-    \item \link{block_processing} for more information about block-processing
-          of an array-like object.
 
     \item \code{\link{chunkGrid}}.
 
@@ -189,62 +189,21 @@ stopifnot(identical(dims(Lgrid), matrix(refdim(Lgrid), nrow=1)))
 ## ---------------------------------------------------------------------
 
 ## Grid elements are ArrayViewport objects:
+grid1[[1L]]
 class(grid1[[1L]])
+grid1[[2L]]
+grid1[[2L, 1L, 1L]]
+grid1[[15L, 1L, 4L]]
 
+## Construction of a standalong ArrayViewport object:
 m0 <- matrix(1:30, ncol=5)
-
 block_dim <- c(4, 3)
 viewport1 <- ArrayViewport(dim(m0), IRanges(c(3, 2), width=block_dim))
 viewport1
 
 dim(viewport1)     # 'block_dim'
-length(viewport1)
+length(viewport1)  # number of array elements in the viewport
 ranges(viewport1)
-
-## 2 utilities (not exported yet) for extracting/replacing blocks from/in
-## an array-like object:
-extract_block <- DelayedArray:::extract_block
-replace_block <- DelayedArray:::replace_block
-
-block1 <- extract_block(m0, viewport1)
-block1
-
-## No-op:
-replace_block(m0, viewport1, block1)
-stopifnot(identical(m0, replace_block(m0, viewport1, block1)))
-
-replace_block(m0, viewport1, block1 + 100L)
-
-viewport2 <- ArrayViewport(dim(m0), IRanges(c(1, 3), width=block_dim))
-replace_block(m0, viewport2, block1 + 100L)
-
-## Using a grid:
-grid3 <- RegularArrayGrid(dim(m0), spacings=c(3L, 2L))
-grid3
-extract_block(m0, grid3[[3L]])
-extract_block(m0, grid3[[1L, 3L]])
-
-## Walk on the grid, colum by column:
-m1 <- m0
-for (b in seq_along(grid3)) {
-    viewport <- grid3[[b]]
-    block <- extract_block(m1, viewport)
-    block <- b * 1000L + block
-    m1 <- replace_block(m1, viewport, block)
-}
-m1
-
-## Walk on the grid, row by row:
-m2 <- m0
-for (i in seq_len(dim(grid3)[[1]])) {
-  for (j in seq_len(dim(grid3)[[2]])) {
-    viewport <- grid3[[i, j]]
-    block <- extract_block(m2, viewport)
-    block <- (i * 10L + j) * 1000L + block
-    m2 <- replace_block(m2, viewport, block)
-  }
-}
-m2
 
 ## ---------------------------------------------------------------------
 ## C. DOWNSAMPLING AN ArrayGrid OBJECT
@@ -267,10 +226,10 @@ stopifnot(identical(refdim(downsample(grid2, 4)), refdim(grid2)))
 ## A big enough ratio will eventually produce the coarsest possible grid
 ## i.e. a grid with a single grid element covering the entire reference
 ## array:
-grid4 <- downsample(grid2, 7)
-length(grid4)
-grid4[[1L]]
-stopifnot(identical(dim(grid4[[1L]]), refdim(grid4)))
+grid3 <- downsample(grid2, 7)
+length(grid3)
+grid3[[1L]]
+stopifnot(identical(dim(grid3[[1L]]), refdim(grid3)))
 
 ## Downsampling by a ratio of 1 is a no-op:
 stopifnot(identical(downsample(grid2, 1), grid2))
@@ -280,10 +239,10 @@ downsample(grid2, c(2, 1))
 
 ## Downsample a max resolution grid:
 refdim <- c(45, 16, 20)
-grid5 <- RegularArrayGrid(refdim, c(1, 1, 1))
+grid4 <- RegularArrayGrid(refdim, c(1, 1, 1))
 ratio <- c(6, 1, 3)
 stopifnot(identical(
-    downsample(grid5, ratio),
+    downsample(grid4, ratio),
     RegularArrayGrid(refdim, ratio)
 ))
 }
