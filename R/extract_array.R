@@ -159,7 +159,7 @@ setMethod("extract_array", "DataFrame",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### 2 convenience wrappers around extract_array()
+### 3 convenience wrappers around extract_array()
 ###
 
 ### Perform extract_array(x, list(integer(0), ..., integer(0))).
@@ -177,6 +177,41 @@ extract_array_element <- function(x, i)
     i <- normalizeDoubleBracketSubscript(i, x)
     index <- as.list(arrayInd(i, dim(x)))
     as.vector(extract_array(x, index))
+}
+
+### An enhanced version of extract_array() that accepts an Nindex (see
+### R/utils.R) and propagates the dimnames.
+### WARNING: The list elements in 'Nindex' can only be NULLs, integer
+### vectors, or RangeNSBS objects at the moment. extract_array_by_Nindex()
+### will break if they are not! See FIXME below.
+extract_array_by_Nindex <- function(x, Nindex)
+{
+    ## TODO: Once we have a full Nindex normalization mechanism in place
+    ## (see FIXME below), use it to normalize the supplied 'Nindex' in 2
+    ## steps: (1) by normalizing with something like 'as.NSBSlist=TRUE'
+    ## to produce an Nindex with NSBS list elements, then (2) by doing
+    ## something like:
+    ##
+    ##   lapply( , function(i) if (is.null(i)) NULL else as.integer(i))
+    ##
+    ## on the Nindex obtained at (1).
+    ## Pass the Nindex obtained at (1) to subset_dimnames_by_Nindex() and
+    ## the Nindex obtained at (2) to extract_array().
+    ans_dimnames <- subset_dimnames_by_Nindex(dimnames(x), Nindex)
+
+    ## FIXME: The list elements of an Nindex can be anything (see utils.R)
+    ## so it's not enough to expand only those list elements that are
+    ## RangeNSBS objects. For example the call to extract_array() below
+    ## will fail if some subscripts in 'Nindex' are character vectors or
+    ## Rle objects. We need to perform a full normalization of 'Nindex'
+    ## like we do in new_DelayedSubset() (see DelayedOp-class.R). Note that
+    ## we're good for now because extract_array_by_Nindex() is only used
+    ## in the context of show_compact_array() and the default "read_block"
+    ## method where the supplied 'Nindex' is guaranteed to contain only
+    ## NULLs, integer vectors, or RangeNSBS objects.
+    ans <- extract_array(x, expand_Nindex_RangeNSBS(Nindex))
+
+    set_dimnames(ans, ans_dimnames)
 }
 
 

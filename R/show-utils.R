@@ -6,13 +6,6 @@
 ###
 
 
-### Wrapper around extract_array() that preserves the dimnames.
-.extract_array_with_dimnames <- function(x, index)
-{
-    a <- extract_array(x, index)
-    set_dimnames(a, subset_dimnames(dimnames(x), index))
-}
-
 ### 'x' must be an ordinary vector or matrix of atomic or recursive type.
 ### 'max.width' takes effect only if 'x' is character or list (i.e. if the
 ### underlying type inherits from character or list when 'x' is a matrix).
@@ -83,8 +76,10 @@
     } else {
         idx1 <- seq_len(n1)
         idx2 <- seq(to=x_len, by=1L, length.out=n2)
-        x1 <- .extract_array_with_dimnames(x, list(idx1))
-        x2 <- .extract_array_with_dimnames(x, list(idx2))
+        ## We use extract_array_by_Nindex() instead of extract_array() to
+        ## propagate the dimnames.
+        x1 <- extract_array_by_Nindex(x, list(idx1))
+        x2 <- extract_array_by_Nindex(x, list(idx2))
         ans1 <- .format_as_character_vector(x1, justify, quote=quote)
         ans2 <- .format_as_character_vector(x2, justify, quote=quote)
         ans <- c(ans1, ".", ans2)
@@ -157,8 +152,10 @@
     idx1 <- seq_len(m1)
     idx2 <- seq(to=x_nrow, by=1L, length.out=m2)
 
-    x1 <- .extract_array_with_dimnames(x, list(idx1, NULL))
-    x2 <- .extract_array_with_dimnames(x, list(idx2, NULL))
+    ## We use extract_array_by_Nindex() instead of extract_array() to
+    ## propagate the dimnames.
+    x1 <- extract_array_by_Nindex(x, list(idx1, NULL))
+    x2 <- extract_array_by_Nindex(x, list(idx2, NULL))
     ans1 <- .format_as_character_matrix(x1, justify, quote=quote)
     ans2 <- .format_as_character_matrix(x2, justify, quote=quote)
     dots <- rep.int(".", ncol(ans1))
@@ -175,8 +172,10 @@
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
 
-    x1 <- .extract_array_with_dimnames(x, list(NULL, idx1))
-    x2 <- .extract_array_with_dimnames(x, list(NULL, idx2))
+    ## We use extract_array_by_Nindex() instead of extract_array() to
+    ## propagate the dimnames.
+    x1 <- extract_array_by_Nindex(x, list(NULL, idx1))
+    x2 <- extract_array_by_Nindex(x, list(NULL, idx2))
     ans1 <- .format_as_character_matrix(x1, justify, quote=quote)
     ans2 <- .format_as_character_matrix(x2, justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
@@ -193,8 +192,10 @@
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
 
-    x1 <- .extract_array_with_dimnames(x, list(NULL, idx1))
-    x2 <- .extract_array_with_dimnames(x, list(NULL, idx2))
+    ## We use extract_array_by_Nindex() instead of extract_array() to
+    ## propagate the dimnames.
+    x1 <- extract_array_by_Nindex(x, list(NULL, idx1))
+    x2 <- extract_array_by_Nindex(x, list(NULL, idx2))
     ans1 <- .rsplit_2Darray_data(x1, m1, m2, justify, quote=quote)
     ans2 <- .rsplit_2Darray_data(x2, m1, m2, justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
@@ -283,7 +284,9 @@
                                             as.2Dslice=TRUE)
         cat(s, "\n", sep="")
         index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
-        slice <- .extract_array_with_dimnames(x, index)
+        ## We use extract_array_by_Nindex() instead of extract_array() to
+        ## propagate the dimnames.
+        slice <- extract_array_by_Nindex(x, index)
         slice <- set_dim(slice, dim(slice)[1:2])
         .print_2Darray_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")

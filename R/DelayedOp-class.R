@@ -237,7 +237,7 @@ setMethod("summary", "DelayedSubset", summary.DelayedSubset)
 setMethod("dim", "DelayedSubset", .get_DelayedSubset_dim)
 
 setMethod("dimnames", "DelayedSubset",
-    function(x) subset_dimnames(dimnames(x@seed), x@index)
+    function(x) subset_dimnames_by_Nindex(dimnames(x@seed), x@index)
 )
 
 .extract_array_from_DelayedSubset <- function(x, index)

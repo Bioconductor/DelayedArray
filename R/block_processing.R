@@ -131,7 +131,7 @@ set_verbose_block_processing <- function(verbose)
 ### read_block() and write_block() generics
 ###
 
-### Must return an ordinay array.
+### Must return an ordinay array and propagate the dimnames.
 setGeneric("read_block", signature="x",
     function(x, viewport)
     {
@@ -154,11 +154,16 @@ setGeneric("write_block", signature="x",
     }
 )
 
+### Work on any object 'x' that supports extract_array() e.g. an ordinary
+### array or a DelayedArray, HDF5ArraySeed, or DelayedOp object, etc...
+### Propagate the dimnames.
 setMethod("read_block", "ANY",
     function(x, viewport)
     {
-        index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
-        extract_array(x, index)
+        ## We use extract_array_by_Nindex() instead of extract_array() to
+        ## propagate the dimnames.
+        Nindex <- makeNindexFromArrayViewport(viewport)
+        extract_array_by_Nindex(x, Nindex)
     }
 )
 

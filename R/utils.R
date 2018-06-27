@@ -39,7 +39,7 @@ set_dimnames <- function(x, value)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### subset_dimnames()
+### simplify_NULL_dimnames()
 ###
 
 simplify_NULL_dimnames <- function(dimnames)
@@ -47,29 +47,6 @@ simplify_NULL_dimnames <- function(dimnames)
     if (all(S4Vectors:::sapply_isNULL(dimnames)))
         return(NULL)
     dimnames
-}
-
-### Like for extract_array(), 'index' is expected to be an unnamed list of
-### subscripts as positive integer vectors, one vector per dimension in 'x'.
-### *Missing* list elements are allowed and represented by NULLs.
-### See extract_array.R for more information.
-subset_dimnames <- function(dimnames, index)
-{
-    stopifnot(is.list(index))
-    if (is.null(dimnames))
-        return(NULL)
-    ndim <- length(index)
-    stopifnot(is.list(dimnames), length(dimnames) == ndim)
-    ## Would mapply() be faster here?
-    ans <- lapply(seq_len(ndim),
-                  function(along) {
-                      dn <- dimnames[[along]]
-                      i <- index[[along]]
-                      if (is.null(dn) || is.null(i))
-                          return(dn)
-                      dn[i]
-                  })
-    simplify_NULL_dimnames(ans)
 }
 
 
@@ -81,7 +58,7 @@ subset_dimnames <- function(dimnames, index)
 ### NULL list elements in it are interpreted as missing subscripts, that is, as
 ### subscripts that run along the full extend of the corresponding dimension.
 ### Before an Nindex can be used in a call to `[`, `[<-`, `[[` or `[[<-`, the
-### NULL list elements must be replaced with object of class "name".
+### NULL list elements must be replaced with objects of class "name".
 ###
 
 ### For use in "[", "[<-", "[[", or "[[<-" methods to extract the user
@@ -112,8 +89,9 @@ extract_Nindex_from_syscall <- function(call, eframe)
 expand_Nindex_RangeNSBS <- function(Nindex)
 {
     stopifnot(is.list(Nindex))
-    RangeNSBS_idx <- which(vapply(Nindex, is, logical(1), "RangeNSBS"))
-    Nindex[RangeNSBS_idx] <- lapply(Nindex[RangeNSBS_idx], as.integer)
+    expand_idx <- which(vapply(Nindex, is, logical(1), "RangeNSBS"))
+    if (length(expand_idx) != 0L)
+        Nindex[expand_idx] <- lapply(Nindex[expand_idx], as.integer)
     Nindex
 }
 
@@ -144,6 +122,25 @@ replace_by_Nindex <- function(x, Nindex, value)
 {
     subscripts <- .make_subscripts_from_Nindex(Nindex, x)
     do.call(`[<-`, c(list(x), subscripts, list(value=value)))
+}
+
+subset_dimnames_by_Nindex <- function(dimnames, Nindex)
+{
+    stopifnot(is.list(Nindex))
+    if (is.null(dimnames))
+        return(NULL)
+    ndim <- length(Nindex)
+    stopifnot(is.list(dimnames), length(dimnames) == ndim)
+    ## Would mapply() be faster here?
+    ans <- lapply(seq_len(ndim),
+                  function(along) {
+                      dn <- dimnames[[along]]
+                      i <- Nindex[[along]]
+                      if (is.null(dn) || is.null(i))
+                          return(dn)
+                      extractROWS(dn, i)
+                  })
+    simplify_NULL_dimnames(ans)
 }
 
 ### Used in HDF5Array!
