@@ -196,6 +196,9 @@ export(
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
 
+    ## makeCappedVolumeBox.R:
+    makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
+
     ## showtree.R:
     showtree, contentIsPristine,
 

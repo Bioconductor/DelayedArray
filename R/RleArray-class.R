@@ -196,7 +196,7 @@ setAs("SolidRleArraySeed", "Rle", function(from) from@rle)
 setAs("RleRealizationSink", "Rle",
     function(from)
     {
-        ans <- Rle(match.fun(from@type)(0))
+        ans <- Rle(vector(from@type))
         if (length(from@chunks) == 0L)
             return(ans)
         list_of_Rles <- c(list(ans), unname(as.list(from@chunks, sorted=TRUE)))
@@ -224,7 +224,7 @@ setMethod("extract_array", "SolidRleArraySeed",
 {
     x_dim <- dim(x)
     i <- to_linear_index(index, x_dim)
-    ans <- match.fun(x@type)(0)
+    ans <- vector(x@type)
     if (length(i) != 0L) {
         part_idx <- get_part_index(i, x@breakpoints)
         split_part_idx <- split_part_index(part_idx, length(x@breakpoints))

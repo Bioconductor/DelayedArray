@@ -28,7 +28,7 @@ blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
 defaultGrid(x, block.maxlength=NULL, chunk.grid=NULL,
-               block.shape=c("hypercube", "linear"))
+               block.shape=c("hypercube", "proportional", "linear"))
 
 effectiveGrid(block)
 currentBlockId(block)

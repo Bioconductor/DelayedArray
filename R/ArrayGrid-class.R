@@ -260,7 +260,7 @@ setClass("RegularArrayGrid",
     ans
 }
 
-.get_RegularArrayGrid_dim <- function(refdim, spacings)
+get_RegularArrayGrid_dim <- function(refdim, spacings)
 {
     ans <- refdim %/% spacings + (refdim %% spacings != 0L)
     ans[is.na(ans)] <- 1L
@@ -349,7 +349,7 @@ setMethod("refdim", "RegularArrayGrid", function(x) x@refdim)
 setMethod("dim", "ArbitraryArrayGrid", function(x) lengths(x@tickmarks))
 
 setMethod("dim", "RegularArrayGrid",
-    function(x) .get_RegularArrayGrid_dim(refdim(x), x@spacings)
+    function(x) get_RegularArrayGrid_dim(refdim(x), x@spacings)
 )
 
 ### Constructors
@@ -566,56 +566,6 @@ setMethod("downsample", "RegularArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get_spacings_for_hypercube_capped_length_blocks()
-###
-### Typically used to create a regular grid with a first block that is as
-### close as possible to an hypercube and that has a length as close as
-### possibe to (but not bigger than) 'block_maxlen'.
-### NOT exported but used in HDF5Array!
-get_spacings_for_hypercube_capped_length_blocks <-
-    function(refdim, block_maxlen)
-{
-    if (!isSingleNumber(block_maxlen))
-        stop("'block_maxlen' must be a single integer")
-    if (!is.integer(block_maxlen))
-        block_maxlen <- as.integer(block_maxlen)
-
-    p <- prod(refdim)
-    if (p <= block_maxlen)
-        return(refdim)
-
-    spacings <- refdim
-    L <- max(spacings)
-    while (TRUE) {
-        is_max <- spacings == L
-        not_max_spacings <- spacings[!is_max]
-        L <- (block_maxlen / prod(not_max_spacings)) ^ (1 / sum(is_max))
-        if (length(not_max_spacings) == 0L)
-            break
-        L2 <- max(not_max_spacings)
-        if (L >= L2)
-            break
-        L <- L2
-        spacings[is_max] <- L
-    }
-    spacings[is_max] <- as.integer(L)
-    q <- .get_RegularArrayGrid_dim(refdim, spacings + 1L) /
-         .get_RegularArrayGrid_dim(refdim, spacings)
-    for (along in which(is_max)[order(q[is_max])]) {
-        spacings[[along]] <- spacings[[along]] + 1L
-        p <- prod(spacings)
-        if (p == block_maxlen)
-            break
-        if (p > block_maxlen) {
-            spacings[[along]] <- spacings[[along]] - 1L
-            break
-        }
-    }
-    spacings
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Linear blocks
 ###
 ### An array block is "linear" if it would be made of elements contiguous in
@@ -646,52 +596,4 @@ setMethod("isLinear", "ArrayGrid",
         isLinear(x[[1L]])
     }
 )
-
-### Typically used to create a regular grid with linear blocks of length as
-### close as possibe to (but not bigger than) 'block_maxlen'.
-### NOT exported but used in HDF5Array!
-get_spacings_for_linear_capped_length_blocks <- function(refdim, block_maxlen)
-{
-    if (!isSingleNumber(block_maxlen))
-        stop("'block_maxlen' must be a single integer")
-    if (!is.integer(block_maxlen))
-        block_maxlen <- as.integer(block_maxlen)
-
-    p <- cumprod(refdim)
-    w <- which(p <= block_maxlen)
-    N <- if (length(w) == 0L) 1L else w[[length(w)]] + 1L
-    if (N > length(refdim))
-        return(refdim)
-    if (N == 1L) {
-        by <- block_maxlen
-    } else {
-        by <- block_maxlen %/% as.integer(p[[N - 1L]])
-    }
-    c(head(refdim, n=N-1L), by, rep.int(1L, length(refdim)-N))
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Some unexported utilities
-###
-
-### Used in the DelayedMatrixStats package!
-get_spacings_for_capped_length_blocks <-
-    function(refdim, block_maxlen, block_shape=c("hypercube", "linear"))
-{
-    block_shape <- match.arg(block_shape)
-    FUN <- switch(block_shape,
-                  hypercube=get_spacings_for_hypercube_capped_length_blocks,
-                  linear=get_spacings_for_linear_capped_length_blocks,
-                  stop("unsupported 'block_shape'"))
-    FUN(refdim, block_maxlen)
-}
-
-make_RegularArrayGrid_of_capped_length_blocks <-
-    function(refdim, block_maxlen, block_shape=c("hypercube", "linear"))
-{
-    spacings <- get_spacings_for_capped_length_blocks(
-                    refdim, block_maxlen, block_shape=block_shape)
-    RegularArrayGrid(refdim, spacings)
-}
 

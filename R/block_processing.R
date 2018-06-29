@@ -87,7 +87,7 @@ get_default_block_maxlength <- function(type)
 ### object).
 defaultGrid <- function(x, block.maxlength=NULL,
                            chunk.grid=NULL,
-                           block.shape=c("hypercube", "linear"))
+                           block.shape=c("hypercube", "proportional", "linear"))
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
@@ -100,13 +100,13 @@ defaultGrid <- function(x, block.maxlength=NULL,
     if (any(x_dim == 0L))
         return(RegularArrayGrid(x_dim))
     if (is.null(chunk_grid)) {
-        ans <- make_RegularArrayGrid_of_capped_length_blocks(
-                           x_dim, block_maxlen, block_shape=block_shape)
+        ans <- makeRegularArrayGridOfCappedLengthViewports(x_dim,
+                                                           block_maxlen,
+                                                           block_shape)
         return(ans)
     }
     chunks_per_block <- max(block_maxlen %/% maxlength(chunk_grid), 1L)
-    ratio <- get_spacings_for_capped_length_blocks(
-                 dim(chunk_grid), chunks_per_block, block_shape=block_shape)
+    ratio <- makeCappedVolumeBox(chunks_per_block, dim(chunk_grid), block_shape)
     downsample(chunk_grid, ratio)
 }
 

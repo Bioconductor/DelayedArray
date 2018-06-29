@@ -29,15 +29,14 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
 
     ans_dim <- c(nrow(x), ncol(y))
     ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
-    ans_type <- typeof(match.fun(type(x))(1) * match.fun(type(y))(1))
+    ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
 
     ## We're going to walk along the columns so need to increase the block
     ## length so that each block is made of at least one column.
     block_maxlen <- max(get_default_block_maxlength(type(y)), nrow(y))
-    spacings <- get_spacings_for_linear_capped_length_blocks(dim(y),
-                                                             block_maxlen)
+    spacings <- makeCappedVolumeBox(block_maxlen, dim(y), "linear")
     y_grid <- RegularArrayGrid(dim(y), spacings)
     spacings[[1L]] <- ans_dim[[1L]]
     ans_grid <- RegularArrayGrid(ans_dim, spacings)  # parallel to 'y_grid'
@@ -56,6 +55,23 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
     as(sink, "DelayedArray")
 }
 
+.block_matrix_mult <- function(x, y)
+{
+    stop(wmsg("multiplication of 2 DelayedMatrix objects is not ",
+              "supported, only multiplication of an ordinary matrix by ",
+              "a DelayedMatrix object at the moment"))
+
+    x_dim <- dim(x)
+    y_dim <- dim(y)
+    stopifnot(length(x_dim) == 2L, length(y_dim) == 2L, ncol(x) == nrow(y))
+
+    ans_dim <- c(nrow(x), ncol(y))
+    ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
+    ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
+    sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
+    on.exit(close(sink))
+}
+
 setMethod("%*%", c("DelayedMatrix", "matrix"),
     function(x, y) t(t(y) %*% t(x))
 )
@@ -64,10 +80,5 @@ setMethod("%*%", c("matrix", "DelayedMatrix"),
     .DelayedMatrix_block_mult_by_left_matrix
 )
 
-setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"),
-    function(x, y)
-        stop(wmsg("multiplication of 2 DelayedMatrix objects is not ",
-                  "supported, only multiplication of an ordinary matrix by ",
-                  "a DelayedMatrix object at the moment"))
-)
+setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .block_matrix_mult)
 
