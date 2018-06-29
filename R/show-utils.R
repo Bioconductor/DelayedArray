@@ -317,7 +317,7 @@
     }
     grid <- makeRegularArrayGridOfCappedLengthViewports(x_dim,
                                                         prod(x_dim[1:2]),
-                                                        "linear")
+                                                        "first-dim-grows-first")
     nblock <- length(grid)
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)

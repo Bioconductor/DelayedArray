@@ -45,7 +45,7 @@
     stop("'shape=\"proportional\"'")
 }
 
-.make_capped_volume_linear_box <- function(maxvol, dim)
+.make_capped_volume_FDGF_box <- function(maxvol, dim)
 {
     p <- cumprod(dim)
     w <- which(p <= maxvol)
@@ -60,12 +60,19 @@
     c(head(dim, n=N-1L), by, rep.int(1L, length(dim)-N))
 }
 
+.make_capped_volume_LDGF_box <- function(maxvol, dim)
+{
+    rev(.make_capped_volume_FDGF_box(maxvol, rev(dim)))
+}
+
 ### Return the dimensions of a box that satisfies the following properties:
 ###   (1) Has a volume as close as possibe to (but not bigger than) 'maxvol'.
 ###   (2) Fits in the "reference box" i.e. in the box of dimensions 'dim'.
 ###   (3) Has a shape that is as close as possible to the requested shape.
-makeCappedVolumeBox <- function(maxvol, dim,
-                                shape=c("hypercube", "proportional", "linear"))
+makeCappedVolumeBox <- function(maxvol, dim, shape=c("hypercube",
+                                                     "proportional",
+                                                     "first-dim-grows-first",
+                                                     "last-dim-grows-first"))
 {
     if (!isSingleNumber(maxvol))
         stop("'maxvol' must be a single integer")
@@ -79,16 +86,20 @@ makeCappedVolumeBox <- function(maxvol, dim,
     FUN <- switch(shape,
                   hypercube=.make_capped_volume_hypercube_box,
                   proportional=.make_capped_volume_proportional_box,
-                  linear=.make_capped_volume_linear_box,
+                  `first-dim-grows-first`=.make_capped_volume_FDGF_box,
+                  `last-dim-grows-first`=.make_capped_volume_LDGF_box,
                   stop("unsupported 'shape'"))
     FUN(maxvol, dim)
 }
 
 
 ### A capped-volume box related utility.
+### If 'viewport_shape' is "first-dim-grows-first", return a linear grid.
 makeRegularArrayGridOfCappedLengthViewports <-
-    function(refdim, viewport_maxlen,
-             viewport_shape=c("hypercube", "proportional", "linear"))
+    function(refdim, viewport_maxlen, viewport_shape=c("hypercube",
+                                                       "proportional",
+                                                       "first-dim-grows-first",
+                                                       "last-dim-grows-first"))
 {
     spacings <- makeCappedVolumeBox(viewport_maxlen, refdim, viewport_shape)
     RegularArrayGrid(refdim, spacings)

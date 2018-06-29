@@ -87,7 +87,10 @@ get_default_block_maxlength <- function(type)
 ### object).
 defaultGrid <- function(x, block.maxlength=NULL,
                            chunk.grid=NULL,
-                           block.shape=c("hypercube", "proportional", "linear"))
+                           block.shape=c("hypercube",
+                                         "proportional",
+                                         "first-dim-grows-first",
+                                         "last-dim-grows-first"))
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
@@ -379,7 +382,8 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
         ## a trick to make sure that defaultGrid() returns linear blocks.
         chunk_grid <- RegularArrayGrid(x_dim, rep.int(1L, length(x_dim)))
     }
-    grid <- defaultGrid(x, block_maxlen, chunk_grid, block.shape="linear")
+    grid <- defaultGrid(x, block_maxlen, chunk_grid,
+                           block.shape="first-dim-grows-first")
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {

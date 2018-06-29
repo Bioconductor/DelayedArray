@@ -566,12 +566,11 @@ setMethod("downsample", "RegularArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Linear blocks
+### Linear viewports
 ###
-### An array block is "linear" if it would be made of elements contiguous in
-### memory if the reference array was an ordinary R array (where the fastest
-### changing dimension is the first one).
-### A grid element is "linear" if it defines a linear block.
+### An array viewport is "linear" if it is made of reference array elements
+### that would be contiguous in memory if the reference array was an ordinary
+### R array (where the fastest changing dimension is the first one).
 ###
 
 setGeneric("isLinear", function(x) standardGeneric("isLinear"))

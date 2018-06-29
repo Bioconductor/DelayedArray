@@ -198,11 +198,12 @@ test_make_capped_volume_hypercube_box <- function()
     checkIdentical(refdim, current)
 }
 
-### We do "linear blocks" only because they are the easiest to unsplit.
+### We do "linear blocks" (i.e. block.shape="first-dim-grows-first") only,
+### because they are the easiest to unsplit.
 .split_array_by_block <- function(x, block.maxlength)
 {
     grid <- defaultGrid(x, block.maxlength,
-                        chunk.grid=NULL, block.shape="linear")
+                        chunk.grid=NULL, block.shape="first-dim-grows-first")
     lapply(grid, function(viewport) read_block(x, viewport))
 }
 

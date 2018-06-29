@@ -28,7 +28,10 @@ blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
 defaultGrid(x, block.maxlength=NULL, chunk.grid=NULL,
-               block.shape=c("hypercube", "proportional", "linear"))
+               block.shape=c("hypercube",
+                             "proportional",
+                             "first-dim-grows-first",
+                             "last-dim-grows-first"))
 
 effectiveGrid(block)
 currentBlockId(block)
@@ -114,16 +117,24 @@ write_block(x, viewport, block)
 m <- matrix(runif(500), ncol=10)
 
 defaultGrid(m, block.maxlength=25)
-defaultGrid(m, block.maxlength=10)
-defaultGrid(m, block.maxlength=20)
-defaultGrid(m, block.maxlength=75)
-defaultGrid(m, block.maxlength=100)
+defaultGrid(m, block.maxlength=25, block.shape="first-dim-grows-first")
+defaultGrid(m, block.maxlength=25, block.shape="last-dim-grows-first")
 
-defaultGrid(m, block.maxlength=25, block.shape="linear")
-defaultGrid(m, block.maxlength=10, block.shape="linear")
-defaultGrid(m, block.maxlength=20, block.shape="linear")
-defaultGrid(m, block.maxlength=75, block.shape="linear")
-defaultGrid(m, block.maxlength=100, block.shape="linear")
+defaultGrid(m, block.maxlength=10)
+defaultGrid(m, block.maxlength=10, block.shape="first-dim-grows-first")
+defaultGrid(m, block.maxlength=10, block.shape="last-dim-grows-first")
+
+defaultGrid(m, block.maxlength=20)
+defaultGrid(m, block.maxlength=20, block.shape="first-dim-grows-first")
+defaultGrid(m, block.maxlength=20, block.shape="last-dim-grows-first")
+
+defaultGrid(m, block.maxlength=75)
+defaultGrid(m, block.maxlength=75, block.shape="first-dim-grows-first")
+defaultGrid(m, block.maxlength=75, block.shape="last-dim-grows-first")
+
+defaultGrid(m, block.maxlength=100)
+defaultGrid(m, block.maxlength=100, block.shape="first-dim-grows-first")
+defaultGrid(m, block.maxlength=100, block.shape="last-dim-grows-first")
 
 ## More to come soon...
 
