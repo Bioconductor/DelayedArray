@@ -16,6 +16,9 @@
   \code{makeRegularArrayGridOfCappedLengthViewports} makes a
   \link{RegularArrayGrid} object with grid elements that are capped volume
   boxes with the specified constraints.
+
+  These are low-level utilities used internally to support block processing
+  of an array-like object.
 }
 
 \usage{
@@ -95,4 +98,4 @@ makeCappedVolumeBox(40, c(50, 12), shape="last-dim-grows-first")
 makeCappedVolumeBox(59, c(50, 12), shape="last-dim-grows-first")
 makeCappedVolumeBox(60, c(50, 12), shape="last-dim-grows-first")
 }
-\keyword{methods}
+\keyword{utilities}
