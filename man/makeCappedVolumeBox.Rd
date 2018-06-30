@@ -129,6 +129,7 @@ makeCappedVolumeBox(60, maxdim, shape="last-dim-grows-first")
 ## ---------------------------------------------------------------------
 ## makeRegularArrayGridOfCappedLengthViewports()
 ## ---------------------------------------------------------------------
+
 grid1a <- makeRegularArrayGridOfCappedLengthViewports(maxdim, 40)
 grid1a
 as.list(grid1a)  # turn the grid into a list of ArrayViewport objects
