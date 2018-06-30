@@ -91,6 +91,9 @@ write_block(x, viewport, block)
   \itemize{
     \item \link{DelayedArray} objects.
 
+    \item The \code{\link{makeCappedVolumeBox}} utility to make
+          \emph{capped volume boxes}.
+
     \item \code{\link{chunkGrid}}.
 
     \item \code{\link{realize}} for realizing a DelayedArray object in memory

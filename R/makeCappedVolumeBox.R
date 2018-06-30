@@ -64,7 +64,7 @@
 
 ### Return the dimensions of a box that satisfies the following properties:
 ###   (1) Has a volume as close as possibe to (but not bigger than) 'maxvol'.
-###   (2) Fits in the "reference box" i.e. in the box of dimensions 'dim'.
+###   (2) Fits in the "constraining box" i.e. in the box of dimensions 'dim'.
 ###   (3) Has a shape that is as close as possible to the requested shape.
 makeCappedVolumeBox <- function(maxvol, dim, shape=c("hypercube",
                                                      "scale",
