@@ -29,7 +29,7 @@ blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
 blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
              block.shape=c("hypercube",
-                           "proportional",
+                           "scale",
                            "first-dim-grows-first",
                            "last-dim-grows-first"))
 

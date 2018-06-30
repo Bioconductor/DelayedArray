@@ -88,7 +88,7 @@ get_default_block_maxlength <- function(type)
 blockGrid <- function(x, block.maxlength=NULL,
                          chunk.grid=NULL,
                          block.shape=c("hypercube",
-                                       "proportional",
+                                       "scale",
                                        "first-dim-grows-first",
                                        "last-dim-grows-first"))
 {
