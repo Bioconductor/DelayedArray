@@ -88,7 +88,7 @@ ArrayViewport <- function(refdim, ranges=NULL)
 
 make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
                                            as.2Dslice=FALSE,
-                                           with.brackets=FALSE)
+                                           collapse=",", with.brackets=FALSE)
 {
     if (!isTRUEorFALSE(as.2Dslice))
         stop("'as.2Dslice' must be TRUE or FALSE")
@@ -120,7 +120,7 @@ make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
     }
     if (ans[[1L]] == "" && with.brackets)
         ans[[1L]] <- " "
-    ans <- paste0(ans, collapse=", ")
+    ans <- paste0(ans, collapse=collapse)
     if (with.brackets)
         ans <- paste0("[", ans, "]")
     ans
@@ -129,9 +129,10 @@ make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
 setMethod("show", "ArrayViewport",
     function(object)
     {
+        dim_in1string <- paste0(dim(object), collapse=" x ")
         refdim_in1string <- paste0(refdim(object), collapse=" x ")
-        cat(class(object), " object on a ", refdim_in1string, " array: ",
-            sep="")
+        cat(dim_in1string, " ", class(object), " object on a ",
+            refdim_in1string, " array: ", sep="")
         s <- make_string_from_ArrayViewport(object, with.brackets=TRUE)
         cat(s, "\n", sep="")
     }
@@ -478,11 +479,12 @@ setMethod("maxlength", "RegularArrayGrid", .get_RegularArrayGrid_maxlength)
 ### Show
 
 ### S3/S4 combo for as.character.ArrayGrid
-.as.character.ArrayGrid <- function(x, with.brackets=FALSE)
+.as.character.ArrayGrid <- function(x, collapse=",", with.brackets=FALSE)
 {
     data <- vapply(x,
         function(viewport)
             make_string_from_ArrayViewport(viewport,
+                                           collapse=collapse,
                                            with.brackets=with.brackets),
         character(1),
         USE.NAMES=FALSE
@@ -497,10 +499,11 @@ setMethod("show", "ArrayGrid",
     {
         dim_in1string <- paste0(dim(object), collapse=" x ")
         refdim_in1string <- paste0(refdim(object), collapse=" x ")
-        cat(dim_in1string, " ", class(object), " object ",
-            "on a ", refdim_in1string, " array:\n", sep="")
+        cat(dim_in1string, " ", class(object), " object on a ",
+            refdim_in1string, " array:\n", sep="")
         ## Turn 'object' into a character array.
-        print(as.character(object, TRUE), quote=FALSE)
+        print(as.character(object, with.brackets=TRUE),
+              quote=FALSE, right=TRUE)
     }
 )
 

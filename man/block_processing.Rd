@@ -114,11 +114,25 @@ write_block(x, viewport, block)
 ## ---------------------------------------------------------------------
 ## defaultGrid()
 ## ---------------------------------------------------------------------
-m <- matrix(runif(500), ncol=10)
+m <- matrix(runif(600), ncol=12)
 
-defaultGrid(m, block.maxlength=25)
-defaultGrid(m, block.maxlength=25, block.shape="first-dim-grows-first")
-defaultGrid(m, block.maxlength=25, block.shape="last-dim-grows-first")
+grid <- defaultGrid(m, block.maxlength=120)
+grid
+as.list(grid)  # turn the grid into a list of ArrayViewport objects
+table(lengths(grid))
+stopifnot(maxlength(grid) <= 120)
+
+grid <- defaultGrid(m, block.maxlength=120,
+                       block.shape="first-dim-grows-first")
+grid
+table(lengths(grid))
+stopifnot(maxlength(grid) <= 120)
+
+grid <- defaultGrid(m, block.maxlength=120,
+                       block.shape="last-dim-grows-first")
+grid
+table(lengths(grid))
+stopifnot(maxlength(grid) <= 120)
 
 defaultGrid(m, block.maxlength=10)
 defaultGrid(m, block.maxlength=10, block.shape="first-dim-grows-first")
@@ -128,6 +142,10 @@ defaultGrid(m, block.maxlength=20)
 defaultGrid(m, block.maxlength=20, block.shape="first-dim-grows-first")
 defaultGrid(m, block.maxlength=20, block.shape="last-dim-grows-first")
 
+defaultGrid(m, block.maxlength=25)
+defaultGrid(m, block.maxlength=25, block.shape="first-dim-grows-first")
+defaultGrid(m, block.maxlength=25, block.shape="last-dim-grows-first")
+
 defaultGrid(m, block.maxlength=75)
 defaultGrid(m, block.maxlength=75, block.shape="first-dim-grows-first")
 defaultGrid(m, block.maxlength=75, block.shape="last-dim-grows-first")
@@ -135,8 +153,6 @@ defaultGrid(m, block.maxlength=75, block.shape="last-dim-grows-first")
 defaultGrid(m, block.maxlength=100)
 defaultGrid(m, block.maxlength=100, block.shape="first-dim-grows-first")
 defaultGrid(m, block.maxlength=100, block.shape="last-dim-grows-first")
-
-## More to come soon...
 
 ## ---------------------------------------------------------------------
 ## read_block() / write_block()
