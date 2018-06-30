@@ -85,12 +85,12 @@ get_default_block_maxlength <- function(type)
 ### Note that the returned grid is regular (i.e. RegularArrayGrid object)
 ### unless the chunk grid is not regular (i.e. is an ArbitraryArrayGrid
 ### object).
-defaultGrid <- function(x, block.maxlength=NULL,
-                           chunk.grid=NULL,
-                           block.shape=c("hypercube",
-                                         "proportional",
-                                         "first-dim-grows-first",
-                                         "last-dim-grows-first"))
+blockGrid <- function(x, block.maxlength=NULL,
+                         chunk.grid=NULL,
+                         block.shape=c("hypercube",
+                                       "proportional",
+                                       "first-dim-grows-first",
+                                       "last-dim-grows-first"))
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
@@ -188,7 +188,7 @@ setMethod("write_block", "ANY",
 .normarg_grid <- function(grid, x)
 {
     if (is.null(grid))
-        return(defaultGrid(x))
+        return(blockGrid(x))
     if (!is(grid, "ArrayGrid"))
         stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
     if (!identical(refdim(grid), dim(x)))
@@ -201,8 +201,8 @@ setMethod("write_block", "ANY",
 ### object 'x'. It must take at least 1 argument which is the current array
 ### block as an ordinary array or matrix.
 ### 'grid' must be an ArrayGrid object describing the block partitioning
-### of 'x'. If not supplied, the grid returned by 'defaultGrid(x)' is used.
-### The effective grid (i.e. 'grid' or 'defaultGrid(x)'), current block number,
+### of 'x'. If not supplied, the grid returned by 'blockGrid(x)' is used.
+### The effective grid (i.e. 'grid' or 'blockGrid(x)'), current block number,
 ### and current viewport (i.e. the ArrayViewport object describing the position
 ### of the current block w.r.t. the effective grid), can be obtained from
 ### within 'FUN' with 'effectiveGrid(block)', 'currentBlockId(block)', and
@@ -379,11 +379,11 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
         chunk_grid <- NULL
     } else {
         ## Using chunks of length 1 (i.e. max resolution chunk grid) is just
-        ## a trick to make sure that defaultGrid() returns linear blocks.
+        ## a trick to make sure that blockGrid() returns linear blocks.
         chunk_grid <- RegularArrayGrid(x_dim, rep.int(1L, length(x_dim)))
     }
-    grid <- defaultGrid(x, block_maxlen, chunk_grid,
-                           block.shape="first-dim-grows-first")
+    grid <- blockGrid(x, block_maxlen, chunk_grid,
+                         block.shape="first-dim-grows-first")
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(b) {

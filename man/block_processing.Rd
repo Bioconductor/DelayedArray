@@ -5,7 +5,7 @@
 \alias{blockApply}
 \alias{blockReduce}
 
-\alias{defaultGrid}
+\alias{blockGrid}
 \alias{effectiveGrid}
 \alias{currentBlockId}
 \alias{currentViewport}
@@ -27,11 +27,11 @@
 blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
-defaultGrid(x, block.maxlength=NULL, chunk.grid=NULL,
-               block.shape=c("hypercube",
-                             "proportional",
-                             "first-dim-grows-first",
-                             "last-dim-grows-first"))
+blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
+             block.shape=c("hypercube",
+                           "proportional",
+                           "first-dim-grows-first",
+                           "last-dim-grows-first"))
 
 effectiveGrid(block)
 currentBlockId(block)
@@ -112,47 +112,47 @@ write_block(x, viewport, block)
 ## Coming soon...
 
 ## ---------------------------------------------------------------------
-## defaultGrid()
+## blockGrid()
 ## ---------------------------------------------------------------------
 m <- matrix(runif(600), ncol=12)
 
-grid <- defaultGrid(m, block.maxlength=120)
+grid <- blockGrid(m, block.maxlength=120)
 grid
 as.list(grid)  # turn the grid into a list of ArrayViewport objects
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-grid <- defaultGrid(m, block.maxlength=120,
-                       block.shape="first-dim-grows-first")
+grid <- blockGrid(m, block.maxlength=120,
+                     block.shape="first-dim-grows-first")
 grid
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-grid <- defaultGrid(m, block.maxlength=120,
-                       block.shape="last-dim-grows-first")
+grid <- blockGrid(m, block.maxlength=120,
+                     block.shape="last-dim-grows-first")
 grid
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-defaultGrid(m, block.maxlength=10)
-defaultGrid(m, block.maxlength=10, block.shape="first-dim-grows-first")
-defaultGrid(m, block.maxlength=10, block.shape="last-dim-grows-first")
+blockGrid(m, block.maxlength=10)
+blockGrid(m, block.maxlength=10, block.shape="first-dim-grows-first")
+blockGrid(m, block.maxlength=10, block.shape="last-dim-grows-first")
 
-defaultGrid(m, block.maxlength=20)
-defaultGrid(m, block.maxlength=20, block.shape="first-dim-grows-first")
-defaultGrid(m, block.maxlength=20, block.shape="last-dim-grows-first")
+blockGrid(m, block.maxlength=20)
+blockGrid(m, block.maxlength=20, block.shape="first-dim-grows-first")
+blockGrid(m, block.maxlength=20, block.shape="last-dim-grows-first")
 
-defaultGrid(m, block.maxlength=25)
-defaultGrid(m, block.maxlength=25, block.shape="first-dim-grows-first")
-defaultGrid(m, block.maxlength=25, block.shape="last-dim-grows-first")
+blockGrid(m, block.maxlength=25)
+blockGrid(m, block.maxlength=25, block.shape="first-dim-grows-first")
+blockGrid(m, block.maxlength=25, block.shape="last-dim-grows-first")
 
-defaultGrid(m, block.maxlength=75)
-defaultGrid(m, block.maxlength=75, block.shape="first-dim-grows-first")
-defaultGrid(m, block.maxlength=75, block.shape="last-dim-grows-first")
+blockGrid(m, block.maxlength=75)
+blockGrid(m, block.maxlength=75, block.shape="first-dim-grows-first")
+blockGrid(m, block.maxlength=75, block.shape="last-dim-grows-first")
 
-defaultGrid(m, block.maxlength=100)
-defaultGrid(m, block.maxlength=100, block.shape="first-dim-grows-first")
-defaultGrid(m, block.maxlength=100, block.shape="last-dim-grows-first")
+blockGrid(m, block.maxlength=100)
+blockGrid(m, block.maxlength=100, block.shape="first-dim-grows-first")
+blockGrid(m, block.maxlength=100, block.shape="last-dim-grows-first")
 
 ## ---------------------------------------------------------------------
 ## read_block() / write_block()

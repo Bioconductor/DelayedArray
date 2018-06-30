@@ -206,7 +206,7 @@ export(
     new_DelayedArray,
 
     ## block_processing.R:
-    defaultGrid, blockApply, blockReduce,
+    blockGrid, blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,
 
