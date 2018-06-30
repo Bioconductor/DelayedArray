@@ -1,12 +1,16 @@
 ### =========================================================================
-### makeCappedVolumeBox()
+### Utilities to make capped volume boxes
 ### -------------------------------------------------------------------------
 ###
 
-### 'maxvol' is assumed to be a single integer > 0 and < 'prod(dim)'
-.make_capped_volume_hypercube_box <- function(maxvol, dim)
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### makeCappedVolumeBox()
+###
+
+### 'maxvol' is assumed to be a single integer > 0 and < 'prod(maxdim)'
+.make_capped_volume_hypercube_box <- function(maxvol, maxdim)
 {
-    ans <- dim
+    ans <- maxdim
     L <- max(ans)
     while (TRUE) {
         is_max <- ans == L
@@ -21,8 +25,8 @@
         ans[is_max] <- L
     }
     ans[is_max] <- as.integer(L)
-    q <- get_RegularArrayGrid_dim(dim, ans + 1L) /
-         get_RegularArrayGrid_dim(dim, ans)
+    q <- get_RegularArrayGrid_dim(maxdim, ans + 1L) /
+         get_RegularArrayGrid_dim(maxdim, ans)
     for (along in which(is_max)[order(q[is_max])]) {
         ans[[along]] <- ans[[along]] + 1L
         p <- prod(ans)
@@ -36,17 +40,17 @@
     ans
 }
 
-### 'maxvol' is assumed to be a single integer > 0 and < 'prod(dim)'
-.make_capped_volume_scale_box <- function(maxvol, dim)
+### 'maxvol' is assumed to be a single integer > 0 and < 'prod(maxdim)'
+.make_capped_volume_scale_box <- function(maxvol, maxdim)
 {
-    r <- (maxvol / prod(dim)) ^ (1 / length(dim))
-    as.integer(r * dim)
+    r <- (maxvol / prod(maxdim)) ^ (1 / length(maxdim))
+    as.integer(r * maxdim)
 }
 
-### 'maxvol' is assumed to be a single integer > 0 and < 'prod(dim)'
-.make_capped_volume_FDGF_box <- function(maxvol, dim)
+### 'maxvol' is assumed to be a single integer > 0 and < 'prod(maxdim)'
+.make_capped_volume_FDGF_box <- function(maxvol, maxdim)
 {
-    p <- cumprod(dim)
+    p <- cumprod(maxdim)
     w <- which(p <= maxvol)
     N <- if (length(w) == 0L) 1L else w[[length(w)]] + 1L
     if (N == 1L) {
@@ -54,22 +58,22 @@
     } else {
         by <- maxvol %/% as.integer(p[[N - 1L]])
     }
-    c(head(dim, n=N-1L), by, rep.int(1L, length(dim)-N))
+    c(head(maxdim, n=N-1L), by, rep.int(1L, length(maxdim)-N))
 }
 
-.make_capped_volume_LDGF_box <- function(maxvol, dim)
+.make_capped_volume_LDGF_box <- function(maxvol, maxdim)
 {
-    rev(.make_capped_volume_FDGF_box(maxvol, rev(dim)))
+    rev(.make_capped_volume_FDGF_box(maxvol, rev(maxdim)))
 }
 
 ### Return the dimensions of a box that satisfies the following properties:
-###   (1) Has a volume as close as possibe to (but not bigger than) 'maxvol'.
-###   (2) Fits in the "constraining box" i.e. in the box of dimensions 'dim'.
-###   (3) Has a shape that is as close as possible to the requested shape.
-makeCappedVolumeBox <- function(maxvol, dim, shape=c("hypercube",
-                                                     "scale",
-                                                     "first-dim-grows-first",
-                                                     "last-dim-grows-first"))
+###   1. Has a volume as close as possibe to (but not bigger than) 'maxvol'.
+###   2. Fits in the "constraining box" i.e. in the box of dimensions 'maxdim'.
+###   3. Has a shape that is as close as possible to the requested shape.
+makeCappedVolumeBox <- function(maxvol, maxdim, shape=c("hypercube",
+                                                        "scale",
+                                                        "first-dim-grows-first",
+                                                        "last-dim-grows-first"))
 {
     if (!isSingleNumber(maxvol))
         stop("'maxvol' must be a single integer")
@@ -78,18 +82,18 @@ makeCappedVolumeBox <- function(maxvol, dim, shape=c("hypercube",
     if (maxvol < 0L)
         stop("'maxvol' must be a non-negative integer")
 
-    if (!is.numeric(dim))
-        stop(wmsg("'dim' must be an integer vector"))
-    if (!is.integer(dim))
-        dim <- as.integer(dim)
+    if (!is.numeric(maxdim))
+        stop(wmsg("'maxdim' must be an integer vector"))
+    if (!is.integer(maxdim))
+        maxdim <- as.integer(maxdim)
 
     shape <- match.arg(shape)
 
     if (maxvol == 0L)
-        return(integer(length(dim)))
+        return(integer(length(maxdim)))
 
-    if (maxvol >= prod(dim))
-        return(dim)
+    if (maxvol >= prod(maxdim))
+        return(maxdim)
 
     FUN <- switch(shape,
                   hypercube=.make_capped_volume_hypercube_box,
@@ -97,8 +101,13 @@ makeCappedVolumeBox <- function(maxvol, dim, shape=c("hypercube",
                   `first-dim-grows-first`=.make_capped_volume_FDGF_box,
                   `last-dim-grows-first`=.make_capped_volume_LDGF_box,
                   stop("unsupported 'shape'"))
-    FUN(maxvol, dim)
+    FUN(maxvol, maxdim)
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### makeRegularArrayGridOfCappedLengthViewports()
+###
 
 ### A capped-volume box related utility.
 ### If 'viewport_shape' is "first-dim-grows-first", return a linear grid.
@@ -111,4 +120,36 @@ makeRegularArrayGridOfCappedLengthViewports <-
     spacings <- makeCappedVolumeBox(viewport_maxlen, refdim, viewport_shape)
     RegularArrayGrid(refdim, spacings)
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Linear viewports and grids
+###
+### An array viewport is "linear" if it is made of reference array elements
+### that would be contiguous in memory if the reference array was an ordinary
+### R array (where the fastest changing dimension is the first one).
+###
+
+setGeneric("isLinear", function(x) standardGeneric("isLinear"))
+
+setMethod("isLinear", "ArrayViewport",
+    function(x)
+    {
+        x_width <- width(x)
+        idx <- which(x_width != refdim(x))
+        if (length(idx) == 0L)
+            return(TRUE)
+        all(tail(x_width, n=-idx[[1L]]) == 1L)
+    }
+)
+
+### If the 1st grid element is linear, then they all are.
+setMethod("isLinear", "ArrayGrid",
+    function(x)
+    {
+        if (length(x) == 0L)
+            return(TRUE)
+        isLinear(x[[1L]])
+    }
+)
 

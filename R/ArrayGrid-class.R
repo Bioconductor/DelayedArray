@@ -567,35 +567,3 @@ setMethod("downsample", "RegularArrayGrid",
     }
 )
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Linear viewports
-###
-### An array viewport is "linear" if it is made of reference array elements
-### that would be contiguous in memory if the reference array was an ordinary
-### R array (where the fastest changing dimension is the first one).
-###
-
-setGeneric("isLinear", function(x) standardGeneric("isLinear"))
-
-setMethod("isLinear", "ArrayViewport",
-    function(x)
-    {
-        x_width <- width(x)
-        idx <- which(x_width != refdim(x))
-        if (length(idx) == 0L)
-            return(TRUE)
-        all(tail(x_width, n=-idx[[1L]]) == 1L)
-    }
-)
-
-### If the 1st grid element is linear, then they all are.
-setMethod("isLinear", "ArrayGrid",
-    function(x)
-    {
-        if (length(x) == 0L)
-            return(TRUE)
-        isLinear(x[[1L]])
-    }
-)
-

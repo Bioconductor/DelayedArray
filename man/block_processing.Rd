@@ -73,7 +73,9 @@ write_block(x, viewport, block)
     Coming soon...
   }
   \item{block.shape}{
-    Coming soon...
+    A string specifying the shape of the blocks.
+    See \code{\link{makeCappedVolumeBox}} for a description of the supported
+    shapes.
   }
   \item{block}{
     Coming soon...
@@ -137,25 +139,11 @@ grid
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-blockGrid(m, block.maxlength=10)
-blockGrid(m, block.maxlength=10, block.shape="first-dim-grows-first")
-blockGrid(m, block.maxlength=10, block.shape="last-dim-grows-first")
-
-blockGrid(m, block.maxlength=20)
-blockGrid(m, block.maxlength=20, block.shape="first-dim-grows-first")
-blockGrid(m, block.maxlength=20, block.shape="last-dim-grows-first")
-
-blockGrid(m, block.maxlength=25)
-blockGrid(m, block.maxlength=25, block.shape="first-dim-grows-first")
-blockGrid(m, block.maxlength=25, block.shape="last-dim-grows-first")
-
-blockGrid(m, block.maxlength=75)
-blockGrid(m, block.maxlength=75, block.shape="first-dim-grows-first")
-blockGrid(m, block.maxlength=75, block.shape="last-dim-grows-first")
-
 blockGrid(m, block.maxlength=100)
-blockGrid(m, block.maxlength=100, block.shape="first-dim-grows-first")
-blockGrid(m, block.maxlength=100, block.shape="last-dim-grows-first")
+blockGrid(m, block.maxlength=75)
+blockGrid(m, block.maxlength=25)
+blockGrid(m, block.maxlength=20)
+blockGrid(m, block.maxlength=10)
 
 ## ---------------------------------------------------------------------
 ## read_block() / write_block()

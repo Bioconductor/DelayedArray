@@ -48,10 +48,6 @@
 \alias{downsample,ArbitraryArrayGrid-method}
 \alias{downsample,RegularArrayGrid-method}
 
-\alias{isLinear}
-\alias{isLinear,ArrayViewport-method}
-\alias{isLinear,ArrayGrid-method}
-
 \title{ArrayGrid and ArrayViewport objects}
 
 \description{

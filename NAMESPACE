@@ -227,7 +227,10 @@ export(
     arbind, acbind,
 
     ## ArrayGrid-class.R:
-    refdim, maxlength, downsample, isLinear,
+    refdim, maxlength, downsample,
+
+    ## makeCappedVolumeBox.R:
+    isLinear,
 
     ## mapToGrid.R:
     mapToGrid, mapToRef,
@@ -263,7 +266,8 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
-    refdim, maxlength, downsample, isLinear,
+    refdim, maxlength, downsample,
+    isLinear,
     mapToGrid, mapToRef,
     extract_array, type,
     isNoOp,
