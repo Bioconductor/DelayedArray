@@ -172,6 +172,7 @@ exportMethods(
     dims,
     cbind, rbind,
     grepl,
+    table,
     path, "path<-",
     updateObject,
 

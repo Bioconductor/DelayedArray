@@ -404,14 +404,9 @@ setMethod("which", "DelayedArray", .DelayedArray_block_which)
 ### Members: max, min, range, sum, prod, any, all
 ###
 
-.collect_objects <- function(x, ...)
+.collect_objects <- function(...)
 {
-    if (missing(x)) {
-        objects <- list(...)
-    } else {
-        objects <- list(x, ...)
-    }
-    objects <- unname(S4Vectors:::delete_NULLs(objects))
+    objects <- unname(S4Vectors:::delete_NULLs(list(...)))
     is_array_like <- function(x) is(x, "Array") || is.array(x)
     if (!all(vapply(objects, is_array_like, logical(1))))
         stop("the supplied objects must be array-like objects (or NULLs)")
@@ -490,8 +485,8 @@ range.DelayedArray <- function(..., na.rm=FALSE, finite=FALSE, grid=NULL)
         is.na(init[[1L]]) || (na.rm && all(init == c(-Inf, Inf)))
     }
 
-    for (x in objects)
-        init <- blockReduce(FUN, x, init, BREAKIF, grid)
+    for (object in objects)
+        init <- blockReduce(FUN, object, init, BREAKIF, grid)
     if (is.null(init))
         init <- range()
     init
@@ -511,7 +506,7 @@ setMethod("range", "DelayedArray",
 ###
 
 ### Same arguments as base::mean.default().
-.DelayedArray_block_mean <- function(x, trim=0, na.rm=FALSE)
+.block_mean <- function(x, trim=0, na.rm=FALSE, grid=NULL)
 {
     if (!identical(trim, 0))
         stop("\"mean\" method for DelayedArray objects ",
@@ -528,14 +523,64 @@ setMethod("range", "DelayedArray",
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])
 
-    ans <- blockReduce(FUN, x, init, BREAKIF)
+    ans <- blockReduce(FUN, x, init, BREAKIF, grid=grid)
     ans[[1L]] / ans[[2L]]
 }
 
 ### S3/S4 combo for mean.DelayedArray
 mean.DelayedArray <- function(x, trim=0, na.rm=FALSE, ...)
-    .DelayedArray_block_mean(x, trim=trim, na.rm=na.rm, ...)
-setMethod("mean", "DelayedArray", .DelayedArray_block_mean)
+    .block_mean(x, trim=trim, na.rm=na.rm, ...)
+setMethod("mean", "DelayedArray", .block_mean)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### table()
+###
+
+.block_table <- function(..., grid=NULL)
+{
+    objects <- list(...)
+    if (length(objects) != 1L)
+        stop(wmsg("the \"table\" method for DelayedArray objects ",
+                  "only works on a single object at the moment"))
+    x <- objects[[1L]]
+
+    block_tables <- blockApply(x, table, grid=grid)
+
+    ## Combine the block results.
+    levels <- unlist(lapply(block_tables, names))
+    storage.mode(levels) <- type(x)
+    ans_names <- as.character(unique(sort(levels)))
+    block_tabs <- lapply(block_tables,
+        function(block_table) {
+            block_tabs <- integer(length(ans_names))
+            block_tabs[match(names(block_table), ans_names)] <- block_table
+            block_tabs
+        })
+    tab <- as.integer(rowSums(matrix(unlist(block_tabs),
+                                     nrow=length(ans_names),
+                                     ncol=length(block_tabs))))
+
+    ## 'tab' is a naked integer vector. We need to decorate it (see
+    ## selectMethod("table", "Rle")).
+    ans_dimnames <- list(ans_names)
+    names(ans_dimnames) <- S4Vectors:::.list.names(...)
+    ans <- array(tab, length(tab), dimnames=ans_dimnames)
+    class(ans) <- "table"
+    ans
+}
+
+### The table() S4 generic is defined in BiocGenerics with dispatch on the ellipsis
+### (...). Unfortunately specifying 'grid' when calling table() breaks dispatch.
+### For example:
+###   A <- DelayedArray(array(sample(100L, 20000L, replace=TRUE), c(20, 4, 250)))
+###   table(A)  # ok
+###   table(A, grid=blockGrid(A, 500))
+###   # Error in unique.default(x, nmax = nmax) :
+###   #   unique() applies only to vectors
+### A workaround is to call .block_table():
+###   DelayedArray:::.block_table(A, grid=blockGrid(A, 500))  # ok
+setMethod("table", "DelayedArray", .block_table)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

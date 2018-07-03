@@ -26,6 +26,7 @@
 \alias{pmax2,DelayedArray,DelayedArray-method}
 \alias{pmin2,DelayedArray,DelayedArray-method}
 
+\alias{sweep}
 \alias{sweep,DelayedArray-method}
 
 \alias{is.na,DelayedArray-method}
@@ -50,11 +51,16 @@
 \alias{anyNA,DelayedArray-method}
 \alias{which,DelayedArray-method}
 
+\alias{range}
 \alias{range.DelayedArray}
 \alias{range,DelayedArray-method}
 
+\alias{mean}
 \alias{mean.DelayedArray}
 \alias{mean,DelayedArray-method}
+
+\alias{table}
+\alias{table,DelayedArray-method}
 
 \alias{apply}
 \alias{apply,DelayedArray-method}
@@ -129,6 +135,7 @@
     \item \code{anyNA}, \code{which}
     \item all the members of the \code{\link[methods]{Summary}} group
     \item \code{mean}
+    \item \code{table}
     \item \code{apply}
     \item matrix multiplication (\%*\%) of an ordinary matrix by a
           \link{DelayedMatrix} object
@@ -149,9 +156,10 @@
           dimensions along their rows or columns.
 
     \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
-          \code{\link[base]{mean}}, \code{\link[base]{apply}},
-          and \code{\link[base]{\%*\%}} in the \pkg{base} package for the
-          corresponding operations on ordinary arrays or matrices.
+          \code{\link[base]{mean}}, \code{\link[base]{table}},
+          \code{\link[base]{apply}}, and \code{\link[base]{\%*\%}} in the
+          \pkg{base} package for the corresponding operations on ordinary
+          arrays or matrices.
 
     \item \code{\link[base]{rowSums}} in the \pkg{base} package and
           \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
@@ -259,6 +267,15 @@ log(M1)                        # delayed
 pmax2(M2, 0)                   # delayed
 
 sweep(M2, 2, colMeans(M2))     # delayed
+
+## table() is block-processed:
+a4 <- array(sample(50L, 2000000L, replace=TRUE), c(200, 4, 2500))
+A4 <- as(a4, "HDF5Array")
+table(A4)
+a5 <- array(sample(20L, 2000000L, replace=TRUE), c(200, 4, 2500))
+A5 <- as(a5, "HDF5Array")
+table(A5)
+table(A4 - 2 * A5)
 
 ## ---------------------------------------------------------------------
 ## MATRIX MULTIPLICATION
