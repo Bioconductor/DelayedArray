@@ -51,6 +51,12 @@
 \alias{anyNA,DelayedArray-method}
 \alias{which,DelayedArray-method}
 
+\alias{unique}
+\alias{unique.DelayedArray}
+\alias{unique,DelayedArray-method}
+\alias{table}
+\alias{table,DelayedArray-method}
+
 \alias{range}
 \alias{range.DelayedArray}
 \alias{range,DelayedArray-method}
@@ -58,9 +64,6 @@
 \alias{mean}
 \alias{mean.DelayedArray}
 \alias{mean,DelayedArray-method}
-
-\alias{table}
-\alias{table,DelayedArray-method}
 
 \alias{apply}
 \alias{apply,DelayedArray-method}
@@ -133,9 +136,9 @@
   Block-processed operations:
   \itemize{
     \item \code{anyNA}, \code{which}
+    \item \code{unique}, \code{table}
     \item all the members of the \code{\link[methods]{Summary}} group
     \item \code{mean}
-    \item \code{table}
     \item \code{apply}
     \item matrix multiplication (\%*\%) of an ordinary matrix by a
           \link{DelayedMatrix} object
@@ -156,7 +159,7 @@
           dimensions along their rows or columns.
 
     \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
-          \code{\link[base]{mean}}, \code{\link[base]{table}},
+          \code{\link[base]{table}}, \code{\link[base]{mean}},
           \code{\link[base]{apply}}, and \code{\link[base]{\%*\%}} in the
           \pkg{base} package for the corresponding operations on ordinary
           arrays or matrices.
@@ -260,13 +263,9 @@ stopifnot(identical(rbind(DF$V, DF$V), DF2$V))
 ## MORE OPERATIONS
 ## ---------------------------------------------------------------------
 
-range(M1)                      # block-processed
 M1 >= 0.5 & M1 < 0.75          # delayed
 log(M1)                        # delayed
-
 pmax2(M2, 0)                   # delayed
-
-sweep(M2, 2, colMeans(M2))     # delayed
 
 ## table() is block-processed:
 a4 <- array(sample(50L, 2000000L, replace=TRUE), c(200, 4, 2500))
@@ -275,7 +274,16 @@ table(A4)
 a5 <- array(sample(20L, 2000000L, replace=TRUE), c(200, 4, 2500))
 A5 <- as(a5, "HDF5Array")
 table(A5)
-table(A4 - 2 * A5)
+
+A4 - 2 * A5                    # delayed
+table(A4 - 2 * A5)             # block-processed
+
+## range() is block-processed:
+range(A4 - 2 * A5)
+range(M1)
+
+cmeans <- colMeans(M2)         # block-processed
+sweep(M2, 2, cmeans)           # delayed
 
 ## ---------------------------------------------------------------------
 ## MATRIX MULTIPLICATION

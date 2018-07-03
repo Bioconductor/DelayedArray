@@ -83,6 +83,8 @@ S3method(summary, DelayedAbind)
 
 S3method(t, DelayedMatrix)
 
+S3method(unique, DelayedArray)
+
 ### We also export them thru the export() directive so that (a) they can be
 ### called directly, (b) tab-completion on the name of the generic shows them,
 ### and (c) methods() doesn't asterisk them.
@@ -125,7 +127,9 @@ export(
     summary.DelayedNaryIsoOp,
     summary.DelayedAbind,
 
-    t.DelayedMatrix
+    t.DelayedMatrix,
+
+    unique.DelayedArray
 )
 
 
@@ -149,6 +153,7 @@ exportMethods(
     "==", "!=", "<=", ">=", "<", ">",       # "Compare" group generic
     sweep,
     anyNA, which,
+    unique,
     max, min, range, sum, prod, any, all,   # "Summary" group generic
     mean,
     round, signif,
