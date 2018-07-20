@@ -22,8 +22,8 @@
   \link{RegularArrayGrid} object with grid elements that are capped volume
   boxes with the specified constraints.
 
-  These are low-level utilities used internally to support block processing
-  of an array-like object.
+  These are low-level utilities used internally to support
+  \code{\link{blockGrid}} and family.
 }
 
 \usage{
@@ -93,8 +93,8 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
 
 \seealso{
   \itemize{
-    \item \link{block_processing} for more information about block processing
-          of an array-like object.
+    \item \code{\link{blockGrid}} to define a grid suitable for
+          block processing of an array-like object.
 
     \item \link{ArrayGrid} objects.
   }

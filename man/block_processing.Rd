@@ -5,7 +5,6 @@
 \alias{blockApply}
 \alias{blockReduce}
 
-\alias{blockGrid}
 \alias{effectiveGrid}
 \alias{currentBlockId}
 \alias{currentViewport}
@@ -26,12 +25,6 @@
 \usage{
 blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
-
-blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
-             block.shape=c("hypercube",
-                           "scale",
-                           "first-dim-grows-first",
-                           "last-dim-grows-first"))
 
 effectiveGrid(block)
 currentBlockId(block)
@@ -66,17 +59,6 @@ write_block(x, viewport, block)
   \item{BREAKIF}{
     Coming soon...
   }
-  \item{block.maxlength}{
-    Coming soon...
-  }
-  \item{chunk.grid}{
-    Coming soon...
-  }
-  \item{block.shape}{
-    A string specifying the shape of the blocks.
-    See \code{\link{makeCappedVolumeBox}} for a description of the supported
-    shapes.
-  }
   \item{block}{
     Coming soon...
   }
@@ -91,12 +73,10 @@ write_block(x, viewport, block)
 
 \seealso{
   \itemize{
+    \item \code{\link{blockGrid}} to define a grid suitable for
+          block processing of an array-like object.
+
     \item \link{DelayedArray} objects.
-
-    \item The \code{\link{makeCappedVolumeBox}} utility to make
-          \emph{capped volume boxes}.
-
-    \item \code{\link{chunkGrid}}.
 
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
@@ -115,35 +95,6 @@ write_block(x, viewport, block)
 ## ---------------------------------------------------------------------
 
 ## Coming soon...
-
-## ---------------------------------------------------------------------
-## blockGrid()
-## ---------------------------------------------------------------------
-m <- matrix(runif(600), ncol=12)
-
-grid <- blockGrid(m, block.maxlength=120)
-grid
-as.list(grid)  # turn the grid into a list of ArrayViewport objects
-table(lengths(grid))
-stopifnot(maxlength(grid) <= 120)
-
-grid <- blockGrid(m, block.maxlength=120,
-                     block.shape="first-dim-grows-first")
-grid
-table(lengths(grid))
-stopifnot(maxlength(grid) <= 120)
-
-grid <- blockGrid(m, block.maxlength=120,
-                     block.shape="last-dim-grows-first")
-grid
-table(lengths(grid))
-stopifnot(maxlength(grid) <= 120)
-
-blockGrid(m, block.maxlength=100)
-blockGrid(m, block.maxlength=75)
-blockGrid(m, block.maxlength=25)
-blockGrid(m, block.maxlength=20)
-blockGrid(m, block.maxlength=10)
 
 ## ---------------------------------------------------------------------
 ## read_block() / write_block()
