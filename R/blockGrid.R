@@ -19,7 +19,6 @@ DEFAULT_BLOCK_SIZE <- 45000000L  # 45 Mb
     raw=1L
 )
 
-### NOT exported but used in HDF5Array!
 get_default_block_maxlength <- function(type)
 {
     type_size <- .TYPE_SIZES[type]
