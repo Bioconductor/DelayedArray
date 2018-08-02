@@ -16,8 +16,8 @@
 .extract_two_1Darrays_by_row <- function(x, idx1, idx2)
 {
     x12 <- extract_array_by_Nindex(x, list(c(idx1, idx2)))
-    x1 <- head(x12, n=n1)
-    x2 <- tail(x12, n=n2)
+    x1 <- x12[seq_along(idx1), drop=FALSE]
+    x2 <- x12[seq_along(idx2) + length(idx1), drop=FALSE]
     list(x1, x2)
 }
 
