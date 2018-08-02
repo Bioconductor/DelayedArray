@@ -112,7 +112,7 @@
     } else {
         idx1 <- seq_len(n1)
         idx2 <- seq(to=x_len, by=1L, length.out=n2)
-        x12 <- extract_two_1Darrays_by_row(x, idx1, idx2)
+        x12 <- .extract_two_1Darrays_by_row(x, idx1, idx2)
         ans1 <- .format_as_character_vector(x12[[1L]], justify, quote=quote)
         ans2 <- .format_as_character_vector(x12[[2L]], justify, quote=quote)
         ans <- c(ans1, ".", ans2)
