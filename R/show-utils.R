@@ -349,7 +349,8 @@
     .print_nDarray_data(x, n1, n2, quote=quote)
 }
 
-.array_one_line_summary <- function(x)
+### NOT exported but used in the HDF5Array package.
+array_as_one_line_summary <- function(x)
 {
     dim_in1string <- paste0(dim(x), collapse=" x ")
     sprintf("<%s> %s object of type \"%s\"", dim_in1string, class(x), type(x))
@@ -359,7 +360,7 @@
 ### that supports dim(), dimnames(), and extract_array().
 show_compact_array <- function(object)
 {
-    cat(.array_one_line_summary(object))
+    cat(array_as_one_line_summary(object))
     if (any(dim(object) == 0L)) {
         cat("\n")
         return()
