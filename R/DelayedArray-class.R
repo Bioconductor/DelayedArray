@@ -177,9 +177,17 @@ setMethod("extract_array", "DelayedArray",
 ### Low-level constructor. Not intended to be used directly by the end user.
 new_DelayedArray <- function(seed=new("array"), Class="DelayedArray")
 {
+    stopifnot(isSingleString(Class), extends(Class, "DelayedArray"))
     seed_ndim <- length(dim(seed))
-    if (seed_ndim == 2L)
-        Class <- matrixClass(new(Class))
+    if (extends(Class, "DelayedMatrix")) {
+        if (seed_ndim != 2L)
+            stop(wmsg("the supplied seed must have exactly 2 dimensions ",
+                      "when the specified class (", Class, ") extends ",
+                      "DelayedMatrix"))
+    } else {
+        if (seed_ndim == 2L)
+            Class <- matrixClass(new(Class))
+    }
     new2(Class, seed=seed)
 }
 
