@@ -6,6 +6,42 @@
 ###
 
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Some wrappers around extract_array_by_Nindex()
+###
+### All of them return a list of 2 ordinary arrays. The dimnames need to
+### propagate so we use extract_array_by_Nindex() instead of extract_array().
+###
+
+.extract_two_1Darrays_by_row <- function(x, idx1, idx2)
+{
+    x12 <- extract_array_by_Nindex(x, list(c(idx1, idx2)))
+    x1 <- head(x12, n=n1)
+    x2 <- tail(x12, n=n2)
+    list(x1, x2)
+}
+
+.extract_two_arrays_by_row <- function(x, idx1, idx2)
+{
+    x12 <- extract_array_by_Nindex(x, list(c(idx1, idx2), NULL))
+    x1 <- x12[seq_along(idx1), , drop=FALSE]
+    x2 <- x12[seq_along(idx2) + length(idx1), , drop=FALSE]
+    list(x1, x2)
+}
+
+.extract_two_arrays_by_col <- function(x, idx1, idx2)
+{
+    x12 <- extract_array_by_Nindex(x, list(NULL, c(idx1, idx2)))
+    x1 <- x12[ , seq_along(idx1), drop=FALSE]
+    x2 <- x12[ , seq_along(idx2) + length(idx1), drop=FALSE]
+    list(x1, x2)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Some wrappers around format()
+###
+
 ### 'x' must be an ordinary vector or matrix of atomic or recursive type.
 ### 'max.width' takes effect only if 'x' is character or list (i.e. if the
 ### underlying type inherits from character or list when 'x' is a matrix).
@@ -76,12 +112,9 @@
     } else {
         idx1 <- seq_len(n1)
         idx2 <- seq(to=x_len, by=1L, length.out=n2)
-        ## We use extract_array_by_Nindex() instead of extract_array() to
-        ## propagate the dimnames.
-        x1 <- extract_array_by_Nindex(x, list(idx1))
-        x2 <- extract_array_by_Nindex(x, list(idx2))
-        ans1 <- .format_as_character_vector(x1, justify, quote=quote)
-        ans2 <- .format_as_character_vector(x2, justify, quote=quote)
+        x12 <- extract_two_1Darrays_by_row(x, idx1, idx2)
+        ans1 <- .format_as_character_vector(x12[[1L]], justify, quote=quote)
+        ans2 <- .format_as_character_vector(x12[[2L]], justify, quote=quote)
         ans <- c(ans1, ".", ans2)
         names(ans) <- .split_1Darray_names(x_names, idx1, idx2, justify)
     }
@@ -151,13 +184,9 @@
     x_rownames <- rownames(x)
     idx1 <- seq_len(m1)
     idx2 <- seq(to=x_nrow, by=1L, length.out=m2)
-
-    ## We use extract_array_by_Nindex() instead of extract_array() to
-    ## propagate the dimnames.
-    x1 <- extract_array_by_Nindex(x, list(idx1, NULL))
-    x2 <- extract_array_by_Nindex(x, list(idx2, NULL))
-    ans1 <- .format_as_character_matrix(x1, justify, quote=quote)
-    ans2 <- .format_as_character_matrix(x2, justify, quote=quote)
+    x12 <- .extract_two_arrays_by_row(x, idx1, idx2)
+    ans1 <- .format_as_character_matrix(x12[[1L]], justify, quote=quote)
+    ans2 <- .format_as_character_matrix(x12[[2L]], justify, quote=quote)
     dots <- rep.int(".", ncol(ans1))
     ans <- rbind(ans1, matrix(dots, nrow=1L), ans2)
 
@@ -171,13 +200,9 @@
     x_colnames <- colnames(x)
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
-
-    ## We use extract_array_by_Nindex() instead of extract_array() to
-    ## propagate the dimnames.
-    x1 <- extract_array_by_Nindex(x, list(NULL, idx1))
-    x2 <- extract_array_by_Nindex(x, list(NULL, idx2))
-    ans1 <- .format_as_character_matrix(x1, justify, quote=quote)
-    ans2 <- .format_as_character_matrix(x2, justify, quote=quote)
+    x12 <- .extract_two_arrays_by_col(x, idx1, idx2)
+    ans1 <- .format_as_character_matrix(x12[[1L]], justify, quote=quote)
+    ans2 <- .format_as_character_matrix(x12[[2L]], justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
     ans <- cbind(ans1, matrix(dots, ncol=1L), ans2)
 
@@ -191,13 +216,9 @@
     x_colnames <- colnames(x)
     idx1 <- seq_len(n1)
     idx2 <- seq(to=x_ncol, by=1L, length.out=n2)
-
-    ## We use extract_array_by_Nindex() instead of extract_array() to
-    ## propagate the dimnames.
-    x1 <- extract_array_by_Nindex(x, list(NULL, idx1))
-    x2 <- extract_array_by_Nindex(x, list(NULL, idx2))
-    ans1 <- .rsplit_2Darray_data(x1, m1, m2, justify, quote=quote)
-    ans2 <- .rsplit_2Darray_data(x2, m1, m2, justify, quote=quote)
+    x12 <- .extract_two_arrays_by_col(x, idx1, idx2)
+    ans1 <- .rsplit_2Darray_data(x12[[1L]], m1, m2, justify, quote=quote)
+    ans2 <- .rsplit_2Darray_data(x12[[2L]], m1, m2, justify, quote=quote)
     dots <- rep.int(".", nrow(ans1))
     ans <- cbind(ans1, matrix(dots, ncol=1L), ans2)
 
