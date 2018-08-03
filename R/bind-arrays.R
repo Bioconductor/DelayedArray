@@ -5,9 +5,9 @@
 
 
 ### Return a matrix with one row per dim and one column per object if the
-### objects are bindable. Otherwise return a character vector describing why
-### the objects are not bindable. This design allows the function to be used
-### in the context of a validity method.
+### objects are "bindable". Otherwise return a character vector describing
+### why they are not. This design allows the function to be used in the
+### context of a validity method.
 get_dims_to_bind <- function(objects, along)
 {
     if (!(isSingleInteger(along) && along >= 1L))
@@ -86,11 +86,9 @@ combine_dimnames_along <- function(objects, dims, along)
 ###
 
 ### 'objects' is assumed to be a list of vector-like objects.
-### 'block_lens' is assumed to be an integer vector parallel to 'objects'
-### specifying the block length for each object in 'objects'. In addition the
-### length of 'object[[i]]' must be 'nblock * block_lens[[i]]' ('nblock' is
-### the same for all the objects).
-.intertwine_blocks <- function(objects, block_lens, ans_dim)
+### 'nblock' is assumed to be a single integer value (stored as a numeric)
+### that is a common divisor of the object lengths.
+.intertwine_blocks <- function(objects, nblock, ans_dim)
 {
     x0 <- unlist(lapply(objects, `[`, 0L), use.names=FALSE)
     objects_lens <- lengths(objects)
@@ -103,10 +101,6 @@ combine_dimnames_along <- function(objects, dims, along)
         USE.NAMES=FALSE))
     if (length(idx) != 0L)
         objects[idx] <- lapply(objects[idx], `storage.mode<-`, typeof(x0))
-
-    nblock <- objects_lens %/% block_lens
-    nblock <- unique(nblock[!is.na(nblock)])
-    stopifnot(length(nblock) == 1L)  # sanity check
 
     .Call("abind", objects, nblock, ans_dim, PACKAGE="DelayedArray")
 }
@@ -139,11 +133,9 @@ simple_abind <- function(..., along)
         return(objects[[1L]])
 
     ## Perform the binding.
-    block_lens <- dims[along, ]
-    for (n in seq_len(along - 1L))
-        block_lens <- block_lens * dims[n, ]
-    ans <- .intertwine_blocks(objects, block_lens,
-                              combine_dims_along(dims, along))
+    nblock <- prod(dims[-seq_len(along), 1L])  # numeric that can be >
+                                               # .Machine$integer.max
+    ans <- .intertwine_blocks(objects, nblock, combine_dims_along(dims, along))
 
     ## Combine and set the dimnames.
     set_dimnames(ans, combine_dimnames_along(objects, dims, along))
