@@ -182,7 +182,7 @@ exportMethods(
     updateObject,
 
     ## Methods for generics defined in the S4Vectors package:
-    isEmpty,
+    showAsCell, isEmpty,
 
     ## Methods for generics defined in the IRanges package:
     ranges, start, end, width,
