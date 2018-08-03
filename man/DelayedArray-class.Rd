@@ -243,7 +243,7 @@ seed(A2)  # 'DF'
 as(A2, "DataFrame")
 stopifnot(identical(DF, as(A2, "DataFrame")))
 
-t(A2)  # transposition is delayed so is very fast and memory efficient
+t(A2)  # transposition is delayed so is very fast and memory-efficient
 colSums(A2)
 
 ## ---------------------------------------------------------------------
@@ -347,8 +347,8 @@ row_normalized_p <- p / rowSums(p^2)  # consumes too much memory
 ## because the rowSums() result is being recycled (appropriately) into a
 ## *dense* matrix with dimensions equal to dim(p).
 
-## Murat came up with the following solution that is very fast and memory
-## efficient:
+## Murat came up with the following solution that is very fast and
+## memory-efficient:
 row_normalized_p1 <- Diagonal(x=1/sqrt(Matrix::rowSums(p^2))) %*% p
 
 ## With a DelayedArray object, the straight-forward approach uses a
