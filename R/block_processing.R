@@ -184,11 +184,13 @@ currentViewport <- function(block)
 ### block_which()
 ###
 
-### Return a numeric matrix like one returned by base::arrayInd(), that is,
-### a matrix where each row is an n-uplet representing an array index.
 ### 'x' is **trusted** to be a logical array-like object.
-block_which <- function(x, grid=NULL)
+block_which <- function(x, arr.ind=FALSE, grid=NULL)
 {
+    if (!isTRUEorFALSE(arr.ind))
+        stop("'arr.ind' must be TRUE or FALSE")
+    ## Return a numeric matrix like one returned by base::arrayInd(), that
+    ## is, a matrix where each row is an n-uplet representing an array index.
     FUN <- function(block) {
         b <- currentBlockId(block)
         m <- base::which(block)
@@ -198,7 +200,10 @@ block_which <- function(x, grid=NULL)
     aind <- do.call(rbind, block_results)
     aind_as_list <- lapply(ncol(aind):1, function(j) aind[ , j])
     oo <- do.call(order, aind_as_list)
-    aind[oo, , drop=FALSE]
+    ans <- aind[oo, , drop=FALSE]
+    if (!arr.ind)
+        ans <- linearInd(ans, dim(x))
+    ans
 }
 
 

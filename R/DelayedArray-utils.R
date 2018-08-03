@@ -384,15 +384,10 @@ setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
 ### Used in unit tests!
 .DelayedArray_block_which <- function(x, arr.ind=FALSE, useNames=TRUE)
 {
-    if (!isTRUEorFALSE(arr.ind))
-        stop("'arr.ind' must be TRUE or FALSE")
     if (!identical(useNames, TRUE))
         warning(wmsg("'useNames' is ignored when 'x' is ",
                      "a DelayedArray object or derivative"))
-    ans <- block_which(x)
-    if (!arr.ind)
-        ans <- linearInd(ans, dim(x))
-    ans
+    block_which(x, arr.ind=arr.ind)
 }
 
 setMethod("which", "DelayedArray", .DelayedArray_block_which)
