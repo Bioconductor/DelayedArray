@@ -205,6 +205,9 @@ export(
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
 
+    ## blockGrid.R:
+    blockGrid, rowGrid, colGrid,
+
     ## showtree.R:
     showtree, contentIsPristine,
 
@@ -212,7 +215,7 @@ export(
     new_DelayedArray,
 
     ## block_processing.R:
-    blockGrid, blockApply, blockReduce,
+    blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,
 

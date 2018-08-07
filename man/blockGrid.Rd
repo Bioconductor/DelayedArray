@@ -1,12 +1,18 @@
 \name{blockGrid}
 
 \alias{blockGrid}
+\alias{rowGrid}
+\alias{colGrid}
 
 \title{Define a grid suitable for block processing of an array-like object}
 
 \description{
   \code{blockGrid()} is the primary utility function to use to define a grid
   that is suitable for block processing of an array-like object.
+
+  \code{rowGrid()} and \code{colGrid()} are additional functions, specific
+  to the 2-dimensional case, that can be used to define blocks of full rows
+  or full columns.
 }
 
 \usage{
@@ -15,11 +21,16 @@ blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
                            "scale",
                            "first-dim-grows-first",
                            "last-dim-grows-first"))
+
+rowGrid(x, nrow=NULL, block.maxlength=NULL)
+colGrid(x, ncol=NULL, block.maxlength=NULL)
 }
 
 \arguments{
   \item{x}{
-    An array-like object.
+    An array-like or matrix-like object for \code{blockGrid}.
+
+    A matrix-like object for \code{rowGrid} and \code{colGrid}.
   }
   \item{block.maxlength}{
     The maximum length of the blocks.
@@ -41,6 +52,14 @@ blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
     See \code{\link{makeCappedVolumeBox}} for a description of the supported
     shapes.
   }
+  \item{nrow}{
+    The number of rows of the blocks. The bottommost blocks might have less.
+    See examples below.
+  }
+  \item{ncol}{
+    The number of columns of the blocks. The rightmost blocks might have less.
+    See examples below.
+  }
 }
 
 \details{
@@ -50,9 +69,9 @@ blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
 }
 
 \value{
-  The grid is returned as an \link{ArrayGrid} object on reference array
-  \code{x}. The grid elements define the blocks that will be used to
-  process \code{x} by block. The grid is \emph{optimal} in the sense that:
+  \code{blockGrid}: An \link{ArrayGrid} object on reference array \code{x}.
+  The grid elements define the blocks that will be used to process \code{x}
+  by block. The grid is \emph{optimal} in the sense that:
   \enumerate{
     \item It's \emph{compatible} with the grid of physical chunks a.k.a.
           \emph{chunk grid}. This means that, when the chunk grid is known
@@ -69,6 +88,12 @@ blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
   Note that the returned grid is regular (i.e. is a \link{RegularArrayGrid}
   object) unless the chunk grid is not regular (i.e. is an
   \link{ArbitraryArrayGrid} object).
+
+  \code{rowGrid}: A \link{RegularArrayGrid} object on reference array \code{x}
+  where the grid elements define blocks made of full rows of \code{x}.
+
+  \code{colGrid}: A \link{RegularArrayGrid} object on reference array \code{x}
+  where the grid elements define blocks made of full columns of \code{x}.
 }
 
 \seealso{
@@ -88,6 +113,9 @@ blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
 \examples{
 m <- matrix(runif(600), ncol=12)
 
+## ---------------------------------------------------------------------
+## blockGrid()
+## ---------------------------------------------------------------------
 grid <- blockGrid(m, block.maxlength=120)
 grid
 as.list(grid)  # turn the grid into a list of ArrayViewport objects
@@ -111,5 +139,12 @@ blockGrid(m, block.maxlength=75)
 blockGrid(m, block.maxlength=25)
 blockGrid(m, block.maxlength=20)
 blockGrid(m, block.maxlength=10)
+
+## ---------------------------------------------------------------------
+## rowGrid() AND colGrid()
+## ---------------------------------------------------------------------
+rowGrid(m, nrow=10)  # 5 blocks of 10 rows each
+rowGrid(m, nrow=15)  # 3 blocks of 15 rows each plus 1 block of 5 rows
+colGrid(m, ncol=5)   # 2 blocks of 5 cols each plus 1 block of 2 cols
 }
 \keyword{utilities}

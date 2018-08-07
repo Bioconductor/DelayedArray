@@ -50,7 +50,7 @@ get_default_block_maxlength <- function(type)
     if (!isSingleNumber(block.maxlength))
         stop(wmsg("'block.maxlength' must be a single integer or NULL"))
     if (block.maxlength < 1)
-        stop(wmsg("'block.maxlength' cannot be < 1"))
+        stop(wmsg("'block.maxlength' must be >= 1"))
     if (block.maxlength > .Machine$integer.max)
         stop(wmsg("'block.maxlength' is too big. Blocks of ",
                   "length > .Machine$integer.max are not supported yet. ",
@@ -69,7 +69,8 @@ get_default_block_maxlength <- function(type)
     chunk.grid
 }
 
-### Return an "optimal" grid for block processing.
+### Return a grid that is "optimal" for block processing of array-like
+### object 'x'.
 ### The grid is returned as an ArrayGrid object on reference array 'x'.
 ### The grid elements define the blocks that will be used for processing 'x'
 ### by block. The grid is "optimal" in the sense that:
@@ -110,5 +111,81 @@ blockGrid <- function(x, block.maxlength=NULL,
     chunks_per_block <- max(block_maxlen %/% maxlength(chunk_grid), 1L)
     ratio <- makeCappedVolumeBox(chunks_per_block, dim(chunk_grid), block_shape)
     downsample(chunk_grid, ratio)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Two additional functions specific to the 2-dimensional case
+###
+### Both return a RegularArrayGrid object.
+###
+
+.get_default_nrow <- function(x_dim, block.maxlength, x_type)
+{
+    x_nrow <- x_dim[[1L]]
+    x_ncol <- x_dim[[2L]]
+    block_maxlen <- .normarg_block.maxlength(block.maxlength, x_type)
+    nrow <- block_maxlen %/% x_ncol
+    if (nrow < 1L)
+        return(1L)
+    if (nrow > x_nrow)
+        return(x_nrow)
+    nrow
+}
+
+### Define blocks of full rows.
+rowGrid <- function(x, nrow=NULL, block.maxlength=NULL)
+{
+    x_dim <- dim(x)
+    if (length(x_dim) != 2L)
+        stop(wmsg("'x' must have exactly 2 dimensions"))
+    x_nrow <- x_dim[[1L]]
+    x_ncol <- x_dim[[2L]]
+    if (is.null(nrow)) {
+        nrow <- .get_default_nrow(x_dim, block.maxlength, type(x))
+        spacings <- c(nrow, x_ncol)
+    } else {
+        if (!is.null(block.maxlength))
+            warning("'block.maxlength' is ignored when 'nrow' is not NULL")
+        if (!isSingleNumber(nrow))
+            stop(wmsg("'nrow' must be a single integer or NULL"))
+        nrow <- as.integer(nrow)
+        if (nrow < 1L || nrow > x_nrow)
+            stop(wmsg("'nrow' must be >= 1 and <= nrow(x)"))
+        spacings <- c(nrow, x_ncol)
+        if (prod(spacings) > .Machine$integer.max)
+            stop(wmsg("'nrow' is too big. Blocks of length > ",
+                      ".Machine$integer.max are not supported yet. ",
+                      "Please specify a smaller 'nrow'."))
+    }
+    RegularArrayGrid(x_dim, spacings)
+}
+
+### Define blocks of full columns.
+colGrid <- function(x, ncol=NULL, block.maxlength=NULL)
+{
+    x_dim <- dim(x)
+    if (length(x_dim) != 2L)
+        stop(wmsg("'x' must have exactly 2 dimensions"))
+    x_nrow <- x_dim[[1L]]
+    x_ncol <- x_dim[[2L]]
+    if (is.null(ncol)) {
+        ncol <- .get_default_nrow(rev(x_dim), block.maxlength, type(x))
+        spacings <- c(x_nrow, ncol)
+    } else {
+        if (!is.null(block.maxlength))
+            warning("'block.maxlength' is ignored when 'ncol' is not NULL")
+        if (!isSingleNumber(ncol))
+            stop(wmsg("'ncol' must be a single integer or NULL"))
+        ncol <- as.integer(ncol)
+        if (ncol < 1L || ncol > x_ncol)
+            stop(wmsg("'ncol' must be >= 1 and <= ncol(x)"))
+        spacings <- c(x_nrow, ncol)
+        if (prod(spacings) > .Machine$integer.max)
+            stop(wmsg("'ncol' is too big. Blocks of length > ",
+                      ".Machine$integer.max are not supported yet. ",
+                      "Please specify a smaller 'ncol'."))
+    }
+    RegularArrayGrid(x_dim, spacings)
 }
 
