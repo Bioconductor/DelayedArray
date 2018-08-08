@@ -309,7 +309,7 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
     APPLY <- match.fun(APPLY)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
-    block_maxlen <- max(get_default_block_length(type(x)), x_dim[[1L]])
+    block_maxlen <- max(getDefaultBlockLength(type(x)), x_dim[[1L]])
     block_APPLY(x, APPLY, ..., sink=sink, block_maxlen=block_maxlen)
 }
 

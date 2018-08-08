@@ -1,8 +1,6 @@
 #setRealizationBackend("RleArray")
 #setRealizationBackend("HDF5Array")
 
-DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
-
 Arith_members <- c("+", "-", "*", "/", "^", "%%", "%/%")
 Compare_members <- c("==", "!=", "<=", ">=", "<", ">")
 Logic_members <- c("&", "|")  # currently untested
@@ -93,9 +91,9 @@ test_DelayedMatrix_mult <- function()
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
     Rm <- rbind(Lm + 7.05, 0.1 * Lm)
 
-    on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
+    on.exit(setDefaultBlockSize())
     for (block_size in block_sizes2) {
-        options(DelayedArray.block.size=block_size)
+        setDefaultBlockSize(block_size)
         P <- Lm %*% M
         checkEquals(Lm %*% m, as.matrix(P))
         P <- M %*% Rm

@@ -10,8 +10,6 @@
     )
   Then validity method is not needed anymore.
 
-- Document global option DelayedArray.block.size
-
 - Add man page and unit tests for statistical methods defined in
   DelayedArray-stats.R
 

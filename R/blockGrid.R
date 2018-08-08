@@ -5,11 +5,41 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setDefaultBlocSize()
+### get/setDefaultBlockSize()
+###
+### The default block size must be specified in bytes.
 ###
 
-### Default block size in bytes.
-DEFAULT_BLOCK_SIZE <- 45000000L  # 45 Mb
+getDefaultBlockSize <- function()
+{
+    size <- getOption("DelayedArray.block.size")
+    if (!isSingleNumber(size) || size < 1)
+        stop(wmsg("Global option DelayedArray.block.size ",
+                  "should be a single number >= 1. ",
+                  "Fix it with setDefaultBlockSize()."))
+    size
+}
+
+### We set the default block size to 100Mb by default.
+setDefaultBlockSize <- function(size=1e8)
+{
+    if (!isSingleNumber(size) || size < 1)
+        stop(wmsg("the block size must be a single number >= 1"))
+    prev_size <- getOption("DelayedArray.block.size")
+    if (isSingleNumber(prev_size)) {
+        previous_was <- c(" (was ", prev_size, ")")
+    } else {
+        previous_was <- ""
+    }
+    options(DelayedArray.block.size=size)
+    message("default block size set to ", size, " bytes", previous_was)
+    invisible(size)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### getDefaultBlockLength()
+###
 
 ### Atomic type sizes in bytes.
 .TYPE_SIZES <- c(
@@ -23,7 +53,7 @@ DEFAULT_BLOCK_SIZE <- 45000000L  # 45 Mb
     raw=1L
 )
 
-get_default_block_length <- function(type)
+getDefaultBlockLength <- function(type)
 {
     type_size <- .TYPE_SIZES[type]
     idx <- which(is.na(type_size))
@@ -32,17 +62,13 @@ get_default_block_length <- function(type)
         in1string <- paste0(unsupported_types, collapse=", ")
         stop("unsupported type(s): ",  in1string)
     }
-    block_size <- getOption("DelayedArray.block.size",
-                            default=DEFAULT_BLOCK_SIZE)
-    if (!isSingleNumber(block_size) || block_size < 1)
-        stop(wmsg("global option DelayedArray.block.size must be a ",
-                  "single number >= 1"))
+    block_size <- getDefaultBlockSize()
     ans <- block_size / type_size
     if (ans > .Machine$integer.max)
         stop(wmsg("Default block length is too big. Blocks of ",
                   "length > .Machine$integer.max are not supported yet. ",
-                  "Please reduce the default block length by setting global ",
-                  "option DelayedArray.block.size to a smaller value."))
+                  "Please reduce the default block length by reducing the ",
+                  "default block size with setDefaultBlockSize()."))
     max(as.integer(ans), 1L)
 }
 
@@ -50,7 +76,7 @@ get_default_block_length <- function(type)
 .normarg_block.length <- function(block.length, type)
 {
     if (is.null(block.length))
-        return(get_default_block_length(type))
+        return(getDefaultBlockLength(type))
     if (!isSingleNumber(block.length))
         stop(wmsg("'block.length' must be a single integer or NULL"))
     if (block.length < 1)

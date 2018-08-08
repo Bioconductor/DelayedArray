@@ -577,8 +577,8 @@ colSums(M)
 
       \begin{exampleblock}{}
 <<>>=
-getOption("DelayedArray.block.size")
-options(DelayedArray.block.size=1e6)
+getDefaultBlockSize()
+setDefaultBlockSize(1e6)
 colSums(M)
 @ 
       \end{exampleblock}
@@ -646,8 +646,7 @@ colSums(M)
   \bigskip
 
   \begin{block}{}
-    9. Control the block size via \Rcode{DelayedArray.block.size} global
-       option.
+    9. Control the block size with \Rcode{setDefaultBlockSize()}.
   \end{block}
 \end{frame}
 

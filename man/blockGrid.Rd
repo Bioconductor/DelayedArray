@@ -34,14 +34,10 @@ colGrid(x, ncol=NULL, block.length=NULL)
   }
   \item{block.length}{
     The maximum length of the blocks.
-    By default \code{getOption("DelayedArray.block.size") / sizeof(type(x))}
-    is used. In a fresh session (i.e. when the \pkg{DelayedArray} package is
-    loaded), global option \code{DelayedArray.block.size} is set to 45e6
-    or 45 Mb (this is internal constant
-    \code{DelayedArray:::DEFAULT_BLOCK_SIZE}).
+    By default \code{getDefaultBlockLength(type(x))} is used.
     Depending on how much memory is available on your machine, you can
     increase or decrease the default block size with something like
-    \code{options(DelayedArray.block.size=200e6)}.
+    \code{setDefaultBlockSize(5e8)}.
   }
   \item{chunk.grid}{
     The grid of physical chunks.

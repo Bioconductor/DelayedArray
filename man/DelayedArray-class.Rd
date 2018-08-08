@@ -357,14 +357,13 @@ row_normalized_p1 <- Diagonal(x=1/sqrt(Matrix::rowSums(p^2))) %*% p
 
 ## First, let's see the block processing in action:
 DelayedArray:::set_verbose_block_processing(TRUE)
-## and set block size to a bigger value than the default:
-getOption("DelayedArray.block.size")
-options(DelayedArray.block.size=80e6)
+## and check the default block size:
+getDefaultBlockSize()
 
 row_normalized_P <- P / sqrt(DelayedArray::rowSums(P^2))
 
 ## Increasing the block size increases the speed but also memory usage:
-options(DelayedArray.block.size=200e6)
+setDefaultBlockSize(2e8)
 row_normalized_P2 <- P / sqrt(DelayedArray::rowSums(P^2))
 stopifnot(all.equal(row_normalized_P, row_normalized_P2))
 
@@ -373,7 +372,7 @@ DelayedArray:::set_verbose_block_processing(FALSE)
 row_normalized_p2 <- as(row_normalized_P, "sparseMatrix")
 stopifnot(all.equal(row_normalized_p1, row_normalized_p2))
 
-options(DelayedArray.block.size=10e6)
+setDefaultBlockSize()
 }
 }
 \keyword{classes}

@@ -1,7 +1,7 @@
 .onLoad <- function(libname, pkgname)
 {
     options(DelayedArray.simplify=TRUE)
-    options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE)
+    setDefaultBlockSize()
     ## By default bplapply() uses the SnowParam() backend on Windows, which
     ## introduces **a lot** of overhead in the context of block processing.
     ## See https://github.com/Bioconductor/BiocParallel/issues/78

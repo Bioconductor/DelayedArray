@@ -1,8 +1,6 @@
 #setRealizationBackend("RleArray")
 #setRealizationBackend("HDF5Array")
 
-DEFAULT_BLOCK_SIZE <- DelayedArray:::DEFAULT_BLOCK_SIZE
-
 a1 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))  # integer array
 a2 <- a1 + runif(150) - 0.5                              # numeric array
 m2 <- matrix(runif(60), ncol=6)                          # numeric matrix
@@ -13,7 +11,7 @@ block_sizes2 <- 2L * block_sizes1
 test_DelayedMatrix_row_col_summarization <- function()
 {
     test_row_col_summary <- function(FUN, m, M, block_sizes) {
-        on.exit(options(DelayedArray.block.size=DEFAULT_BLOCK_SIZE))
+        on.exit(setDefaultBlockSize())
         FUN <- match.fun(FUN)
  
         target1 <- FUN(m)
@@ -21,7 +19,7 @@ test_DelayedMatrix_row_col_summarization <- function()
         target3 <- FUN(t(m))
         target4 <- FUN(t(m), na.rm=TRUE)
         for (block_size in block_sizes) {
-            options(DelayedArray.block.size=block_size)
+            setDefaultBlockSize(block_size)
             current <- FUN(M)
             checkEquals(target1, current)
             checkIdentical(typeof(target1), typeof(current))
