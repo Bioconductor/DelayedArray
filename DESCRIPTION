@@ -37,6 +37,7 @@ Collate: utils.R
 	DelayedArray-class.R
 	chunkGrid.R
 	block_processing.R
+	RealizationSink-class.R
 	realize.R
 	DelayedArray-utils.R
 	DelayedMatrix-utils.R

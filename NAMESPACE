@@ -31,7 +31,7 @@ exportClasses(
     ## chunkGrid.R:
     integer_OR_NULL,
 
-    ## realize.R:
+    ## RealizationSink-class.R:
     RealizationSink, arrayRealizationSink,
 
     ## RleArray-class.R:
@@ -219,8 +219,10 @@ export(
     effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,
 
-    ## realize.R:
-    supportedRealizationBackends, getRealizationBackend, setRealizationBackend,
+    ## RealizationSink-class.R:
+    supportedRealizationBackends,
+    getRealizationBackend, setRealizationBackend,
+    RealizationSink,
 
     ## RleArray-class.R:
     RleArray
@@ -262,8 +264,11 @@ export(
     ## block_processing.R:
     read_block, write_block,
 
+    ## RealizationSink-class.R:
+    close,
+
     ## realize.R:
-    close, realize,
+    realize,
 
     ## DelayedArray-utils.R:
     pmax2, pmin2, apply,
@@ -284,7 +289,8 @@ exportMethods(
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
     chunkdim, chunkGrid,
     read_block, write_block,
-    close, realize,
+    close,
+    realize,
     pmax2, pmin2, apply,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )

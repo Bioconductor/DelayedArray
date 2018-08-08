@@ -78,8 +78,8 @@ write_block(x, viewport, block)
 
     \item \link{DelayedArray} objects.
 
-    \item \code{\link{realize}} for realizing a DelayedArray object in memory
-          or on disk.
+    \item Advanced users: \link{RealizationSink} objects for writing an
+          array-like object block by block to disk (or to memory).
   }
 }
 

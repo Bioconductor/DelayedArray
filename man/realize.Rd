@@ -1,21 +1,5 @@
 \name{realize}
 
-\alias{class:RealizationSink}
-\alias{RealizationSink-class}
-
-\alias{close,RealizationSink-method}
-
-\alias{class:arrayRealizationSink}
-\alias{arrayRealizationSink-class}
-
-\alias{dim,arrayRealizationSink-method}
-\alias{write_block,arrayRealizationSink-method}
-\alias{coerce,arrayRealizationSink,DelayedArray-method}
-
-\alias{supportedRealizationBackends}
-\alias{getRealizationBackend}
-\alias{setRealizationBackend}
-
 \alias{realize}
 \alias{realize,ANY-method}
 
@@ -23,15 +7,9 @@
 
 \description{
   Realize a \link{DelayedArray} object in memory or on disk.
-  Get or set the \emph{realization backend} for the current session with
-  \code{getRealizationBackend} or \code{setRealizationBackend}.
 }
 
 \usage{
-supportedRealizationBackends()
-getRealizationBackend()
-setRealizationBackend(BACKEND=NULL)
-
 realize(x, ...)
 
 \S4method{realize}{ANY}(x, BACKEND=getRealizationBackend())
@@ -45,29 +23,26 @@ realize(x, ...)
     Additional arguments passed to methods.
   }
   \item{BACKEND}{
-    \code{NULL} (the default), or a single string specifying the name of
-    the backend. When the backend is set to \code{NULL}, \code{x} is
-    realized in memory as an ordinary array by just calling \code{as.array}
-    on it.
+    A single string specifying the name of the \emph{realization backend}.
+    Use the current realization backend by default i.e. the backend
+    returned by \code{\link{getRealizationBackend}()}.
   }
 }
 
-\details{
-  The \emph{realization backend} controls where/how realization happens e.g.
-  as an ordinary array if set to \code{NULL}, as an \link{RleArray} object
-  if set to \code{"RleArray"}, or in an HDF5 file if set to \code{"HDF5Array"}.
-}
-
 \value{
-  \code{realize(x)} returns a \link{DelayedArray} object. More precisely,
-  it returns \code{DelayedArray(as.array(x))} when the backend is set to
-  \code{NULL} (the default). Otherwise it returns an instance of the class
-  associated with the specified backend (which should extend
+  A \link{DelayedArray} object. More precisely, it returns
+  \code{DelayedArray(as.array(x))} when the backend is set to
+  \code{NULL} (the default). Otherwise it returns an instance of the
+  class associated with the specified backend (which should extend
   \link{DelayedArray}).
 }
 
 \seealso{
   \itemize{
+    \item \code{\link{getRealizationBackend}} and
+          \code{\link{setRealizationBackend}} for getting and setting
+          the current \emph{realization backend}.
+
     \item \link{DelayedArray} objects.
 
     \item \link{RleArray} objects.
