@@ -107,8 +107,8 @@ getRealizationBackend()  # backend is set to "HDF5Array"
 ## ---------------------------------------------------------------------
 ## B. A SIMPLE (AND VERY ARTIFICIAL) RealizationSink() EXAMPLE
 ## ---------------------------------------------------------------------
-getHDF5DumpChunkMaxLength()
-setHDF5DumpChunkMaxLength(500L)
+getHDF5DumpChunkLength()
+setHDF5DumpChunkLength(500L)
 getHDF5DumpChunkShape()
 
 sink <- RealizationSink(c(120L, 50L))
