@@ -20,7 +20,7 @@ getDefaultBlockSize <- function()
     size
 }
 
-### We set the default block size to 100Mb by default.
+### We set the default block size to 100 Mb by default.
 setDefaultBlockSize <- function(size=1e8)
 {
     if (!isSingleNumber(size) || size < 1)
@@ -72,6 +72,50 @@ getDefaultBlockLength <- function(type)
     max(as.integer(ans), 1L)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### get/setDefaultBlockShape()
+###
+
+.SUPPORTED_SHAPES <- c("hypercube",
+                       "scale",
+                       "first-dim-grows-first",
+                       "last-dim-grows-first")
+
+getDefaultBlockShape <- function()
+{
+    shape <- getOption("DelayedArray.block.shape")
+    if (!(isSingleString(shape) && shape %in% .SUPPORTED_SHAPES)) {
+        in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
+        stop(wmsg("Global option DelayedArray.block.shape ",
+                  "should be one of: ", in1string, ". ",
+                  "Fix it with setDefaultBlockShape()."))
+    }
+    shape
+}
+
+setDefaultBlockShape <- function(shape=c("hypercube",
+                                         "scale",
+                                         "first-dim-grows-first",
+                                         "last-dim-grows-first"))
+{
+    shape <- match.arg(shape)
+    prev_shape <- getOption("DelayedArray.block.shape")
+    if (isSingleString(prev_shape)) {
+        previous_was <- c(" (was \"", prev_shape, "\")")
+    } else {
+        previous_was <- ""
+    }
+    options(DelayedArray.block.shape=shape)
+    message("default block shape set to \"", shape, "\"", previous_was)
+    invisible(shape)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### blockGrid()
+###
+
 ### Guaranteed to return an integer >= 1.
 .normarg_block.length <- function(block.length, type)
 {
@@ -93,10 +137,21 @@ getDefaultBlockLength <- function(type)
     if (is.null(chunk.grid))
         return(chunkGrid(x))
     if (!is(chunk.grid, "ArrayGrid"))
-        stop(wmsg("'chunk.grid' must be NULL or an ArrayGrid object"))
+        stop(wmsg("'chunk.grid' must be an ArrayGrid object or NULL"))
     if (!identical(refdim(chunk.grid), dim(x)))
         stop(wmsg("'chunk.grid' is incompatible with 'x'"))
     chunk.grid
+}
+
+.normarg_block.shape <- function(block.shape)
+{
+    if (is.null(block.shape))
+        return(getDefaultBlockShape())
+    if (!(isSingleString(block.shape) && block.shape %in% .SUPPORTED_SHAPES)) {
+        in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
+        stop(wmsg("'block.shape' must be one of ", in1string, ", or NULL"))
+    }
+    block.shape
 }
 
 ### Return a grid that is "optimal" for block processing of array-like
@@ -115,19 +170,14 @@ getDefaultBlockLength <- function(type)
 ### Note that the returned grid is regular (i.e. RegularArrayGrid object)
 ### unless the chunk grid is not regular (i.e. is an ArbitraryArrayGrid
 ### object).
-blockGrid <- function(x, block.length=NULL,
-                         chunk.grid=NULL,
-                         block.shape=c("hypercube",
-                                       "scale",
-                                       "first-dim-grows-first",
-                                       "last-dim-grows-first"))
+blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must have dimensions"))
     block_len <- .normarg_block.length(block.length, type(x))
     chunk_grid <- .normarg_chunk.grid(chunk.grid, x)
-    block_shape <- match.arg(block.shape)
+    block_shape <- .normarg_block.shape(block.shape)
     ## If 'x' is empty, we return a grid with a single (empty) block that
     ## has the dimensions of 'x'.
     if (any(x_dim == 0L))

@@ -236,7 +236,7 @@ test_DelayedArray_Summary <- function()
 
 test_DelayedArray_mean <- function()
 {
-    on.exit(options(setDefaultBlockSize())
+    on.exit(setDefaultBlockSize())
 
     ## on a numeric array
     a <- a2

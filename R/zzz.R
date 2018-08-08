@@ -2,6 +2,7 @@
 {
     options(DelayedArray.simplify=TRUE)
     setDefaultBlockSize()
+    setDefaultBlockShape()
     ## By default bplapply() uses the SnowParam() backend on Windows, which
     ## introduces **a lot** of overhead in the context of block processing.
     ## See https://github.com/Bioconductor/BiocParallel/issues/78

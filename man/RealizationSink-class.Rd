@@ -76,8 +76,8 @@ RealizationSink(dim, dimnames=NULL, type="double")
 
 \seealso{
   \itemize{
-    \item \code{\link{blockGrid}} to define a grid suitable for
-          block processing of an array-like object.
+    \item \code{\link{blockGrid}} to define grids to use in the context
+          of block processing of array-like objects.
 
     \item \link{DelayedArray} objects.
 

@@ -207,6 +207,7 @@ export(
 
     ## blockGrid.R:
     setDefaultBlockSize, getDefaultBlockSize, getDefaultBlockLength,
+    setDefaultBlockShape, getDefaultBlockShape,
     blockGrid, rowGrid, colGrid,
 
     ## showtree.R:

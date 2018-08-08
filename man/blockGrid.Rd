@@ -4,26 +4,46 @@
 \alias{rowGrid}
 \alias{colGrid}
 
-\title{Define a grid suitable for block processing of an array-like object}
+\alias{getDefaultBlockSize}
+\alias{setDefaultBlockSize}
+\alias{getDefaultBlockLength}
+\alias{getDefaultBlockShape}
+\alias{setDefaultBlockShape}
+
+\title{Define grids to use in the context of block processing}
 
 \description{
   \code{blockGrid()} is the primary utility function to use to define a grid
   that is suitable for block processing of an array-like object.
 
   \code{rowGrid()} and \code{colGrid()} are additional functions, specific
-  to the 2-dimensional case, that can be used to define blocks of full rows
+  to the 2-dimensional case. They can be used to define blocks of full rows
   or full columns.
+
+  A family of utilities is provided to control the default block size (or
+  length) and shape.
 }
 
 \usage{
-blockGrid(x, block.length=NULL, chunk.grid=NULL,
-             block.shape=c("hypercube",
-                           "scale",
-                           "first-dim-grows-first",
-                           "last-dim-grows-first"))
+## Define grids to use in the context of block processing:
+
+blockGrid(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 
 rowGrid(x, nrow=NULL, block.length=NULL)
 colGrid(x, ncol=NULL, block.length=NULL)
+
+## Control the default block size (or length) and shape:
+
+getDefaultBlockSize()
+setDefaultBlockSize(size=1e8)
+
+getDefaultBlockLength(type)
+
+getDefaultBlockShape()
+setDefaultBlockShape(shape=c("hypercube",
+                             "scale",
+                             "first-dim-grows-first",
+                             "last-dim-grows-first"))
 }
 
 \arguments{
@@ -33,11 +53,11 @@ colGrid(x, ncol=NULL, block.length=NULL)
     A matrix-like object for \code{rowGrid} and \code{colGrid}.
   }
   \item{block.length}{
-    The maximum length of the blocks.
+    The length of the blocks i.e. the number of array elements per block.
     By default \code{getDefaultBlockLength(type(x))} is used.
-    Depending on how much memory is available on your machine, you can
-    increase or decrease the default block size with something like
-    \code{setDefaultBlockSize(5e8)}.
+    Depending on how much memory is available on your machine, you might
+    want to increase (or decrease) the default block size with something
+    like \code{setDefaultBlockSize(5e8)}.
   }
   \item{chunk.grid}{
     The grid of physical chunks.
@@ -45,8 +65,9 @@ colGrid(x, ncol=NULL, block.length=NULL)
   }
   \item{block.shape}{
     A string specifying the shape of the blocks.
-    See \code{\link{makeCappedVolumeBox}} for a description of the supported
-    shapes.
+    See \code{\link{makeCappedVolumeBox}} for a description of the
+    supported shapes.
+    By default \code{getDefaultBlockShape()} is used.
   }
   \item{nrow}{
     The number of rows of the blocks. The bottommost blocks might have less.
@@ -55,6 +76,29 @@ colGrid(x, ncol=NULL, block.length=NULL)
   \item{ncol}{
     The number of columns of the blocks. The rightmost blocks might have less.
     See examples below.
+  }
+  \item{size}{
+    The size of the blocks in bytes. Note that, except when the type of the
+    array data is \code{"character"}, the size of a block is its length
+    multiplied by the size of an array element. For example, a block of
+    500x1000x500 doubles has a length of 250 million elements and a size
+    of 2 Gb (each double occupies 8 bytes of memory).
+
+    The default block size is set to 100 Mb at package startup and can
+    be reset anytime to this value by calling \code{setDefaultBlockSize()}
+    with no argument.
+  }
+  \item{type}{
+    A string specifying the type of the array data.
+  }
+  \item{shape}{
+    A string specifying the shape of the blocks.
+    See \code{\link{makeCappedVolumeBox}} for a description of the
+    supported shapes.
+
+    The default block shape is set to \code{"hypercube"} at package startup
+    and can be reset anytime to this value by calling
+    \code{setDefaultBlockShape()} with no argument.
   }
 }
 
@@ -90,6 +134,20 @@ colGrid(x, ncol=NULL, block.length=NULL)
 
   \code{colGrid}: A \link{RegularArrayGrid} object on reference array \code{x}
   where the grid elements define blocks made of full columns of \code{x}.
+
+  \code{getDefaultBlockSize}: The default block size in bytes as a single
+  numeric value.
+
+  \code{setDefaultBlockSize}: The new default block size in bytes as an
+  invisible single numeric value.
+
+  \code{getDefaultBlockLength}: The default block length as a single integer
+  value.
+
+  \code{getDefaultBlockShape}: The default block shape as a single string.
+
+  \code{setDefaultBlockShape}: The new default block shape as an invisible
+  single string.
 }
 
 \seealso{
@@ -113,7 +171,7 @@ colGrid(x, ncol=NULL, block.length=NULL)
 m <- matrix(runif(600), ncol=12)
 
 ## ---------------------------------------------------------------------
-## blockGrid()
+## A. blockGrid()
 ## ---------------------------------------------------------------------
 grid <- blockGrid(m, block.length=120)
 grid
@@ -140,7 +198,7 @@ blockGrid(m, block.length=20)
 blockGrid(m, block.length=10)
 
 ## ---------------------------------------------------------------------
-## rowGrid() AND colGrid()
+## B. rowGrid() AND colGrid()
 ## ---------------------------------------------------------------------
 rowGrid(m, nrow=10)  # 5 blocks of 10 rows each
 rowGrid(m, nrow=15)  # 3 blocks of 15 rows each plus 1 block of 5 rows
@@ -148,5 +206,31 @@ colGrid(m, ncol=5)   # 2 blocks of 5 cols each plus 1 block of 2 cols
 
 ## See ?RealizationSink for an advanced example of user-controlled block
 ## processing using colGrid() and a realization sink.
+
+## ---------------------------------------------------------------------
+## C. CONTROL THE DEFAULT BLOCK SIZE (OR LENGTH) AND SHAPE
+## ---------------------------------------------------------------------
+getDefaultBlockSize()
+
+getDefaultBlockLength("double")
+getDefaultBlockLength("integer")
+getDefaultBlockLength("logical")
+getDefaultBlockLength("raw")
+
+setDefaultBlockSize(140)
+getDefaultBlockLength(type(m))
+blockGrid(m)
+lengths(blockGrid(m))
+dims(blockGrid(m))
+
+getDefaultBlockShape()
+setDefaultBlockShape("scale")
+blockGrid(m)
+lengths(blockGrid(m))
+dims(blockGrid(m))
+
+## Reset block size and shape to factory settings:
+setDefaultBlockSize()
+setDefaultBlockShape()
 }
 \keyword{utilities}
