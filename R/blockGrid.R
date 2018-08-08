@@ -4,6 +4,10 @@
 ###
 
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### get/setDefaultBlocSize()
+###
+
 ### Default block size in bytes.
 DEFAULT_BLOCK_SIZE <- 45000000L  # 45 Mb
 
@@ -19,7 +23,7 @@ DEFAULT_BLOCK_SIZE <- 45000000L  # 45 Mb
     raw=1L
 )
 
-get_default_block_maxlength <- function(type)
+get_default_block_length <- function(type)
 {
     type_size <- .TYPE_SIZES[type]
     idx <- which(is.na(type_size))
@@ -43,19 +47,19 @@ get_default_block_maxlength <- function(type)
 }
 
 ### Guaranteed to return an integer >= 1.
-.normarg_block.maxlength <- function(block.maxlength, type)
+.normarg_block.length <- function(block.length, type)
 {
-    if (is.null(block.maxlength))
-        return(get_default_block_maxlength(type))
-    if (!isSingleNumber(block.maxlength))
-        stop(wmsg("'block.maxlength' must be a single integer or NULL"))
-    if (block.maxlength < 1)
-        stop(wmsg("'block.maxlength' must be >= 1"))
-    if (block.maxlength > .Machine$integer.max)
-        stop(wmsg("'block.maxlength' is too big. Blocks of ",
+    if (is.null(block.length))
+        return(get_default_block_length(type))
+    if (!isSingleNumber(block.length))
+        stop(wmsg("'block.length' must be a single integer or NULL"))
+    if (block.length < 1)
+        stop(wmsg("'block.length' must be >= 1"))
+    if (block.length > .Machine$integer.max)
+        stop(wmsg("'block.length' is too big. Blocks of ",
                   "length > .Machine$integer.max are not supported yet. ",
-                  "Please specify a smaller 'block.maxlength'."))
-    as.integer(block.maxlength)
+                  "Please specify a smaller 'block.length'."))
+    as.integer(block.length)
 }
 
 .normarg_chunk.grid <- function(chunk.grid, x)
@@ -79,13 +83,13 @@ get_default_block_maxlength <- function(type)
 ###    the chunks are contained in the blocks. In other words, chunks never
 ###    cross block boundaries.
 ###  - Its "resolution" is such that the blocks have a length that is as
-###    close as possibe to (but does not exceed) 'block.maxlength'.
-###    An exception is when some chunks are already >= 'block.maxlength',
+###    close as possibe to (but does not exceed) 'block.length'.
+###    An exception is when some chunks are already >= 'block.length',
 ###    in which case the returned grid is the same as the chunk grid.
 ### Note that the returned grid is regular (i.e. RegularArrayGrid object)
 ### unless the chunk grid is not regular (i.e. is an ArbitraryArrayGrid
 ### object).
-blockGrid <- function(x, block.maxlength=NULL,
+blockGrid <- function(x, block.length=NULL,
                          chunk.grid=NULL,
                          block.shape=c("hypercube",
                                        "scale",
@@ -95,7 +99,7 @@ blockGrid <- function(x, block.maxlength=NULL,
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must have dimensions"))
-    block_maxlen <- .normarg_block.maxlength(block.maxlength, type(x))
+    block_len <- .normarg_block.length(block.length, type(x))
     chunk_grid <- .normarg_chunk.grid(chunk.grid, x)
     block_shape <- match.arg(block.shape)
     ## If 'x' is empty, we return a grid with a single (empty) block that
@@ -104,11 +108,11 @@ blockGrid <- function(x, block.maxlength=NULL,
         return(RegularArrayGrid(x_dim))
     if (is.null(chunk_grid)) {
         ans <- makeRegularArrayGridOfCappedLengthViewports(x_dim,
-                                                           block_maxlen,
+                                                           block_len,
                                                            block_shape)
         return(ans)
     }
-    chunks_per_block <- max(block_maxlen %/% maxlength(chunk_grid), 1L)
+    chunks_per_block <- max(block_len %/% maxlength(chunk_grid), 1L)
     ratio <- makeCappedVolumeBox(chunks_per_block, dim(chunk_grid), block_shape)
     downsample(chunk_grid, ratio)
 }
@@ -120,12 +124,12 @@ blockGrid <- function(x, block.maxlength=NULL,
 ### Both return a RegularArrayGrid object.
 ###
 
-.get_default_nrow <- function(x_dim, block.maxlength, x_type)
+.get_default_nrow <- function(x_dim, block.length, x_type)
 {
     x_nrow <- x_dim[[1L]]
     x_ncol <- x_dim[[2L]]
-    block_maxlen <- .normarg_block.maxlength(block.maxlength, x_type)
-    nrow <- block_maxlen %/% x_ncol
+    block_len <- .normarg_block.length(block.length, x_type)
+    nrow <- block_len %/% x_ncol
     if (nrow < 1L)
         return(1L)
     if (nrow > x_nrow)
@@ -134,7 +138,7 @@ blockGrid <- function(x, block.maxlength=NULL,
 }
 
 ### Define blocks of full rows.
-rowGrid <- function(x, nrow=NULL, block.maxlength=NULL)
+rowGrid <- function(x, nrow=NULL, block.length=NULL)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -142,11 +146,11 @@ rowGrid <- function(x, nrow=NULL, block.maxlength=NULL)
     x_nrow <- x_dim[[1L]]
     x_ncol <- x_dim[[2L]]
     if (is.null(nrow)) {
-        nrow <- .get_default_nrow(x_dim, block.maxlength, type(x))
+        nrow <- .get_default_nrow(x_dim, block.length, type(x))
         spacings <- c(nrow, x_ncol)
     } else {
-        if (!is.null(block.maxlength))
-            warning("'block.maxlength' is ignored when 'nrow' is not NULL")
+        if (!is.null(block.length))
+            warning("'block.length' is ignored when 'nrow' is not NULL")
         if (!isSingleNumber(nrow))
             stop(wmsg("'nrow' must be a single integer or NULL"))
         nrow <- as.integer(nrow)
@@ -162,7 +166,7 @@ rowGrid <- function(x, nrow=NULL, block.maxlength=NULL)
 }
 
 ### Define blocks of full columns.
-colGrid <- function(x, ncol=NULL, block.maxlength=NULL)
+colGrid <- function(x, ncol=NULL, block.length=NULL)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -170,11 +174,11 @@ colGrid <- function(x, ncol=NULL, block.maxlength=NULL)
     x_nrow <- x_dim[[1L]]
     x_ncol <- x_dim[[2L]]
     if (is.null(ncol)) {
-        ncol <- .get_default_nrow(rev(x_dim), block.maxlength, type(x))
+        ncol <- .get_default_nrow(rev(x_dim), block.length, type(x))
         spacings <- c(x_nrow, ncol)
     } else {
-        if (!is.null(block.maxlength))
-            warning("'block.maxlength' is ignored when 'ncol' is not NULL")
+        if (!is.null(block.length))
+            warning("'block.length' is ignored when 'ncol' is not NULL")
         if (!isSingleNumber(ncol))
             stop(wmsg("'ncol' must be a single integer or NULL"))
         ncol <- as.integer(ncol)

@@ -16,14 +16,14 @@
 }
 
 \usage{
-blockGrid(x, block.maxlength=NULL, chunk.grid=NULL,
+blockGrid(x, block.length=NULL, chunk.grid=NULL,
              block.shape=c("hypercube",
                            "scale",
                            "first-dim-grows-first",
                            "last-dim-grows-first"))
 
-rowGrid(x, nrow=NULL, block.maxlength=NULL)
-colGrid(x, ncol=NULL, block.maxlength=NULL)
+rowGrid(x, nrow=NULL, block.length=NULL)
+colGrid(x, ncol=NULL, block.length=NULL)
 }
 
 \arguments{
@@ -32,7 +32,7 @@ colGrid(x, ncol=NULL, block.maxlength=NULL)
 
     A matrix-like object for \code{rowGrid} and \code{colGrid}.
   }
-  \item{block.maxlength}{
+  \item{block.length}{
     The maximum length of the blocks.
     By default \code{getOption("DelayedArray.block.size") / sizeof(type(x))}
     is used. In a fresh session (i.e. when the \pkg{DelayedArray} package is
@@ -81,8 +81,8 @@ colGrid(x, ncol=NULL, block.maxlength=NULL)
           block boundaries.
     \item Its \emph{resolution} is such that the blocks have a length
           that is as close as possibe to (but does not exceed)
-          \code{block.maxlength}. An exception is made when some chunks
-          already have a length that is >= \code{block.maxlength}, in which
+          \code{block.length}. An exception is made when some chunks
+          already have a length that is >= \code{block.length}, in which
           case the returned grid is the same as the chunk grid.
   }
   Note that the returned grid is regular (i.e. is a \link{RegularArrayGrid}
@@ -119,29 +119,29 @@ m <- matrix(runif(600), ncol=12)
 ## ---------------------------------------------------------------------
 ## blockGrid()
 ## ---------------------------------------------------------------------
-grid <- blockGrid(m, block.maxlength=120)
+grid <- blockGrid(m, block.length=120)
 grid
 as.list(grid)  # turn the grid into a list of ArrayViewport objects
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-grid <- blockGrid(m, block.maxlength=120,
+grid <- blockGrid(m, block.length=120,
                      block.shape="first-dim-grows-first")
 grid
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-grid <- blockGrid(m, block.maxlength=120,
+grid <- blockGrid(m, block.length=120,
                      block.shape="last-dim-grows-first")
 grid
 table(lengths(grid))
 stopifnot(maxlength(grid) <= 120)
 
-blockGrid(m, block.maxlength=100)
-blockGrid(m, block.maxlength=75)
-blockGrid(m, block.maxlength=25)
-blockGrid(m, block.maxlength=20)
-blockGrid(m, block.maxlength=10)
+blockGrid(m, block.length=100)
+blockGrid(m, block.length=75)
+blockGrid(m, block.length=25)
+blockGrid(m, block.length=20)
+blockGrid(m, block.length=10)
 
 ## ---------------------------------------------------------------------
 ## rowGrid() AND colGrid()

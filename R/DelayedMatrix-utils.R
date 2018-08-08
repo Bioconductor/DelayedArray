@@ -33,14 +33,9 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
 
-    ## We're going to walk along the columns so need to increase the block
-    ## length so that each block is made of at least one column.
-    block_maxlen <- max(get_default_block_maxlength(type(y)), nrow(y))
-    spacings <- makeCappedVolumeBox(block_maxlen, dim(y),
-                                    "first-dim-grows-first")
-    y_grid <- RegularArrayGrid(dim(y), spacings)
-    spacings[[1L]] <- ans_dim[[1L]]
-    ans_grid <- RegularArrayGrid(ans_dim, spacings)  # parallel to 'y_grid'
+    y_grid <- colGrid(y)
+    ans_spacings <- c(ans_dim[[1L]], ncol(y_grid[[1L]]))
+    ans_grid <- RegularArrayGrid(ans_dim, ans_spacings)  # parallel to 'y_grid'
     nblock <- length(y_grid)  # same as 'length(ans_grid)'
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())

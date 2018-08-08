@@ -115,7 +115,7 @@ sink <- RealizationSink(c(120L, 50L))
 dim(sink)
 chunkdim(sink)
 
-grid <- blockGrid(sink, block.maxlength=600)
+grid <- blockGrid(sink, block.length=600)
 for (b in seq_along(grid)) {
     viewport <- grid[[b]]
     block <- 101 * b + runif(length(viewport))

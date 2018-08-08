@@ -33,7 +33,7 @@ makeCappedVolumeBox(maxvol, maxdim, shape=c("hypercube",
                                             "last-dim-grows-first"))
 
 makeRegularArrayGridOfCappedLengthViewports(refdim,
-                           viewport_maxlen,
+                           viewport_len,
                            viewport_shape=c("hypercube",
                                             "scale",
                                             "first-dim-grows-first",
@@ -53,7 +53,7 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
   \item{refdim}{
     The dimensions of the reference array of the grid to return.
   }
-  \item{viewport_maxlen}{
+  \item{viewport_len}{
     The maximum length of the elements (a.k.a. viewports) of the
     grid to return.
   }
