@@ -247,7 +247,7 @@ t(A2)  # transposition is delayed so is very fast and memory-efficient
 colSums(A2)
 
 ## ---------------------------------------------------------------------
-## C. A HDF5Array OBJECT IS A (PARTICULAR KIND OF) DelayedArray OBJECT
+## C. AN HDF5Array OBJECT IS A (PARTICULAR KIND OF) DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 library(HDF5Array)
 A3 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file

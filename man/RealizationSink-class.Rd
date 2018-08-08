@@ -159,7 +159,7 @@ G <- as(matrix(runif(250000), ncol=1000), "HDF5Array")  # 250 rows
 ## (R and G), we can't use blockApply() or blockReduce() so we'll use
 ## a "for" loop.
 
-## Before we can write the "for", we need 4 things:
+## Before we can write the "for" loop, we need 4 things:
 
 ## 1) Two grids of blocks, one on R and one on G. The blocks in the
 ##    2 grids must contain the same number of columns. We arbitrarily
