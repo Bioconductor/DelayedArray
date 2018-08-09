@@ -76,6 +76,8 @@ RealizationSink(dim, dimnames=NULL, type="double")
 
 \seealso{
   \itemize{
+    \item \code{\link{write_block}}.
+
     \item \code{\link{blockGrid}} to define grids to use in the context
           of block processing of array-like objects.
 

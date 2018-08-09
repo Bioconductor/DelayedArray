@@ -240,17 +240,20 @@ export(
     ## bind-arrays.R:
     arbind, acbind,
 
+    ## extract_array.R:
+    extract_array, type,
+
     ## ArrayGrid-class.R:
     refdim, maxlength, downsample,
 
-    ## makeCappedVolumeBox.R:
-    isLinear,
+    ## read_block.R:
+    read_block, write_block,
 
     ## mapToGrid.R:
     mapToGrid, mapToRef,
 
-    ## extract_array.R:
-    extract_array, type,
+    ## makeCappedVolumeBox.R:
+    isLinear,
 
     ## DelayedOp-class.R:
     isNoOp,
@@ -263,9 +266,6 @@ export(
 
     ## chunkGrid.R:
     chunkdim, chunkGrid,
-
-    ## block_processing.R:
-    read_block, write_block,
 
     ## RealizationSink-class.R:
     close,
@@ -283,15 +283,15 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
-    refdim, maxlength, downsample,
-    isLinear,
-    mapToGrid, mapToRef,
     extract_array, type,
+    refdim, maxlength, downsample,
+    read_block, write_block,
+    mapToGrid, mapToRef,
+    isLinear,
     isNoOp,
     simplify, netSubsetAndAperm,
     matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
     chunkdim, chunkGrid,
-    read_block, write_block,
     close,
     realize,
     pmax2, pmin2, apply,

@@ -98,6 +98,8 @@ downsample(x, ratio=1L)
 
 \seealso{
   \itemize{
+    \item \code{\link{read_block}}.
+
     \item \link{block_processing} for more information about block processing
           of an array-like object.
 

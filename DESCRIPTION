@@ -26,9 +26,10 @@ Collate: utils.R
 	linearInd.R
 	bind-arrays.R
 	Array-class.R
-	ArrayGrid-class.R
-	mapToGrid.R
 	extract_array.R
+	ArrayGrid-class.R
+	read_block.R
+	mapToGrid.R
 	makeCappedVolumeBox.R
 	blockGrid.R
 	show-utils.R

@@ -89,11 +89,13 @@ type(x)
 
 \seealso{
   \itemize{
-    \item \link{DelayedArray} objects.
+    \item \code{\link{read_block}}.
 
     \item \link[base]{array} and \link[base]{data.frame} objects in base R.
 
     \item \link[S4Vectors]{DataFrame} objects in the \pkg{S4Vectors} package.
+
+    \item \link{DelayedArray} objects.
   }
 }
 
