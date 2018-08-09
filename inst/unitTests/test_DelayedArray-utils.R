@@ -145,7 +145,7 @@ test_DelayedArray_Ops_COMBINE_seeds <- function()
 test_DelayedArray_anyNA <- function()
 {
     on.exit(setDefaultBlockSize())
-    DelayedArray_block_anyNA <- DelayedArray:::.DelayedArray_block_anyNA
+    BLOCK_anyNA <- DelayedArray:::.BLOCK_anyNA
 
     A1 <- realize(a1)
     a <- a1
@@ -155,16 +155,16 @@ test_DelayedArray_anyNA <- function()
     for (block_size in block_sizes2) {
         setDefaultBlockSize(block_size)
         checkIdentical(FALSE, anyNA(A1))
-        checkIdentical(FALSE, DelayedArray_block_anyNA(a1))
+        checkIdentical(FALSE, BLOCK_anyNA(a1))
         checkIdentical(TRUE, anyNA(A))
-        checkIdentical(TRUE, DelayedArray_block_anyNA(a))
+        checkIdentical(TRUE, BLOCK_anyNA(a))
     }
 }
 
 test_DelayedArray_which <- function()
 {
     on.exit(setDefaultBlockSize())
-    DelayedArray_block_which <- DelayedArray:::.DelayedArray_block_which
+    BLOCK_which <- DelayedArray:::BLOCK_which
 
     a <- a1 == 1L
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
@@ -176,7 +176,7 @@ test_DelayedArray_which <- function()
         setDefaultBlockSize(block_size)
         checkIdentical(target1, which(A))
         checkIdentical(target2, which(A, arr.ind=TRUE))
-        checkIdentical(target1, DelayedArray_block_which(a))
+        checkIdentical(target1, BLOCK_which(a))
     }
 
     a <- a1 == -1L    # all FALSE
@@ -189,7 +189,7 @@ test_DelayedArray_which <- function()
         setDefaultBlockSize(block_size)
         checkIdentical(target1, which(A))
         checkIdentical(target2, which(A, arr.ind=TRUE))
-        checkIdentical(target1, DelayedArray_block_which(a))
+        checkIdentical(target1, BLOCK_which(a))
     }
 }
 
@@ -197,7 +197,7 @@ test_DelayedArray_Summary <- function()
 {
     test_Summary <- function(.Generic, a, block_sizes) {
         on.exit(setDefaultBlockSize())
-        block_Summary <- DelayedArray:::.block_Summary
+        BLOCK_Summary <- DelayedArray:::.BLOCK_Summary
 
         GENERIC <- match.fun(.Generic)
         target1 <- GENERIC(a)
@@ -207,10 +207,10 @@ test_DelayedArray_Summary <- function()
             setDefaultBlockSize(block_size)
             checkIdentical(target1, GENERIC(A))
             checkIdentical(target1, GENERIC(aperm(A)))
-            checkIdentical(target1, block_Summary(.Generic, a))
+            checkIdentical(target1, BLOCK_Summary(.Generic, a))
             checkIdentical(target2, GENERIC(A, na.rm=TRUE))
             checkIdentical(target2, GENERIC(aperm(A), na.rm=TRUE))
-            checkIdentical(target2, block_Summary(.Generic, a, na.rm=TRUE))
+            checkIdentical(target2, BLOCK_Summary(.Generic, a, na.rm=TRUE))
         }
     }
 

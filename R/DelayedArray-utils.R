@@ -366,64 +366,63 @@ setMethod("gsub", c(x="DelayedArray"),
 ###
 
 ### Used in unit tests!
-.DelayedArray_block_anyNA <- function(x, recursive=FALSE)
+.BLOCK_anyNA <- function(x, recursive=FALSE, grid=NULL)
 {
     FUN <- function(block, init) {anyNA(block) || init}
     init <- FALSE
     BREAKIF <- identity
-    blockReduce(FUN, x, init, BREAKIF)
+    blockReduce(FUN, x, init, BREAKIF, grid=grid)
 }
 
-setMethod("anyNA", "DelayedArray", .DelayedArray_block_anyNA)
+.anyNA_DelayedArray <- function(x, recursive=FALSE) .BLOCK_anyNA(x, recursive)
+setMethod("anyNA", "DelayedArray", .anyNA_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### which()
 ###
 
-### Used in unit tests!
-.DelayedArray_block_which <- function(x, arr.ind=FALSE, useNames=TRUE)
+.which_DelayedArray <- function(x, arr.ind=FALSE, useNames=TRUE)
 {
     if (!identical(useNames, TRUE))
         warning(wmsg("'useNames' is ignored when 'x' is ",
                      "a DelayedArray object or derivative"))
-    block_which(x, arr.ind=arr.ind)
+    BLOCK_which(x, arr.ind=arr.ind)
 }
 
-setMethod("which", "DelayedArray", .DelayedArray_block_which)
+setMethod("which", "DelayedArray", .which_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### unique() and table()
 ###
 
-### S3/S4 combo for unique.DelayedArray
-
 ### We only support 1D arrays.
 ### Semantically equivalent to 'unique(as.array(x), ...)' which, in the 1D
 ### case, is also equivalent to 'unique(as.vector(x), ...)'.
 ### Unlike unique.array(), does not support the 'MARGIN' or 'fromLast' args.
 ### Return an **ordinary** 1D array.
-.block_unique <- function(x, incomparables=FALSE, grid=NULL)
+.BLOCK_unique <- function(x, incomparables=FALSE, grid=NULL)
 {
     if (length(dim(x)) != 1L)
         stop(wmsg("the \"unique\" method for DelayedArray objects ",
                   "supports 1D objects only"))
 
-    block_results <- blockApply(x, unique, incomparables=incomparables, grid=grid)
+    block_results <- blockApply(x, unique, incomparables=incomparables,
+                                grid=grid)
 
     ## Combine the block results.
     unique(unlist(block_results))
 }
 
+### S3/S4 combo for unique.DelayedArray
 unique.DelayedArray <- function(x, incomparables=FALSE, ...)
-    .block_unique(x, incomparables=incomparables, ...)
-
-setMethod("unique", "DelayedArray", .block_unique)
+    .BLOCK_unique(x, incomparables=incomparables, ...)
+setMethod("unique", "DelayedArray", .BLOCK_unique)
 
 ### table()
 
-.block_table <- function(..., grid=NULL)
+.BLOCK_table <- function(..., grid=NULL)
 {
     objects <- list(...)
     if (length(objects) != 1L)
@@ -456,17 +455,19 @@ setMethod("unique", "DelayedArray", .block_unique)
     ans
 }
 
-### The table() S4 generic is defined in BiocGenerics with dispatch on the ellipsis
-### (...). Unfortunately specifying 'grid' when calling table() breaks dispatch.
-### For example:
-###   A <- DelayedArray(array(sample(100L, 20000L, replace=TRUE), c(20, 4, 250)))
+### The table() S4 generic is defined in BiocGenerics with dispatch on the
+### ellipsis (...). Unfortunately specifying 'grid' when calling table()
+### breaks dispatch. For example:
+###   a <- array(sample(100L, 20000L, replace=TRUE), c(20, 4, 250))
+###   A <- DelayedArray(a)
 ###   table(A)  # ok
 ###   table(A, grid=blockGrid(A, 500))
-###   # Error in unique.default(x, nmax = nmax) :
-###   #   unique() applies only to vectors
-### A workaround is to call .block_table():
-###   DelayedArray:::.block_table(A, grid=blockGrid(A, 500))  # ok
-setMethod("table", "DelayedArray", .block_table)
+###   # Error in .BLOCK_unique(x, incomparables = incomparables, ...) : 
+###   #   unused argument (nmax = nmax)
+### A workaround is to call .BLOCK_table():
+###   DelayedArray:::.BLOCK_table(A, grid=blockGrid(A, 500))  # ok
+.table_DelayedArray <- function(...) .BLOCK_table(...)
+setMethod("table", "DelayedArray", .table_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -485,9 +486,10 @@ setMethod("table", "DelayedArray", .block_table)
 }
 
 ### Used in unit tests!
-### Note that the specified grid must be compatible with 'x' and all the
-### objects in '...'.
-.block_Summary <- function(.Generic, x, ..., na.rm=FALSE, grid=NULL)
+### An IMPORTANT RESTRICTION is that the specified grid must be compatible
+### with all the objects in '...', which means that the objects in '...'
+### must be conformable!
+.BLOCK_Summary <- function(.Generic, x, ..., na.rm=FALSE, grid=NULL)
 {
     GENERIC <- match.fun(.Generic)
     objects <- .collect_objects(x, ...)
@@ -526,23 +528,22 @@ setMethod("table", "DelayedArray", .block_table)
     init
 }
 
-setMethod("Summary", "DelayedArray",
-    function(x, ..., na.rm=FALSE)
-        .block_Summary(.Generic, x, ..., na.rm=na.rm)
-)
+.Summary_DelayedArray <- function(x, ..., na.rm=FALSE)
+    .BLOCK_Summary(.Generic, x, ..., na.rm=na.rm)
+setMethod("Summary", "DelayedArray", .Summary_DelayedArray)
 
-### S3/S4 combo for range.DelayedArray
 ### We override the "range" method defined above via the "Summary" method
 ### because we want to support the 'finite' argument like S3 method
 ### base::range.default() does.
-### Note that the specified grid must be compatible with all the objects
-### in '...'.
-range.DelayedArray <- function(..., na.rm=FALSE, finite=FALSE, grid=NULL)
+### An IMPORTANT RESTRICTION is that the specified grid must be compatible
+### with all the objects in '...', which means that the objects in '...'
+### must be conformable!
+.BLOCK_range <- function(..., na.rm=FALSE, finite=FALSE, grid=NULL)
 {
     objects <- .collect_objects(...)
 
     FUN <- function(block, init) {
-        ## See .block_Summary() above for why we use tryCatch().
+        ## See .BLOCK_Summary() above for why we use tryCatch().
         reduced_block <- tryCatch(range(block, na.rm=na.rm, finite=finite),
                                   warning=identity)
         if (is(reduced_block, "warning") && is.null(init))
@@ -563,12 +564,15 @@ range.DelayedArray <- function(..., na.rm=FALSE, finite=FALSE, grid=NULL)
     init
 }
 
+### S3/S4 combo for range.DelayedArray
+range.DelayedArray <- function(..., na.rm=FALSE, finite=FALSE)
+    .BLOCK_range(..., na.rm=na.rm, finite=finite)
 ### The signature of all the members of the S4 "Summary" group generic is
 ### 'x, ..., na.rm' (see getGeneric("range")) which means that the S4 methods
 ### cannot add arguments after 'na.rm'. So we add the 'finite' argument before.
 setMethod("range", "DelayedArray",
     function(x, ..., finite=FALSE, na.rm=FALSE)
-        range.DelayedArray(x, ..., na.rm=na.rm, finite=finite)
+        .BLOCK_range(x, ..., na.rm=na.rm, finite=finite)
 )
 
 
@@ -577,7 +581,7 @@ setMethod("range", "DelayedArray",
 ###
 
 ### Same arguments as base::mean.default().
-.block_mean <- function(x, trim=0, na.rm=FALSE, grid=NULL)
+.BLOCK_mean <- function(x, trim=0, na.rm=FALSE, grid=NULL)
 {
     if (!identical(trim, 0))
         stop("\"mean\" method for DelayedArray objects ",
@@ -600,8 +604,8 @@ setMethod("range", "DelayedArray",
 
 ### S3/S4 combo for mean.DelayedArray
 mean.DelayedArray <- function(x, trim=0, na.rm=FALSE, ...)
-    .block_mean(x, trim=trim, na.rm=na.rm, ...)
-setMethod("mean", "DelayedArray", .block_mean)
+    .BLOCK_mean(x, trim=trim, na.rm=na.rm, ...)
+setMethod("mean", "DelayedArray", .BLOCK_mean)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -647,7 +651,7 @@ setGeneric("apply", signature="X")
 }
 
 ### MARGIN must be a single integer.
-.DelayedArray_apply <- function(X, MARGIN, FUN, ...)
+.apply_DelayedArray <- function(X, MARGIN, FUN, ...)
 {
     FUN <- match.fun(FUN)
     X_dim <- dim(X)
@@ -681,5 +685,5 @@ setGeneric("apply", signature="X")
     .simplify_apply_answer(ans)
 }
 
-setMethod("apply", "DelayedArray", .DelayedArray_apply)
+setMethod("apply", "DelayedArray", .apply_DelayedArray)
 

@@ -4,11 +4,12 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### block_which()
+### BLOCK_which()
 ###
 
+### Used in unit tests!
 ### 'x' is **trusted** to be a logical array-like object.
-block_which <- function(x, arr.ind=FALSE, grid=NULL)
+BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
 {
     if (!isTRUEorFALSE(arr.ind))
         stop("'arr.ind' must be TRUE or FALSE")
@@ -31,7 +32,7 @@ block_which <- function(x, arr.ind=FALSE, grid=NULL)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### .block_linear_subset()
+### .BLOCK_extract_vector()
 ###
 
 ### Linear single bracket subsetting (e.g. x[5:2]) of an array-like object.
@@ -39,7 +40,7 @@ block_which <- function(x, arr.ind=FALSE, grid=NULL)
 ### 'x' is **trusted** to be an array-like object.
 ### 'i' is **trusted** to be an integer vector representing a linear index
 ### of valid positions in 'x'.
-.block_linear_subset <- function(x, i, grid=NULL)
+.BLOCK_extract_vector <- function(x, i, grid=NULL)
 {
     i_len <- length(i)
     if (i_len == 0L)
@@ -107,13 +108,13 @@ block_which <- function(x, arr.ind=FALSE, grid=NULL)
         ## delayed.
         i <- Nindex[[1L]]
         if (identical(x_dim, dim(i)) && type(i) == "logical") {
-            i <- block_which(i)
+            i <- BLOCK_which(i)
         } else {
             i <- normalizeSingleBracketSubscript2(i, length(x))
         }
         ## From now on 'i' is an integer vector representing a linear index
         ## of valid positions in 'x'.
-        return(.block_linear_subset(x, i))
+        return(.BLOCK_extract_vector(x, i))
     }
     if (nsubscript != x_ndim)
         stop("incorrect number of subscripts")
@@ -131,12 +132,12 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercion to sparse matrix (requires the Matrix package)
 ###
-### Based on block_which().
+### Based on BLOCK_which().
 ###
 
 .from_DelayedMatrix_to_dgCMatrix <- function(from)
 {
-    idx <- block_which(from != 0L)
+    idx <- BLOCK_which(from != 0L)
     array_ind <- arrayInd(idx, dim(from))
     i <- array_ind[ , 1L]
     j <- array_ind[ , 2L]

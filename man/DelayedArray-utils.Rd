@@ -168,6 +168,9 @@
           \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
           for row/col summarization of an ordinary matrix.
 
+    \item The \pkg{DelayedMatrixStats} package for more row/col summarization
+          methods for \link{DelayedMatrix} objects.
+
     \item \code{\link{setRealizationBackend}} for how to set a
           \emph{realization backend}.
 

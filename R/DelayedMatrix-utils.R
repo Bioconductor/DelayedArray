@@ -21,7 +21,7 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
 ### DelayedMatrix objects is not supported.
 ###
 
-.DelayedMatrix_block_mult_by_left_matrix <- function(x, y)
+.BLOCK_mult_by_left_matrix <- function(x, y)
 {
     stopifnot(is.matrix(x),
               is(y, "DelayedMatrix") || is.matrix(y),
@@ -51,7 +51,7 @@ setMethod("t", "DelayedMatrix", t.DelayedMatrix)
     as(sink, "DelayedArray")
 }
 
-.block_matrix_mult <- function(x, y)
+.BLOCK_matrix_mult <- function(x, y)
 {
     stop(wmsg("multiplication of 2 DelayedMatrix objects is not ",
               "supported, only multiplication of an ordinary matrix by ",
@@ -73,8 +73,8 @@ setMethod("%*%", c("DelayedMatrix", "matrix"),
 )
 
 setMethod("%*%", c("matrix", "DelayedMatrix"),
-    .DelayedMatrix_block_mult_by_left_matrix
+    .BLOCK_mult_by_left_matrix
 )
 
-setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .block_matrix_mult)
+setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
