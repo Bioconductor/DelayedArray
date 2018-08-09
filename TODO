@@ -1,20 +1,45 @@
-- A[A == 1] should work on a 1D DelayedArray object (and return a 1D
-  DelayedArray object).
-
-- Add unit tests for all the DelayedOp types.
-
-- Should backend classes (e.g. HDF5Array) be defined as:
+- Backend classes (e.g. HDF5Array) should be defined as:
     setClass("HDF5Array",
         contains="DelayedArray",
         representation(seed="HDF5ArraySeed")
     )
-  Then validity method is not needed anymore.
+  This would avoid the need for a validity method.
+  Update 02-Implementing_a_backend.Rmd after making this change.
+
+- In 02-Implementing_a_backend.Rmd, add a "Other optional (but highly
+  recommended) methods" subsection after "The seed contract" subsection.
+  The optional methods are "chunkdim", "path", "path<-". See HDF5ArraySeed
+  and TENxMatrixSeed for examples.
+
+- dim() setter allows dropping ineffective dimensions so should also allow
+  adding ineffective dimensions e.g. if dim(A) is c(2, 10, 8) we should be
+  able to do dim(A) <- c(1, 1, 2, 10, 1, 8).
+
+  One use case for this is to bind 2 conformable arrays with
+  dim(A) <- c(1, dim(A)); dim(B) <- c(1, dim(B)); abind(A, B, along=1).
+  So the resulting array has one extra dimension of extend 2.
+
+  Maybe another use case for this is that it could be the 1st step towards
+  supporting delayed array replication:
+    https://github.com/Bioconductor/DelayedArray/issues/8
+
+- Subsetting:
+
+  - A[A == 1] should work on a 1D DelayedArray object (and return a 1D
+    DelayedArray object).
+
+  - If A and B are conformable DelayedArray objects, and type(B) is logical,
+    it should be possible to compute A[B] by walking simultaneously on A
+    and B. Right now we first do i <- which(B) and then A[i] so we complete
+    the walk on B before we walk on A.
+
+  - Support subsetting an arbitrary object by a DelayedArray or
+    DelayedMatrix of type logical?
+
+- Add unit tests for all the DelayedOp types.
 
 - Add man page and unit tests for statistical methods defined in
   DelayedArray-stats.R
-
-- Support delayed array replication.
-  See https://github.com/Bioconductor/DelayedArray/issues/8
 
 - Make DelayedArray contain Annotated from S4Vectors?
 
@@ -31,9 +56,6 @@
   realization when the user probably doesn't want it). But if people
   switch to DelayedAtomicVector objects then maybe it's ok to make this
   change.
-
-- Support subsetting an arbitrary object by a DelayedArray or
-  DelayedMatrix of type logical.
 
 - Support more matrix- and array-like operations.
 
