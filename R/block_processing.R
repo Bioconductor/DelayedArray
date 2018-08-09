@@ -164,84 +164,6 @@ currentViewport <- function(block)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### block_which()
-###
-
-### 'x' is **trusted** to be a logical array-like object.
-block_which <- function(x, arr.ind=FALSE, grid=NULL)
-{
-    if (!isTRUEorFALSE(arr.ind))
-        stop("'arr.ind' must be TRUE or FALSE")
-    ## Return a numeric matrix like one returned by base::arrayInd(), that
-    ## is, a matrix where each row is an n-uplet representing an array index.
-    FUN <- function(block) {
-        b <- currentBlockId(block)
-        m <- base::which(block)
-        mapToRef(rep.int(b, length(m)), m, effectiveGrid(block), linear=TRUE)
-    }
-    block_results <- blockApply(x, FUN, grid=grid)
-    aind <- do.call(rbind, block_results)
-    aind_as_list <- lapply(ncol(aind):1, function(j) aind[ , j])
-    oo <- do.call(order, aind_as_list)
-    ans <- aind[oo, , drop=FALSE]
-    if (!arr.ind)
-        ans <- linearInd(ans, dim(x))
-    ans
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### block_extract_array_elements()
-###
-
-### Linear single bracket subsetting (e.g. x[5:2]) of an array-like object.
-### Return an atomic vector.
-### 'x' is **trusted** to be an array-like object.
-### 'i' is **trusted** to be an integer vector representing a linear index
-### of valid positions in 'x'.
-block_extract_array_elements <- function(x, i, grid=NULL)
-{
-    i_len <- length(i)
-    if (i_len == 0L)
-        return(as.vector(extract_empty_array(x)))
-    if (i_len == 1L)
-        return(extract_array_element(x, i))
-
-    ## We don't want to use blockApply() here because it would walk on the
-    ## entire grid of blocks, which is not necessary. We only need to walk
-    ## on the blocks touched by linear index 'i', that is, on the blocks
-    ## that contain array elements located at the positions corresponding
-    ## to linear index 'i'.
-    grid <- .normarg_grid(grid, x)
-    nblock <- length(grid)
-    x_dim <- dim(x)
-    majmin <- mapToGrid(arrayInd(i, x_dim), grid, linear=TRUE)
-    minor_by_block <- split(majmin$minor, majmin$major)
-    res <- lapply(seq_along(minor_by_block),
-        function(k) {
-            b <- as.integer(names(minor_by_block)[[k]])
-            m <- minor_by_block[[k]]
-            if (get_verbose_block_processing())
-                message("Visiting block ", b, "/", nblock, " ... ",
-                        appendLF=FALSE)
-            ## We don't need to load the entire block if there is only 1
-            ## value to extract from it.
-            if (length(m) == 1L) {
-                i2 <- linearInd(mapToRef(b, m, grid, linear=TRUE), x_dim)
-                block_ans <- extract_array_element(x, i2)
-            } else {
-                block <- read_block(x, grid[[b]])
-                block_ans <- block[m]
-            }
-            if (get_verbose_block_processing())
-                message("OK")
-            block_ans
-    })
-    unsplit(res, majmin$major)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### OLD - Walking on the blocks
 ### OLD -
 ### OLD - 3 utility functions to process array-like objects by block.
@@ -294,18 +216,5 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
     ## length so each block is made of at least one column.
     block_maxlen <- max(getDefaultBlockLength(type(x)), x_dim[[1L]])
     block_APPLY(x, APPLY, ..., sink=sink, block_maxlen=block_maxlen)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Block by block realization of an array-like object
-###
-
-### Split the array-like object into blocks, then realize and write one block
-### at a time to disk.
-write_array_to_sink <- function(x, sink)
-{
-    stopifnot(identical(dim(x), dim(sink)))
-    block_APPLY(DelayedArray(x), identity, sink=sink)
 }
 

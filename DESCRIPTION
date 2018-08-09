@@ -28,11 +28,11 @@ Collate: utils.R
 	Array-class.R
 	extract_array.R
 	ArrayGrid-class.R
+	show-utils.R
 	read_block.R
 	mapToGrid.R
 	makeCappedVolumeBox.R
 	blockGrid.R
-	show-utils.R
 	DelayedOp-class.R
 	showtree.R
 	DelayedArray-class.R
@@ -40,6 +40,7 @@ Collate: utils.R
 	block_processing.R
 	RealizationSink-class.R
 	realize.R
+	DelayedArray-subsetting.R
 	DelayedArray-utils.R
 	DelayedMatrix-utils.R
 	DelayedArray-stats.R

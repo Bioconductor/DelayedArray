@@ -2,8 +2,6 @@
 ### Compact display of an array-like object
 ### -------------------------------------------------------------------------
 ###
-### Nothing in this file is exported.
-###
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -382,10 +380,10 @@
             z1 <- z2 <- 1L  # print only first and last slices
         }
     }
-    grid <- makeRegularArrayGridOfCappedLengthViewports(x_dim,
-                                                        prod(x_dim[1:2]),
-                                                        "first-dim-grows-first")
-    nblock <- length(grid)
+    spacings <- x_dim
+    spacings[-(1:2)] <- 1L
+    grid <- RegularArrayGrid(x_dim, spacings)
+    nblock <- length(grid)  # should be equal to prod(x_dim[-(1:2)])
     if (nblock <= z1 + z2 + 1L) {
         idx <- seq_len(nblock)
         .print_2D_slices(x, m1, m2, n1, n2, grid, idx, quote=quote)
@@ -425,6 +423,7 @@ array_as_one_line_summary <- function(x)
 
 ### Work on any array-like object that complies with the "seed contract" i.e.
 ### that supports dim(), dimnames(), and extract_array().
+### NOT exported.
 show_compact_array <- function(object)
 {
     cat(array_as_one_line_summary(object))

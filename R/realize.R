@@ -3,6 +3,24 @@
 ### -------------------------------------------------------------------------
 ###
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Internal helper to support block by block realization
+###
+### Used by coercions to RleArray and to HDF5Array.
+###
+
+write_array_to_sink <- function(x, sink)
+{
+    stopifnot(identical(dim(x), dim(sink)))
+    block_APPLY(DelayedArray(x), identity, sink=sink)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### realize()
+###
+
 setGeneric("realize", function(x, ...) standardGeneric("realize"))
 
 setMethod("realize", "ANY",
