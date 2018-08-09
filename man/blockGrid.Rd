@@ -105,7 +105,9 @@ setDefaultBlockShape(shape=c("hypercube",
 \details{
   By default, primary block processing functions \code{\link{blockApply}()}
   and \code{\link{blockReduce}()} use the grid returned by \code{blockGrid(x)}
-  to process array-like object \code{x} block by block.
+  to process array-like object \code{x} block by block. This can be changed
+  with \code{\link{setDefaultGridMaker}()}.
+  See \code{?\link{setDefaultGridMaker}} for more information.
 }
 
 \value{
@@ -135,8 +137,8 @@ setDefaultBlockShape(shape=c("hypercube",
   \code{colGrid}: A \link{RegularArrayGrid} object on reference array \code{x}
   where the grid elements define blocks made of full columns of \code{x}.
 
-  \code{getDefaultBlockSize}: The default block size in bytes as a single
-  numeric value.
+  \code{getDefaultBlockSize}: The current default block size in bytes
+  as a single numeric value.
 
   \code{setDefaultBlockSize}: The new default block size in bytes as an
   invisible single numeric value.
@@ -144,7 +146,8 @@ setDefaultBlockShape(shape=c("hypercube",
   \code{getDefaultBlockLength}: The default block length as a single integer
   value.
 
-  \code{getDefaultBlockShape}: The default block shape as a single string.
+  \code{getDefaultBlockShape}: The current default block shape as a
+  single string.
 
   \code{setDefaultBlockShape}: The new default block shape as an invisible
   single string.
@@ -229,7 +232,7 @@ blockGrid(m)
 lengths(blockGrid(m))
 dims(blockGrid(m))
 
-## Reset block size and shape to factory settings:
+## Reset default block size and shape to factory settings:
 setDefaultBlockSize()
 setDefaultBlockShape()
 }

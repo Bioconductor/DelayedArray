@@ -22,6 +22,24 @@ set_verbose_block_processing <- function(verbose)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### get/setDefaultGridMaker()
+###
+
+getDefaultGridMaker <- function()
+{
+    getOption("DelayedArray.grid.maker")
+}
+
+### We set the default grid maker to blockGrid() by default.
+setDefaultGridMaker <- function(GRIDMAKER="blockGrid")
+{
+    match.fun(GRIDMAKER)  # sanity check
+    options(DelayedArray.grid.maker=GRIDMAKER)
+    invisible(GRIDMAKER)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### read_block() and write_block() generics
 ###
 
@@ -78,12 +96,26 @@ setMethod("write_block", "ANY",
 
 .normarg_grid <- function(grid, x)
 {
-    if (is.null(grid))
-        return(blockGrid(x))
-    if (!is(grid, "ArrayGrid"))
-        stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
-    if (!identical(refdim(grid), dim(x)))
-        stop(wmsg("'grid' is incompatible with 'x'"))
+    if (is.null(grid)) {
+        etc <- c("Please use setDefaultGridMaker() ",
+                 "to set a valid default grid maker.")
+        GRIDMAKER <- match.fun(getDefaultGridMaker())
+        grid <- try(GRIDMAKER(x), silent=TRUE)
+        if (is(grid, "try-error"))
+            stop(wmsg("The current default grid maker returned an ",
+                      "error when called on 'x'. ", etc))
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("The current default grid maker didn't return an ",
+                      "ArrayGrid object. ", etc))
+        if (!identical(refdim(grid), dim(x)))
+            stop(wmsg("The current default grid maker returned a grid ",
+                      "that is incompatible with 'x'. ", etc))
+    } else {
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
+        if (!identical(refdim(grid), dim(x)))
+            stop(wmsg("'grid' is incompatible with 'x'"))
+    }
     grid
 }
 

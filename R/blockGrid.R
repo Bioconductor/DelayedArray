@@ -94,6 +94,7 @@ getDefaultBlockShape <- function()
     shape
 }
 
+### We set the default block shape to "hypercube" by default.
 setDefaultBlockShape <- function(shape=c("hypercube",
                                          "scale",
                                          "first-dim-grows-first",

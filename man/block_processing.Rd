@@ -16,6 +16,9 @@
 
 \alias{write_array_to_sink}
 
+\alias{getDefaultGridMaker}
+\alias{setDefaultGridMaker}
+
 \title{Block processing of an array-like object}
 
 \description{
@@ -32,11 +35,14 @@ currentViewport(block)
 
 read_block(x, viewport)
 write_block(x, viewport, block)
+
+getDefaultGridMaker()
+setDefaultGridMaker(GRIDMAKER="blockGrid")
 }
 
 \arguments{
   \item{x}{
-    Coming soon...
+    An array-like object.
   }
   \item{FUN}{
     Coming soon...
@@ -64,6 +70,24 @@ write_block(x, viewport, block)
   }
   \item{viewport}{
     Coming soon...
+  }
+  \item{GRIDMAKER}{
+    The function to use by \code{blockApply()} and \code{blockReduce()}
+    as \emph{default grid maker}. If no grid is explicitely supplied to
+    \code{blockApply()} or \code{blockReduce()}, a grid will be made by
+    calling the \emph{default grid maker} function on array-like object
+    \code{x}. This call must return an \link{ArrayGrid} object, say
+    \code{grid}, that is compatible with \code{x} i.e. such that
+    \code{refdim(grid)} is identical to \code{dim(x)}.
+
+    \code{GRIDMAKER} can be specified as a function or as a single string
+    naming a function. It can be a user-defined function or a pre-defined
+    grid maker like \code{\link{blockGrid}}, \code{\link{rowGrid}}, or
+    \code{\link{colGrid}}.
+
+    The default grid maker is set to \code{\link{blockGrid}} at package
+    startup and can be reset anytime to this value by calling
+    \code{setDefaultGridMaker()} with no argument.
   }
 }
 
@@ -147,5 +171,18 @@ for (i in seq_len(dim(grid0)[[1]])) {
   }
 }
 m2
+
+## ---------------------------------------------------------------------
+## CONTROL THE DEFAULT GRID MAKER
+## ---------------------------------------------------------------------
+getDefaultGridMaker()
+setDefaultGridMaker(function(x) colGrid(x, ncol=5))
+getDefaultGridMaker()
+
+m <- matrix(runif(600), ncol=12)
+blockApply(m, currentViewport)
+
+## Reset default grid maker to factory settings:
+setDefaultGridMaker()
 }
 \keyword{methods}

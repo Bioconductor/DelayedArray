@@ -1,6 +1,7 @@
 .onLoad <- function(libname, pkgname)
 {
     options(DelayedArray.simplify=TRUE)
+    setDefaultGridMaker()
     setDefaultBlockSize()
     setDefaultBlockShape()
     ## By default bplapply() uses the SnowParam() backend on Windows, which

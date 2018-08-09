@@ -219,6 +219,7 @@ export(
     ## block_processing.R:
     blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
+    getDefaultGridMaker, setDefaultGridMaker,
     write_array_to_sink,
 
     ## RealizationSink-class.R:
