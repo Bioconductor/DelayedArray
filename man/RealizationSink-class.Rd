@@ -130,7 +130,7 @@ A <- as(sink, "DelayedArray")
 A
 
 ## ---------------------------------------------------------------------
-## C. AN ADVANCED EXAMPLE OF USER-CONTROLLED BLOCK PROCESSING USING
+## C. AN ADVANCED EXAMPLE OF USER-IMPLEMENTED BLOCK PROCESSING USING
 ##    colGrid() AND A REALIZATION SINK
 ## ---------------------------------------------------------------------
 ## Say we have 2 matrices with the same number of columns. Each column

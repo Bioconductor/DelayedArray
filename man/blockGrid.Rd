@@ -171,10 +171,43 @@ setDefaultBlockShape(shape=c("hypercube",
 }
 
 \examples{
+## ---------------------------------------------------------------------
+## A VERSION OF sum() THAT USES BLOCK PROCESSING
+## ---------------------------------------------------------------------
+
+block_sum <- function(a, grid)
+{
+    sums <- lapply(grid, function(viewport) sum(read_block(a, viewport)))
+    sum(unlist(sums))
+}
+
+## On an ordinary matrix:
 m <- matrix(runif(600), ncol=12)
+m_grid <- blockGrid(m, block.length=120)
+sum1 <- block_sum(m, m_grid)
+sum1
+
+## On a DelayedArray object:
+library(HDF5Array)
+M <- as(m, "HDF5Array")
+sum2 <- block_sum(M, m_grid)
+sum2
+
+sum3 <- block_sum(M, colGrid(M, block.length=120))
+sum3
+
+sum4 <- block_sum(M, rowGrid(M, block.length=80))
+sum4
+
+## Sanity checks:
+sum0 <- sum(m)
+stopifnot(identical(sum1, sum0))
+stopifnot(identical(sum2, sum0))
+stopifnot(identical(sum3, sum0))
+stopifnot(identical(sum4, sum0))
 
 ## ---------------------------------------------------------------------
-## A. blockGrid()
+## blockGrid()
 ## ---------------------------------------------------------------------
 grid <- blockGrid(m, block.length=120)
 grid
@@ -201,17 +234,17 @@ blockGrid(m, block.length=20)
 blockGrid(m, block.length=10)
 
 ## ---------------------------------------------------------------------
-## B. rowGrid() AND colGrid()
+## rowGrid() AND colGrid()
 ## ---------------------------------------------------------------------
 rowGrid(m, nrow=10)  # 5 blocks of 10 rows each
 rowGrid(m, nrow=15)  # 3 blocks of 15 rows each plus 1 block of 5 rows
 colGrid(m, ncol=5)   # 2 blocks of 5 cols each plus 1 block of 2 cols
 
-## See ?RealizationSink for an advanced example of user-controlled block
-## processing using colGrid() and a realization sink.
+## See ?RealizationSink for an advanced example of user-implemented
+## block processing using colGrid() and a realization sink.
 
 ## ---------------------------------------------------------------------
-## C. CONTROL THE DEFAULT BLOCK SIZE (OR LENGTH) AND SHAPE
+## CONTROL THE DEFAULT BLOCK SIZE (OR LENGTH) AND SHAPE
 ## ---------------------------------------------------------------------
 getDefaultBlockSize()
 
