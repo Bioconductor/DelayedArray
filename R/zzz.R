@@ -2,8 +2,8 @@
 {
     options(DelayedArray.simplify=TRUE)
     setDefaultGridMaker()
-    setDefaultBlockSize()
-    setDefaultBlockShape()
+    suppressMessages(setDefaultBlockSize())
+    suppressMessages(setDefaultBlockShape())
     ## By default bplapply() uses the SnowParam() backend on Windows, which
     ## introduces **a lot** of overhead in the context of block processing.
     ## See https://github.com/Bioconductor/BiocParallel/issues/78
