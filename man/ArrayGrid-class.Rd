@@ -44,6 +44,13 @@
 \alias{maxlength,RegularArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
+\alias{aperm.ArbitraryArrayGrid}
+\alias{aperm,ArbitraryArrayGrid-method}
+\alias{aperm.RegularArrayGrid}
+\alias{aperm,RegularArrayGrid-method}
+\alias{t.ArrayGrid}
+\alias{t,ArrayGrid-method}
+
 \alias{downsample}
 \alias{downsample,ArbitraryArrayGrid-method}
 \alias{downsample,RegularArrayGrid-method}
@@ -204,7 +211,25 @@ length(viewport1)  # number of array elements in the viewport
 ranges(viewport1)
 
 ## ---------------------------------------------------------------------
-## C. DOWNSAMPLING AN ArrayGrid OBJECT
+## C. GRIDS CAN BE TRANSPOSED
+## ---------------------------------------------------------------------
+
+tgrid2 <- t(grid2)
+dim(tgrid2)
+refdim(tgrid2)
+
+## Use aperm() if the grid has more than 2 dimensions:
+tgrid1 <- aperm(grid1)
+dim(tgrid1)
+refdim(tgrid1)
+
+aperm(grid1, c(3, 1, 2))
+aperm(grid1, c(1, 3, 2))
+aperm(grid1, c(3, 1))     # some dimensions can be dropped
+aperm(grid1, c(3, 2, 3))  # and some can be repeated
+
+## ---------------------------------------------------------------------
+## D. DOWNSAMPLING AN ArrayGrid OBJECT
 ## ---------------------------------------------------------------------
 ## The elements (ArrayViewport) of an ArrayGrid object can be replaced
 ## with bigger elements obtained by merging adjacent elements. How many

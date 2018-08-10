@@ -70,6 +70,7 @@
 
 % DelayedMatrix utils
 
+\alias{t}
 \alias{t.DelayedMatrix}
 \alias{t,DelayedMatrix-method}
 
@@ -77,33 +78,6 @@
 \alias{\%*\%,DelayedMatrix,matrix-method}
 \alias{\%*\%,matrix,DelayedMatrix-method}
 \alias{\%*\%,DelayedMatrix,DelayedMatrix-method}
-
-% DelayedMatrix row/col summarization
-
-\alias{rowSums}
-\alias{rowSums,DelayedMatrix-method}
-\alias{colSums}
-\alias{colSums,DelayedMatrix-method}
-
-\alias{rowMeans}
-\alias{rowMeans,DelayedMatrix-method}
-\alias{colMeans}
-\alias{colMeans,DelayedMatrix-method}
-
-\alias{rowMaxs}
-\alias{rowMaxs,DelayedMatrix-method}
-\alias{colMaxs}
-\alias{colMaxs,DelayedMatrix-method}
-
-\alias{rowMins}
-\alias{rowMins,DelayedMatrix-method}
-\alias{colMins}
-\alias{colMins,DelayedMatrix-method}
-
-\alias{rowRanges}
-\alias{rowRanges,DelayedMatrix-method}
-\alias{colRanges}
-\alias{colRanges,DelayedMatrix-method}
 
 \title{Common operations on DelayedArray objects}
 
@@ -142,10 +116,8 @@
     \item \code{apply}
     \item matrix multiplication (\%*\%) of an ordinary matrix by a
           \link{DelayedMatrix} object
-    \item matrix row/col summarization [\link{DelayedMatrix} objects only]:
-          \code{rowSums}, \code{colSums}, \code{rowMeans}, \code{colMeans},
-          \code{rowMaxs}, \code{colMaxs}, \code{rowMins}, \code{colMins},
-          \code{rowRanges}, and \code{colRanges}
+    \item matrix row/col summarization (see
+          \code{?`\link{DelayedMatrix-stats}`})
   }
 }
 
@@ -164,12 +136,11 @@
           \pkg{base} package for the corresponding operations on ordinary
           arrays or matrices.
 
-    \item \code{\link[base]{rowSums}} in the \pkg{base} package and
-          \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
-          for row/col summarization of an ordinary matrix.
+    \item \link{DelayedArray-stats} for statistical functions on
+          DelayedArray objects.
 
-    \item The \pkg{DelayedMatrixStats} package for more row/col summarization
-          methods for \link{DelayedMatrix} objects.
+    \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
+          summarization.
 
     \item \code{\link{setRealizationBackend}} for how to set a
           \emph{realization backend}.
@@ -180,9 +151,6 @@
           HDF5 datasets.
 
     \item \link{DelayedArray} objects.
-
-    \item \link{DelayedArray-stats} for statistical functions on
-          DelayedArray objects.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
@@ -325,29 +293,5 @@ lsHDF5DumpFile()
 ## to control the location of automatically created HDF5 datasets.
 
 stopifnot(identical(as.array(P1), as.array(P2)))
-
-## ---------------------------------------------------------------------
-## MATRIX ROW/COL SUMMARIZATION
-## ---------------------------------------------------------------------
-
-## All these operations are block-processed.
-
-rowSums(M1)
-colSums(M1)
-
-rowMeans(M1)
-colMeans(M1)
-
-rmaxs <- rowMaxs(M1)
-cmaxs <- colMaxs(M1)
-
-rmins <- rowMins(M1)
-cmins <- colMins(M1)
-
-rranges <- rowRanges(M1)
-cranges <- colRanges(M1)
-
-stopifnot(identical(cbind(rmins, rmaxs, deparse.level=0), rranges))
-stopifnot(identical(cbind(cmins, cmaxs, deparse.level=0), cranges))
 }
 \keyword{methods}

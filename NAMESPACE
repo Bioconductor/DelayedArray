@@ -44,6 +44,8 @@ exportClasses(
 ### Export S3 methods
 ###
 
+S3method(aperm, ArbitraryArrayGrid)
+S3method(aperm, RegularArrayGrid)
 S3method(aperm, DelayedArray)
 
 S3method(as.array, Array)
@@ -81,6 +83,7 @@ S3method(summary, DelayedDimnames)
 S3method(summary, DelayedNaryIsoOp)
 S3method(summary, DelayedAbind)
 
+S3method(t, ArrayGrid)
 S3method(t, DelayedMatrix)
 
 S3method(unique, DelayedArray)
@@ -90,6 +93,8 @@ S3method(unique, DelayedArray)
 ### and (c) methods() doesn't asterisk them.
 
 export(
+    aperm.ArbitraryArrayGrid,
+    aperm.RegularArrayGrid,
     aperm.DelayedArray,
 
     as.array.Array,
@@ -127,6 +132,7 @@ export(
     summary.DelayedNaryIsoOp,
     summary.DelayedAbind,
 
+    t.ArrayGrid,
     t.DelayedMatrix,
 
     unique.DelayedArray
@@ -244,7 +250,7 @@ export(
     extract_array, type,
 
     ## ArrayGrid-class.R:
-    refdim, maxlength, downsample,
+    refdim, maxlength, aperm, downsample,
 
     ## read_block.R:
     read_block, write_block,
@@ -262,7 +268,7 @@ export(
     simplify, netSubsetAndAperm,
 
     ## DelayedArray-class.R:
-    matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
+    matrixClass, DelayedArray, nseed, seed, "seed<-",
 
     ## chunkGrid.R:
     chunkdim, chunkGrid,
@@ -284,13 +290,13 @@ export(
 exportMethods(
     arbind, acbind,
     extract_array, type,
-    refdim, maxlength, downsample,
+    refdim, maxlength, aperm, downsample,
     read_block, write_block,
     mapToGrid, mapToRef,
     isLinear,
     isNoOp,
     simplify, netSubsetAndAperm,
-    matrixClass, DelayedArray, nseed, seed, "seed<-", aperm,
+    matrixClass, DelayedArray, nseed, seed, "seed<-",
     chunkdim, chunkGrid,
     close,
     realize,

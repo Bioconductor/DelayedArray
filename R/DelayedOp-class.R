@@ -291,20 +291,9 @@ setClass("DelayedAperm",
 
 setValidity2("DelayedAperm", .validate_DelayedAperm)
 
-.normarg_perm <- function(perm, a_dim)
-{
-    if (is.null(perm))
-        return(seq_along(a_dim))
-    if (!is.numeric(perm))
-        stop(wmsg("'perm' must be an integer vector"))
-    if (!is.integer(perm))
-        perm <- as.integer(perm)
-    perm
-}
-
 new_DelayedAperm <- function(seed, perm=NULL)
 {
-    perm <- .normarg_perm(perm, dim(seed))
+    perm <- normarg_perm(perm, dim(seed))
     new2("DelayedAperm", seed=seed, perm=perm)
 }
 

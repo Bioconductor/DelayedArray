@@ -153,18 +153,18 @@ setGeneric("rowMaxs", signature="x")
 setGeneric("colMaxs", signature="x")
 
 .rowMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x), ...)
+                                   na.rm=FALSE, dim.=dim(x))
 {
     .check_rows_cols(rows, cols, "rowMaxs")
-    .BLOCK_row_summary(rowMaxs, x, na.rm=na.rm, ...)
+    .BLOCK_row_summary(rowMaxs, x, na.rm=na.rm)
 }
 setMethod("rowMaxs", "DelayedMatrix", .rowMaxs_DelayedMatrix)
 
 .colMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x), ...)
+                                   na.rm=FALSE, dim.=dim(x))
 {
     .check_rows_cols(rows, cols, "colMaxs")
-    .BLOCK_row_summary(rowMaxs, t(x), na.rm=na.rm, ...)
+    .BLOCK_row_summary(rowMaxs, t(x), na.rm=na.rm)
 }
 setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
 
@@ -174,18 +174,18 @@ setGeneric("rowMins", signature="x")
 setGeneric("colMins", signature="x")
 
 .rowMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x), ...)
+                                   na.rm=FALSE, dim.=dim(x))
 {
     .check_rows_cols(rows, cols, "rowMins")
-    .BLOCK_row_summary(rowMins, x, na.rm=na.rm, ...)
+    .BLOCK_row_summary(rowMins, x, na.rm=na.rm)
 }
 setMethod("rowMins", "DelayedMatrix", .rowMins_DelayedMatrix)
 
 .colMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x), ...)
+                                   na.rm=FALSE, dim.=dim(x))
 {
     .check_rows_cols(rows, cols, "colMins")
-    .BLOCK_row_summary(rowMins, t(x), na.rm=na.rm, ...)
+    .BLOCK_row_summary(rowMins, t(x), na.rm=na.rm)
 }
 setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 
@@ -199,18 +199,18 @@ setGeneric("rowRanges", signature="x",
 setGeneric("colRanges", signature="x")
 
 .rowRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                     na.rm=FALSE, dim.=dim(x), ...)
+                                     na.rm=FALSE, dim.=dim(x))
 {
     .check_rows_cols(rows, cols, "rowRanges")
-    .BLOCK_rowRanges(x, na.rm=na.rm, ...)
+    .BLOCK_rowRanges(x, na.rm=na.rm)
 }
 setMethod("rowRanges", "DelayedMatrix", .rowRanges_DelayedMatrix)
 
 .colRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                     na.rm=FALSE, dim.=dim(x), ...)
+                                     na.rm=FALSE, dim.=dim(x))
 {
     .check_rows_cols(rows, cols, "colRanges")
-    .BLOCK_rowRanges(t(x), na.rm=na.rm, ...)
+    .BLOCK_rowRanges(t(x), na.rm=na.rm)
 }
 setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
 

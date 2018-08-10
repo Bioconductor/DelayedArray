@@ -509,6 +509,60 @@ setMethod("show", "ArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### aperm() and t()
+###
+
+setGeneric("aperm", signature="a")
+
+normarg_perm <- function(perm, a_dim)
+{
+    if (missing(perm))
+        return(rev(seq_along(a_dim)))
+    if (is.null(perm))
+        return(seq_along(a_dim))
+    if (!is.numeric(perm))
+        stop(wmsg("'perm' must be an integer vector"))
+    if (!is.integer(perm))
+        perm <- as.integer(perm)
+    perm
+}
+
+### S3/S4 combo for aperm.ArbitraryArrayGrid
+aperm.ArbitraryArrayGrid <- function(a, perm, ...)
+{
+    ## normarg_perm() does not perform full check/normalization e.g. it
+    ## won't say anything if 'perm' contains NAs or values > length(dim(a)).
+    ## We rely on validation of the modified ArrayGrid object to fail if
+    ## this is the case.
+    perm <- normarg_perm(perm, dim(a))
+    BiocGenerics:::replaceSlots(a, tickmarks=a@tickmarks[perm])
+}
+setMethod("aperm", "ArbitraryArrayGrid", aperm.ArbitraryArrayGrid)
+
+### S3/S4 combo for aperm.RegularArrayGrid
+aperm.RegularArrayGrid <- function(a, perm, ...)
+{
+    ## normarg_perm() does not perform full check/normalization e.g. it
+    ## won't say anything if 'perm' contains NAs or values > length(dim(a)).
+    ## We rely on validation of the modified ArrayGrid object to fail if
+    ## this is the case.
+    perm <- normarg_perm(perm, dim(a))
+    BiocGenerics:::replaceSlots(a, refdim=a@refdim[perm],
+                                   spacings=a@spacings[perm])
+}
+setMethod("aperm", "RegularArrayGrid", aperm.RegularArrayGrid)
+
+### S3/S4 combo for t.ArrayGrid
+t.ArrayGrid <- function(x)
+{
+    if (length(dim(x)) != 2L)
+        stop(wmsg("the grid to transpose must have exactly 2 dimensions"))
+    aperm(x)
+}
+setMethod("t", "ArrayGrid", t.ArrayGrid)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### downsample() generic and methods
 ###
 ### Reduce the "resolution" of a grid by the specified ratio.

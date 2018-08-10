@@ -171,11 +171,14 @@ type(x)
     \item \link{block_processing} for more information about block processing
           of an array-like object.
 
-    \item \link{DelayedArray-utils} for common operations on DelayedArray
-          objects.
+    \item \link{DelayedArray-utils} for common operations on
+          \link{DelayedArray} objects.
 
     \item \link{DelayedArray-stats} for statistical functions on
           DelayedArray objects.
+
+    \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
+          summarization.
 
     \item \link{RleArray} objects.
 

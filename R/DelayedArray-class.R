@@ -566,17 +566,8 @@ setReplaceMethod("path", "DelayedArray",
 ### length). This feature is used by the "drop" method below.
 ###
 
-setGeneric("aperm", signature="a")
-
-.aperm.DelayedArray <- function(a, perm)
-{
-    if (missing(perm))
-        perm <- rev(seq_along(dim(a)))
-    stash_DelayedAperm(a, perm)
-}
-
 ### S3/S4 combo for aperm.DelayedArray
-aperm.DelayedArray <- function(a, perm, ...) .aperm.DelayedArray(a, perm, ...)
+aperm.DelayedArray <- function(a, perm, ...) stash_DelayedAperm(a, perm, ...)
 setMethod("aperm", "DelayedArray", aperm.DelayedArray)
 
 

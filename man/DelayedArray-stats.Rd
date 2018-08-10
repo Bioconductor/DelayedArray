@@ -2,20 +2,32 @@
 
 \alias{DelayedArray-stats}
 
+\alias{dnorm}
 \alias{dnorm,DelayedArray-method}
+\alias{pnorm}
 \alias{pnorm,DelayedArray-method}
+\alias{qnorm}
 \alias{qnorm,DelayedArray-method}
 
+\alias{dbinom}
 \alias{dbinom,DelayedArray-method}
+\alias{pbinom}
 \alias{pbinom,DelayedArray-method}
+\alias{qbinom}
 \alias{qbinom,DelayedArray-method}
 
+\alias{dpois}
 \alias{dpois,DelayedArray-method}
+\alias{ppois}
 \alias{ppois,DelayedArray-method}
+\alias{qpois}
 \alias{qpois,DelayedArray-method}
 
+\alias{dlogis}
 \alias{dlogis,DelayedArray-method}
+\alias{plogis}
 \alias{plogis,DelayedArray-method}
+\alias{qlogis}
 \alias{qlogis,DelayedArray-method}
 
 \title{Statistical functions on DelayedArray objects}
@@ -69,6 +81,9 @@
           \code{\link[stats]{dpois}}, and \code{\link[stats]{dlogis}}
           in the \pkg{stats} package for the corresponding operations
           on ordinary arrays or matrices.
+
+    \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
+          summarization.
 
     \item \link{DelayedArray} objects.
 
