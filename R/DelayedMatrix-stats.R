@@ -114,7 +114,7 @@ setMethod("colSums", "DelayedMatrix", .colSums_DelayedMatrix)
 .rowMeans_DelayedMatrix <- function(x, na.rm=FALSE, dims=1)
 {
     .check_dims(dims, "rowMeans")
-    ans <- .BLOCK_row_summary(rowMeans, x, na.rm=na.rm)
+    ans <- .BLOCK_rowMeans(x, na.rm=na.rm)
     setNames(ans, rownames(x))
 }
 setMethod("rowMeans", "DelayedMatrix", .rowMeans_DelayedMatrix)
@@ -122,7 +122,7 @@ setMethod("rowMeans", "DelayedMatrix", .rowMeans_DelayedMatrix)
 .colMeans_DelayedMatrix <- function(x, na.rm=FALSE, dims=1)
 {
     .check_dims(dims, "colMeans")
-    ans <- .BLOCK_row_summary(rowMeans, t(x), na.rm=na.rm)
+    ans <- .BLOCK_rowMeans(t(x), na.rm=na.rm)
     setNames(ans, colnames(x))
 }
 setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
