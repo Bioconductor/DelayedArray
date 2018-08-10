@@ -41,27 +41,45 @@ setDefaultBlockSize <- function(size=1e8)
 ### getDefaultBlockLength()
 ###
 
-### Atomic type sizes in bytes.
-.TYPE_SIZES <- c(
-    logical=4L,
-    integer=4L,
-    numeric=8L,
-    double=8L,
-    complex=16L,
-    character=8L,  # just the overhead of a CHARSXP; doesn't account for the
-                   # string data itself
-    raw=1L
-)
-
-getDefaultBlockLength <- function(type)
+get_type_size <- function(type)
 {
-    type_size <- .TYPE_SIZES[type]
-    idx <- which(is.na(type_size))
+    ### Atomic type sizes in bytes.
+    TYPE_SIZES <- c(
+        logical=4L,
+        integer=4L,
+        numeric=8L,
+        double=8L,
+        complex=16L,
+        character=8L,  # just the overhead of a CHARSXP; doesn't account for
+                       # the string data itself
+        raw=1L
+    )
+    if (missing(type))
+        return(TYPE_SIZES)
+    if (is.factor(type)) {
+        type <- as.character(type)
+    } else if (!is.character(type)) {
+        stop(wmsg("'type' must be a character vector or factor"))
+    }
+    if (any(type %in% ""))
+        stop(wmsg("'type' cannot contain empty strings"))
+    idx <- which(!(type %in% c(names(TYPE_SIZES), NA_character_)))
     if (length(idx) != 0L) {
         unsupported_types <- unique(type[idx])
         in1string <- paste0(unsupported_types, collapse=", ")
-        stop("unsupported type(s): ",  in1string)
+        stop(wmsg("unsupported type(s): ",  in1string))
     }
+    TYPE_SIZES[type]
+}
+
+getDefaultBlockLength <- function(type)
+{
+    if (missing(type))
+        stop(wmsg("Please specify the type of the array data. ",
+                  "See ?getDefaultBlockLength"))
+    if (!isSingleString(type))
+        stop(wmsg("'type' must be a single string"))
+    type_size <- get_type_size(type)
     block_size <- getDefaultBlockSize()
     ans <- block_size / type_size
     if (ans > .Machine$integer.max)

@@ -6,6 +6,7 @@
 
 \alias{getDefaultBlockSize}
 \alias{setDefaultBlockSize}
+\alias{get_type_size}
 \alias{getDefaultBlockLength}
 \alias{getDefaultBlockShape}
 \alias{setDefaultBlockShape}

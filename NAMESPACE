@@ -212,7 +212,8 @@ export(
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
 
     ## blockGrid.R:
-    setDefaultBlockSize, getDefaultBlockSize, getDefaultBlockLength,
+    setDefaultBlockSize, getDefaultBlockSize,
+    get_type_size, getDefaultBlockLength,
     setDefaultBlockShape, getDefaultBlockShape,
     blockGrid, rowGrid, colGrid,
 
