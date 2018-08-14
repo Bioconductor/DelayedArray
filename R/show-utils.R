@@ -348,10 +348,8 @@
         s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames,
                                             as.2Dslice=TRUE)
         cat(s, "\n", sep="")
-        index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
-        ## We use extract_array_by_Nindex() instead of extract_array() to
-        ## propagate the dimnames.
-        slice <- extract_array_by_Nindex(x, index)
+        Nindex <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
+        slice <- subset_by_Nindex(x, Nindex)
         slice <- set_dim(slice, dim(slice)[1:2])
         .print_2Darray_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")
