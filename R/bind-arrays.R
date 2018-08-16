@@ -90,7 +90,7 @@ combine_dimnames_along <- function(objects, dims, along)
 ### that is a common divisor of the object lengths.
 .intertwine_blocks <- function(objects, nblock, ans_dim)
 {
-    x0 <- unlist(lapply(objects, `[`, 0L), use.names=FALSE)
+    x0 <- unlist(lapply(objects, `[`, 0L), recursive=FALSE, use.names=FALSE)
     objects_lens <- lengths(objects)
     if (all(objects_lens == 0L))
         return(set_dim(x0, ans_dim))
@@ -119,6 +119,7 @@ combine_dimnames_along <- function(objects, dims, along)
 ###       'simple_abind(m, m, m, along=1L)' is 14x faster than
 ###       'abind::abind(m, m, m, along=1L)' and 11x faster than
 ###       'base::rbind(m, m, m)'.
+###   (c) abind::abind() is broken on matrices of type "list".
 simple_abind <- function(..., along)
 {
     objects <- S4Vectors:::delete_NULLs(list(...))

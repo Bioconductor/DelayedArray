@@ -16,11 +16,12 @@
            dimnames=list(paste0("M3x", 1:5), NULL, paste0("M3z", 1:4)))
 )
 
-test_arbind <- function()
+test_arbind_on_matrices <- function()
 {
-    ## on matrices
-    target <- do.call(rbind, .TEST_matrices)
-    current <- do.call(arbind, .TEST_matrices)
+    ## on non-empty matrices
+    matrices <- .TEST_matrices
+    target <- do.call(rbind, matrices)
+    current <- do.call(arbind, matrices)
     checkIdentical(target, current)
 
     ## on empty matrices
@@ -39,7 +40,31 @@ test_arbind <- function()
     current <- do.call(arbind, list(m1, m1))
     checkIdentical(target, current)
 
-    ## on arrays
+    ## on matrices of type "list"
+    m3 <- matrix(list(), nrow=0, ncol=5)
+    m4 <- matrix(list(10:9, NULL, letters[1:3], TRUE, raw()), nrow=4, ncol=5)
+
+    target <- do.call(rbind, list(m3, m4))
+    current <- do.call(arbind, list(m3, m4))
+    checkIdentical(target, current)
+
+    target <- do.call(rbind, list(m4, m3))
+    current <- do.call(arbind, list(m4, m3))
+    checkIdentical(target, current)
+
+    target <- do.call(rbind, list(m3, m3))
+    current <- do.call(arbind, list(m3, m3))
+    checkIdentical(target, current)
+
+    matrices <- c(matrices, list(m3), list(m4))
+    target <- do.call(rbind, matrices)
+    current <- do.call(arbind, matrices)
+    checkIdentical(target, current)
+}
+
+test_arbind_on_arrays <- function()
+{
+    ## on arbitrary arrays
     current <- do.call(arbind, .TEST_arrays)
     check_2D_slice <- function(k) {
         slices <- lapply(.TEST_arrays, `[`, , , k)
@@ -61,9 +86,9 @@ test_arbind <- function()
     checkIdentical(arbind(arbind(a1, b1), a1), a1b1a1)
 }
 
-test_acbind <- function()
+test_acbind_on_matrices <- function()
 {
-    ## on matrices
+    ## on non-empty matrices
     matrices <- lapply(.TEST_matrices, t)
     target <- do.call(cbind, matrices)
     current <- do.call(acbind, matrices)
@@ -85,8 +110,30 @@ test_acbind <- function()
     current <- do.call(acbind, list(m1, m1))
     checkIdentical(target, current)
 
-    ## on arrays
+    ## on matrices of type "list"
+    m3 <- matrix(list(), nrow=5, ncol=0)
+    m4 <- matrix(list(), nrow=5, ncol=4)
 
+    target <- do.call(cbind, list(m3, m4))
+    current <- do.call(acbind, list(m3, m4))
+    checkIdentical(target, current)
+
+    target <- do.call(cbind, list(m4, m3))
+    current <- do.call(acbind, list(m4, m3))
+    checkIdentical(target, current)
+
+    target <- do.call(cbind, list(m3, m3))
+    current <- do.call(acbind, list(m3, m3))
+    checkIdentical(target, current)
+
+    matrices <- c(matrices, list(m3), list(m4))
+    target <- do.call(cbind, matrices)
+    current <- do.call(acbind, matrices)
+    checkIdentical(target, current)
+}
+
+test_acbind_on_arrays <- function()
+{
     ## transpose the 1st 2 dimensions
     arrays <- lapply(.TEST_arrays,
         function(a) {
