@@ -405,7 +405,8 @@ setClass("DelayedUnaryIsoOp",
 
 new_DelayedUnaryIsoOp <- function(seed=new("array"),
                                   OP=identity, Largs=list(), Rargs=list(),
-                                  Lalong=NA, Ralong=NA)
+                                  Lalong=NA, Ralong=NA,
+                                  check.op=FALSE)
 {
     seed_dim <- dim(seed)
     if (length(seed_dim) == 0L)
@@ -417,8 +418,21 @@ new_DelayedUnaryIsoOp <- function(seed=new("array"),
 
     OP <- match.fun(OP)
 
-    new2("DelayedUnaryIsoOp", seed=seed, OP=OP, Largs=Largs, Rargs=Rargs,
-                              Lalong=Lalong, Ralong=Ralong)
+    ans <- new2("DelayedUnaryIsoOp", seed=seed,
+                                     OP=OP, Largs=Largs, Rargs=Rargs,
+                                     Lalong=Lalong, Ralong=Ralong)
+    if (check.op) {
+        ## We quickly test the validity of the operation by calling type()
+        ## on the returned object. This will fail if the operation cannot
+        ## be applied e.g. if the user does something like:
+        ##   M <- DelayedArray(matrix(character(12), ncol=3))
+        ##   M2 <- log(M)
+        ## The test is cheap and type() will be called anyway by show()
+        ## later when the user tries to display M2. Better fail early than
+        ## late!
+        type(ans)  # we ignore the returned value
+    }
+    ans
 }
 
 ### S3/S4 combo for summary.DelayedUnaryIsoOp

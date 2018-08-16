@@ -422,7 +422,8 @@ stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
 {
     stopifnot(is(x, "DelayedArray"))
     op <- new_DelayedUnaryIsoOp(x@seed, OP=OP, Largs=Largs, Rargs=Rargs,
-                                        Lalong=Lalong, Ralong=Ralong)
+                                        Lalong=Lalong, Ralong=Ralong,
+                                        check.op=TRUE)
     DelayedArray(op)
 }
 
