@@ -41,6 +41,15 @@ setDefaultBlockSize <- function(size=1e8)
 ### getDefaultBlockLength()
 ###
 
+### The elements of a character vector or a list have a variable size.
+### For a character vector: the minimum size of an element is 8 bytes which
+### is the overhead of a CHARSXP object. This doesn't account for the string
+### data itself.
+### For a list: the minimum size of a list element is 8 bytes and is obtained
+### when the element is a NULL. However, assuming that a list will typically
+### contain more non-NULL than NULL elements and that the non-NULL elements
+### will typically be atomic vectors, the average element size is more likely
+### to be >= the overhead of an atomic vector which is 56 bytes.
 get_type_size <- function(type)
 {
     ### Atomic type sizes in bytes.
@@ -50,9 +59,9 @@ get_type_size <- function(type)
         numeric=8L,
         double=8L,
         complex=16L,
-        character=8L,  # just the overhead of a CHARSXP; doesn't account for
-                       # the string data itself
-        raw=1L
+        character=8L,  # overhead of a CHARSXP object
+        raw=1L,
+        list=56L       # overhead of an atomic vector
     )
     if (missing(type))
         return(TYPE_SIZES)

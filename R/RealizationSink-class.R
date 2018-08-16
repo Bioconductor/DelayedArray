@@ -7,7 +7,7 @@
 ### of DelayedArray backends. Concrete subclasses must implement:
 ###   1) A constructor function that takes argument 'dim', 'dimnames', and
 ###      'type'.
-###   2) "dim" and "dimnames" methods.
+###   2) "dim", "dimnames", and "type" methods.
 ###   3) A "write_block" method.
 ###   4) A "close" method (optional).
 ###   5) Coercion to DelayedArray.
