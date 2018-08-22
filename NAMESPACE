@@ -19,6 +19,9 @@ import(BiocParallel)
 ###
 
 exportClasses(
+    ## SparseData-class.R:
+    SparseData,
+
     ## Array-class.R:
     Array,
 
@@ -204,12 +207,12 @@ export(
     ## linearInd.R:
     linearInd,
 
+    ## SparseData-class.R:
+    dense2sparse, sparse2dense,
+
     ## ArrayGrid-class.R:
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
-
-    ## read_block.R:
-    dense2sparse, sparse2dense,
 
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
@@ -249,6 +252,9 @@ export(
 export(
     ## bind-arrays.R:
     arbind, acbind,
+
+    ## SparseData-class.R:
+    aind, nzdata,
 
     ## extract_array.R:
     extract_array, type,
@@ -294,6 +300,7 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
+    aind, nzdata,
     extract_array, type,
     refdim, maxlength, aperm, downsample,
     read_block, write_block,

@@ -1,8 +1,5 @@
 \name{read_block}
 
-\alias{dense2sparse}
-\alias{sparse2dense}
-
 \alias{read_sparse_block}
 \alias{write_sparse_block}
 
