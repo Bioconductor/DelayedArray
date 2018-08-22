@@ -9,7 +9,7 @@
 ###
 
 ### Return a data.frame with 3 columns ("i", "j", "data") and 1 row per
-### non-zero element in matrix-like object 'x'.
+### nonzero element in matrix-like object 'x'.
 dense2sparse <- function(x)
 {
     if (length(dim(x)) != 2L)

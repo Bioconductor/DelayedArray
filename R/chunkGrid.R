@@ -53,7 +53,7 @@ setGeneric("chunkdim",
             stop(wmsg("The \"chunkdim\" method for ", class(x), " objects ",
                       "returned an integer vector with illegal zeros. ",
                       "chunkdim() should always return an integer vector with ",
-                      "non-zero values unless the zero values correspond to ",
+                      "nonzero values unless the zero values correspond to ",
                       "dimensions in 'x' that are also zero. ",
                       .contact_author_msg(class(x))))
         if (prod(ans) > .Machine$integer.max)

@@ -97,8 +97,8 @@ library(pryr)
     \begin{itemize}
       \item a 30k x 1.3M matrix might still fit in memory if the data can
             be efficiently compressed
-      \item example: sparse data (small percentage of non-zero values) ==>
-            {\em sparse representation} (storage of non-zero values only)
+      \item example: sparse data (small percentage of nonzero values) ==>
+            {\em sparse representation} (storage of nonzero values only)
       \item example: data with long runs of identical values ==> {\em RLE
             compression (Run Length Encoding)}
       \item choose the {\em smallest type} to store the values: \Rcode{raw}
@@ -129,7 +129,7 @@ library(pryr)
   \begin{block}{}
     \begin{itemize}
       \item sparse matrix representation
-      \item non-zero values stored as \Rcode{double}
+      \item nonzero values stored as \Rcode{double}
     \end{itemize}
   \end{block}
 
@@ -255,9 +255,9 @@ object_size(as(m, "HDF5Matrix"))
 
   \begin{block}{}
     \begin{itemize}
-      \item non-zero values always stored as \Rcode{double}, the most memory
+      \item nonzero values always stored as \Rcode{double}, the most memory
             consuming type
-      \item number of non-zero values must be $< 2^{31}$
+      \item number of nonzero values must be $< 2^{31}$
       \item limited to 2 dimensions: no support for arrays of arbitrary number
             of dimensions
     \end{itemize}
