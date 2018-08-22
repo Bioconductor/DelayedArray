@@ -388,15 +388,15 @@ setClass("DelayedUnaryIsoOp",
         stop(wmsg("'Lalong' must be an integer vector parallel to 'Largs'"))
     if (!is.integer(Lalong))
         Lalong <- as.integer(Lalong)
-    non_na_idx <- which(!is.na(Lalong))
-    non_na_Lalong <- Lalong[non_na_idx]
-    if (S4Vectors:::anyMissingOrOutside(non_na_Lalong, 1L, length(seed_dim)))
+    nonNA_idx <- which(!is.na(Lalong))
+    nonNA_Lalong <- Lalong[nonNA_idx]
+    if (S4Vectors:::anyMissingOrOutside(nonNA_Lalong, 1L, length(seed_dim)))
         stop(wmsg("all non-NA values in 'Lalong' and 'Ralong' must ",
                   "be >= 1 and <= 'length(dim(seed))'"))
     if (any(Lalong != 1L, na.rm=TRUE))
         stop(wmsg("arguments in 'Largs' and 'Rargs' can only go along ",
                   "first dimension at the moment"))
-    ok <- elementNROWS(Largs[non_na_idx]) == seed_dim[non_na_Lalong]
+    ok <- elementNROWS(Largs[nonNA_idx]) == seed_dim[nonNA_Lalong]
     if (!all(ok))
         stop(wmsg("some arguments in 'Largs' and/or 'Rargs' are not ",
                   "parallel to the dimension that they go along"))
