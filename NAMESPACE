@@ -208,6 +208,9 @@ export(
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
 
+    ## read_block.R:
+    dense2sparse, sparse2dense,
+
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
 
@@ -254,6 +257,7 @@ export(
     refdim, maxlength, aperm, downsample,
 
     ## read_block.R:
+    read_sparse_block, write_sparse_block,
     read_block, write_block,
 
     ## mapToGrid.R:
