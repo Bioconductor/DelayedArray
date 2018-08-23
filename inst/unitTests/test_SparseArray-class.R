@@ -7,7 +7,7 @@ test_SparseArray_getters <- function()
     sparse_array <- SparseArray(5:3, aind1, nzdata)
 
     checkIdentical(dim(sparse_array), 5:3)
-    checkIdentical(length(sparse_array), 8L)
+    checkIdentical(length(sparse_array), 60L)
     storage.mode(aind2) <- "integer"
     checkIdentical(aind(sparse_array), aind2)
     checkIdentical(nzdata(sparse_array), nzdata)
