@@ -208,7 +208,7 @@ export(
     linearInd,
 
     ## SparseData-class.R:
-    dense2sparse, sparse2dense,
+    SparseData, dense2sparse, sparse2dense,
 
     ## ArrayGrid-class.R:
     ArrayViewport, makeNindexFromArrayViewport,

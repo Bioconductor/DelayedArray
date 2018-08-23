@@ -4,7 +4,7 @@ test_SparseData_getters <- function()
     aind <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
                   c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
     nzdata <- seq_len(nrow(aind)) / 10
-    sparse_data <- new2("SparseData", dim=5:3, aind=aind, nzdata=nzdata)
+    sparse_data <- SparseData(5:3, aind, nzdata)
 
     checkIdentical(dim(sparse_data), 5:3)
     checkIdentical(length(sparse_data), 8L)
