@@ -13,6 +13,8 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
+\alias{extract_array,SparseArray-method}
+
 \alias{as.array.SparseArray}
 \alias{as.array,SparseArray-method}
 
@@ -20,6 +22,7 @@
 \alias{as.matrix,SparseArray-method}
 
 \alias{coerce,ANY,SparseArray-method}
+
 \alias{coerce,dgCMatrix,SparseArray-method}
 \alias{coerce,SparseArray,dgCMatrix-method}
 \alias{coerce,SparseArray,sparseMatrix-method}
@@ -81,6 +84,10 @@ sparse2dense(sparse_array)
     \item \link{block_processing} for more information about block processing
           of an array-like object.
 
+    \item \code{\link{extract_array}}.
+
+    \item \link{DelayedArray} objects.
+
     \item \code{\link[base]{arrayInd}} in the \pkg{base} package.
 
     \item \link[base]{array} objects in base R.
@@ -92,7 +99,7 @@ sparse2dense(sparse_array)
 ## EXAMPLE 1
 ## ---------------------------------------------------------------------
 aind1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
-              c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
+               c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
 nzdata1 <- 11.11 * seq_len(nrow(aind1))
 sparse_array1 <- SparseArray(5:3, aind1, nzdata1)
 
@@ -131,6 +138,28 @@ sparse_array2b <- as(M2, "SparseArray")
 all.equal(sparse_array2b, sparse_array2)
 typeof(nzdata(sparse_array2b))  # numeric
 typeof(nzdata(sparse_array2))   # integer
+
+## ---------------------------------------------------------------------
+## SEED CONTRACT
+## ---------------------------------------------------------------------
+## SparseArray comply with the "seed contract". In particular they
+## support extract_array():
+extract_array(sparse_array1, list(c(5, 3:2, 5), NULL, 3))
+
+## See '?extract_array' for more information about the "seed contract".
+
+## This means that they can be wrapped in a DelayedArray object:
+A1 <- DelayedArray(sparse_array1)
+A1
+
+## A big very sparse DelayedMatrix object:
+aind3 <- cbind(sample(25000, 600000, replace=TRUE),
+               sample(195000, 600000, replace=TRUE))
+nzdata3 <- runif(600000)
+sparse_array3 <- SparseArray(c(25000, 195000), aind3, nzdata3)
+M3 <- DelayedArray(sparse_array3)
+M3
+colSums(M3[ , 1:20])
 }
 \keyword{classes}
 \keyword{methods}

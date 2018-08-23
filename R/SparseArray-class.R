@@ -3,13 +3,6 @@
 ### -------------------------------------------------------------------------
 
 
-### Note that there are objects with dimensions that have a length()
-### that is not 'prod(dim(x))' e.g. data-frame-like objects (for which
-### 'length(x)' is 'ncol(x)') and SummarizedExperiment derivatives (for
-### which 'length(x)' is 'nrow(x)').
-### Terminology: Should we still consider these objects to be "array-like"
-### or "matrix-like"? Or should these terms be used only for objects that
-### have dimensions **and** have a length() defined as 'prod(dim(x))'?
 setClass("SparseArray",
     contains="Array",
     representation(
@@ -26,9 +19,9 @@ setClass("SparseArray",
 ### API:
 ### - Getters: dim(), length(), aind(), nonzeroes()
 ### - dense2sparse(), sparse2dense()
+### - Based on sparse2dense(): extract_array(), as.array(), as.matrix()
 ### - Based on dense2sparse(): coercion to SparseArray
-### - Based on sparse2dense(): as.array(), as.matrix()
-### - Other coercions: back and forth between SparseArray and dgCMatrix.
+### - Back and forth coercion between SparseArray and dgCMatrix.
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -168,6 +161,46 @@ sparse2dense <- function(sparse_array)
     ans[aind(sparse_array)] <- nzdata(sparse_array)
     ans
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### extract_array()
+###
+
+.extract_array_from_SparseArray <- function(x, index)
+{
+    stopifnot(is(x, "SparseArray"))
+    ans_dim <- get_Nindex_lengths(index, dim(x))
+    x_aind <- aind(x)
+    for (along in seq_along(ans_dim)) {
+        i <- index[[along]]
+        if (is.null(i))
+            next
+        x_aind[ , along] <- match(x_aind[ , along], i)
+    }
+    keep_idx <- which(!rowAnyNAs(x_aind))
+    x0_aind <- x_aind[keep_idx, , drop=FALSE]
+    x0_nzdata <- x@nzdata[keep_idx]
+    x0 <- BiocGenerics:::replaceSlots(x, dim=ans_dim,
+                                         aind=x0_aind,
+                                         nzdata=x0_nzdata,
+                                         check=FALSE)
+    ans0 <- sparse2dense(x0)
+    sm_index <- lapply(index,
+        function(i) {
+            if (is.null(i))
+                return(NULL)
+            sm <- match(i, i)
+            if (isSequence(sm))
+                return(NULL)
+            sm
+        })
+    if (all(S4Vectors:::sapply_isNULL(sm_index)))
+        return(ans0)
+    subset_by_Nindex(ans0, sm_index)
+}
+
+setMethod("extract_array", "SparseArray", .extract_array_from_SparseArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

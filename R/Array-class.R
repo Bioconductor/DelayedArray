@@ -7,6 +7,14 @@
 ### an array-like semantic.
 setClass("Array", representation("VIRTUAL"))
 
+### Note that some objects with dimensions (i.e. with a non-NULL dim()) can
+### have a length() that is not 'prod(dim(x))' e.g. data-frame-like objects
+### (for which 'length(x)' is 'ncol(x)') and SummarizedExperiment derivatives
+### (for which 'length(x)' is 'nrow(x)').
+### Terminology: Should we still consider that these objects are "array-like"
+### or "matrix-like"? Or should these terms be used only for objects that
+### have dimensions **and** have a length() defined as 'prod(dim(x))'?
+
 ### Even though prod() always returns a double, it seems that the length()
 ### primitive function takes care of turning this double into an integer if
 ### it's <= .Machine$integer.max
