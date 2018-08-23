@@ -1,50 +1,49 @@
-\name{SparseData-class}
+\name{SparseArray-class}
 \docType{class}
 
-\alias{class:SparseData}
-\alias{SparseData-class}
-\alias{SparseData}
+\alias{class:SparseArray}
+\alias{SparseArray-class}
+\alias{SparseArray}
 
-\alias{length,SparseData-method}
 \alias{aind}
-\alias{aind,SparseData-method}
+\alias{aind,SparseArray-method}
 \alias{nzdata}
-\alias{nzdata,SparseData-method}
+\alias{nzdata,SparseArray-method}
 
 \alias{dense2sparse}
 \alias{sparse2dense}
 
-\alias{as.array.SparseData}
-\alias{as.array,SparseData-method}
+\alias{as.array.SparseArray}
+\alias{as.array,SparseArray-method}
 
-\alias{as.matrix.SparseData}
-\alias{as.matrix,SparseData-method}
+\alias{as.matrix.SparseArray}
+\alias{as.matrix,SparseArray-method}
 
-\alias{coerce,ANY,SparseData-method}
-\alias{coerce,dgCMatrix,SparseData-method}
-\alias{coerce,SparseData,dgCMatrix-method}
-\alias{coerce,SparseData,sparseMatrix-method}
+\alias{coerce,ANY,SparseArray-method}
+\alias{coerce,dgCMatrix,SparseArray-method}
+\alias{coerce,SparseArray,dgCMatrix-method}
+\alias{coerce,SparseArray,sparseMatrix-method}
 
-\title{SparseData objects}
+\title{SparseArray objects}
 
 \description{
-  SparseData objects are used internally to support block processing
+  SparseArray objects are used internally to support block processing
   of array-like objects.
 }
 
 \usage{
 ## Constructor function:
-SparseData(dim, aind=NULL, nzdata=NULL, check=TRUE)
+SparseArray(dim, aind=NULL, nzdata=NULL, check=TRUE)
 
 ## Two low-level utilities:
 dense2sparse(x)
-sparse2dense(sparse_data)
+sparse2dense(sparse_array)
 }
 
 \arguments{
   \item{dim}{
     The dimensions (specified as an integer vector) of the
-    SparseData object to create.
+    SparseArray object to create.
   }
   \item{aind}{
     An integer matrix like one returned by \code{base::\link[base]{arrayInd}},
@@ -60,16 +59,16 @@ sparse2dense(sparse_data)
   \item{x}{
     An array-like object.
   }
-  \item{sparse_data}{
-    A SparseData object.
+  \item{sparse_array}{
+    A SparseArray object.
   }
 }
 
 \value{
   \itemize{
-    \item For \code{SparseData()}: A SparseData instance.
+    \item For \code{SparseArray()}: A SparseArray instance.
 
-    \item For \code{dense2sparse()}: A SparseData instance.
+    \item For \code{dense2sparse()}: A SparseArray instance.
 
     \item For \code{sparse2dense()}: An ordinary array.
   }
@@ -95,43 +94,43 @@ sparse2dense(sparse_data)
 aind1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
               c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
 nzdata1 <- 11.11 * seq_len(nrow(aind1))
-sparse_data1 <- SparseData(5:3, aind1, nzdata1)
+sparse_array1 <- SparseArray(5:3, aind1, nzdata1)
 
-dim(sparse_data1)
-length(sparse_data1)
-aind(sparse_data1)
-nzdata(sparse_data1)
+dim(sparse_array1)
+length(sparse_array1)
+aind(sparse_array1)
+nzdata(sparse_array1)
 
-sparse2dense(sparse_data1)
-as.array(sparse_data1)  # same as sparse2dense(sparse_data1)
+sparse2dense(sparse_array1)
+as.array(sparse_array1)   # same as sparse2dense(sparse_array1)
 
 \dontrun{
-as.matrix(sparse_data1)  # error!
+as.matrix(sparse_array1)  # error!
 }
 ## ---------------------------------------------------------------------
 ## EXAMPLE 2
 ## ---------------------------------------------------------------------
 m2 <- matrix(c(5:-2, rep.int(c(0L, 99L), 11)), ncol=6)
-sparse_data2 <- dense2sparse(m2)
-dim(sparse_data2)
-length(sparse_data2)
-aind(sparse_data2)
-nzdata(sparse_data2)
+sparse_array2 <- dense2sparse(m2)
+dim(sparse_array2)
+length(sparse_array2)
+aind(sparse_array2)
+nzdata(sparse_array2)
 
-stopifnot(identical(sparse2dense(sparse_data2), m2))
+stopifnot(identical(sparse2dense(sparse_array2), m2))
 
-as.matrix(sparse_data2)  # same as sparse2dense(sparse_data2)
+as.matrix(sparse_array2)  # same as sparse2dense(sparse_array2)
 
-## Go back and forth between SparseData and dgCMatrix objects:
-M2 <- as(sparse_data2, "dgCMatrix")
+## Go back and forth between SparseArray and dgCMatrix objects:
+M2 <- as(sparse_array2, "dgCMatrix")
 stopifnot(identical(M2, as(m2, "dgCMatrix")))
 
-sparse_data2b <- as(M2, "SparseData")
-## 'sparse_data2b' is the same as 'sparse_data2' except that
-## 'nzdata(sparse_data2b)' is of type numeric instead of integer:
-all.equal(sparse_data2b, sparse_data2)
-typeof(nzdata(sparse_data2b))  # numeric
-typeof(nzdata(sparse_data2))   # integer
+sparse_array2b <- as(M2, "SparseArray")
+## 'sparse_array2b' is the same as 'sparse_array2' except that
+## 'nzdata(sparse_array2b)' is of type numeric instead of integer:
+all.equal(sparse_array2b, sparse_array2)
+typeof(nzdata(sparse_array2b))  # numeric
+typeof(nzdata(sparse_array2))   # integer
 }
 \keyword{classes}
 \keyword{methods}

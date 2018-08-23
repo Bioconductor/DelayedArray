@@ -8,7 +8,7 @@
 ### read_sparse_block() and write_sparse_block()
 ###
 
-### Must return a SparseData object.
+### Must return a SparseArray object.
 setGeneric("read_sparse_block", signature="x",
     function(x, viewport)
     {
@@ -19,20 +19,20 @@ setGeneric("read_sparse_block", signature="x",
         ## doing something like the read_block() generic where
         ## check_returned_array() is used to display a long and
         ## detailed error message.
-        stopifnot(is(ans, "SparseData"),
+        stopifnot(is(ans, "SparseArray"),
                   identical(dim(ans), dim(viewport)))
         ans
     }
 )
 
-### 'sparse_block' must be a SparseData object.
+### 'sparse_block' must be a SparseArray object.
 ### Must return 'x' (possibly modified if it's an in-memory object).
 setGeneric("write_sparse_block", signature="x",
     function(x, viewport, sparse_block)
     {
         stopifnot(is(viewport, "ArrayViewport"),
                   identical(refdim(viewport), dim(x)),
-                  is(sparse_block, "SparseData"),
+                  is(sparse_block, "SparseArray"),
                   identical(dim(sparse_block), dim(viewport)))
         standardGeneric("write_sparse_block")
     }

@@ -1,18 +1,17 @@
 ### =========================================================================
-### SparseData objects
+### SparseArray objects
 ### -------------------------------------------------------------------------
 
 
-### Do NOT extend Array! The length() of an Array derivative 'x' is
-### defined as 'prod(dim(x))' whereas here we want it to be something else.
-### Note that there are other objects with dimensions that have a length()
+### Note that there are objects with dimensions that have a length()
 ### that is not 'prod(dim(x))' e.g. data-frame-like objects (for which
 ### 'length(x)' is 'ncol(x)') and SummarizedExperiment derivatives (for
-### which 'length(x)' is 'nrow(x)') so we are not creating a precedent.
+### which 'length(x)' is 'nrow(x)').
 ### Terminology: Should we still consider these objects to be "array-like"
 ### or "matrix-like"? Or should these terms be used only for objects that
 ### have dimensions **and** have a length() defined as 'prod(dim(x))'?
-setClass("SparseData",
+setClass("SparseArray",
+    contains="Array",
     representation(
         dim="integer",   # This gives us dim() for free!
         aind="matrix",   # An **integer** matrix like one returned by
@@ -27,9 +26,9 @@ setClass("SparseData",
 ### API:
 ### - Getters: dim(), length(), aind(), nonzeroes()
 ### - dense2sparse(), sparse2dense()
-### - Based on dense2sparse(): coercion to SparseData
+### - Based on dense2sparse(): coercion to SparseArray
 ### - Based on sparse2dense(): as.array(), as.matrix()
-### - Other coercions: back and forth between SparseData and dgCMatrix.
+### - Other coercions: back and forth between SparseArray and dgCMatrix.
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -65,7 +64,7 @@ setClass("SparseData",
     TRUE
 }
 
-.validate_SparseData <- function(x)
+.validate_SparseArray <- function(x)
 {
     msg <- validate_dim_slot(x, "dim")
     if (!isTRUE(msg))
@@ -79,21 +78,18 @@ setClass("SparseData",
     TRUE
 }
 
-setValidity2("SparseData", .validate_SparseData)
+setValidity2("SparseArray", .validate_SparseArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters
 ###
 
-### In disagreement with the length() of Array derivatives!
-setMethod("length", "SparseData", function(x) length(x@nzdata))
-
 setGeneric("aind", function(x) standardGeneric("aind"))
-setMethod("aind", "SparseData", function(x) x@aind)
+setMethod("aind", "SparseArray", function(x) x@aind)
 
 setGeneric("nzdata", function(x) standardGeneric("nzdata"))
-setMethod("nzdata", "SparseData", function(x) x@nzdata)
+setMethod("nzdata", "SparseArray", function(x) x@nzdata)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,7 +115,7 @@ setMethod("nzdata", "SparseData", function(x) x@nzdata)
     rep(nzdata, length.out=length.out)
 }
 
-SparseData <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
+SparseArray <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
 {
     if (!is.numeric(dim))
         stop(wmsg("'dim' must be an integer vector"))
@@ -139,7 +135,7 @@ SparseData <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
             dimnames(aind) <- NULL
         nzdata <- .normarg_nzdata(nzdata, nrow(aind))
     }
-    new2("SparseData", dim=dim, aind=aind, nzdata=nzdata, check=check)
+    new2("SparseArray", dim=dim, aind=aind, nzdata=nzdata, check=check)
 }
 
 
@@ -152,37 +148,37 @@ SparseData <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
 ### matrix where each row is an n-uplet representing an array index.
 ### Note that DelayedArray objects don't support this kind of subsetting
 ### yet so dense2sparse() doesn't work on them.
-### Return a SparseData object.
+### Return a SparseArray object.
 dense2sparse <- function(x)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must be an array-like object"))
     aind <- which(x != 0L, arr.ind=TRUE)
-    SparseData(x_dim, aind, x[aind], check=FALSE)
+    SparseArray(x_dim, aind, x[aind], check=FALSE)
 }
 
-### 'sparse_data' must be a SparseData object.
+### 'sparse_array' must be a SparseArray object.
 ### Return an ordinary array.
-sparse2dense <- function(sparse_data)
+sparse2dense <- function(sparse_array)
 {
-    if (!is(sparse_data, "SparseData"))
-        stop(wmsg("'sparse_data' must be a SparseData object"))
-    ans <- array(0L, dim=dim(sparse_data))
-    ans[aind(sparse_data)] <- nzdata(sparse_data)
+    if (!is(sparse_array, "SparseArray"))
+        stop(wmsg("'sparse_array' must be a SparseArray object"))
+    ans <- array(0L, dim=dim(sparse_array))
+    ans[aind(sparse_array)] <- nzdata(sparse_array)
     ans
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Coercion to/from SparseData
+### Coercion to/from SparseArray
 ###
 
-### S3/S4 combo for as.array.SparseData
-as.array.SparseData <- function(x, ...) sparse2dense(x)
-setMethod("as.array", "SparseData", as.array.SparseData)
+### S3/S4 combo for as.array.SparseArray
+as.array.SparseArray <- function(x, ...) sparse2dense(x)
+setMethod("as.array", "SparseArray", as.array.SparseArray)
 
-.from_SparseData_to_matrix <- function(x)
+.from_SparseArray_to_matrix <- function(x)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -190,26 +186,26 @@ setMethod("as.array", "SparseData", as.array.SparseData)
     sparse2dense(x)
 }
 
-### S3/S4 combo for as.matrix.SparseData
-as.matrix.SparseData <- function(x, ...) .from_SparseData_to_matrix(x, ...)
-setMethod("as.matrix", "SparseData", .from_SparseData_to_matrix)
+### S3/S4 combo for as.matrix.SparseArray
+as.matrix.SparseArray <- function(x, ...) .from_SparseArray_to_matrix(x, ...)
+setMethod("as.matrix", "SparseArray", .from_SparseArray_to_matrix)
 
 ### Doesn't work on DelayedArray objects at the moment. See dense2sparse()
 ### above.
-setAs("ANY", "SparseData", function(from) dense2sparse(from))
+setAs("ANY", "SparseArray", function(from) dense2sparse(from))
 
-### Going back and forth between SparseData and dgCMatrix:
+### Going back and forth between SparseArray and dgCMatrix:
 
-.from_dgCMatrix_to_SparseData <- function(from)
+.from_dgCMatrix_to_SparseArray <- function(from)
 {
     i <- from@i + 1L
     j <- rep.int(seq_len(ncol(from)), diff(from@p))
     aind <- cbind(i, j, deparse.level=0L)
-    SparseData(dim(from), aind, from@x, check=FALSE)
+    SparseArray(dim(from), aind, from@x, check=FALSE)
 }
-setAs("dgCMatrix", "SparseData", .from_dgCMatrix_to_SparseData)
+setAs("dgCMatrix", "SparseArray", .from_dgCMatrix_to_SparseArray)
 
-.from_SparseData_to_dgCMatrix <- function(from)
+.from_SparseArray_to_dgCMatrix <- function(from)
 {
     from_dim <- dim(from)
     if (length(from_dim) != 2L)
@@ -220,6 +216,6 @@ setAs("dgCMatrix", "SparseData", .from_dgCMatrix_to_SparseData)
     x <- from@nzdata
     Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
 }
-setAs("SparseData", "dgCMatrix", .from_SparseData_to_dgCMatrix)
-setAs("SparseData", "sparseMatrix", .from_SparseData_to_dgCMatrix)
+setAs("SparseArray", "dgCMatrix", .from_SparseArray_to_dgCMatrix)
+setAs("SparseArray", "sparseMatrix", .from_SparseArray_to_dgCMatrix)
 

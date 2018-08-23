@@ -136,25 +136,25 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 ###
 
 ### Needed only because dense2sparse() doesn't work yet on DelayedArray
-### objects. See dense2sparse() in the SparseData-class.R file.
+### objects. See dense2sparse() in the SparseArray-class.R file.
 ### TODO: This can be removed once dense2sparse() works on DelayedArray
 ### objects which will automatically happen when DelayedArray objects
 ### support 1D-style subsetting by a matrix like one returned by
 ### base::arrayInd(), that is, by a matrix where each row is an n-uplet
 ### representing an array index.
-.from_DelayedArray_to_SparseData <- function(from)
+.from_DelayedArray_to_SparseArray <- function(from)
 {
     idx <- BLOCK_which(from != 0L)
     nzdata <- from[idx]  # block-processed
     from_dim <- dim(from)
     aind <- arrayInd(idx, from_dim)
-    SparseData(from_dim, aind, nzdata, check=FALSE)
+    SparseArray(from_dim, aind, nzdata, check=FALSE)
 }
-setAs("DelayedArray", "SparseData", .from_DelayedArray_to_SparseData)
+setAs("DelayedArray", "SparseArray", .from_DelayedArray_to_SparseArray)
 
 .from_DelayedMatrix_to_dgCMatrix <- function(from)
 {
-    as(as(from, "SparseData"), "dgCMatrix")
+    as(as(from, "SparseArray"), "dgCMatrix")
 }
 setAs("DelayedMatrix", "dgCMatrix", .from_DelayedMatrix_to_dgCMatrix)
 setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)

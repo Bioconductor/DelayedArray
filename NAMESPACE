@@ -19,14 +19,14 @@ import(BiocParallel)
 ###
 
 exportClasses(
-    ## SparseData-class.R:
-    SparseData,
-
     ## Array-class.R:
     Array,
 
     ## ArrayGrid-class.R:
     ArrayViewport, ArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
+
+    ## SparseArray-class.R:
+    SparseArray,
 
     ## DelayedArray-class.R:
     DelayedArray, DelayedMatrix,
@@ -52,7 +52,7 @@ S3method(aperm, RegularArrayGrid)
 S3method(aperm, DelayedArray)
 
 S3method(as.array, Array)
-S3method(as.array, SparseData)
+S3method(as.array, SparseArray)
 
 S3method(as.character, Array)
 S3method(as.character, ArrayGrid)
@@ -66,7 +66,7 @@ S3method(as.integer, Array)
 S3method(as.logical, Array)
 
 S3method(as.matrix, Array)
-S3method(as.matrix, SparseData)
+S3method(as.matrix, SparseArray)
 
 S3method(as.numeric, Array)
 
@@ -103,7 +103,7 @@ export(
     aperm.DelayedArray,
 
     as.array.Array,
-    as.array.SparseData,
+    as.array.SparseArray,
 
     as.character.ArrayGrid,
     as.character.Array,
@@ -117,7 +117,7 @@ export(
     as.logical.Array,
 
     as.matrix.Array,
-    as.matrix.SparseData,
+    as.matrix.SparseArray,
 
     as.numeric.Array,
 
@@ -211,12 +211,12 @@ export(
     ## linearInd.R:
     linearInd,
 
-    ## SparseData-class.R:
-    SparseData, dense2sparse, sparse2dense,
-
     ## ArrayGrid-class.R:
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
+
+    ## SparseArray-class.R:
+    SparseArray, dense2sparse, sparse2dense,
 
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
@@ -257,14 +257,14 @@ export(
     ## bind-arrays.R:
     arbind, acbind,
 
-    ## SparseData-class.R:
-    aind, nzdata,
-
     ## extract_array.R:
     extract_array, type,
 
     ## ArrayGrid-class.R:
     refdim, maxlength, aperm, downsample,
+
+    ## SparseArray-class.R:
+    aind, nzdata,
 
     ## read_block.R:
     read_sparse_block, write_sparse_block,
@@ -304,9 +304,9 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
-    aind, nzdata,
     extract_array, type,
     refdim, maxlength, aperm, downsample,
+    aind, nzdata,
     read_block, write_block,
     mapToGrid, mapToRef,
     isLinear,

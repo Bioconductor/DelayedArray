@@ -25,11 +25,11 @@ VignetteBuilder: knitr
 Collate: utils.R
 	linearInd.R
 	bind-arrays.R
-	SparseData-class.R
 	Array-class.R
 	extract_array.R
 	ArrayGrid-class.R
 	show-utils.R
+	SparseArray-class.R
 	read_block.R
 	mapToGrid.R
 	makeCappedVolumeBox.R
