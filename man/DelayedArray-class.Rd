@@ -51,7 +51,7 @@
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
 
-\alias{coerce,DelayedArray,SparseArray-method}
+\alias{coerce,DelayedArray,SparseArraySeed-method}
 \alias{coerce,DelayedMatrix,dgCMatrix-method}
 \alias{coerce,DelayedMatrix,sparseMatrix-method}
 

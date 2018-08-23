@@ -29,7 +29,7 @@ Collate: utils.R
 	extract_array.R
 	ArrayGrid-class.R
 	show-utils.R
-	SparseArray-class.R
+	SparseArraySeed-class.R
 	read_block.R
 	mapToGrid.R
 	makeCappedVolumeBox.R

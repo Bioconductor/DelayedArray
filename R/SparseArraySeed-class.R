@@ -1,9 +1,9 @@
 ### =========================================================================
-### SparseArray objects
+### SparseArraySeed objects
 ### -------------------------------------------------------------------------
 
 
-setClass("SparseArray",
+setClass("SparseArraySeed",
     contains="Array",
     representation(
         dim="integer",   # This gives us dim() for free!
@@ -20,8 +20,8 @@ setClass("SparseArray",
 ### - Getters: dim(), length(), aind(), nzdata(), sparsity()
 ### - dense2sparse(), sparse2dense()
 ### - Based on sparse2dense(): extract_array(), as.array(), as.matrix()
-### - Based on dense2sparse(): coercion to SparseArray
-### - Back and forth coercion between SparseArray and dgCMatrix.
+### - Based on dense2sparse(): coercion to SparseArraySeed
+### - Back and forth coercion between SparseArraySeed and dgCMatrix
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -57,7 +57,7 @@ setClass("SparseArray",
     TRUE
 }
 
-.validate_SparseArray <- function(x)
+.validate_SparseArraySeed <- function(x)
 {
     msg <- validate_dim_slot(x, "dim")
     if (!isTRUE(msg))
@@ -71,7 +71,7 @@ setClass("SparseArray",
     TRUE
 }
 
-setValidity2("SparseArray", .validate_SparseArray)
+setValidity2("SparseArraySeed", .validate_SparseArraySeed)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -79,13 +79,13 @@ setValidity2("SparseArray", .validate_SparseArray)
 ###
 
 setGeneric("aind", function(x) standardGeneric("aind"))
-setMethod("aind", "SparseArray", function(x) x@aind)
+setMethod("aind", "SparseArraySeed", function(x) x@aind)
 
 setGeneric("nzdata", function(x) standardGeneric("nzdata"))
-setMethod("nzdata", "SparseArray", function(x) x@nzdata)
+setMethod("nzdata", "SparseArraySeed", function(x) x@nzdata)
 
 setGeneric("sparsity", function(x) standardGeneric("sparsity"))
-setMethod("sparsity", "SparseArray",
+setMethod("sparsity", "SparseArraySeed",
     function(x) { 1 - length(nzdata(x)) / length(x) }
 )
 
@@ -113,7 +113,7 @@ setMethod("sparsity", "SparseArray",
     rep(nzdata, length.out=length.out)
 }
 
-SparseArray <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
+SparseArraySeed <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
 {
     if (!is.numeric(dim))
         stop(wmsg("'dim' must be an integer vector"))
@@ -133,7 +133,7 @@ SparseArray <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
             dimnames(aind) <- NULL
         nzdata <- .normarg_nzdata(nzdata, nrow(aind))
     }
-    new2("SparseArray", dim=dim, aind=aind, nzdata=nzdata, check=check)
+    new2("SparseArraySeed", dim=dim, aind=aind, nzdata=nzdata, check=check)
 }
 
 
@@ -146,24 +146,24 @@ SparseArray <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
 ### matrix where each row is an n-uplet representing an array index.
 ### Note that DelayedArray objects don't support this kind of subsetting
 ### yet so dense2sparse() doesn't work on them.
-### Return a SparseArray object.
+### Return a SparseArraySeed object.
 dense2sparse <- function(x)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must be an array-like object"))
     aind <- which(x != 0L, arr.ind=TRUE)
-    SparseArray(x_dim, aind, x[aind], check=FALSE)
+    SparseArraySeed(x_dim, aind, x[aind], check=FALSE)
 }
 
-### 'sparse_array' must be a SparseArray object.
+### 'sas' must be a SparseArraySeed object.
 ### Return an ordinary array.
-sparse2dense <- function(sparse_array)
+sparse2dense <- function(sas)
 {
-    if (!is(sparse_array, "SparseArray"))
-        stop(wmsg("'sparse_array' must be a SparseArray object"))
-    ans <- array(0L, dim=dim(sparse_array))
-    ans[aind(sparse_array)] <- nzdata(sparse_array)
+    if (!is(sas, "SparseArraySeed"))
+        stop(wmsg("'sas' must be a SparseArraySeed object"))
+    ans <- array(0L, dim=dim(sas))
+    ans[aind(sas)] <- nzdata(sas)
     ans
 }
 
@@ -172,9 +172,9 @@ sparse2dense <- function(sparse_array)
 ### extract_array()
 ###
 
-.extract_array_from_SparseArray <- function(x, index)
+.extract_array_from_SparseArraySeed <- function(x, index)
 {
-    stopifnot(is(x, "SparseArray"))
+    stopifnot(is(x, "SparseArraySeed"))
     ans_dim <- get_Nindex_lengths(index, dim(x))
     x_aind <- aind(x)
     for (along in seq_along(ans_dim)) {
@@ -205,18 +205,20 @@ sparse2dense <- function(sparse_array)
     subset_by_Nindex(ans0, sm_index)
 }
 
-setMethod("extract_array", "SparseArray", .extract_array_from_SparseArray)
+setMethod("extract_array", "SparseArraySeed",
+    .extract_array_from_SparseArraySeed
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Coercion to/from SparseArray
+### Coercion to/from SparseArraySeed
 ###
 
-### S3/S4 combo for as.array.SparseArray
-as.array.SparseArray <- function(x, ...) sparse2dense(x)
-setMethod("as.array", "SparseArray", as.array.SparseArray)
+### S3/S4 combo for as.array.SparseArraySeed
+as.array.SparseArraySeed <- function(x, ...) sparse2dense(x)
+setMethod("as.array", "SparseArraySeed", as.array.SparseArraySeed)
 
-.from_SparseArray_to_matrix <- function(x)
+.from_SparseArraySeed_to_matrix <- function(x)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -224,26 +226,27 @@ setMethod("as.array", "SparseArray", as.array.SparseArray)
     sparse2dense(x)
 }
 
-### S3/S4 combo for as.matrix.SparseArray
-as.matrix.SparseArray <- function(x, ...) .from_SparseArray_to_matrix(x, ...)
-setMethod("as.matrix", "SparseArray", .from_SparseArray_to_matrix)
+### S3/S4 combo for as.matrix.SparseArraySeed
+as.matrix.SparseArraySeed <-
+    function(x, ...) .from_SparseArraySeed_to_matrix(x, ...)
+setMethod("as.matrix", "SparseArraySeed", .from_SparseArraySeed_to_matrix)
 
 ### Doesn't work on DelayedArray objects at the moment. See dense2sparse()
 ### above.
-setAs("ANY", "SparseArray", function(from) dense2sparse(from))
+setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
 
-### Going back and forth between SparseArray and dgCMatrix:
+### Going back and forth between SparseArraySeed and dgCMatrix:
 
-.from_dgCMatrix_to_SparseArray <- function(from)
+.from_dgCMatrix_to_SparseArraySeed <- function(from)
 {
     i <- from@i + 1L
     j <- rep.int(seq_len(ncol(from)), diff(from@p))
     aind <- cbind(i, j, deparse.level=0L)
-    SparseArray(dim(from), aind, from@x, check=FALSE)
+    SparseArraySeed(dim(from), aind, from@x, check=FALSE)
 }
-setAs("dgCMatrix", "SparseArray", .from_dgCMatrix_to_SparseArray)
+setAs("dgCMatrix", "SparseArraySeed", .from_dgCMatrix_to_SparseArraySeed)
 
-.from_SparseArray_to_dgCMatrix <- function(from)
+.from_SparseArraySeed_to_dgCMatrix <- function(from)
 {
     from_dim <- dim(from)
     if (length(from_dim) != 2L)
@@ -254,6 +257,6 @@ setAs("dgCMatrix", "SparseArray", .from_dgCMatrix_to_SparseArray)
     x <- from@nzdata
     Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
 }
-setAs("SparseArray", "dgCMatrix", .from_SparseArray_to_dgCMatrix)
-setAs("SparseArray", "sparseMatrix", .from_SparseArray_to_dgCMatrix)
+setAs("SparseArraySeed", "dgCMatrix", .from_SparseArraySeed_to_dgCMatrix)
+setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_dgCMatrix)
 

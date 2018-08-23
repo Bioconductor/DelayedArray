@@ -25,8 +25,8 @@ exportClasses(
     ## ArrayGrid-class.R:
     ArrayViewport, ArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
 
-    ## SparseArray-class.R:
-    SparseArray,
+    ## SparseArraySeed-class.R:
+    SparseArraySeed,
 
     ## DelayedArray-class.R:
     DelayedArray, DelayedMatrix,
@@ -52,7 +52,7 @@ S3method(aperm, RegularArrayGrid)
 S3method(aperm, DelayedArray)
 
 S3method(as.array, Array)
-S3method(as.array, SparseArray)
+S3method(as.array, SparseArraySeed)
 
 S3method(as.character, Array)
 S3method(as.character, ArrayGrid)
@@ -66,7 +66,7 @@ S3method(as.integer, Array)
 S3method(as.logical, Array)
 
 S3method(as.matrix, Array)
-S3method(as.matrix, SparseArray)
+S3method(as.matrix, SparseArraySeed)
 
 S3method(as.numeric, Array)
 
@@ -103,7 +103,7 @@ export(
     aperm.DelayedArray,
 
     as.array.Array,
-    as.array.SparseArray,
+    as.array.SparseArraySeed,
 
     as.character.ArrayGrid,
     as.character.Array,
@@ -117,7 +117,7 @@ export(
     as.logical.Array,
 
     as.matrix.Array,
-    as.matrix.SparseArray,
+    as.matrix.SparseArraySeed,
 
     as.numeric.Array,
 
@@ -215,8 +215,8 @@ export(
     ArrayViewport, makeNindexFromArrayViewport,
     ArbitraryArrayGrid, RegularArrayGrid,
 
-    ## SparseArray-class.R:
-    SparseArray, dense2sparse, sparse2dense,
+    ## SparseArraySeed-class.R:
+    SparseArraySeed, dense2sparse, sparse2dense,
 
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
@@ -263,7 +263,7 @@ export(
     ## ArrayGrid-class.R:
     refdim, maxlength, aperm, downsample,
 
-    ## SparseArray-class.R:
+    ## SparseArraySeed-class.R:
     aind, nzdata, sparsity,
 
     ## read_block.R:
