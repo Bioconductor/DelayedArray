@@ -145,8 +145,10 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 .from_DelayedArray_to_SparseData <- function(from)
 {
     idx <- BLOCK_which(from != 0L)
-    aind <- arrayInd(idx, dim(from))
-    SparseData(dim(from), aind, from[idx], check=FALSE)
+    nzdata <- from[idx]  # block-processed
+    from_dim <- dim(from)
+    aind <- arrayInd(idx, from_dim)
+    SparseData(from_dim, aind, nzdata, check=FALSE)
 }
 setAs("DelayedArray", "SparseData", .from_DelayedArray_to_SparseData)
 
