@@ -14,6 +14,17 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
+\alias{as.array.SparseData}
+\alias{as.array,SparseData-method}
+
+\alias{as.matrix.SparseData}
+\alias{as.matrix,SparseData-method}
+
+\alias{coerce,ANY,SparseData-method}
+\alias{coerce,dgCMatrix,SparseData-method}
+\alias{coerce,SparseData,dgCMatrix-method}
+\alias{coerce,SparseData,sparseMatrix-method}
+
 \title{SparseData objects}
 
 \description{
@@ -78,6 +89,9 @@ sparse2dense(sparse_data)
 }
 
 \examples{
+## ---------------------------------------------------------------------
+## EXAMPLE 1
+## ---------------------------------------------------------------------
 aind1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
               c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
 nzdata1 <- 11.11 * seq_len(nrow(aind1))
@@ -89,7 +103,14 @@ aind(sparse_data1)
 nzdata(sparse_data1)
 
 sparse2dense(sparse_data1)
+as.array(sparse_data1)  # same as sparse2dense(sparse_data1)
 
+\dontrun{
+as.matrix(sparse_data1)  # error!
+}
+## ---------------------------------------------------------------------
+## EXAMPLE 2
+## ---------------------------------------------------------------------
 m2 <- matrix(c(5:-2, rep.int(c(0L, 99L), 11)), ncol=6)
 sparse_data2 <- dense2sparse(m2)
 dim(sparse_data2)
@@ -98,6 +119,19 @@ aind(sparse_data2)
 nzdata(sparse_data2)
 
 stopifnot(identical(sparse2dense(sparse_data2), m2))
+
+as.matrix(sparse_data2)  # same as sparse2dense(sparse_data2)
+
+## Go back and forth between SparseData and dgCMatrix objects:
+M2 <- as(sparse_data2, "dgCMatrix")
+stopifnot(identical(M2, as(m2, "dgCMatrix")))
+
+sparse_data2b <- as(M2, "SparseData")
+## 'sparse_data2b' is the same as 'sparse_data2' except that
+## 'nzdata(sparse_data2b)' is of type numeric instead of integer:
+all.equal(sparse_data2b, sparse_data2)
+typeof(nzdata(sparse_data2b))  # numeric
+typeof(nzdata(sparse_data2))   # integer
 }
 \keyword{classes}
 \keyword{methods}

@@ -52,6 +52,7 @@ S3method(aperm, RegularArrayGrid)
 S3method(aperm, DelayedArray)
 
 S3method(as.array, Array)
+S3method(as.array, SparseData)
 
 S3method(as.character, Array)
 S3method(as.character, ArrayGrid)
@@ -65,6 +66,7 @@ S3method(as.integer, Array)
 S3method(as.logical, Array)
 
 S3method(as.matrix, Array)
+S3method(as.matrix, SparseData)
 
 S3method(as.numeric, Array)
 
@@ -101,6 +103,7 @@ export(
     aperm.DelayedArray,
 
     as.array.Array,
+    as.array.SparseData,
 
     as.character.ArrayGrid,
     as.character.Array,
@@ -114,6 +117,7 @@ export(
     as.logical.Array,
 
     as.matrix.Array,
+    as.matrix.SparseData,
 
     as.numeric.Array,
 

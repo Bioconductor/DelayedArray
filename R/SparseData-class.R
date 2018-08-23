@@ -28,7 +28,7 @@ setClass("SparseData",
 ### - Getters: dim(), length(), aind(), nonzeroes()
 ### - dense2sparse(), sparse2dense()
 ### - Based on dense2sparse(): coercion to SparseData
-### - Based on sparse2dense(): as.array()
+### - Based on sparse2dense(): as.array(), as.matrix()
 ### - Other coercions: back and forth between SparseData and dgCMatrix.
 
 
@@ -135,6 +135,8 @@ SparseData <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
             stop(wmsg("'aind' must be a matrix"))
         if (storage.mode(aind) == "double")
             storage.mode(aind) <- "integer"
+        if (!is.null(dimnames(aind)))
+            dimnames(aind) <- NULL
         nzdata <- .normarg_nzdata(nzdata, nrow(aind))
     }
     new2("SparseData", dim=dim, aind=aind, nzdata=nzdata, check=check)
@@ -145,7 +147,11 @@ SparseData <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
 ### dense2sparse() and sparse2dense()
 ###
 
-### 'x' must be an array-like object.
+### 'x' must be an array-like object that supports 1D-style subsetting
+### by a matrix like one returned by base::arrayInd(), that is, by a
+### matrix where each row is an n-uplet representing an array index.
+### Note that DelayedArray objects don't support this kind of subsetting
+### yet so dense2sparse() doesn't work on them.
 ### Return a SparseData object.
 dense2sparse <- function(x)
 {
@@ -167,13 +173,53 @@ sparse2dense <- function(sparse_data)
     ans
 }
 
-### NOT exported and currently unused.
-dense2sparse.dgCMatrix <- function(x)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion to/from SparseData
+###
+
+### S3/S4 combo for as.array.SparseData
+as.array.SparseData <- function(x, ...) sparse2dense(x)
+setMethod("as.array", "SparseData", as.array.SparseData)
+
+.from_SparseData_to_matrix <- function(x)
 {
-    stopifnot(is(x, "dgCMatrix"))
-    ans_aind <- cbind(x@i + 1L,
-                      rep.int(seq_len(ncol(x)), diff(x@p)),
-                      deparse.level=0L)
-    SparseData(dim(x), ans_aind, x@x, check=FALSE)
+    x_dim <- dim(x)
+    if (length(x_dim) != 2L)
+        stop(wmsg("'x' must have exactly 2 dimensions"))
+    sparse2dense(x)
 }
+
+### S3/S4 combo for as.matrix.SparseData
+as.matrix.SparseData <- function(x, ...) .from_SparseData_to_matrix(x, ...)
+setMethod("as.matrix", "SparseData", .from_SparseData_to_matrix)
+
+### Doesn't work on DelayedArray objects at the moment. See dense2sparse()
+### above.
+setAs("ANY", "SparseData", function(from) dense2sparse(from))
+
+### Going back and forth between SparseData and dgCMatrix:
+
+.from_dgCMatrix_to_SparseData <- function(from)
+{
+    i <- from@i + 1L
+    j <- rep.int(seq_len(ncol(from)), diff(from@p))
+    aind <- cbind(i, j, deparse.level=0L)
+    SparseData(dim(from), aind, from@x, check=FALSE)
+}
+setAs("dgCMatrix", "SparseData", .from_dgCMatrix_to_SparseData)
+
+.from_SparseData_to_dgCMatrix <- function(from)
+{
+    from_dim <- dim(from)
+    if (length(from_dim) != 2L)
+        stop(wmsg("the ", class(from), " object to coerce to dgCMatrix ",
+                  "must have exactly 2 dimensions"))
+    i <- from@aind[ , 1L]
+    j <- from@aind[ , 2L]
+    x <- from@nzdata
+    Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
+}
+setAs("SparseData", "dgCMatrix", .from_SparseData_to_dgCMatrix)
+setAs("SparseData", "sparseMatrix", .from_SparseData_to_dgCMatrix)
 
