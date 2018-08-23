@@ -176,7 +176,7 @@ sparse2dense <- function(sas)
 {
     stopifnot(is(x, "SparseArraySeed"))
     ans_dim <- get_Nindex_lengths(index, dim(x))
-    x_aind <- aind(x)
+    x_aind <- x@aind
     for (along in seq_along(ans_dim)) {
         i <- index[[along]]
         if (is.null(i))
@@ -208,6 +208,31 @@ sparse2dense <- function(sas)
 setMethod("extract_array", "SparseArraySeed",
     .extract_array_from_SparseArraySeed
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### read_sparse_block_from_SparseArraySeed()
+###
+
+### NOT exported but used in the HDF5Array package.
+### Return a SparseArraySeed objects.
+### TODO: Make this the "read_sparse_block" method for SparseArraySeed
+### objects.
+read_sparse_block_from_SparseArraySeed <- function(x, viewport)
+{
+    stopifnot(is(x, "SparseArraySeed"))
+    taind <- t(x@aind)
+    keep_idx <- which(colAlls(taind >= start(viewport) &
+                              taind <= end(viewport)))
+    taind <- taind[ , keep_idx, drop=FALSE]
+    offsets <- start(viewport) - 1L
+    x0_aind <- t(taind - offsets)
+    x0_nzdata <- x@nzdata[keep_idx]
+    BiocGenerics:::replaceSlots(x, dim=dim(viewport),
+                                   aind=x0_aind,
+                                   nzdata=x0_nzdata,
+                                   check=FALSE)
+}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
