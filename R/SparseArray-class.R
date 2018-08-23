@@ -17,7 +17,7 @@ setClass("SparseArray",
 )
 
 ### API:
-### - Getters: dim(), length(), aind(), nonzeroes()
+### - Getters: dim(), length(), aind(), nzdata(), sparsity()
 ### - dense2sparse(), sparse2dense()
 ### - Based on sparse2dense(): extract_array(), as.array(), as.matrix()
 ### - Based on dense2sparse(): coercion to SparseArray
@@ -83,6 +83,11 @@ setMethod("aind", "SparseArray", function(x) x@aind)
 
 setGeneric("nzdata", function(x) standardGeneric("nzdata"))
 setMethod("nzdata", "SparseArray", function(x) x@nzdata)
+
+setGeneric("sparsity", function(x) standardGeneric("sparsity"))
+setMethod("sparsity", "SparseArray",
+    function(x) { 1 - length(nzdata(x)) / length(x) }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

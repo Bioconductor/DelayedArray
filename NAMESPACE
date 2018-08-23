@@ -264,7 +264,7 @@ export(
     refdim, maxlength, aperm, downsample,
 
     ## SparseArray-class.R:
-    aind, nzdata,
+    aind, nzdata, sparsity,
 
     ## read_block.R:
     read_sparse_block, write_sparse_block,
@@ -306,7 +306,7 @@ exportMethods(
     arbind, acbind,
     extract_array, type,
     refdim, maxlength, aperm, downsample,
-    aind, nzdata,
+    aind, nzdata, sparsity,
     read_block, write_block,
     mapToGrid, mapToRef,
     isLinear,

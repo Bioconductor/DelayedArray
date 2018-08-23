@@ -9,6 +9,8 @@
 \alias{aind,SparseArray-method}
 \alias{nzdata}
 \alias{nzdata,SparseArray-method}
+\alias{sparsity}
+\alias{sparsity,SparseArray-method}
 
 \alias{dense2sparse}
 \alias{sparse2dense}
@@ -38,6 +40,11 @@
 ## Constructor function:
 SparseArray(dim, aind=NULL, nzdata=NULL, check=TRUE)
 
+## Getters (in addition to dim() and length()):
+aind(x)
+nzdata(x)
+sparsity(x)
+
 ## Two low-level utilities:
 dense2sparse(x)
 sparse2dense(sparse_array)
@@ -49,9 +56,11 @@ sparse2dense(sparse_array)
     SparseArray object to create.
   }
   \item{aind}{
-    An integer matrix like one returned by \code{base::\link[base]{arrayInd}},
-    that is, with \code{length(dim)} columns and where each row is an
-    n-uplet representing an array index.
+    A matrix containing the array indices of the nonzero data.
+
+    This must be an integer matrix like one returned by
+    \code{base::\link[base]{arrayInd}}, that is, with \code{length(dim)}
+    columns and where each row is an n-uplet representing an array index.
   }
   \item{nzdata}{
     A vector of length \code{nrow(aind)} containing the nonzero data.
@@ -60,7 +69,10 @@ sparse2dense(sparse_array)
     Should the object be validated upon construction?
   }
   \item{x}{
-    An array-like object.
+    A SparseArray object for the \code{aind}, \code{nzdata}, and
+    \code{sparsity} getters.
+
+    An array-like object for \code{dense2sparse}.
   }
   \item{sparse_array}{
     A SparseArray object.
@@ -70,6 +82,15 @@ sparse2dense(sparse_array)
 \value{
   \itemize{
     \item For \code{SparseArray()}: A SparseArray instance.
+
+    \item For \code{aind()}: The matrix containing the array indices of the
+          nonzero data.
+
+    \item For \code{nzdata()}: The vector of nonzero data.
+
+    \item For \code{sparsity()}: The number of zero-valued elements
+          in the implicit array divided by the total number of array
+          elements (a.k.a. the length of the array).
 
     \item For \code{dense2sparse()}: A SparseArray instance.
 
@@ -103,10 +124,11 @@ aind1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
 nzdata1 <- 11.11 * seq_len(nrow(aind1))
 sparse_array1 <- SparseArray(5:3, aind1, nzdata1)
 
-dim(sparse_array1)
-length(sparse_array1)
+dim(sparse_array1)     # the dimensions of the implicit array
+length(sparse_array1)  # the length of the implicit array
 aind(sparse_array1)
 nzdata(sparse_array1)
+sparsity(sparse_array1)
 
 sparse2dense(sparse_array1)
 as.array(sparse_array1)   # same as sparse2dense(sparse_array1)
@@ -123,6 +145,7 @@ dim(sparse_array2)
 length(sparse_array2)
 aind(sparse_array2)
 nzdata(sparse_array2)
+sparsity(sparse_array2)
 
 stopifnot(identical(sparse2dense(sparse_array2), m2))
 
@@ -142,8 +165,8 @@ typeof(nzdata(sparse_array2))   # integer
 ## ---------------------------------------------------------------------
 ## SEED CONTRACT
 ## ---------------------------------------------------------------------
-## SparseArray comply with the "seed contract". In particular they
-## support extract_array():
+## SparseArray objects comply with the "seed contract". In particular
+## they support extract_array():
 extract_array(sparse_array1, list(c(5, 3:2, 5), NULL, 3))
 
 ## See '?extract_array' for more information about the "seed contract".
@@ -157,6 +180,8 @@ aind3 <- cbind(sample(25000, 600000, replace=TRUE),
                sample(195000, 600000, replace=TRUE))
 nzdata3 <- runif(600000)
 sparse_array3 <- SparseArray(c(25000, 195000), aind3, nzdata3)
+sparsity(sparse_array3)
+
 M3 <- DelayedArray(sparse_array3)
 M3
 colSums(M3[ , 1:20])
