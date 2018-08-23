@@ -1,14 +1,15 @@
 
 test_SparseData_getters <- function()
 {
-    aind <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
-                  c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
-    nzdata <- seq_len(nrow(aind)) / 10
-    sparse_data <- SparseData(5:3, aind, nzdata)
+    aind1 <- aind2 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
+                            c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
+    nzdata <- seq_len(nrow(aind1)) / 10
+    sparse_data <- SparseData(5:3, aind1, nzdata)
 
     checkIdentical(dim(sparse_data), 5:3)
     checkIdentical(length(sparse_data), 8L)
-    checkIdentical(aind(sparse_data), aind)
+    storage.mode(aind2) <- "integer"
+    checkIdentical(aind(sparse_data), aind2)
     checkIdentical(nzdata(sparse_data), nzdata)
 }
 

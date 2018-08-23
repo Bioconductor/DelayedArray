@@ -157,7 +157,7 @@ dense2sparse <- function(x)
 }
 
 ### 'sparse_data' must be a SparseData object.
-### Return an ordinary matrix.
+### Return an ordinary array.
 sparse2dense <- function(sparse_data)
 {
     if (!is(sparse_data, "SparseData"))

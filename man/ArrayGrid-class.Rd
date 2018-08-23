@@ -59,10 +59,11 @@
 
 \description{
   ArrayGrid and ArrayViewport objects are used internally to support
-  block processing of an array-like object.
+  block processing of array-like objects.
 }
 
 \usage{
+## Constructor functions:
 ArbitraryArrayGrid(tickmarks)
 RegularArrayGrid(refdim, spacings=refdim)
 
