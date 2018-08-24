@@ -183,7 +183,8 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
         stop(wmsg(.filling_error_msg))
     value_len <- length(value)
     if (value_len == 1L)
-        return(stash_DelayedUnaryIsoOp(x, `[<-`, Rargs=list(value=value)))
+        return(stash_DelayedUnaryIsoOpWithArgs(x, `[<-`,
+                                               Rargs=list(value=value)))
     x_len <- length(x)
     if (value_len > x_len)
         stop(wmsg("'value' is longer than 'x'"))
@@ -193,7 +194,8 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
             stop(wmsg(.filling_error_msg))
         value <- rep(value, length.out=x_nrow)
     }
-    stash_DelayedUnaryIsoOp(x, `[<-`, Rargs=list(value=value), Ralong=1L)
+    stash_DelayedUnaryIsoOpWithArgs(x, `[<-`,
+                                    Rargs=list(value=value), Ralong=1L)
 }
 
 .subassign_DelayedArray <- function(x, i, j, ..., value)

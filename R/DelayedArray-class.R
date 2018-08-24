@@ -295,8 +295,8 @@ setClass("DelayedArray1",
     if (!isNoOp(op))
         seed <- op
 
-    ## Translate 'delayed_ops' slot as DelayedUnaryIsoOp objects and
-    ## stash them inside 'seed'.
+    ## Translate 'delayed_ops' slot as DelayedUnaryIsoOpWithArgs objects
+    ## and stash them inside 'seed'.
 
     for (delayed_op in object1@delayed_ops) {
         OP <- delayed_op[[1L]]
@@ -307,8 +307,8 @@ setClass("DelayedArray1",
         if (recycle_along_last_dim) {
             if (length(Largs) == 1L) Lalong <- 1L else Ralong <- 1L
         }
-        seed <- new_DelayedUnaryIsoOp(seed, OP, Largs, Rargs,
-                                            Lalong, Ralong)
+        seed <- new_DelayedUnaryIsoOpWithArgs(seed, OP, Largs, Rargs,
+                                              Lalong, Ralong)
     }
 
     DelayedArray(seed)
@@ -417,11 +417,13 @@ stash_DelayedAperm <- function(x, perm)
     DelayedArray(op)
 }
 
-stash_DelayedUnaryIsoOp <- function(x, OP, Largs=list(), Rargs=list(),
-                                       Lalong=NA, Ralong=NA)
+stash_DelayedUnaryIsoOpWithArgs <- function(x, OP,
+                                            Largs=list(), Rargs=list(),
+                                            Lalong=NA, Ralong=NA)
 {
     stopifnot(is(x, "DelayedArray"))
-    op <- new_DelayedUnaryIsoOp(x@seed, OP=OP, Largs=Largs, Rargs=Rargs,
+    op <- new_DelayedUnaryIsoOpWithArgs(x@seed, OP=OP,
+                                        Largs=Largs, Rargs=Rargs,
                                         Lalong=Lalong, Ralong=Ralong,
                                         check.op=TRUE)
     DelayedArray(op)

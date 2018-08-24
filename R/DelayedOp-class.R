@@ -4,23 +4,35 @@
 ###
 ### In a DelayedArray object the delayed operations are stored as a tree of
 ### DelayedOp objects. Each node in the tree is represented by a DelayedOp
-### object. 6 types of nodes are currently supported. Each type is a concrete
+### object. 7 types of nodes are currently supported. Each type is a concrete
 ### DelayedOp subclass:
 ###
-###   Node type    Outdegree  Operation
+###   Node type                        Represented operation
 ###   -------------------------------------------------------------------
-###   DelayedSubset        1  Multi-dimensional single bracket subsetting
-###   DelayedAperm         1  Extended aperm() (can drop dimensions)
-###   DelayedUnaryIsoOp    1  Unary op that preserves the geometry
-###   DelayedDimnames      1  Set dimnames
-###   DelayedNaryIsoOp     N  N-ary op that preserves the geometry
-###   DelayedAbind         N  abind()
+###   DelayedOp (VIRTUAL)
+###   -------------------------------------------------------------------
+###     DelayedUnaryOp (VIRTUAL)
+###     - DelayedSubset                Multi-dimensional single bracket
+###                                    subsetting.
+###     - DelayedAperm                 Extended aperm() (can drop
+###                                    dimensions).
+###     - DelayedUnaryIsoOp            Unary op that preserves the
+###                                    geometry.
+###       - DelayedUnaryIsoOpWithArgs  Unary op with arguments that
+###                                    preserves the geometry.
+###     - DelayedDimnames              Set/replace the dimnames.
+###   -------------------------------------------------------------------
+###     DelayedNaryOp (VIRTUAL)
+###     - DelayedNaryIsoOp             N-ary op that preserves the
+###                                    geometry.
+###     - DelayedAbind                 abind()
+###   -------------------------------------------------------------------
 ###
 ### All the nodes are array-like objects that must comply with the "seed
 ### contract" i.e. they must support dim(), dimnames(), and extract_array().
 ###
 
-### This virtual class and its 6 concrete subclasses are for internal use
+### This virtual class and its 7 concrete subclasses are for internal use
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
@@ -370,12 +382,12 @@ setMethod("extract_array", "DelayedAperm",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### DelayedUnaryIsoOp objects
+### DelayedUnaryIsoOpWithArgs objects
 ###
-### Delayed "Unary op that preserves the geometry".
+### Delayed "Unary op with arguments that preserves the geometry".
 ###
 
-setClass("DelayedUnaryIsoOp",
+setClass("DelayedUnaryIsoOpWithArgs",
     contains="DelayedUnaryOp",
     representation(
         OP="function",     # The function to apply to the input i.e. to the
@@ -425,10 +437,11 @@ setClass("DelayedUnaryIsoOp",
     Lalong
 }
 
-new_DelayedUnaryIsoOp <- function(seed=new("array"),
-                                  OP=identity, Largs=list(), Rargs=list(),
-                                  Lalong=NA, Ralong=NA,
-                                  check.op=FALSE)
+new_DelayedUnaryIsoOpWithArgs <- function(seed=new("array"),
+                                          OP=identity,
+                                          Largs=list(), Rargs=list(),
+                                          Lalong=NA, Ralong=NA,
+                                          check.op=FALSE)
 {
     seed_dim <- dim(seed)
     if (length(seed_dim) == 0L)
@@ -440,9 +453,10 @@ new_DelayedUnaryIsoOp <- function(seed=new("array"),
 
     OP <- match.fun(OP)
 
-    ans <- new2("DelayedUnaryIsoOp", seed=seed,
-                                     OP=OP, Largs=Largs, Rargs=Rargs,
-                                     Lalong=Lalong, Ralong=Ralong)
+    ans <- new2("DelayedUnaryIsoOpWithArgs", seed=seed,
+                                             OP=OP,
+                                             Largs=Largs, Rargs=Rargs,
+                                             Lalong=Lalong, Ralong=Ralong)
     if (check.op) {
         ## We quickly test the validity of the operation by calling type()
         ## on the returned object. This will fail if the operation cannot
@@ -457,14 +471,16 @@ new_DelayedUnaryIsoOp <- function(seed=new("array"),
     ans
 }
 
-### S3/S4 combo for summary.DelayedUnaryIsoOp
+### S3/S4 combo for summary.DelayedUnaryIsoOpWithArgs
 
-.DelayedUnaryIsoOp_summary <- function(object) "Unary iso op"
+.DelayedUnaryIsoOpWithArgs_summary <- function(object) "Unary iso op"
 
-summary.DelayedUnaryIsoOp <-
-    function(object, ...) .DelayedUnaryIsoOp_summary(object, ...)
+summary.DelayedUnaryIsoOpWithArgs <-
+    function(object, ...) .DelayedUnaryIsoOpWithArgs_summary(object, ...)
 
-setMethod("summary", "DelayedUnaryIsoOp", summary.DelayedUnaryIsoOp)
+setMethod("summary", "DelayedUnaryIsoOpWithArgs",
+    summary.DelayedUnaryIsoOpWithArgs
+)
 
 ### Seed contract.
 
@@ -481,7 +497,7 @@ subset_args <- function(args, along, index)
     mapply(subset_arg, args, along, SIMPLIFY=FALSE, USE.NAMES=FALSE)
 }
 
-setMethod("extract_array", "DelayedUnaryIsoOp",
+setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
     function(x, index)
     {
         a <- extract_array(x@seed, index)
@@ -507,7 +523,7 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 
 ### isSparse()
 
-setMethod("isSparse", "DelayedUnaryIsoOp",
+setMethod("isSparse", "DelayedUnaryIsoOpWithArgs",
     function(x)
     {
         if (!isSparse(x@seed))

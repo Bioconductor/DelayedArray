@@ -124,7 +124,7 @@ setMethod("simplify", "DelayedSubset",
             x1@seed <- simplify(x2, incremental=TRUE)
             return(x1)
         }
-        if (is(x1, "DelayedUnaryIsoOp")) {
+        if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
             ## SWAP
             Largs <- subset_args(x1@Largs, x1@Lalong, x@index)
             Rargs <- subset_args(x1@Rargs, x1@Ralong, x@index)
@@ -162,7 +162,7 @@ setMethod("simplify", "DelayedAperm",
                 return(x1@seed)
             return(simplify(x1, incremental=TRUE))
         }
-        if (is(x1, "DelayedUnaryIsoOp")) {
+        if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
             set_Lalong_to_NA <- !(x1@Lalong %in% x@perm)
             set_Ralong_to_NA <- !(x1@Ralong %in% x@perm)
             if (all(set_Lalong_to_NA) && all(set_Ralong_to_NA)) {
@@ -187,7 +187,7 @@ setMethod("simplify", "DelayedAperm",
     }
 )
 
-setMethod("simplify", "DelayedUnaryIsoOp",
+setMethod("simplify", "DelayedUnaryIsoOpWithArgs",
     function(x, incremental=FALSE)
     {
         if (!.normarg_incremental(incremental))
@@ -227,14 +227,14 @@ setMethod("simplify", "DelayedDimnames",
 ### contentIsPristine()
 ###
 
-### Return FALSE if the tree contains any DelayedUnaryIsoOp or
+### Return FALSE if the tree contains any DelayedUnaryIsoOpWithArgs or
 ### DelayedNaryIsoOp node.
 contentIsPristine <- function(x)
 {
     if (!is.list(x)) {
         if (!is(x, "DelayedOp"))
             return(TRUE)
-        if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedNaryIsoOp"))
+        if (is(x, "DelayedUnaryIsoOpWithArgs") || is(x, "DelayedNaryIsoOp"))
             return(FALSE)
         if (is(x, "DelayedUnaryOp")) {
             x <- list(x@seed)
@@ -263,8 +263,8 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
 )
 
 ### Remove nodes that represent unary isomorphic ops (i.e. nodes of type
-### DelayedUnaryIsoOp and DelayedDimnames) from a linear tree. Raise an error
-### if the tree is not linear.
+### DelayedUnaryIsoOpWithArgs and DelayedDimnames) from a linear tree.
+### Raise an error if the tree is not linear.
 .remove_iso_ops <- function(x)
 {
     if (!is(x, "DelayedOp"))
@@ -275,7 +275,7 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
                   IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
     }
     x1 <- .remove_iso_ops(x@seed)
-    if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedDimnames")) {
+    if (is(x, "DelayedUnaryIsoOpWithArgs") || is(x, "DelayedDimnames")) {
         x <- x1
     } else {
         x@seed <- x1

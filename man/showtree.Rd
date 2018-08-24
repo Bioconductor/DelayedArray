@@ -9,7 +9,7 @@
 \alias{simplify,ANY-method}
 \alias{simplify,DelayedSubset-method}
 \alias{simplify,DelayedAperm-method}
-\alias{simplify,DelayedUnaryIsoOp-method}
+\alias{simplify,DelayedUnaryIsoOpWithArgs-method}
 \alias{simplify,DelayedDimnames-method}
 \alias{simplify,DelayedArray-method}
 
