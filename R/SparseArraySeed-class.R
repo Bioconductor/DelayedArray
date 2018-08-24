@@ -211,6 +211,21 @@ setMethod("extract_array", "SparseArraySeed",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### isSparse()
+###
+### Used for propagation of **structural** sparsity.
+### It is not about quantitative sparsity measured by sparsity().
+###
+
+setGeneric("isSparse", function(x) standardGeneric("isSparse"))
+
+### By default, nothing is considered sparse.
+setMethod("isSparse", "ANY", function(x) FALSE)
+
+setMethod("isSparse", "SparseArraySeed", function(x) TRUE)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### read_sparse_block_from_SparseArraySeed()
 ###
 

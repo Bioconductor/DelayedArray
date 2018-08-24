@@ -170,7 +170,7 @@ extract_empty_array <- function(x)
     extract_array(x, index)
 }
 
-### For extracting a single array element.
+### For extracting a **single** array element.
 ### 'x' is **trusted** to be an array-like object.
 extract_array_element <- function(x, i)
 {

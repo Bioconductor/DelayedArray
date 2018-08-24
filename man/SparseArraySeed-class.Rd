@@ -17,6 +17,10 @@
 
 \alias{extract_array,SparseArraySeed-method}
 
+\alias{isSparse}
+\alias{isSparse,ANY-method}
+\alias{isSparse,SparseArraySeed-method}
+
 \alias{as.array.SparseArraySeed}
 \alias{as.array,SparseArraySeed-method}
 

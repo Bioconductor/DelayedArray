@@ -73,6 +73,11 @@ setMethod("extract_array", "DelayedUnaryOp",
     function(x, index) extract_array(x@seed, index)
 )
 
+### isSparse()
+### Unless stated otherwise (via a specific method), a DelayedUnaryOp
+### derivative is considered to propagate structural sparsity.
+setMethod("isSparse", "DelayedUnaryOp", function(x) isSparse(x@seed))
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedNaryOp objects
@@ -110,7 +115,7 @@ setClass("DelayedSubset",
     contains="DelayedUnaryOp",
     representation(
         index="list"  # List of subscripts as positive integer vectors, one
-                      # per dimension in the input. *Missing* list elements
+                      # per dimension in the input. **Missing** list elements
                       # are allowed and represented by NULLs.
     ),
     prototype(
@@ -248,6 +253,19 @@ setMethod("dimnames", "DelayedSubset",
 
 setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 
+### isSparse()
+
+setMethod("isSparse", "DelayedSubset",
+    function(x)
+    {
+        if (!isSparse(x@seed))
+            return(FALSE)
+        ## Duplicates in x@index break structural sparsity.
+        !any(vapply(x@index, anyDuplicated,
+                    integer(1), USE.NAMES=FALSE))
+    }
+)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedAperm objects
@@ -260,7 +278,7 @@ setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
 setClass("DelayedAperm",
     contains="DelayedUnaryOp",
     representation(
-        perm="integer"  # Index into dim(seed) describing the *rearrangement*
+        perm="integer"  # Index into dim(seed) describing the **rearrangement**
                         # of the dimensions i.e. which dimensions of the input
                         # to keep and in which order.
     ),
@@ -360,9 +378,10 @@ setMethod("extract_array", "DelayedAperm",
 setClass("DelayedUnaryIsoOp",
     contains="DelayedUnaryOp",
     representation(
-        OP="function",     # The function to apply to the input (e.g. `+` or
-                           # log). It should act as an isomorphism i.e. always
-                           # return an array-like object *parallel* to the
+        OP="function",     # The function to apply to the input i.e. to the
+                           # incoming array-like object. For example `+` or
+                           # log. It should act as an isomorphism i.e. always
+                           # output an array-like object **parallel** to the
                            # input (i.e. with the same dimensions as the input).
 
         Largs="list",      # Left arguments to OP i.e. arguments to place
@@ -371,9 +390,11 @@ setClass("DelayedUnaryIsoOp",
                            # after the input array in the function call.
 
         Lalong="integer",  # One integer (or NA) per left argument indicating
-                           # what dimension the argument is parallel to.
+                           # which dimension of the input array the argument
+                           # is parallel to.
         Ralong="integer"   # One integer (or NA) per right argument indicating
-                           # what dimension the argument is parallel to.
+                           # which dimension of the input array the argument
+                           # is parallel to.
     ),
     prototype(
         OP=identity
@@ -385,7 +406,8 @@ setClass("DelayedUnaryIsoOp",
     if (identical(Lalong, NA))
         return(rep.int(NA_integer_, length(Largs)))
     if (!(is.numeric(Lalong) && length(Lalong) == length(Largs)))
-        stop(wmsg("'Lalong' must be an integer vector parallel to 'Largs'"))
+        stop(wmsg("'Lalong' and 'Ralong' must be integer vectors ",
+                  "parallel to 'Largs' and 'Rargs', respectively"))
     if (!is.integer(Lalong))
         Lalong <- as.integer(Lalong)
     nonNA_idx <- which(!is.na(Lalong))
@@ -395,7 +417,7 @@ setClass("DelayedUnaryIsoOp",
                   "be >= 1 and <= 'length(dim(seed))'"))
     if (any(Lalong != 1L, na.rm=TRUE))
         stop(wmsg("arguments in 'Largs' and 'Rargs' can only go along ",
-                  "first dimension at the moment"))
+                  "the first dimension at the moment"))
     ok <- elementNROWS(Largs[nonNA_idx]) == seed_dim[nonNA_Lalong]
     if (!all(ok))
         stop(wmsg("some arguments in 'Largs' and/or 'Rargs' are not ",
@@ -480,6 +502,36 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
             stopifnot(identical(ans_dim, a_dim))  # sanity check
         }
         ans
+    }
+)
+
+### isSparse()
+
+setMethod("isSparse", "DelayedUnaryIsoOp",
+    function(x)
+    {
+        if (!isSparse(x@seed))
+            return(FALSE)
+        ## No propagation of structural sparsity if any left or right argument
+        ## to the "unary iso op" is parallel to a dimension of the input array.
+        if (!(all(is.na(x@Lalong)) && all(is.na(x@Ralong))))
+            return(FALSE)
+        ## Here is the trick we use to detect propagation of structural
+        ## sparsity: Artificially replace the current seed with an ordinary
+        ## array of the same number of dimensions and same type, but with
+        ## a single element. The single element is a 0, or the "zero"
+        ## associated with the type of the seed e.g. "" for character, FALSE
+        ## for logical, etc... whatever 'vector(type(x@seed), length=1L)'
+        ## produces.
+        ## Note that this doesn't preserve the dimensions of the original seed
+        ## but is OK because at this point no left or right argument to the
+        ## "unary iso op" is parallel to a dimension of the input array.
+        x_ndim <- length(dim(x@seed))
+        seed0 <- array(vector(type(x@seed), length=1L),
+                       dim=rep.int(1L, x_ndim))
+        x@seed <- seed0
+        a0 <- extract_array(x, rep.int(list(1L), x_ndim))
+        as.vector(a0) == vector(type(a0), length=1L)
     }
 )
 
@@ -610,7 +662,7 @@ setClass("DelayedNaryIsoOp",
     representation(
         OP="function",  # The function to use to combine the input objects.
                         # Should act as an isomorphism i.e. always return an
-                        # array-like object *parallel* to the input objects
+                        # array-like object **parallel** to the input objects
                         # (i.e. with the same dimensions).
 
         Rargs="list"    # Additional right arguments to OP.
@@ -676,6 +728,18 @@ setMethod("extract_array", "DelayedNaryIsoOp",
     {
         arrays <- lapply(x@seeds, extract_array, index)
         do.call(x@OP, c(arrays, x@Rargs))
+    }
+)
+
+### isSparse()
+
+setMethod("isSparse", "DelayedNaryIsoOp",
+    function(x)
+    {
+        ok <- vapply(x@seeds, isSparse, logical(1), USE.NAMES=FALSE)
+        if (!all(ok))
+            return(FALSE)
+        stop("NOT IMPLEMENTED YET!")
     }
 )
 
@@ -781,6 +845,15 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
 }
 
 setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
+
+### isSparse()
+
+setMethod("isSparse", "DelayedAbind",
+    function(x)
+    {
+        all(vapply(x@seeds, isSparse, logical(1), USE.NAMES=FALSE))
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
