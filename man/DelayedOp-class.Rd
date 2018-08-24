@@ -50,6 +50,21 @@
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
 
+% DelayedUnaryIsoOp objects
+\alias{class:DelayedUnaryIsoOp}
+\alias{DelayedUnaryIsoOp-class}
+\alias{DelayedUnaryIsoOp}
+
+% DelayedUnaryIsoOpStack objects
+\alias{class:DelayedUnaryIsoOpStack}
+\alias{DelayedUnaryIsoOpStack-class}
+\alias{DelayedUnaryIsoOpStack}
+
+\alias{summary.DelayedUnaryIsoOpStack}
+\alias{summary,DelayedUnaryIsoOpStack-method}
+\alias{extract_array,DelayedUnaryIsoOpStack-method}
+\alias{isSparse,DelayedUnaryIsoOpStack-method}
+
 % DelayedUnaryIsoOpWithArgs objects
 \alias{class:DelayedUnaryIsoOpWithArgs}
 \alias{DelayedUnaryIsoOpWithArgs-class}
@@ -120,25 +135,26 @@ isNoOp(x)
   7 types of nodes are currently supported. Each type is a DelayedOp subclass:
 
   \preformatted{  Node type                        Represented operation
-  -----------------------------------------------------------------
+  ------------------------------------------------------------------
    DelayedOp (VIRTUAL)
-  -----------------------------------------------------------------
+  ------------------------------------------------------------------
     DelayedUnaryOp (VIRTUAL)
     - DelayedSubset                Multi-dimensional single bracket
                                    subsetting.
     - DelayedAperm                 Extended aperm() (can drop
                                    dimensions).
-    - DelayedUnaryIsoOp            Unary op that preserves the
+    - DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
                                    geometry.
-      - DelayedUnaryIsoOpWithArgs  Unary op with arguments that
-                                   preserves the geometry.
+      - DelayedUnaryIsoOpStack     Simple ops stacked together.
+      - DelayedUnaryIsoOpWithArgs  One op with vector-like arguments
+                                   along the dimensions of the input.
     - DelayedDimnames              Set/replace the dimnames.
-  -----------------------------------------------------------------
+  ------------------------------------------------------------------
     DelayedNaryOp (VIRTUAL)
     - DelayedNaryIsoOp             N-ary op that preserves the
                                    geometry.
     - DelayedAbind                 abind()
-  -----------------------------------------------------------------
+  ------------------------------------------------------------------
   }
 
   All the nodes are array-like objects that must comply with the \emph{seed

@@ -77,8 +77,13 @@ setMethod("bindROWS", "DelayedArray",
     e2 <- .normarg_Ops_vector_arg(e2, nrow(e1),
                                   e_what="right object",
                                   x_what="first dimension of left object")
-    Ralong <- if (length(e2) == 1L) NA else 1L
-    stash_DelayedUnaryIsoOpWithArgs(e1, .Generic, Rargs=list(e2), Ralong=Ralong)
+    if (length(e2) == 1L) {
+        stash_DelayedUnaryIsoOpStack(e1,
+            function(a) match.fun(.Generic)(a, e2))
+    } else {
+        stash_DelayedUnaryIsoOpWithArgs(e1,
+            .Generic, Rargs=list(e2), Ralong=1L)
+    }
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e2'.
@@ -95,8 +100,13 @@ setMethod("bindROWS", "DelayedArray",
     e1 <- .normarg_Ops_vector_arg(e1, nrow(e2),
                                   e_what="left object",
                                   x_what="first dimension of right object")
-    Lalong <- if (length(e1) == 1L) NA else 1L
-    stash_DelayedUnaryIsoOpWithArgs(e2, .Generic, Largs=list(e1), Lalong=Lalong)
+    if (length(e1) == 1L) {
+        stash_DelayedUnaryIsoOpStack(e2,
+            function(a) match.fun(.Generic)(e1, a))
+    } else {
+        stash_DelayedUnaryIsoOpWithArgs(e2,
+            .Generic, Largs=list(e1), Lalong=1L)
+    }
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
@@ -142,12 +152,12 @@ setMethod("Ops", c("DelayedArray", "DelayedArray"),
 
 ### Support unary operators "+" and "-".
 setMethod("+", c("DelayedArray", "missing"),
-    function(e1, e2) stash_DelayedUnaryIsoOpWithArgs(e1, .Generic,
-                                                     Largs=list(0L))
+    function(e1, e2)
+        stash_DelayedUnaryIsoOpStack(e1, function(a) match.fun(.Generic)(a))
 )
 setMethod("-", c("DelayedArray", "missing"),
-    function(e1, e2) stash_DelayedUnaryIsoOpWithArgs(e1, .Generic,
-                                                     Largs=list(0L))
+    function(e1, e2)
+        stash_DelayedUnaryIsoOpStack(e1, function(a) match.fun(.Generic)(a))
 )
 
 
@@ -292,24 +302,26 @@ setMethod("sweep", "DelayedArray",
 
 for (.Generic in .UNARY_OPS) {
     setMethod(.Generic, "DelayedArray",
-        function(x) stash_DelayedUnaryIsoOpWithArgs(x, .Generic)
+        function(x)
+            stash_DelayedUnaryIsoOpStack(x, function(a) match.fun(.Generic)(a))
     )
 }
 
 setMethod("lengths", "DelayedArray",
     function(x, use.names=TRUE)
-        stash_DelayedUnaryIsoOpWithArgs(x, "lengths",
-            Rargs=list(use.names=use.names))
+        stash_DelayedUnaryIsoOpStack(x,
+            function(a) lengths(a, use.names=use.names))
 )
 
 setMethod("nchar", "DelayedArray",
     function(x, type="chars", allowNA=FALSE, keepNA=NA)
-        stash_DelayedUnaryIsoOpWithArgs(x, "nchar",
-            Rargs=list(type=type, allowNA=allowNA, keepNA=keepNA))
+        stash_DelayedUnaryIsoOpStack(x,
+            function(a) nchar(a, type=type, allowNA=allowNA, keepNA=keepNA))
 )
 
 setMethod("Math", "DelayedArray",
-    function(x) stash_DelayedUnaryIsoOpWithArgs(x, .Generic)
+    function(x)
+        stash_DelayedUnaryIsoOpStack(x, function(a) match.fun(.Generic)(a))
 )
 
 .DelayedArray_Math2 <- function(.Generic, x, digits)
@@ -319,7 +331,8 @@ setMethod("Math", "DelayedArray",
         stop(wmsg("'digits' must be a single numeric"))
     if (!is.integer(digits))
         digits <- as.integer(digits)
-    stash_DelayedUnaryIsoOpWithArgs(x, .Generic, Rargs=list(digits=digits))
+    stash_DelayedUnaryIsoOpStack(x,
+        function(a) match.fun(.Generic)(a, digits=digits))
 }
 
 ### Note that round() and signif() don't use the same default for 'digits'.
@@ -338,28 +351,28 @@ setMethod("signif", "DelayedArray",
 setMethod("grepl", c(x="DelayedArray"),
     function(pattern, x,
              ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
-        stash_DelayedUnaryIsoOpWithArgs(x, "grepl",
-            Largs=list(pattern=pattern),
-            Rargs=list(ignore.case=ignore.case, perl=perl,
-                       fixed=fixed, useBytes=useBytes))
+        stash_DelayedUnaryIsoOpStack(x,
+            function(a) grepl(pattern, a,
+                              ignore.case=ignore.case, perl=perl,
+                              fixed=fixed, useBytes=useBytes))
 )
 
 setMethod("sub", c(x="DelayedArray"),
     function(pattern, replacement, x,
              ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
-        stash_DelayedUnaryIsoOpWithArgs(x, "sub",
-            Largs=list(pattern=pattern, replacement=replacement),
-            Rargs=list(ignore.case=ignore.case, perl=perl,
-                       fixed=fixed, useBytes=useBytes))
+        stash_DelayedUnaryIsoOpStack(x,
+            function(a) sub(pattern, replacement, a,
+                            ignore.case=ignore.case, perl=perl,
+                            fixed=fixed, useBytes=useBytes))
 )
 
 setMethod("gsub", c(x="DelayedArray"),
     function(pattern, replacement, x,
              ignore.case=FALSE, perl=FALSE, fixed=FALSE, useBytes=FALSE)
-        stash_DelayedUnaryIsoOpWithArgs(x, "gsub",
-            Largs=list(pattern=pattern, replacement=replacement),
-            Rargs=list(ignore.case=ignore.case, perl=perl,
-                       fixed=fixed, useBytes=useBytes))
+        stash_DelayedUnaryIsoOpStack(x,
+            function(a) gsub(pattern, replacement, a,
+                             ignore.case=ignore.case, perl=perl,
+                             fixed=fixed, useBytes=useBytes))
 )
 
 

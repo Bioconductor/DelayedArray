@@ -417,6 +417,13 @@ stash_DelayedAperm <- function(x, perm)
     DelayedArray(op)
 }
 
+stash_DelayedUnaryIsoOpStack <- function(x, OP)
+{
+    stopifnot(is(x, "DelayedArray"))
+    op <- new_DelayedUnaryIsoOpStack(x@seed, OPS=list(OP), check.op=TRUE)
+    DelayedArray(op)
+}
+
 stash_DelayedUnaryIsoOpWithArgs <- function(x, OP,
                                             Largs=list(), Rargs=list(),
                                             Lalong=NA, Ralong=NA)

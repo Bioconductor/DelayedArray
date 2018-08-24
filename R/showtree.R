@@ -124,13 +124,20 @@ setMethod("simplify", "DelayedSubset",
             x1@seed <- simplify(x2, incremental=TRUE)
             return(x1)
         }
+        if (is(x1, "DelayedUnaryIsoOpStack")) {
+            ## SWAP
+            x@seed <- x1@seed
+            x1@seed <- simplify(x, incremental=TRUE)
+            return(x1)
+        }
         if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
             ## SWAP
+            x2 <- x
+            x2@seed <- x1@seed
+            x2 <- simplify(x2, incremental=TRUE)
             Largs <- subset_args(x1@Largs, x1@Lalong, x@index)
             Rargs <- subset_args(x1@Rargs, x1@Ralong, x@index)
-            x@seed <- x1@seed
-            x <- simplify(x, incremental=TRUE)
-            x1 <- BiocGenerics:::replaceSlots(x1, seed=x,
+            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2,
                                                   Largs=Largs,
                                                   Rargs=Rargs)
             return(x1)
@@ -162,6 +169,12 @@ setMethod("simplify", "DelayedAperm",
                 return(x1@seed)
             return(simplify(x1, incremental=TRUE))
         }
+        if (is(x1, "DelayedUnaryIsoOpStack")) {
+            ## SWAP
+            x@seed <- x1@seed
+            x1@seed <- simplify(x, incremental=TRUE)
+            return(x1)
+        }
         if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
             set_Lalong_to_NA <- !(x1@Lalong %in% x@perm)
             set_Ralong_to_NA <- !(x1@Ralong %in% x@perm)
@@ -170,8 +183,7 @@ setMethod("simplify", "DelayedAperm",
                 x1@Lalong[set_Lalong_to_NA] <- NA_integer_
                 x1@Ralong[set_Ralong_to_NA] <- NA_integer_
                 x@seed <- x1@seed
-                x <- simplify(x, incremental=TRUE)
-                x1@seed <- x
+                x1@seed <- simplify(x, incremental=TRUE)
                 return(x1)
             }
         }
@@ -187,16 +199,24 @@ setMethod("simplify", "DelayedAperm",
     }
 )
 
-setMethod("simplify", "DelayedUnaryIsoOpWithArgs",
+setMethod("simplify", "DelayedUnaryIsoOp",
     function(x, incremental=FALSE)
     {
         if (!.normarg_incremental(incremental))
             x@seed <- simplify(x@seed)
         x1 <- x@seed
+        if (is(x1, "DelayedUnaryIsoOpStack") &&
+            is(x, "DelayedUnaryIsoOpStack"))
+        {
+            ## SQUASH
+            x1@OPS <- c(x1@OPS, x@OPS)
+            return(x1)
+
+        }
         if (is(x1, "DelayedDimnames")) {
             ## SWAP
             x@seed <- x1@seed
-            x1@seed <- x
+            x1@seed <- simplify(x, incremental=TRUE)
             return(x1)
         }
         x
@@ -227,14 +247,14 @@ setMethod("simplify", "DelayedDimnames",
 ### contentIsPristine()
 ###
 
-### Return FALSE if the tree contains any DelayedUnaryIsoOpWithArgs or
+### Return FALSE if the tree contains any DelayedUnaryIsoOp or
 ### DelayedNaryIsoOp node.
 contentIsPristine <- function(x)
 {
     if (!is.list(x)) {
         if (!is(x, "DelayedOp"))
             return(TRUE)
-        if (is(x, "DelayedUnaryIsoOpWithArgs") || is(x, "DelayedNaryIsoOp"))
+        if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedNaryIsoOp"))
             return(FALSE)
         if (is(x, "DelayedUnaryOp")) {
             x <- list(x@seed)
@@ -263,7 +283,7 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
 )
 
 ### Remove nodes that represent unary isomorphic ops (i.e. nodes of type
-### DelayedUnaryIsoOpWithArgs and DelayedDimnames) from a linear tree.
+### DelayedUnaryIsoOp and DelayedDimnames) from a linear tree.
 ### Raise an error if the tree is not linear.
 .remove_iso_ops <- function(x)
 {
@@ -275,7 +295,7 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
                   IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
     }
     x1 <- .remove_iso_ops(x@seed)
-    if (is(x, "DelayedUnaryIsoOpWithArgs") || is(x, "DelayedDimnames")) {
+    if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedDimnames")) {
         x <- x1
     } else {
         x@seed <- x1

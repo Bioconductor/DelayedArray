@@ -16,10 +16,11 @@
 ###                                    subsetting.
 ###     - DelayedAperm                 Extended aperm() (can drop
 ###                                    dimensions).
-###     - DelayedUnaryIsoOp            Unary op that preserves the
+###     - DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
 ###                                    geometry.
-###       - DelayedUnaryIsoOpWithArgs  Unary op with arguments that
-###                                    preserves the geometry.
+###       - DelayedUnaryIsoOpStack     Simple ops stacked together.
+###       - DelayedUnaryIsoOpWithArgs  One op with vector-like arguments
+###                                    along the dimensions of the input.
 ###     - DelayedDimnames              Set/replace the dimnames.
 ###   -------------------------------------------------------------------
 ###     DelayedNaryOp (VIRTUAL)
@@ -382,13 +383,132 @@ setMethod("extract_array", "DelayedAperm",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedUnaryIsoOp objects
+###
+### Delayed "Unary op that preserves the geometry".
+###
+
+setClass("DelayedUnaryIsoOp",
+    contains="DelayedUnaryOp",
+    representation("VIRTUAL")
+)
+
+.set_or_check_dim <- function(x, dim)
+{
+    x_dim <- dim(x)
+    if (is.null(x_dim)) {
+        dim(x) <- dim
+    } else {
+        stopifnot(identical(x_dim, dim))
+    }
+    x
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedUnaryIsoOpStack objects
+###
+### Delayed "Unary op that preserves the geometry" where the op is made of
+### simple ops stacked together.
+###
+
+setClass("DelayedUnaryIsoOpStack",
+    contains="DelayedUnaryIsoOp",
+    representation(
+        OPS="list"  # The functions to apply to the input i.e. to the
+                    # incoming array-like object. For example log
+                    # or function(x) log(x + 1). It should act as an
+                    # isomorphism i.e. always output an array-like
+                    # object **parallel** to the input (i.e. with the
+                    # same dimensions as the input).
+    ),
+    prototype(
+        OPS=list()
+    )
+)
+
+new_DelayedUnaryIsoOpStack <- function(seed=new("array"), OPS=list(),
+                                       check.op=FALSE)
+{
+    seed_dim <- dim(seed)
+    if (length(seed_dim) == 0L)
+        stop(wmsg("'seed' must have dimensions"))
+
+    OPS <- lapply(OPS, match.fun)
+
+    ans <- new2("DelayedUnaryIsoOpStack", seed=seed, OPS=OPS)
+    if (check.op) {
+        ## We quickly test the validity of the operation by calling type()
+        ## on the returned object. This will fail if the operation cannot
+        ## be applied e.g. if the user does something like:
+        ##   M <- DelayedArray(matrix(character(12), ncol=3))
+        ##   M2 <- log(M)
+        ## The test is cheap and type() will be called anyway by show()
+        ## later when the user tries to display M2. Better fail early than
+        ## late!
+        type(ans)  # we ignore the returned value
+    }
+    ans
+}
+
+### S3/S4 combo for summary.DelayedUnaryIsoOpStack
+
+.DelayedUnaryIsoOpStack_summary <- function(object) "Unary iso op stack"
+
+summary.DelayedUnaryIsoOpStack <-
+    function(object, ...) .DelayedUnaryIsoOpStack_summary(object, ...)
+
+setMethod("summary", "DelayedUnaryIsoOpStack", summary.DelayedUnaryIsoOpStack)
+
+setMethod("extract_array", "DelayedUnaryIsoOpStack",
+    function(x, index)
+    {
+        a <- extract_array(x@seed, index)
+        a_dim <- dim(a)
+        for (OP in x@OPS) {
+            a <- OP(a)
+            ## Some operations (e.g. dnorm()) don't propagate the "dim"
+            ## attribute if the input array is empty.
+            a <- .set_or_check_dim(a, a_dim)
+        }
+        a
+    }
+)
+
+### isSparse()
+
+setMethod("isSparse", "DelayedUnaryIsoOpStack",
+    function(x)
+    {
+        if (!isSparse(x@seed))
+            return(FALSE)
+        ## Here is the trick we use to detect propagation of structural
+        ## sparsity: Artificially replace the current seed with an ordinary
+        ## array of the same number of dimensions and same type, but with
+        ## a single element. The single element is a 0, or the "zero"
+        ## associated with the type of the seed e.g. "" for character, FALSE
+        ## for logical, etc... whatever 'vector(type(x@seed), length=1L)'
+        ## produces.
+        seed_ndim <- length(dim(x@seed))
+        seed0 <- array(vector(type(x@seed), length=1L),
+                       dim=rep.int(1L, seed_ndim))
+        x@seed <- seed0
+        a0 <- extract_array(x, rep.int(list(1L), seed_ndim))
+        as.vector(a0) == vector(type(a0), length=1L)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedUnaryIsoOpWithArgs objects
 ###
 ### Delayed "Unary op with arguments that preserves the geometry".
+### Here the op can have vector-like arguments along the dimensions of the
+### input.
 ###
 
 setClass("DelayedUnaryIsoOpWithArgs",
-    contains="DelayedUnaryOp",
+    contains="DelayedUnaryIsoOp",
     representation(
         OP="function",     # The function to apply to the input i.e. to the
                            # incoming array-like object. For example `+` or
@@ -457,23 +577,14 @@ new_DelayedUnaryIsoOpWithArgs <- function(seed=new("array"),
                                              OP=OP,
                                              Largs=Largs, Rargs=Rargs,
                                              Lalong=Lalong, Ralong=Ralong)
-    if (check.op) {
-        ## We quickly test the validity of the operation by calling type()
-        ## on the returned object. This will fail if the operation cannot
-        ## be applied e.g. if the user does something like:
-        ##   M <- DelayedArray(matrix(character(12), ncol=3))
-        ##   M2 <- log(M)
-        ## The test is cheap and type() will be called anyway by show()
-        ## later when the user tries to display M2. Better fail early than
-        ## late!
+    if (check.op)
         type(ans)  # we ignore the returned value
-    }
     ans
 }
 
 ### S3/S4 combo for summary.DelayedUnaryIsoOpWithArgs
 
-.DelayedUnaryIsoOpWithArgs_summary <- function(object) "Unary iso op"
+.DelayedUnaryIsoOpWithArgs_summary <- function(object) "Unary iso op with args"
 
 summary.DelayedUnaryIsoOpWithArgs <-
     function(object, ...) .DelayedUnaryIsoOpWithArgs_summary(object, ...)
@@ -510,46 +621,13 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
 
         ## Some operations (e.g. dnorm()) don't propagate the "dim" attribute
         ## if the input array is empty.
-        a_dim <- dim(a)
-        ans_dim <- dim(ans)
-        if (is.null(ans_dim)) {
-            dim(ans) <- a_dim  # propagate the "dim" attribute
-        } else {
-            stopifnot(identical(ans_dim, a_dim))  # sanity check
-        }
-        ans
+        .set_or_check_dim(ans, dim(a))
     }
 )
 
 ### isSparse()
 
-setMethod("isSparse", "DelayedUnaryIsoOpWithArgs",
-    function(x)
-    {
-        if (!isSparse(x@seed))
-            return(FALSE)
-        ## No propagation of structural sparsity if any left or right argument
-        ## to the "unary iso op" is parallel to a dimension of the input array.
-        if (!(all(is.na(x@Lalong)) && all(is.na(x@Ralong))))
-            return(FALSE)
-        ## Here is the trick we use to detect propagation of structural
-        ## sparsity: Artificially replace the current seed with an ordinary
-        ## array of the same number of dimensions and same type, but with
-        ## a single element. The single element is a 0, or the "zero"
-        ## associated with the type of the seed e.g. "" for character, FALSE
-        ## for logical, etc... whatever 'vector(type(x@seed), length=1L)'
-        ## produces.
-        ## Note that this doesn't preserve the dimensions of the original seed
-        ## but is OK because at this point no left or right argument to the
-        ## "unary iso op" is parallel to a dimension of the input array.
-        x_ndim <- length(dim(x@seed))
-        seed0 <- array(vector(type(x@seed), length=1L),
-                       dim=rep.int(1L, x_ndim))
-        x@seed <- seed0
-        a0 <- extract_array(x, rep.int(list(1L), x_ndim))
-        as.vector(a0) == vector(type(a0), length=1L)
-    }
-)
+setMethod("isSparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
