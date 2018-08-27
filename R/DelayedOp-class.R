@@ -21,7 +21,7 @@
 ###       - DelayedUnaryIsoOpStack     Simple ops stacked together.
 ###       - DelayedUnaryIsoOpWithArgs  One op with vector-like arguments
 ###                                    along the dimensions of the input.
-###     - DelayedDimnames              Set/replace the dimnames.
+###       - DelayedDimnames            Set/replace the dimnames.
 ###   -------------------------------------------------------------------
 ###     DelayedNaryOp (VIRTUAL)
 ###     - DelayedNaryIsoOp             N-ary op that preserves the
@@ -74,48 +74,10 @@ setClass("DelayedUnaryOp",
 
 setValidity2("DelayedUnaryOp", .validate_DelayedUnaryOp)
 
-### Seed contract.
-### Each DelayedUnaryOp derivative inherits these 3 default methods and will
-### typically overwrite at least one of them (otherwise it would be a no-op).
-
-setMethod("dim", "DelayedUnaryOp", function(x) dim(x@seed))
-
-setMethod("dimnames", "DelayedUnaryOp", function(x) dimnames(x@seed))
-
-setMethod("extract_array", "DelayedUnaryOp",
-    function(x, index) extract_array(x@seed, index)
-)
-
 ### isSparse()
 ### Unless stated otherwise (via a specific method), a DelayedUnaryOp
 ### derivative is considered to propagate structural sparsity.
 setMethod("isSparse", "DelayedUnaryOp", function(x) isSparse(x@seed))
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### DelayedNaryOp objects
-###
-
-setClass("DelayedNaryOp",
-    contains="DelayedOp",
-    representation(
-        "VIRTUAL",
-        seeds="list"  # The input array-like objects. Each object is
-                      # expected to comply with the "seed contract".
-    ),
-    prototype(
-        seeds=list(new("array"))
-    )
-)
-
-.validate_DelayedNaryOp <- function(x)
-{
-    if (length(x@seeds) == 0L)
-        return(wmsg2("'x@seeds' cannot be empty"))
-    TRUE
-}
-
-setValidity2("DelayedNaryOp", .validate_DelayedNaryOp)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -393,6 +355,26 @@ setClass("DelayedUnaryIsoOp",
     representation("VIRTUAL")
 )
 
+### Seed contract.
+### The 3 default methods below give DelayedUnaryIsoOp derivatives a no-op
+### semantic by default.
+### DelayedUnaryIsoOpStack and DelayedUnaryIsoOpWithArgs objects overwrite
+### this default "extract_array" method.
+### DelayedDimnames objects overwrite this default "dimnames" method.
+### Note that a DelayedArray object is also a DelayedUnaryIsoOp derivative
+### and is considered to be the root node of the tree of DelayedOp objects
+### contained in it. From a DelayedOp point of view, this root node must
+### represent a no-op so DelayedArray objects inherit the 3 default methods
+### below.
+
+setMethod("dim", "DelayedUnaryIsoOp", function(x) dim(x@seed))
+
+setMethod("dimnames", "DelayedUnaryIsoOp", function(x) dimnames(x@seed))
+
+setMethod("extract_array", "DelayedUnaryIsoOp",
+    function(x, index) extract_array(x@seed, index)
+)
+
 .set_or_check_dim <- function(x, dim)
 {
     x_dim <- dim(x)
@@ -639,7 +621,7 @@ setMethod("isSparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
 .INHERIT_FROM_SEED <- -1L
 
 setClass("DelayedDimnames",
-    contains="DelayedUnaryOp",
+    contains="DelayedUnaryIsoOp",
     representation(
         dimnames="list"  # List with one list element per dimension in
                          # the input. Each list element must be NULL,
@@ -741,6 +723,32 @@ setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
 }
 
 setMethod("dimnames", "DelayedDimnames", .get_DelayedDimnames_dimnames)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedNaryOp objects
+###
+
+setClass("DelayedNaryOp",
+    contains="DelayedOp",
+    representation(
+        "VIRTUAL",
+        seeds="list"  # The input array-like objects. Each object is
+                      # expected to comply with the "seed contract".
+    ),
+    prototype(
+        seeds=list(new("array"))
+    )
+)
+
+.validate_DelayedNaryOp <- function(x)
+{
+    if (length(x@seeds) == 0L)
+        return(wmsg2("'x@seeds' cannot be empty"))
+    TRUE
+}
+
+setValidity2("DelayedNaryOp", .validate_DelayedNaryOp)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

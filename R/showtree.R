@@ -247,14 +247,16 @@ setMethod("simplify", "DelayedDimnames",
 ### contentIsPristine()
 ###
 
-### Return FALSE if the tree contains any DelayedUnaryIsoOp or
-### DelayedNaryIsoOp node.
+### Return FALSE if the tree contains any DelayedUnaryIsoOpStack,
+### or DelayedUnaryIsoOpWithArgs, or DelayedNaryIsoOp node.
 contentIsPristine <- function(x)
 {
     if (!is.list(x)) {
         if (!is(x, "DelayedOp"))
             return(TRUE)
-        if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedNaryIsoOp"))
+        if (is(x, "DelayedUnaryIsoOpStack") ||
+            is(x, "DelayedUnaryIsoOpWithArgs") ||
+            is(x, "DelayedNaryIsoOp"))
             return(FALSE)
         if (is(x, "DelayedUnaryOp")) {
             x <- list(x@seed)
@@ -282,10 +284,9 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
     "moment. Note that you can check the number of seeds with nseed()."
 )
 
-### Remove nodes that represent unary isomorphic ops (i.e. nodes of type
-### DelayedUnaryIsoOp and DelayedDimnames) from a linear tree.
+### Remove DelayedUnaryIsoOp nodes from a linear tree.
 ### Raise an error if the tree is not linear.
-.remove_iso_ops <- function(x)
+.remove_unary_iso_ops <- function(x)
 {
     if (!is(x, "DelayedOp"))
         return(x)
@@ -294,8 +295,8 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
         stop(wmsg("netSubsetAndAperm() ",
                   IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
     }
-    x1 <- .remove_iso_ops(x@seed)
-    if (is(x, "DelayedUnaryIsoOp") || is(x, "DelayedDimnames")) {
+    x1 <- .remove_unary_iso_ops(x@seed)
+    if (is(x, "DelayedUnaryIsoOp")) {
         x <- x1
     } else {
         x@seed <- x1
@@ -312,7 +313,7 @@ setMethod("netSubsetAndAperm", "ANY",
     {
         if (!isTRUEorFALSE(as.DelayedOp))
             stop("'as.DelayedOp' must be TRUE or FALSE")
-        reduced <- simplify(.remove_iso_ops(x))
+        reduced <- simplify(.remove_unary_iso_ops(x))
         if (!is(reduced, "DelayedAperm"))
             reduced <- new_DelayedAperm(reduced)
         x1 <- reduced@seed

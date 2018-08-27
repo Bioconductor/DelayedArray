@@ -15,15 +15,7 @@
 \alias{DelayedUnaryOp-class}
 \alias{DelayedUnaryOp}
 
-\alias{dim,DelayedUnaryOp-method}
-\alias{dimnames,DelayedUnaryOp-method}
-\alias{extract_array,DelayedUnaryOp-method}
 \alias{isSparse,DelayedUnaryOp-method}
-
-% DelayedNaryOp objects
-\alias{class:DelayedNaryOp}
-\alias{DelayedNaryOp-class}
-\alias{DelayedNaryOp}
 
 % DelayedSubset objects
 \alias{class:DelayedSubset}
@@ -55,6 +47,10 @@
 \alias{DelayedUnaryIsoOp-class}
 \alias{DelayedUnaryIsoOp}
 
+\alias{dim,DelayedUnaryIsoOp-method}
+\alias{dimnames,DelayedUnaryIsoOp-method}
+\alias{extract_array,DelayedUnaryIsoOp-method}
+
 % DelayedUnaryIsoOpStack objects
 \alias{class:DelayedUnaryIsoOpStack}
 \alias{DelayedUnaryIsoOpStack-class}
@@ -84,6 +80,11 @@
 \alias{summary.DelayedDimnames}
 \alias{summary,DelayedDimnames-method}
 \alias{dimnames,DelayedDimnames-method}
+
+% DelayedNaryOp objects
+\alias{class:DelayedNaryOp}
+\alias{DelayedNaryOp-class}
+\alias{DelayedNaryOp}
 
 % DelayedNaryIsoOp objects
 \alias{summary.DelayedNaryIsoOp}
@@ -148,7 +149,7 @@ isNoOp(x)
       - DelayedUnaryIsoOpStack     Simple ops stacked together.
       - DelayedUnaryIsoOpWithArgs  One op with vector-like arguments
                                    along the dimensions of the input.
-    - DelayedDimnames              Set/replace the dimnames.
+      - DelayedDimnames            Set/replace the dimnames.
   ------------------------------------------------------------------
     DelayedNaryOp (VIRTUAL)
     - DelayedNaryIsoOp             N-ary op that preserves the

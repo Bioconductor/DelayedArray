@@ -4,7 +4,7 @@
 
 
 ### The "root" node of the tree of DelayedOp objects. Represents a no-op.
-setClass("DelayedArray", contains="DelayedUnaryOp")
+setClass("DelayedArray", contains="DelayedUnaryIsoOp")
 
 ### Extending DataTable gives us a few things for free (head(), tail(),
 ### etc...). Note that even though DelayedMatrix already extends Array (via
