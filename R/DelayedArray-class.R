@@ -12,16 +12,18 @@ setClass("DelayedArray", contains="DelayedUnaryIsoOp")
 ### a *direct* child of Array and to place Array *before* DataTable in the
 ### 'contains' field below. This ensures that method dispatch will pick the
 ### method for Array in case a generic has methods defined for Array and
-### DataTable (e.g. as.data.frame()). Furthermore, it seems that we also need
-### to place all the classes that are in the inheritance path between
-### DelayedArray and Array in the 'contains' field otherwise we get the
-### following error when trying to instantiate a DelayedMatrix object with
-### new("DelayedMatrix"):
+### DataTable (e.g. as.data.frame()). Furthermore, for some obscure reason,
+### it seems that we also need to place all the classes that are in the
+### inheritance path between DelayedArray and Array in the 'contains' field
+### otherwise we get the following error when trying to instantiate a
+### DelayedMatrix object with new("DelayedMatrix"):
 ###
 ###     Error: C stack usage  7971652 is too close to the limit
 ###
 setClass("DelayedMatrix",
-    contains=c("DelayedArray", "DelayedUnaryOp", "DelayedOp", "Array",
+    contains=c("DelayedArray",
+               "DelayedUnaryIsoOp", "DelayedUnaryOp", "DelayedOp",
+               "Array",
                "DataTable"),
     prototype=prototype(
         seed=new("matrix")

@@ -137,7 +137,7 @@ isNoOp(x)
 
   \preformatted{  Node type                        Represented operation
   ------------------------------------------------------------------
-   DelayedOp (VIRTUAL)
+  DelayedOp (VIRTUAL)
   ------------------------------------------------------------------
     DelayedUnaryOp (VIRTUAL)
     - DelayedSubset                Multi-dimensional single bracket
