@@ -81,11 +81,15 @@ setGeneric("read_sparse_block", signature="x",
 setMethod("read_sparse_block", "ANY",
     function(x, viewport)
     {
-        Nindex <- makeNindexFromArrayViewport(viewport)
-        extract_sparse_array(x, Nindex)
+        index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
+        extract_sparse_array(x, index)
     }
 )
 
+### The default "read_sparse_block" method above would work just fine on a
+### SparseArraySeed object but we overwrite it with a method that is slightly
+### more efficient (can be 2x to 3x faster on big SparseArraySeed objects
+### with hundreds of thousands of nonzero elements).
 .read_sparse_block_from_SparseArraySeed <- function(x, viewport)
 {
     taind <- t(x@aind)
