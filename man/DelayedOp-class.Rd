@@ -6,7 +6,6 @@
 \alias{DelayedOp}
 
 \alias{isNoOp}
-
 \alias{summary.DelayedOp}
 \alias{summary,DelayedOp-method}
 
@@ -14,8 +13,6 @@
 \alias{class:DelayedUnaryOp}
 \alias{DelayedUnaryOp-class}
 \alias{DelayedUnaryOp}
-
-\alias{isSparse,DelayedUnaryOp-method}
 
 % DelayedSubset objects
 \alias{class:DelayedSubset}
@@ -25,10 +22,13 @@
 \alias{isNoOp,DelayedSubset-method}
 \alias{summary.DelayedSubset}
 \alias{summary,DelayedSubset-method}
+
 \alias{dim,DelayedSubset-method}
 \alias{dimnames,DelayedSubset-method}
 \alias{extract_array,DelayedSubset-method}
+
 \alias{isSparse,DelayedSubset-method}
+\alias{extract_sparse_array,DelayedSubset-method}
 
 % DelayedAperm objects
 \alias{class:DelayedAperm}
@@ -38,9 +38,13 @@
 \alias{isNoOp,DelayedAperm-method}
 \alias{summary.DelayedAperm}
 \alias{summary,DelayedAperm-method}
+
 \alias{dim,DelayedAperm-method}
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
+
+\alias{isSparse,DelayedAperm-method}
+\alias{extract_sparse_array,DelayedAperm-method}
 
 % DelayedUnaryIsoOp objects
 \alias{class:DelayedUnaryIsoOp}
@@ -51,6 +55,9 @@
 \alias{dimnames,DelayedUnaryIsoOp-method}
 \alias{extract_array,DelayedUnaryIsoOp-method}
 
+\alias{isSparse,DelayedUnaryIsoOp-method}
+\alias{extract_sparse_array,DelayedUnaryIsoOp-method}
+
 % DelayedUnaryIsoOpStack objects
 \alias{class:DelayedUnaryIsoOpStack}
 \alias{DelayedUnaryIsoOpStack-class}
@@ -58,8 +65,11 @@
 
 \alias{summary.DelayedUnaryIsoOpStack}
 \alias{summary,DelayedUnaryIsoOpStack-method}
+
 \alias{extract_array,DelayedUnaryIsoOpStack-method}
+
 \alias{isSparse,DelayedUnaryIsoOpStack-method}
+\alias{extract_sparse_array,DelayedUnaryIsoOpStack-method}
 
 % DelayedUnaryIsoOpWithArgs objects
 \alias{class:DelayedUnaryIsoOpWithArgs}
@@ -68,8 +78,11 @@
 
 \alias{summary.DelayedUnaryIsoOpWithArgs}
 \alias{summary,DelayedUnaryIsoOpWithArgs-method}
+
 \alias{extract_array,DelayedUnaryIsoOpWithArgs-method}
+
 \alias{isSparse,DelayedUnaryIsoOpWithArgs-method}
+\alias{extract_sparse_array,DelayedUnaryIsoOpWithArgs-method}
 
 % DelayedDimnames objects
 \alias{class:DelayedDimnames}
@@ -79,6 +92,7 @@
 \alias{isNoOp,DelayedDimnames-method}
 \alias{summary.DelayedDimnames}
 \alias{summary,DelayedDimnames-method}
+
 \alias{dimnames,DelayedDimnames-method}
 
 % DelayedNaryOp objects
@@ -89,18 +103,24 @@
 % DelayedNaryIsoOp objects
 \alias{summary.DelayedNaryIsoOp}
 \alias{summary,DelayedNaryIsoOp-method}
+
 \alias{dim,DelayedNaryIsoOp-method}
 \alias{dimnames,DelayedNaryIsoOp-method}
 \alias{extract_array,DelayedNaryIsoOp-method}
+
 \alias{isSparse,DelayedNaryIsoOp-method}
+\alias{extract_sparse_array,DelayedNaryIsoOp-method}
 
 % DelayedAbind objects
 \alias{summary.DelayedAbind}
 \alias{summary,DelayedAbind-method}
+
 \alias{dim,DelayedAbind-method}
 \alias{dimnames,DelayedAbind-method}
 \alias{extract_array,DelayedAbind-method}
+
 \alias{isSparse,DelayedAbind-method}
+\alias{extract_sparse_array,DelayedAbind-method}
 
 % updateObject()
 \alias{updateObject,DelayedOp-method}

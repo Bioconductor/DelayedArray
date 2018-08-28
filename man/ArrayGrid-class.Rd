@@ -44,12 +44,12 @@
 \alias{maxlength,RegularArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
+\alias{t.Array}
+\alias{t,Array-method}
 \alias{aperm.ArbitraryArrayGrid}
 \alias{aperm,ArbitraryArrayGrid-method}
 \alias{aperm.RegularArrayGrid}
 \alias{aperm,RegularArrayGrid-method}
-\alias{t.ArrayGrid}
-\alias{t,ArrayGrid-method}
 
 \alias{downsample}
 \alias{downsample,ArbitraryArrayGrid-method}

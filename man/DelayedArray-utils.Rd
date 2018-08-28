@@ -71,8 +71,6 @@
 % DelayedMatrix utils
 
 \alias{t}
-\alias{t.DelayedMatrix}
-\alias{t,DelayedMatrix-method}
 
 \alias{\%*\%}
 \alias{\%*\%,DelayedMatrix,matrix-method}

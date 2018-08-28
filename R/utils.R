@@ -247,6 +247,20 @@ validate_dimnames_slot <- function(x, dim, slotname="dimnames")
     TRUE
 }
 
+### Validate 'perm' argument of generalized aperm().
+validate_perm <- function(perm, a_dim)
+{
+    if (length(perm) == 0L)
+        return("'perm' cannot be an empty vector")
+    if (S4Vectors:::anyMissingOrOutside(perm, 1L, length(a_dim)))
+        return("all values in 'perm' must be >= 1 and <= 'length(dim(a))'")
+    if (anyDuplicated(perm))
+        return("'perm' cannot contain duplicates")
+    if (!all(a_dim[-perm] == 1L))
+        return("only dimensions equal to 1 can be dropped")
+    TRUE
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Translate an index into the whole to an index into the parts

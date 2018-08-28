@@ -512,8 +512,26 @@ setMethod("show", "ArrayGrid",
 ### aperm() and t()
 ###
 
+### Unlike base::aperm(), the various methods implemented in the package
+### support dropping dimensions of array-like object 'a'. Note that only
+### "ineffective" dimensions can be dropped (i.e. dimensions equal to 1)
+### so abind() always preserves the length of 'a', that is, no data array
+### gets dropped.
 setGeneric("aperm", signature="a")
 
+### S3/S4 combo for t.Array
+t.Array <- function(x)
+{
+    if (length(dim(x)) != 2L)
+        stop(wmsg("the ", class(x), " object to transpose ",
+                  "must have exactly 2 dimensions"))
+    aperm(x)
+}
+setMethod("t", "Array", t.Array)
+
+### Does not perform full check/normalization e.g. won't say anything if
+### 'perm' contains NAs or values > length(a_dim). Use validate_perm()
+### on the value returned by normarg_perm() for a full check.
 normarg_perm <- function(perm, a_dim)
 {
     if (missing(perm))
@@ -527,39 +545,34 @@ normarg_perm <- function(perm, a_dim)
     perm
 }
 
-### S3/S4 combo for aperm.ArbitraryArrayGrid
-aperm.ArbitraryArrayGrid <- function(a, perm, ...)
+.aperm.ArbitraryArrayGrid <- function(a, perm)
 {
-    ## normarg_perm() does not perform full check/normalization e.g. it
-    ## won't say anything if 'perm' contains NAs or values > length(dim(a)).
-    ## We rely on validation of the modified ArrayGrid object to fail if
-    ## this is the case.
+    ## We don't perform a full check of 'perm' (see normarg_perm() above)
+    ## because we want to allow duplicates in it. Instead we call
+    ## replaceSlots() with 'check=TRUE' to trigger validation of the
+    ## modified ArrayGrid object with the expectation that it will fail
+    ## if for example 'perm' contains NAs or values > length(dim(a)).
     perm <- normarg_perm(perm, dim(a))
-    BiocGenerics:::replaceSlots(a, tickmarks=a@tickmarks[perm])
+    BiocGenerics:::replaceSlots(a, tickmarks=a@tickmarks[perm], check=TRUE)
 }
+### S3/S4 combo for aperm.ArbitraryArrayGrid
+aperm.ArbitraryArrayGrid <-
+    function(a, perm, ...) .aperm.ArbitraryArrayGrid(a, perm, ...)
 setMethod("aperm", "ArbitraryArrayGrid", aperm.ArbitraryArrayGrid)
 
-### S3/S4 combo for aperm.RegularArrayGrid
-aperm.RegularArrayGrid <- function(a, perm, ...)
+.aperm.RegularArrayGrid <- function(a, perm)
 {
-    ## normarg_perm() does not perform full check/normalization e.g. it
-    ## won't say anything if 'perm' contains NAs or values > length(dim(a)).
-    ## We rely on validation of the modified ArrayGrid object to fail if
-    ## this is the case.
+    ## See above for why it's important to call replaceSlots() with
+    ## 'check=TRUE'.
     perm <- normarg_perm(perm, dim(a))
     BiocGenerics:::replaceSlots(a, refdim=a@refdim[perm],
-                                   spacings=a@spacings[perm])
+                                   spacings=a@spacings[perm],
+                                   check=TRUE)
 }
+### S3/S4 combo for aperm.RegularArrayGrid
+aperm.RegularArrayGrid <-
+    function(a, perm, ...) .aperm.RegularArrayGrid(a, perm, ...)
 setMethod("aperm", "RegularArrayGrid", aperm.RegularArrayGrid)
-
-### S3/S4 combo for t.ArrayGrid
-t.ArrayGrid <- function(x)
-{
-    if (length(dim(x)) != 2L)
-        stop(wmsg("the grid to transpose must have exactly 2 dimensions"))
-    aperm(x)
-}
-setMethod("t", "ArrayGrid", t.ArrayGrid)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

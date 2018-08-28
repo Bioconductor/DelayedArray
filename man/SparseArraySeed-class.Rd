@@ -15,11 +15,13 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
-\alias{extract_array,SparseArraySeed-method}
-
 \alias{isSparse}
 \alias{isSparse,ANY-method}
 \alias{isSparse,SparseArraySeed-method}
+\alias{extract_sparse_array}
+\alias{extract_sparse_array,SparseArraySeed-method}
+
+\alias{extract_array,SparseArraySeed-method}
 
 \alias{as.array.SparseArraySeed}
 \alias{as.array,SparseArraySeed-method}
@@ -32,6 +34,9 @@
 \alias{coerce,dgCMatrix,SparseArraySeed-method}
 \alias{coerce,SparseArraySeed,dgCMatrix-method}
 \alias{coerce,SparseArraySeed,sparseMatrix-method}
+
+\alias{aperm.SparseArraySeed}
+\alias{aperm,SparseArraySeed-method}
 
 \title{SparseArraySeed objects}
 
@@ -154,6 +159,9 @@ sparsity(sas2)
 stopifnot(identical(sparse2dense(sas2), m2))
 
 as.matrix(sas2)  # same as sparse2dense(sas2)
+
+t(sas2)
+stopifnot(identical(as.matrix(t(sas2)), t(as.matrix(sas2))))
 
 ## Go back and forth between SparseArraySeed and dgCMatrix objects:
 M2 <- as(sas2, "dgCMatrix")

@@ -49,6 +49,7 @@ exportClasses(
 
 S3method(aperm, ArbitraryArrayGrid)
 S3method(aperm, RegularArrayGrid)
+S3method(aperm, SparseArraySeed)
 S3method(aperm, DelayedArray)
 
 S3method(as.array, Array)
@@ -89,8 +90,7 @@ S3method(summary, DelayedDimnames)
 S3method(summary, DelayedNaryIsoOp)
 S3method(summary, DelayedAbind)
 
-S3method(t, ArrayGrid)
-S3method(t, DelayedMatrix)
+S3method(t, Array)
 
 S3method(unique, DelayedArray)
 
@@ -101,6 +101,7 @@ S3method(unique, DelayedArray)
 export(
     aperm.ArbitraryArrayGrid,
     aperm.RegularArrayGrid,
+    aperm.SparseArraySeed,
     aperm.DelayedArray,
 
     as.array.Array,
@@ -141,8 +142,7 @@ export(
     summary.DelayedNaryIsoOp,
     summary.DelayedAbind,
 
-    t.ArrayGrid,
-    t.DelayedMatrix,
+    t.Array,
 
     unique.DelayedArray
 )
@@ -266,7 +266,7 @@ export(
     refdim, maxlength, aperm, downsample,
 
     ## SparseArraySeed-class.R:
-    aind, nzdata, sparsity, isSparse,
+    aind, nzdata, sparsity, isSparse, extract_sparse_array,
 
     ## read_block.R:
     read_sparse_block, write_sparse_block,
@@ -308,7 +308,7 @@ exportMethods(
     arbind, acbind,
     extract_array, type,
     refdim, maxlength, aperm, downsample,
-    aind, nzdata, sparsity, isSparse,
+    aind, nzdata, sparsity, isSparse, extract_sparse_array,
     read_block, write_block,
     mapToGrid, mapToRef,
     isLinear,

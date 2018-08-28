@@ -74,11 +74,6 @@ setClass("DelayedUnaryOp",
 
 setValidity2("DelayedUnaryOp", .validate_DelayedUnaryOp)
 
-### isSparse()
-### Unless stated otherwise (via a specific method), a DelayedUnaryOp
-### derivative is considered to propagate structural sparsity.
-setMethod("isSparse", "DelayedUnaryOp", function(x) isSparse(x@seed))
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedSubset objects
@@ -212,23 +207,23 @@ setMethod("summary", "DelayedSubset", summary.DelayedSubset)
 
 ### Seed contract.
 
-.get_DelayedSubset_dim <- function(x) get_Nindex_lengths(x@index, dim(x@seed))
-
-setMethod("dim", "DelayedSubset", .get_DelayedSubset_dim)
+setMethod("dim", "DelayedSubset",
+    function(x) get_Nindex_lengths(x@index, dim(x@seed))
+)
 
 setMethod("dimnames", "DelayedSubset",
     function(x) subset_dimnames_by_Nindex(dimnames(x@seed), x@index)
 )
 
-.extract_array_from_DelayedSubset <- function(x, index)
-{
-    x <- subset_DelayedSubset(x, index)
-    extract_array(x@seed, x@index)
-}
+setMethod("extract_array", "DelayedSubset",
+    function(x, index)
+    {
+        x2 <- subset_DelayedSubset(x, index)
+        extract_array(x2@seed, x2@index)
+    }
+)
 
-setMethod("extract_array", "DelayedSubset", .extract_array_from_DelayedSubset)
-
-### isSparse()
+### isSparse() and extract_sparse_array()
 
 setMethod("isSparse", "DelayedSubset",
     function(x)
@@ -238,6 +233,20 @@ setMethod("isSparse", "DelayedSubset",
         ## Duplicates in x@index break structural sparsity.
         !any(vapply(x@index, anyDuplicated,
                     integer(1), USE.NAMES=FALSE))
+    }
+)
+
+setMethod("extract_sparse_array", "DelayedSubset",
+    function(x, index)
+    {
+        x2 <- subset_DelayedSubset(x, index)
+        ## Assuming that the caller respected "extract_sparse_array() Terms
+        ## of Use" (see SparseArraySeed-class.R), 'isSparse(x)' should be
+        ## TRUE and the subscripts in 'index' should not contain duplicates.
+        ## This in turn means that the subscripts in 'x2@index' should not
+        ## contain duplicates either so the call below should also respect
+        ## "extract_sparse_array() Terms of Use".
+        extract_sparse_array(x2@seed, x2@index)
     }
 )
 
@@ -262,23 +271,12 @@ setClass("DelayedAperm",
     )
 )
 
-### The seed is referred to as 'a' in the error messages. This makes them
-### more meaningful for the end user in the context of calling aperm().
 .validate_DelayedAperm <- function(x)
 {
-    seed_dim <- dim(x@seed)
-    seed_ndim <- length(seed_dim)
-
     ## 'perm' slot.
-    if (length(x@perm) == 0L)
-        return(wmsg2("'perm' cannot be an empty vector"))
-    if (S4Vectors:::anyMissingOrOutside(x@perm, 1L, seed_ndim))
-        return(wmsg2("all values in 'perm' must be >= 1 ",
-                     "and <= 'length(dim(a))'"))
-    if (anyDuplicated(x@perm))
-        return(wmsg2("'perm' cannot have duplicates"))
-    if (!all(seed_dim[-x@perm] == 1L))
-        return(wmsg2("only dimensions equal to 1 can be dropped"))
+    msg <- validate_perm(x@perm, dim(x@seed))
+    if (!isTRUE(msg))
+        return(msg)
     TRUE
 }
 
@@ -335,12 +333,32 @@ setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
     seed_index <- rep.int(list(1L), length(seed_dim))
     seed_index[x@perm] <- index
     a <- extract_array(x@seed, seed_index)
+    ## We drop the dimensions not present in 'x@perm'. Even though the
+    ## dimensions to drop are guaranteed to be equal to 1, we should not
+    ## use drop() for this because this would drop **all** the dimensions
+    ## equal to 1, including some of the dimensions to keep (those can also
+    ## be equal to 1).
     dim(a) <- dim(a)[sort(x@perm)]
     aperm(a, perm=rank(x@perm))
 }
 
 setMethod("extract_array", "DelayedAperm",
     .extract_array_from_DelayedAperm
+)
+
+### isSparse() and extract_sparse_array()
+
+setMethod("isSparse", "DelayedAperm", function(x) isSparse(x@seed))
+
+setMethod("extract_sparse_array", "DelayedAperm",
+    function(x, index)
+    {
+        seed_dim <- dim(x@seed)
+        seed_index <- rep.int(list(1L), length(seed_dim))
+        seed_index[x@perm] <- index
+        sas <- extract_sparse_array(x@seed, seed_index)
+        aperm(sas, perm=x@perm)
+    }
 )
 
 
@@ -385,6 +403,17 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
     }
     x
 }
+
+### isSparse() and extract_sparse_array()
+### Like the 3 default methods above (seed contract), the 2 default methods
+### below also implement a no-op semantic and are also inherited by
+### DelayedArray objects.
+
+setMethod("isSparse", "DelayedUnaryIsoOp", function(x) isSparse(x@seed))
+
+setMethod("extract_sparse_array", "DelayedUnaryIsoOp",
+    function(x, index) extract_sparse_array(x@seed, index)
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -457,26 +486,43 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
     }
 )
 
-### isSparse()
+### isSparse() and extract_sparse_array()
 
 setMethod("isSparse", "DelayedUnaryIsoOpStack",
     function(x)
     {
         if (!isSparse(x@seed))
             return(FALSE)
-        ## Here is the trick we use to detect propagation of structural
-        ## sparsity: Artificially replace the current seed with an ordinary
-        ## array of the same number of dimensions and same type, but with
-        ## a single element. The single element is a 0, or the "zero"
-        ## associated with the type of the seed e.g. "" for character, FALSE
-        ## for logical, etc... whatever 'vector(type(x@seed), length=1L)'
-        ## produces.
+        ## Structural sparsity will be propagated if the operations in
+        ## x@OPS preserve the zeroes. To find out whether zeroes are preserved
+        ## or not, we replace the current seed with an ordinary array of the
+        ## same number of dimensions and same type, but with a single element
+        ## and apply the operations in x@OPS to it. The single element is
+        ## a 0, or the "zero" associated with the type of the seed e.g. ""
+        ## for character, FALSE for logical, etc... whatever
+        ## 'vector(type(x@seed), length=1L)' produces.
         seed_ndim <- length(dim(x@seed))
         seed0 <- array(vector(type(x@seed), length=1L),
                        dim=rep.int(1L, seed_ndim))
         x@seed <- seed0
         a0 <- extract_array(x, rep.int(list(1L), seed_ndim))
         as.vector(a0) == vector(type(a0), length=1L)
+    }
+)
+
+setMethod("extract_sparse_array", "DelayedUnaryIsoOpStack",
+    function(x, index)
+    {
+        ## Assuming that the caller respected "extract_sparse_array() Terms
+        ## of Use" (see SparseArraySeed-class.R), 'isSparse(x)' should be
+        ## TRUE so we can assume that the operations in x@OPS preserve the
+        ## zeroes and thus only need to apply them to the nonzero data.
+        sas <- extract_sparse_array(x@seed, index)
+        sas_nzdata <- sas@nzdata
+        for (OP in x@OPS)
+            sas_nzdata <- OP(sas_nzdata)
+        sas@nzdata <- sas_nzdata
+        sas
     }
 )
 
@@ -607,9 +653,15 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
     }
 )
 
-### isSparse()
+### isSparse() and extract_sparse_array()
 
 setMethod("isSparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
+
+setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
+    function(x, index)
+        stop(wmsg("extract_sparse_array() is not supported ",
+                  "on DelayedUnaryIsoOpWithArgs objects"))
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -833,7 +885,7 @@ setMethod("extract_array", "DelayedNaryIsoOp",
     }
 )
 
-### isSparse()
+### isSparse() and extract_sparse_array()
 
 setMethod("isSparse", "DelayedNaryIsoOp",
     function(x)
@@ -841,6 +893,13 @@ setMethod("isSparse", "DelayedNaryIsoOp",
         ok <- vapply(x@seeds, isSparse, logical(1), USE.NAMES=FALSE)
         if (!all(ok))
             return(FALSE)
+        stop("NOT IMPLEMENTED YET!")
+    }
+)
+
+setMethod("extract_sparse_array", "DelayedNaryIsoOp",
+    function(x, index)
+    {
         stop("NOT IMPLEMENTED YET!")
     }
 )
@@ -948,12 +1007,19 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
 
 setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
 
-### isSparse()
+### isSparse() and extract_sparse_array()
 
 setMethod("isSparse", "DelayedAbind",
     function(x)
     {
         all(vapply(x@seeds, isSparse, logical(1), USE.NAMES=FALSE))
+    }
+)
+
+setMethod("extract_sparse_array", "DelayedAbind",
+    function(x, index)
+    {
+        stop("NOT IMPLEMENTED YET!")
     }
 )
 

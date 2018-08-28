@@ -169,10 +169,62 @@ sparse2dense <- function(sas)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### extract_array()
+### isSparse() and extract_sparse_array()
 ###
 
-.extract_array_from_SparseArraySeed <- function(x, index)
+### isSparse() detects **structural** sparsity which is a qualitative
+### property of array-like object 'x'. So it doesn't look at the data in 'x'.
+### It is NOT about quantitative sparsity measured by sparsity().
+setGeneric("isSparse", function(x) standardGeneric("isSparse"))
+
+### By default, nothing is considered sparse.
+setMethod("isSparse", "ANY", function(x) FALSE)
+
+setMethod("isSparse", "SparseArraySeed", function(x) TRUE)
+
+### Similar to extract_array() except that:
+###   (1) The extracted array data must be returned in a SparseArraySeed
+###       object.
+###   (2) It should be called only on an array-like object 'x' for which
+###       'isSparse(x)' is TRUE.
+###   (3) The subscripts in 'index' should NOT contain duplicates.
+### IMPORTANT NOTE: For the sake of efficiency, (2) and (3) are NOT checked
+### and are the responsibility of the user. We'll refer to (2) and (3) as
+### the "extract_sparse_array() Terms of Use".
+setGeneric("extract_sparse_array",
+    function(x, index)
+    {
+        x_dim <- dim(x)
+        if (is.null(x_dim))
+            stop(wmsg("first argument to extract_sparse_array() ",
+                      "must have dimensions"))
+        ans <- standardGeneric("extract_sparse_array")
+        expected_dim <- get_Nindex_lengths(index, x_dim)
+        ## TODO: Display a more user/developper-friendly error by
+        ## doing something like the extract_array() generic where
+        ## check_returned_array() is used to display a long and
+        ## detailed error message.
+        stopifnot(is(ans, "SparseArraySeed"),
+                  identical(dim(ans), expected_dim))
+        ans
+    }
+)
+
+### IMPORTANT NOTE: The returned SparseArraySeed object is guaranteed to be
+### **correct** ONLY if the subscripts in 'index' do NOT contain duplicates!
+### If they contain duplicates, the correct SparseArraySeed object to return
+### should contain repeated nonzero data. However, in order to keep it as
+### efficient as possible, the code below does NOT repeat the nonzero data
+### that corresponds to duplicates subscripts. It does not check for
+### duplicates in 'index' either because this check could have a
+### non-negligible cost.
+### All this is OK because .extract_sparse_array_from_SparseArraySeed()
+### should always be used in a context where 'index' does NOT contain
+### duplicates. The only situation where 'index' CAN contain duplicates
+### is when .extract_sparse_array_from_SparseArraySeed() is called by
+### .extract_array_from_SparseArraySeed(), in which case the missing
+### nonzero data is added later.
+.extract_sparse_array_from_SparseArraySeed <- function(x, index)
 {
     stopifnot(is(x, "SparseArraySeed"))
     ans_dim <- get_Nindex_lengths(index, dim(x))
@@ -184,13 +236,34 @@ sparse2dense <- function(sas)
         x_aind[ , along] <- match(x_aind[ , along], i)
     }
     keep_idx <- which(!rowAnyNAs(x_aind))
-    x0_aind <- x_aind[keep_idx, , drop=FALSE]
-    x0_nzdata <- x@nzdata[keep_idx]
-    x0 <- BiocGenerics:::replaceSlots(x, dim=ans_dim,
-                                         aind=x0_aind,
-                                         nzdata=x0_nzdata,
-                                         check=FALSE)
-    ans0 <- sparse2dense(x0)
+    ans_aind <- x_aind[keep_idx, , drop=FALSE]
+    ans_nzdata <- x@nzdata[keep_idx]
+    SparseArraySeed(ans_dim, ans_aind, ans_nzdata, check=FALSE)
+}
+
+setMethod("extract_sparse_array", "SparseArraySeed",
+    .extract_sparse_array_from_SparseArraySeed
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### extract_array()
+###
+
+.extract_array_from_SparseArraySeed <- function(x, index)
+{
+    sas0 <- .extract_sparse_array_from_SparseArraySeed(x, index)
+    ## If the subscripts in 'index' contain duplicates, 'sas0' is
+    ## "incomplete" in the sense that it does not contain the nonzero data
+    ## that should have been repeated according to the duplicates in the
+    ## subscripts (see IMPORTANT NOTE above).
+    ans0 <- sparse2dense(sas0)
+    ## We "complete" 'ans0' by repeating the nonzero data according to the
+    ## duplicates present in the subscripts. Note that this is easy and cheap
+    ## to do now because 'ans0' uses a dense representation (it's an ordinary
+    ## array). This would be much harder to do **natively** on the
+    ## SparseArraySeed form (i.e. without converting first to dense then back
+    ## to sparse in the process).
     sm_index <- lapply(index,
         function(i) {
             if (is.null(i))
@@ -208,21 +281,6 @@ sparse2dense <- function(sas)
 setMethod("extract_array", "SparseArraySeed",
     .extract_array_from_SparseArraySeed
 )
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### isSparse()
-###
-### Used for propagation of **structural** sparsity.
-### It is not about quantitative sparsity measured by sparsity().
-###
-
-setGeneric("isSparse", function(x) standardGeneric("isSparse"))
-
-### By default, nothing is considered sparse.
-setMethod("isSparse", "ANY", function(x) FALSE)
-
-setMethod("isSparse", "SparseArraySeed", function(x) TRUE)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -299,4 +357,26 @@ setAs("dgCMatrix", "SparseArraySeed", .from_dgCMatrix_to_SparseArraySeed)
 }
 setAs("SparseArraySeed", "dgCMatrix", .from_SparseArraySeed_to_dgCMatrix)
 setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_dgCMatrix)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### aperm()
+###
+
+.aperm.SparseArraySeed <- function(a, perm)
+{
+    a_dim <- dim(a)
+    perm <- normarg_perm(perm, dim(a))
+    msg <- validate_perm(perm, a_dim)
+    if (!isTRUE(msg))
+        stop(wmsg(msg))
+    BiocGenerics:::replaceSlots(a, dim=a_dim[perm],
+                                   aind=a@aind[ , perm, drop=FALSE],
+                                   check=FALSE)
+}
+
+### S3/S4 combo for aperm.SparseArraySeed
+aperm.SparseArraySeed <-
+    function(a, perm, ...) .aperm.SparseArraySeed(a, perm, ...)
+setMethod("aperm", "SparseArraySeed", aperm.SparseArraySeed)
 

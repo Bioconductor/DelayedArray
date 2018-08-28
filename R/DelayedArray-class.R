@@ -572,11 +572,6 @@ setReplaceMethod("path", "DelayedArray",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
-### Unlike base::aperm(), the method for DelayedArray objects supports
-### dropping dimensions. Note that only "ineffective" dimensions can be
-### dropped (i.e. dimensions equal to 1, so dropping them preserves the
-### length). This feature is used by the "drop" method below.
-###
 
 ### S3/S4 combo for aperm.DelayedArray
 aperm.DelayedArray <- function(a, perm, ...) stash_DelayedAperm(a, perm, ...)
