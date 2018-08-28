@@ -15,7 +15,6 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
-\alias{isSparse}
 \alias{isSparse,ANY-method}
 \alias{isSparse,SparseArraySeed-method}
 \alias{extract_sparse_array}

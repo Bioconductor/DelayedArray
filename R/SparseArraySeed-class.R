@@ -182,9 +182,14 @@ setMethod("isSparse", "ANY", function(x) FALSE)
 
 setMethod("isSparse", "SparseArraySeed", function(x) TRUE)
 
+### This is the workhorse behind read_sparse_block().
 ### Similar to extract_array() except that:
 ###   (1) The extracted array data must be returned in a SparseArraySeed
-###       object.
+###       object. Methods should always operate on the sparse representation
+###       of the data and never "expand" it, that is, never turn it into a
+###       dense representation for example by doing something like
+###       'dense2sparse(extract_array(x, index))'. This would defeat the
+###       purpose of read_sparse_block().
 ###   (2) It should be called only on an array-like object 'x' for which
 ###       'isSparse(x)' is TRUE.
 ###   (3) The subscripts in 'index' should NOT contain duplicates.
@@ -262,8 +267,8 @@ setMethod("extract_sparse_array", "SparseArraySeed",
     ## duplicates present in the subscripts. Note that this is easy and cheap
     ## to do now because 'ans0' uses a dense representation (it's an ordinary
     ## array). This would be much harder to do **natively** on the
-    ## SparseArraySeed form (i.e. without converting first to dense then back
-    ## to sparse in the process).
+    ## SparseArraySeed form (i.e. without converting first to dense then
+    ## back to sparse in the process).
     sm_index <- lapply(index,
         function(i) {
             if (is.null(i))
@@ -281,31 +286,6 @@ setMethod("extract_sparse_array", "SparseArraySeed",
 setMethod("extract_array", "SparseArraySeed",
     .extract_array_from_SparseArraySeed
 )
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### read_sparse_block_from_SparseArraySeed()
-###
-
-### NOT exported but used in the HDF5Array package.
-### Return a SparseArraySeed objects.
-### TODO: Make this the "read_sparse_block" method for SparseArraySeed
-### objects.
-read_sparse_block_from_SparseArraySeed <- function(x, viewport)
-{
-    stopifnot(is(x, "SparseArraySeed"))
-    taind <- t(x@aind)
-    keep_idx <- which(colAlls(taind >= start(viewport) &
-                              taind <= end(viewport)))
-    taind <- taind[ , keep_idx, drop=FALSE]
-    offsets <- start(viewport) - 1L
-    x0_aind <- t(taind - offsets)
-    x0_nzdata <- x@nzdata[keep_idx]
-    BiocGenerics:::replaceSlots(x, dim=dim(viewport),
-                                   aind=x0_aind,
-                                   nzdata=x0_nzdata,
-                                   check=FALSE)
-}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
