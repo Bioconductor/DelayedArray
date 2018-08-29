@@ -282,7 +282,7 @@ setClass("DelayedAperm",
 
 setValidity2("DelayedAperm", .validate_DelayedAperm)
 
-new_DelayedAperm <- function(seed, perm=NULL)
+new_DelayedAperm <- function(seed=new("array"), perm=NULL)
 {
     perm <- normarg_perm(perm, dim(seed))
     new2("DelayedAperm", seed=seed, perm=perm)
