@@ -1,6 +1,6 @@
 new_DelayedSubset <- DelayedArray:::new_DelayedSubset
 new_DelayedAperm <- DelayedArray:::new_DelayedAperm
-
+new_DelayedUnaryIsoOpStack <- DelayedArray:::new_DelayedUnaryIsoOpStack
 
 .TEST_MATRIX1 <- matrix(c(5:-2, rep.int(c(0L, 99L), 11)), ncol=6,
                         dimnames=list(NULL, LETTERS[1:6]))
@@ -143,7 +143,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
 
 test_DelayedSubset_API <- function()
 {
-    ## 1. Ordinary array seed - no-op
+    ## 1. Ordinary array seed -- no-op
 
     x1 <- new_DelayedSubset(.TEST_MATRIX1)
     .check_DelayedUnaryOp_with_MATRIX1_seed_is_no_op(x1)
@@ -168,7 +168,7 @@ test_DelayedSubset_API <- function()
 
     checkIdentical(FALSE, isSparse(x2))
 
-    ## 3. Sparse seed - no-op
+    ## 3. Sparse seed -- no-op
 
     x3 <- new_DelayedSubset(.TEST_SAS2)
     .check_DelayedUnaryOp_with_SAS2_seed_is_no_op(x3)
@@ -176,8 +176,8 @@ test_DelayedSubset_API <- function()
     ## 4. Sparse seed -- structural sparsity propagated
 
     i1 <- c(3:8, 1L)
-    Nindex4 <- list(i1, 6:5, NULL)
-    x4 <- new_DelayedSubset(.TEST_SAS2, Nindex4)
+    index4 <- list(i1, 6:5, NULL)
+    x4 <- new_DelayedSubset(.TEST_SAS2, index4)
 
     a4 <- .TEST_ARRAY2[i1, 6:5, , drop=FALSE]
     checkIdentical(dim(a4), dim(x4))
@@ -189,7 +189,7 @@ test_DelayedSubset_API <- function()
                    unname(extract_array(x4, list(7:5, 2L, integer(0)))))
 
     checkTrue(isSparse(x4))
-    sas4 <- extract_sparse_array(.TEST_SAS2, Nindex4)
+    sas4 <- extract_sparse_array(.TEST_SAS2, index4)
     ## The behavior of extract_sparse_array() is **undefined** when the
     ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
     ## Terms of Use" in SparseArraySeed-class.R). So do NOT use such
@@ -263,14 +263,14 @@ test_DelayedAperm_constructor <- function(silent=FALSE)
 
 test_DelayedAperm_API <- function()
 {
-    ## 1. Ordinary array seed - no-op
+    ## 1. Ordinary array seed -- no-op
 
     x1 <- new_DelayedAperm(.TEST_MATRIX1)
     .check_DelayedUnaryOp_with_MATRIX1_seed_is_no_op(x1)
 
     checkIdentical(FALSE, isSparse(x1))
 
-    ## 2. Ordinary array seed - transposition
+    ## 2. Ordinary array seed -- transposition
 
     x2 <- new_DelayedAperm(.TEST_MATRIX1, 2:1)
 
@@ -359,5 +359,119 @@ test_DelayedAperm_API <- function()
     target <- extract_sparse_array(sas5, list(6:5, integer(0)))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(target, current)
+}
+
+test_DelayedUnaryIsoOpStack_constructor <- function(silent=FALSE)
+{
+    ## We also test seed() and isNoOp()
+
+    x <- new_DelayedUnaryIsoOpStack()
+    checkTrue(is(x, "DelayedUnaryIsoOpStack"))
+    checkTrue(validObject(x))
+    checkIdentical(new("array"), seed(x))
+    checkIdentical(list(), x@OPS)
+    #checkTrue(isNoOp(x))  # no isNoOp() yet for DelayedUnaryIsoOpStack objects
+
+    x <- new_DelayedUnaryIsoOpStack(.TEST_SAS2)
+    checkTrue(is(x, "DelayedUnaryIsoOpStack"))
+    checkTrue(validObject(x))
+    checkIdentical(.TEST_SAS2, seed(x))
+    checkIdentical(list(), x@OPS)
+    #checkTrue(isNoOp(x))
+
+    OPS <- list(function(a) log(a),
+                function(a) a^2 + 1,
+                function(a) 1 / a)
+    x <- new_DelayedUnaryIsoOpStack(.TEST_SAS2, OPS)
+    checkTrue(is(x, "DelayedUnaryIsoOpStack"))
+    checkTrue(validObject(x))
+    checkIdentical(.TEST_SAS2, seed(x))
+    checkIdentical(OPS, x@OPS)
+    #checkIdentical(FALSE, isNoOp(x))
+}
+
+test_DelayedUnaryIsoOpStack_API <- function()
+{
+    ## 1. Ordinary array seed -- no-op
+
+    x1 <- new_DelayedUnaryIsoOpStack(.TEST_MATRIX1)
+    .check_DelayedUnaryOp_with_MATRIX1_seed_is_no_op(x1)
+
+    checkIdentical(FALSE, isSparse(x1))
+
+    ## 2. Ordinary array seed -- 1 / (log(a)^2 + 1)
+
+    OPS <- list(function(a) log(a),
+                function(a) a^2 + 1,
+                function(a) 1 / a)
+    x2 <- new_DelayedUnaryIsoOpStack(.TEST_MATRIX1, OPS)
+
+    a2 <- suppressWarnings(1 / (log(.TEST_MATRIX1)^2 + 1))
+    checkIdentical(dim(a2), dim(x2))
+    checkIdentical(dimnames(a2), dimnames(x2))
+    checkIdentical(a2, suppressWarnings(as.array(x2)))
+    checkIdentical(unname(a2[ , 4:2]),
+                   unname(extract_array(x2, list(NULL, 4:2))))
+    checkIdentical(unname(a2[ , 4L, drop=FALSE]),
+                   unname(extract_array(x2, list(NULL, 4L))))
+    checkIdentical(unname(a2[integer(0), ]),
+                   unname(extract_array(x2, list(integer(0), NULL))))
+
+    checkIdentical(FALSE, isSparse(x2))
+
+    ## 3. Sparse seed -- no-op
+
+    x3 <- new_DelayedUnaryIsoOpStack(.TEST_SAS2)
+    .check_DelayedUnaryOp_with_SAS2_seed_is_no_op(x3)
+
+    ## 4. Sparse seed -- 1 / (log(a)^2 + 1)
+
+    OPS <- list(function(a) log(a),
+                function(a) a^2 + 1,
+                function(a) 1 / a)
+    x4 <- new_DelayedUnaryIsoOpStack(.TEST_SAS2, OPS)
+
+    a4 <- 1 / (log(.TEST_ARRAY2)^2 + 1)
+    checkIdentical(dim(a4), dim(x4))
+    checkIdentical(dimnames(a4), dimnames(x4))
+    checkIdentical(a4, as.array(x4))
+    i1 <- c(3:8, 1L)
+    checkIdentical(unname(a4[i1, 6:5, , drop=FALSE]),
+                   unname(extract_array(x4, list(i1, 6:5, NULL))))
+    checkIdentical(unname(a4[i1, c(6:5, 6L), , drop=FALSE]),
+                   unname(extract_array(x4, list(i1, c(6:5, 6L), NULL))))
+    checkIdentical(unname(a4[i1, c(6:5, 6L), integer(0)]),
+                   unname(extract_array(x4, list(i1, c(6:5, 6L), integer(0)))))
+
+    checkTrue(isSparse(x4))
+    ## The behavior of extract_sparse_array() is **undefined** when the
+    ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
+    ## Terms of Use" in SparseArraySeed-class.R). So do NOT use such
+    ## subscripts in the tests below.
+    current <- extract_sparse_array(x4, list(NULL, NULL, NULL))
+    checkTrue(is(current, "SparseArraySeed"))
+    checkIdentical(a4, sparse2dense(current))
+    current <- extract_sparse_array(x4, list(i1, 6:5, NULL))
+    checkTrue(is(current, "SparseArraySeed"))
+    target <- extract_array(a4, list(i1, 6:5, NULL))
+    checkIdentical(target, sparse2dense(current))
+    current <- extract_sparse_array(x4, list(i1, 6:5, integer(0)))
+    checkTrue(is(current, "SparseArraySeed"))
+    target <- extract_array(a4, list(i1, 6:5, integer(0)))
+    checkIdentical(target, sparse2dense(current))
+
+    ## 5. Sparse seed but structural sparsity NOT propagated because
+    ##    the stack of operations doesn't preserve the zeroes
+
+    OPS <- list(function(a) cos(a),
+                function(a) log(a^2 + 1))
+    x5 <- new_DelayedUnaryIsoOpStack(.TEST_SAS2, OPS)
+
+    a5 <- log(cos(.TEST_ARRAY2)^2 + 1)  # does not preserve the zeroes
+    checkIdentical(dim(a5), dim(x5))
+    checkIdentical(dimnames(a5), dimnames(x5))
+    checkIdentical(a5, as.array(x5))
+
+    checkIdentical(FALSE, isSparse(x5))  # structural sparsity not propagated!
 }
 

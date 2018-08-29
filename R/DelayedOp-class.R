@@ -289,7 +289,7 @@ new_DelayedAperm <- function(seed=new("array"), perm=NULL)
 }
 
 setMethod("isNoOp", "DelayedAperm",
-    function(x) identical(x@perm, seq_along(dim(x@seed)))
+    function(x) isSequence(x@perm, length(dim(x@seed)))
 )
 
 ### S3/S4 combo for summary.DelayedAperm
