@@ -672,6 +672,7 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
 ### Delayed "Set dimnames".
 ###
 
+### Used in unit tests!
 .INHERIT_FROM_SEED <- -1L
 
 setClass("DelayedDimnames",
@@ -721,28 +722,29 @@ setValidity2("DelayedDimnames", .validate_DelayedDimnames)
         return(vector("list", length=ndim))
     if (!is.list(dimnames))
         stop("the supplied dimnames must be a list")
-    if (length(dimnames) > ndim)
-        stop(wmsg("the supplied dimnames is longer ",
-                  "than the number of dimensions"))
-    if (length(dimnames) < ndim)
-        length(dimnames) <- ndim
+    if (length(dimnames) != ndim)
+        stop(wmsg("the supplied dimnames must have one list element ",
+                  "per dimension in the array-like object"))
     dimnames
 }
 
-new_DelayedDimnames <- function(seed=new("array"),
-                                dimnames=list(.INHERIT_FROM_SEED))
+new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
 {
     seed_dim <- dim(seed)
     seed_ndim <- length(seed_dim)
-    dimnames <- .normalize_dimnames(dimnames, seed_ndim)
-    seed_dimnames <- dimnames(seed)
-    dimnames <- lapply(seq_len(seed_ndim),
-                       function(along) {
-                           dn <- dimnames[[along]]
-                           if (identical(dn, seed_dimnames[[along]]))
-                               return(.INHERIT_FROM_SEED)
-                           dn
-                       })
+    if (identical(dimnames, .INHERIT_FROM_SEED)) {
+        dimnames <- rep.int(list(.INHERIT_FROM_SEED), seed_ndim)
+    } else {
+        dimnames <- .normalize_dimnames(dimnames, seed_ndim)
+        seed_dimnames <- dimnames(seed)
+        dimnames <- lapply(seq_len(seed_ndim),
+                           function(along) {
+                               dn <- dimnames[[along]]
+                               if (identical(dn, seed_dimnames[[along]]))
+                                   return(.INHERIT_FROM_SEED)
+                               dn
+                           })
+    }
     new2("DelayedDimnames", seed=seed, dimnames=dimnames)
 }
 
