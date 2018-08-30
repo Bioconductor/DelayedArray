@@ -577,11 +577,11 @@ setClass("DelayedUnaryIsoOpWithArgs",
                   "be >= 1 and <= 'length(dim(seed))'"))
     if (any(Lalong != 1L, na.rm=TRUE))
         stop(wmsg("arguments in 'Largs' and 'Rargs' can only go along ",
-                  "the first dimension at the moment"))
+                  "with the first dimension at the moment"))
     ok <- elementNROWS(Largs[nonNA_idx]) == seed_dim[nonNA_Lalong]
     if (!all(ok))
         stop(wmsg("some arguments in 'Largs' and/or 'Rargs' are not ",
-                  "parallel to the dimension that they go along"))
+                  "parallel to the dimension that they go along with"))
     Lalong
 }
 
@@ -641,7 +641,7 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
     {
         a <- extract_array(x@seed, index)
 
-        ## Subset the left and right arguments that go along a dimension.
+        ## Subset the left and right arguments that go along with a dimension.
         Largs <- subset_args(x@Largs, x@Lalong, index)
         Rargs <- subset_args(x@Rargs, x@Ralong, index)
 
@@ -655,6 +655,8 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
 
 ### isSparse() and extract_sparse_array()
 
+### DelayedUnaryIsoOpWithArgs objects are NOT considered to propagate
+### structural sparsity.
 setMethod("isSparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
 
 setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
