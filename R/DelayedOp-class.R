@@ -445,6 +445,8 @@ new_DelayedUnaryIsoOpStack <- function(seed=new("array"), OPS=list(),
     if (length(seed_dim) == 0L)
         stop(wmsg("'seed' must have dimensions"))
 
+    if (!is.list(OPS))
+        stop(wmsg("'OPS' must be a list"))
     OPS <- lapply(OPS, match.fun)
 
     ans <- new2("DelayedUnaryIsoOpStack", seed=seed, OPS=OPS)
@@ -856,11 +858,11 @@ setClass("DelayedNaryIsoOp",
 
 setValidity2("DelayedNaryIsoOp", .validate_DelayedNaryIsoOp)
 
-new_DelayedNaryIsoOp <- function(seed=new("array"), ...,
-                                 OP=identity, Rargs=list())
+new_DelayedNaryIsoOp <- function(OP=identity, seed=new("array"), ...,
+                                 Rargs=list())
 {
-    seeds <- unname(list(seed, ...))
     OP <- match.fun(OP)
+    seeds <- unname(list(seed, ...))
     new2("DelayedNaryIsoOp", seeds=seeds, OP=OP, Rargs=Rargs)
 }
 

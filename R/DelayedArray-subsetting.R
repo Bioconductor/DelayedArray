@@ -215,8 +215,8 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
         stop(wmsg(.subassign_error_msg))
     if (!(is.vector(value) && is.atomic(value) && length(value) == 1L))
         stop(wmsg(.subassign_error_msg))
-    DelayedArray(new_DelayedNaryIsoOp(x@seed, i@seed,
-                                      OP=`[<-`, Rargs=list(value=value)))
+    DelayedArray(new_DelayedNaryIsoOp(`[<-`, x@seed, i@seed,
+                                             Rargs=list(value=value)))
 }
 
 setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)
