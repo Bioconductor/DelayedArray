@@ -47,7 +47,6 @@ combine_dims_along <- function(dims, along)
 ###
 
 ### Assume all the arrays in 'objects' have the same number of dimensions.
-### NOT exported but used in the HDF5Array package.
 combine_dimnames <- function(objects)
 {
     lapply(seq_along(dim(objects[[1L]])),
@@ -62,7 +61,6 @@ combine_dimnames <- function(objects)
 }
 
 ### Combine the dimnames the rbind/cbind way.
-### NOT exported but used in the HDF5Array package.
 combine_dimnames_along <- function(objects, dims, along)
 {
     stopifnot(is.matrix(dims),

@@ -39,6 +39,30 @@ set_dimnames <- function(x, value)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### get_first_non_NULL_dimnames()
+###
+
+### Implement (and extend to the N-ary case) propagation of the dimnames
+### following the "first array with dimnames wins" rule that seems to be
+### used by all the binary operations from the Arith (e.g. "+", "^", etc...),
+### Compare (e.g. "==", ">=", etc...) and Logic ("&", "|") groups.
+### Only makes sense to use if all the array-like objects in 'objects'
+### have the same dimensions.
+### Note that rbind() and cbind() use a different rule for propagation of
+### the dimnames. This rule is implemented (and extended to the N-ary case)
+### by combine_dimnames_along() defined in bind-arrays.R
+get_first_non_NULL_dimnames <- function(objects)
+{
+    for (object in objects) {
+        object_dimnames <- dimnames(object)
+        if (!is.null(object_dimnames))
+            return(object_dimnames)
+    }
+    NULL
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### simplify_NULL_dimnames()
 ###
 

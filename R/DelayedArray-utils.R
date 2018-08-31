@@ -207,7 +207,7 @@ setMethod("pmax2", c("ANY", "ANY"),
             names(ans) <- .combine_names(e1, e2)
         } else {
             ans <- set_dim(ans, ans_dim)
-            ans <- set_dimnames(ans, combine_dimnames(list(e1, e2)))
+            ans <- set_dimnames(ans, get_first_non_NULL_dimnames(list(e1, e2)))
         }
         ans
     }
@@ -222,7 +222,7 @@ setMethod("pmin2", c("ANY", "ANY"),
             names(ans) <- .combine_names(e1, e2)
         } else {
             ans <- set_dim(ans, ans_dim)
-            ans <- set_dimnames(ans, combine_dimnames(list(e1, e2)))
+            ans <- set_dimnames(ans, get_first_non_NULL_dimnames(list(e1, e2)))
         }
         ans
     }
