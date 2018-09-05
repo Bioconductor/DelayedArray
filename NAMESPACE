@@ -236,9 +236,10 @@ export(
     new_DelayedArray,
 
     ## block_processing.R:
+    getDefaultGridMaker, setDefaultGridMaker,
+    getDefaultBPPARAM, setDefaultBPPARAM,
     blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
-    getDefaultGridMaker, setDefaultGridMaker,
     write_array_to_sink,
 
     ## RealizationSink-class.R:

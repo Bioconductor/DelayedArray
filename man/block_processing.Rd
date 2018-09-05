@@ -13,6 +13,8 @@
 
 \alias{getDefaultGridMaker}
 \alias{setDefaultGridMaker}
+\alias{getDefaultBPPARAM}
+\alias{setDefaultBPPARAM}
 
 \title{Block processing of an array-like object}
 
@@ -21,7 +23,7 @@
 }
 
 \usage{
-blockApply(x, FUN, ..., grid=NULL, BPPARAM=bpparam())
+blockApply(x, FUN, ..., grid=NULL, BPPARAM=getDefaultBPPARAM())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
 effectiveGrid(block)
@@ -30,6 +32,8 @@ currentViewport(block)
 
 getDefaultGridMaker()
 setDefaultGridMaker(GRIDMAKER="blockGrid")
+getDefaultBPPARAM()
+setDefaultBPPARAM(BPPARAM=NULL)
 }
 
 \arguments{
