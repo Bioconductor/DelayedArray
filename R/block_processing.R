@@ -81,13 +81,13 @@ setDefaultGridMaker <- function(GRIDMAKER="blockGrid")
 ### of the current block w.r.t. the effective grid), can be obtained from
 ### within 'FUN' with 'effectiveGrid(block)', 'currentBlockId(block)', and
 ### 'currentViewport(block)', respectively.
-### 'BPREDO' and 'BPPARAM' are passed to bplapply(). In theory, the best
-### performance should be obtained when bplapply() uses a post office queue
-### model. According to https://support.bioconductor.org/p/96856/#96888, this
-### can be achieved by setting the nb of tasks to the nb of blocks (i.e. with
+### 'BPPARAM' is passed to bplapply(). In theory, the best performance should
+### be obtained when bplapply() uses a post office queue model. According to
+### https://support.bioconductor.org/p/96856/#96888, this can be achieved by
+### setting the nb of tasks to the nb of blocks (i.e. with
 ### BPPARAM=MulticoreParam(tasks=length(grid))). However, in practice, that
 ### seems to be slower than using tasks=0 (the default). Investigate this!
-blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
+blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=bpparam())
 {
     FUN <- match.fun(FUN)
     grid <- .normarg_grid(grid, x)
@@ -106,7 +106,6 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
                 message("OK")
             block_ans
         },
-        BPREDO=BPREDO,
         BPPARAM=BPPARAM
     )
 }

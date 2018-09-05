@@ -21,7 +21,7 @@
 }
 
 \usage{
-blockApply(x, FUN, ..., grid=NULL, BPREDO=list(), BPPARAM=bpparam())
+blockApply(x, FUN, ..., grid=NULL, BPPARAM=bpparam())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
 effectiveGrid(block)
@@ -43,9 +43,6 @@ setDefaultGridMaker(GRIDMAKER="blockGrid")
     Coming soon...
   }
   \item{grid}{
-    Coming soon...
-  }
-  \item{BPREDO}{
     Coming soon...
   }
   \item{BPPARAM}{
