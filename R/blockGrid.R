@@ -5,40 +5,40 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setDefaultBlockSize()
+### get/setAutoBlockSize()
 ###
-### The default block size must be specified in bytes.
+### The automatic block size must be specified in bytes.
 ###
 
-getDefaultBlockSize <- function()
+getAutoBlockSize <- function()
 {
-    size <- getOption("DelayedArray.block.size")
+    size <- getOption("DelayedArray.auto.block.size")
     if (!isSingleNumber(size) || size < 1)
-        stop(wmsg("Global option DelayedArray.block.size ",
+        stop(wmsg("Global option DelayedArray.auto.block.size ",
                   "should be a single number >= 1. ",
-                  "Fix it with setDefaultBlockSize()."))
+                  "Fix it with setAutoBlockSize()."))
     size
 }
 
-### We set the default block size to 100 Mb by default.
-setDefaultBlockSize <- function(size=1e8)
+### We set the automatic block size to 100 Mb by default.
+setAutoBlockSize <- function(size=1e8)
 {
     if (!isSingleNumber(size) || size < 1)
         stop(wmsg("the block size must be a single number >= 1"))
-    prev_size <- getOption("DelayedArray.block.size")
+    prev_size <- getOption("DelayedArray.auto.block.size")
     if (isSingleNumber(prev_size)) {
         previous_was <- c(" (was ", prev_size, ")")
     } else {
         previous_was <- ""
     }
-    options(DelayedArray.block.size=size)
-    message("default block size set to ", size, " bytes", previous_was)
+    options(DelayedArray.auto.block.size=size)
+    message("automatic block size set to ", size, " bytes", previous_was)
     invisible(size)
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### getDefaultBlockLength()
+### getAutoBlockLength()
 ###
 
 ### The elements of a character vector or a list have a variable size.
@@ -81,27 +81,27 @@ get_type_size <- function(type)
     TYPE_SIZES[type]
 }
 
-getDefaultBlockLength <- function(type)
+getAutoBlockLength <- function(type)
 {
     if (missing(type))
         stop(wmsg("Please specify the type of the array data. ",
-                  "See ?getDefaultBlockLength"))
+                  "See ?getAutoBlockLength"))
     if (!isSingleString(type))
         stop(wmsg("'type' must be a single string"))
     type_size <- get_type_size(type)
-    block_size <- getDefaultBlockSize()
+    block_size <- getAutoBlockSize()
     ans <- block_size / type_size
     if (ans > .Machine$integer.max)
-        stop(wmsg("Default block length is too big. Blocks of ",
+        stop(wmsg("Automatic block length is too big. Blocks of ",
                   "length > .Machine$integer.max are not supported yet. ",
-                  "Please reduce the default block length by reducing the ",
-                  "default block size with setDefaultBlockSize()."))
+                  "Please reduce the automatic block length by reducing ",
+                  "the automatic block size with setAutoBlockSize()."))
     max(as.integer(ans), 1L)
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setDefaultBlockShape()
+### get/setAutoBlockShape()
 ###
 
 .SUPPORTED_SHAPES <- c("hypercube",
@@ -109,33 +109,33 @@ getDefaultBlockLength <- function(type)
                        "first-dim-grows-first",
                        "last-dim-grows-first")
 
-getDefaultBlockShape <- function()
+getAutoBlockShape <- function()
 {
-    shape <- getOption("DelayedArray.block.shape")
+    shape <- getOption("DelayedArray.auto.block.shape")
     if (!(isSingleString(shape) && shape %in% .SUPPORTED_SHAPES)) {
         in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
-        stop(wmsg("Global option DelayedArray.block.shape ",
+        stop(wmsg("Global option DelayedArray.auto.block.shape ",
                   "should be one of: ", in1string, ". ",
-                  "Fix it with setDefaultBlockShape()."))
+                  "Fix it with setAutoBlockShape()."))
     }
     shape
 }
 
-### We set the default block shape to "hypercube" by default.
-setDefaultBlockShape <- function(shape=c("hypercube",
-                                         "scale",
-                                         "first-dim-grows-first",
-                                         "last-dim-grows-first"))
+### We set the automatic block shape to "hypercube" by default.
+setAutoBlockShape <- function(shape=c("hypercube",
+                                      "scale",
+                                      "first-dim-grows-first",
+                                      "last-dim-grows-first"))
 {
     shape <- match.arg(shape)
-    prev_shape <- getOption("DelayedArray.block.shape")
+    prev_shape <- getOption("DelayedArray.auto.block.shape")
     if (isSingleString(prev_shape)) {
         previous_was <- c(" (was \"", prev_shape, "\")")
     } else {
         previous_was <- ""
     }
-    options(DelayedArray.block.shape=shape)
-    message("default block shape set to \"", shape, "\"", previous_was)
+    options(DelayedArray.auto.block.shape=shape)
+    message("automatic block shape set to \"", shape, "\"", previous_was)
     invisible(shape)
 }
 
@@ -148,7 +148,7 @@ setDefaultBlockShape <- function(shape=c("hypercube",
 .normarg_block.length <- function(block.length, type)
 {
     if (is.null(block.length))
-        return(getDefaultBlockLength(type))
+        return(getAutoBlockLength(type))
     if (!isSingleNumber(block.length))
         stop(wmsg("'block.length' must be a single integer or NULL"))
     if (block.length < 1)
@@ -174,7 +174,7 @@ setDefaultBlockShape <- function(shape=c("hypercube",
 .normarg_block.shape <- function(block.shape)
 {
     if (is.null(block.shape))
-        return(getDefaultBlockShape())
+        return(getAutoBlockShape())
     if (!(isSingleString(block.shape) && block.shape %in% .SUPPORTED_SHAPES)) {
         in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
         stop(wmsg("'block.shape' must be one of ", in1string, ", or NULL"))
@@ -228,7 +228,7 @@ blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 ### Both return a RegularArrayGrid object.
 ###
 
-.get_default_nrow <- function(x_dim, block.length, x_type)
+.get_auto_nrow <- function(x_dim, block.length, x_type)
 {
     x_nrow <- x_dim[[1L]]
     x_ncol <- x_dim[[2L]]
@@ -250,7 +250,7 @@ rowGrid <- function(x, nrow=NULL, block.length=NULL)
     x_nrow <- x_dim[[1L]]
     x_ncol <- x_dim[[2L]]
     if (is.null(nrow)) {
-        nrow <- .get_default_nrow(x_dim, block.length, type(x))
+        nrow <- .get_auto_nrow(x_dim, block.length, type(x))
         spacings <- c(nrow, x_ncol)
     } else {
         if (!is.null(block.length))
@@ -278,7 +278,7 @@ colGrid <- function(x, ncol=NULL, block.length=NULL)
     x_nrow <- x_dim[[1L]]
     x_ncol <- x_dim[[2L]]
     if (is.null(ncol)) {
-        ncol <- .get_default_nrow(rev(x_dim), block.length, type(x))
+        ncol <- .get_auto_nrow(rev(x_dim), block.length, type(x))
         spacings <- c(x_nrow, ncol)
     } else {
         if (!is.null(block.length))

@@ -22,33 +22,33 @@ set_verbose_block_processing <- function(verbose)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setDefaultGridMaker()
+### get/setAutoGridMaker()
 ###
 
-getDefaultGridMaker <- function()
+getAutoGridMaker <- function()
 {
-    getOption("DelayedArray.grid.maker")
+    getOption("DelayedArray.auto.grid.maker")
 }
 
-### We set the default grid maker to blockGrid() by default.
-setDefaultGridMaker <- function(GRIDMAKER="blockGrid")
+### We set the automatic grid maker to blockGrid() by default.
+setAutoGridMaker <- function(GRIDMAKER="blockGrid")
 {
     match.fun(GRIDMAKER)  # sanity check
-    options(DelayedArray.grid.maker=GRIDMAKER)
+    options(DelayedArray.auto.grid.maker=GRIDMAKER)
     invisible(GRIDMAKER)
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setDefaultBPPARAM()
+### get/setAutoBPPARAM()
 ###
 
-getDefaultBPPARAM <- function()
+getAutoBPPARAM <- function()
 {
-    getOption("DelayedArray.BPPARAM")
+    getOption("DelayedArray.auto.BPPARAM")
 }
 
-### By default (i.e. when no argument is specified), we set the default
+### By default (i.e. when no argument is specified), we set the automatic
 ### BPPARAM to SerialParam() on Windows and to MulticoreParam() on other
 ### platforms.
 ### The reason we use SerialParam() instead of SnowParam() on Windows is
@@ -56,7 +56,7 @@ getDefaultBPPARAM <- function()
 ### processing. See https://github.com/Bioconductor/BiocParallel/issues/78
 ### To the point that disabling parallel evaluation (by using SerialParam())
 ### is still much faster than parallel evaluation with SnowParam().
-setDefaultBPPARAM <- function(BPPARAM=NULL)
+setAutoBPPARAM <- function(BPPARAM=NULL)
 {
     if (is.null(BPPARAM)) {
         if (.Platform$OS.type == "windows") {
@@ -68,7 +68,7 @@ setDefaultBPPARAM <- function(BPPARAM=NULL)
         if (!is(BPPARAM, "BiocParallelParam"))
             stop(wmsg("'BPPARAM' must be a BiocParallelParam object"))
     }
-    options(DelayedArray.BPPARAM=BPPARAM)
+    options(DelayedArray.auto.BPPARAM=BPPARAM)
     BPPARAM
 }
 
@@ -82,18 +82,18 @@ setDefaultBPPARAM <- function(BPPARAM=NULL)
 .normarg_grid <- function(grid, x)
 {
     if (is.null(grid)) {
-        etc <- c("Please use setDefaultGridMaker() ",
-                 "to set a valid default grid maker.")
-        GRIDMAKER <- match.fun(getDefaultGridMaker())
+        etc <- c("Please use setAutoGridMaker() ",
+                 "to set a valid automatic grid maker.")
+        GRIDMAKER <- match.fun(getAutoGridMaker())
         grid <- try(GRIDMAKER(x), silent=TRUE)
         if (is(grid, "try-error"))
-            stop(wmsg("The current default grid maker returned an ",
+            stop(wmsg("The current automatic grid maker returned an ",
                       "error when called on 'x'. ", etc))
         if (!is(grid, "ArrayGrid"))
-            stop(wmsg("The current default grid maker didn't return an ",
+            stop(wmsg("The current automatic grid maker didn't return an ",
                       "ArrayGrid object. ", etc))
         if (!identical(refdim(grid), dim(x)))
-            stop(wmsg("The current default grid maker returned a grid ",
+            stop(wmsg("The current automatic grid maker returned a grid ",
                       "that is incompatible with 'x'. ", etc))
     } else {
         if (!is(grid, "ArrayGrid"))
@@ -121,7 +121,7 @@ setDefaultBPPARAM <- function(BPPARAM=NULL)
 ### setting the nb of tasks to the nb of blocks (i.e. with
 ### BPPARAM=MulticoreParam(tasks=length(grid))). However, in practice, that
 ### seems to be slower than using tasks=0 (the default). Investigate this!
-blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getDefaultBPPARAM())
+blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
 {
     FUN <- match.fun(FUN)
     grid <- .normarg_grid(grid, x)
@@ -247,7 +247,7 @@ colblock_APPLY <- function(x, APPLY, ..., sink=NULL)
     APPLY <- match.fun(APPLY)
     ## We're going to walk along the columns so need to increase the block
     ## length so each block is made of at least one column.
-    block_maxlen <- max(getDefaultBlockLength(type(x)), x_dim[[1L]])
+    block_maxlen <- max(getAutoBlockLength(type(x)), x_dim[[1L]])
     block_APPLY(x, APPLY, ..., sink=sink, block_maxlen=block_maxlen)
 }
 

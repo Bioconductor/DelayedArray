@@ -1,10 +1,10 @@
 .onLoad <- function(libname, pkgname)
 {
     options(DelayedArray.simplify=TRUE)
-    setDefaultGridMaker()
-    suppressMessages(setDefaultBlockSize())
-    suppressMessages(setDefaultBlockShape())
-    setDefaultBPPARAM()
+    setAutoGridMaker()
+    suppressMessages(setAutoBlockSize())
+    suppressMessages(setAutoBlockShape())
+    setAutoBPPARAM()
 }
 
 .onUnload <- function(libpath)

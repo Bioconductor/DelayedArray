@@ -11,10 +11,10 @@
 
 \alias{write_array_to_sink}
 
-\alias{getDefaultGridMaker}
-\alias{setDefaultGridMaker}
-\alias{getDefaultBPPARAM}
-\alias{setDefaultBPPARAM}
+\alias{getAutoGridMaker}
+\alias{setAutoGridMaker}
+\alias{getAutoBPPARAM}
+\alias{setAutoBPPARAM}
 
 \title{Block processing of an array-like object}
 
@@ -23,17 +23,17 @@
 }
 
 \usage{
-blockApply(x, FUN, ..., grid=NULL, BPPARAM=getDefaultBPPARAM())
+blockApply(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
 
 effectiveGrid(block)
 currentBlockId(block)
 currentViewport(block)
 
-getDefaultGridMaker()
-setDefaultGridMaker(GRIDMAKER="blockGrid")
-getDefaultBPPARAM()
-setDefaultBPPARAM(BPPARAM=NULL)
+getAutoGridMaker()
+setAutoGridMaker(GRIDMAKER="blockGrid")
+getAutoBPPARAM()
+setAutoBPPARAM(BPPARAM=NULL)
 }
 
 \arguments{
@@ -62,22 +62,22 @@ setDefaultBPPARAM(BPPARAM=NULL)
     Coming soon...
   }
   \item{GRIDMAKER}{
-    The function to use by \code{blockApply()} and \code{blockReduce()}
-    as \emph{default grid maker}. If no grid is explicitely supplied to
-    \code{blockApply()} or \code{blockReduce()}, a grid will be made by
-    calling the \emph{default grid maker} function on array-like object
-    \code{x}. This call must return an \link{ArrayGrid} object, say
-    \code{grid}, that is compatible with \code{x} i.e. such that
-    \code{refdim(grid)} is identical to \code{dim(x)}.
+    The function to use as automatic grid maker, that is, the function that
+    will be used by \code{blockApply()} and \code{blockReduce()} to make a
+    grid when no grid is supplied via their \code{grid} argument.
+    The function will be called on array-like object \code{x} and must
+    return an \link{ArrayGrid} object, say \code{grid}, that is compatible
+    with \code{x} i.e. such that \code{refdim(grid)} is identical to
+    \code{dim(x)}.
 
     \code{GRIDMAKER} can be specified as a function or as a single string
     naming a function. It can be a user-defined function or a pre-defined
     grid maker like \code{\link{blockGrid}}, \code{\link{rowGrid}}, or
     \code{\link{colGrid}}.
 
-    The default grid maker is set to \code{\link{blockGrid}} at package
+    The automatic grid maker is set to \code{\link{blockGrid}} at package
     startup and can be reset anytime to this value by calling
-    \code{setDefaultGridMaker()} with no argument.
+    \code{setAutoGridMaker()} with no argument.
   }
 }
 
@@ -89,6 +89,11 @@ setDefaultBPPARAM(BPPARAM=NULL)
   \itemize{
     \item \code{\link{blockGrid}} to define grids to use in the context
           of block processing of array-like objects.
+
+    \item \code{\link[BiocParallel]{MulticoreParam}},
+          \code{\link[BiocParallel]{SnowParam}}, and
+          \code{\link[BiocParallel]{bpparam}}, from the \pkg{BiocParallel}
+          package.
 
     \item \code{\link{read_block}}.
 
@@ -115,14 +120,14 @@ setDefaultBPPARAM(BPPARAM=NULL)
 ## ---------------------------------------------------------------------
 ## CONTROL THE DEFAULT GRID MAKER
 ## ---------------------------------------------------------------------
-getDefaultGridMaker()
-setDefaultGridMaker(function(x) colGrid(x, ncol=5))
-getDefaultGridMaker()
+getAutoGridMaker()
+setAutoGridMaker(function(x) colGrid(x, ncol=5))
+getAutoGridMaker()
 
 m <- matrix(runif(600), ncol=12)
 blockApply(m, currentViewport)
 
-## Reset default grid maker to factory settings:
-setDefaultGridMaker()
+## Reset automatic grid maker to factory settings:
+setAutoGridMaker()
 }
 \keyword{methods}

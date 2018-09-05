@@ -224,9 +224,9 @@ export(
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
 
     ## blockGrid.R:
-    setDefaultBlockSize, getDefaultBlockSize,
-    get_type_size, getDefaultBlockLength,
-    setDefaultBlockShape, getDefaultBlockShape,
+    getAutoBlockSize, setAutoBlockSize,
+    get_type_size, getAutoBlockLength,
+    getAutoBlockShape, setAutoBlockShape,
     blockGrid, rowGrid, colGrid,
 
     ## showtree.R:
@@ -236,8 +236,8 @@ export(
     new_DelayedArray,
 
     ## block_processing.R:
-    getDefaultGridMaker, setDefaultGridMaker,
-    getDefaultBPPARAM, setDefaultBPPARAM,
+    getAutoGridMaker, setAutoGridMaker,
+    getAutoBPPARAM, setAutoBPPARAM,
     blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
     write_array_to_sink,

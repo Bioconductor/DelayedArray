@@ -577,8 +577,8 @@ colSums(M)
 
       \begin{exampleblock}{}
 <<>>=
-getDefaultBlockSize()
-setDefaultBlockSize(1e6)
+getAutoBlockSize()
+setAutoBlockSize(1e6)
 colSums(M)
 @ 
       \end{exampleblock}
@@ -646,7 +646,7 @@ colSums(M)
   \bigskip
 
   \begin{block}{}
-    9. Control the block size with \Rcode{setDefaultBlockSize()}.
+    9. Control the block size with \Rcode{setAutoBlockSize()}.
   \end{block}
 \end{frame}
 
@@ -713,7 +713,7 @@ colSums(M)
   \end{block}
 
   \begin{block}{}
-    Use better default chunk geometry when realizing an HDF5Array object
+    Use better automatic chunk geometry when realizing an HDF5Array object
   \end{block}
 
   \begin{block}{}

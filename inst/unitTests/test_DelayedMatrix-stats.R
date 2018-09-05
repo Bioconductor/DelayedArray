@@ -11,7 +11,7 @@ block_sizes2 <- 2L * block_sizes1
 test_DelayedMatrix_row_col_summarization <- function()
 {
     test_row_col_summary <- function(FUN, m, M, block_sizes) {
-        on.exit(setDefaultBlockSize())
+        on.exit(setAutoBlockSize())
         FUN <- match.fun(FUN)
  
         target1 <- FUN(m)
@@ -19,7 +19,7 @@ test_DelayedMatrix_row_col_summarization <- function()
         target3 <- FUN(t(m))
         target4 <- FUN(t(m), na.rm=TRUE)
         for (block_size in block_sizes) {
-            setDefaultBlockSize(block_size)
+            setAutoBlockSize(block_size)
             current <- FUN(M)
             checkEquals(target1, current)
             checkIdentical(typeof(target1), typeof(current))

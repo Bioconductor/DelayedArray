@@ -91,9 +91,9 @@ test_DelayedMatrix_mult <- function()
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
     Rm <- rbind(Lm + 7.05, 0.1 * Lm)
 
-    on.exit(setDefaultBlockSize())
+    on.exit(setAutoBlockSize())
     for (block_size in block_sizes2) {
-        setDefaultBlockSize(block_size)
+        setAutoBlockSize(block_size)
         P <- Lm %*% M
         checkEquals(Lm %*% m, as.matrix(P))
         P <- M %*% Rm

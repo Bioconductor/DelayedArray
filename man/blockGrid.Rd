@@ -4,12 +4,12 @@
 \alias{rowGrid}
 \alias{colGrid}
 
-\alias{getDefaultBlockSize}
-\alias{setDefaultBlockSize}
+\alias{getAutoBlockSize}
+\alias{setAutoBlockSize}
 \alias{get_type_size}
-\alias{getDefaultBlockLength}
-\alias{getDefaultBlockShape}
-\alias{setDefaultBlockShape}
+\alias{getAutoBlockLength}
+\alias{getAutoBlockShape}
+\alias{setAutoBlockShape}
 
 \title{Define grids to use in the context of block processing}
 
@@ -21,7 +21,7 @@
   to the 2-dimensional case. They can be used to define blocks of full rows
   or full columns.
 
-  A family of utilities is provided to control the default block size (or
+  A family of utilities is provided to control the automatic block size (or
   length) and shape.
 }
 
@@ -33,18 +33,18 @@ blockGrid(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 rowGrid(x, nrow=NULL, block.length=NULL)
 colGrid(x, ncol=NULL, block.length=NULL)
 
-## Control the default block size (or length) and shape:
+## Control the automatic block size (or length) and shape:
 
-getDefaultBlockSize()
-setDefaultBlockSize(size=1e8)
+getAutoBlockSize()
+setAutoBlockSize(size=1e8)
 
-getDefaultBlockLength(type)
+getAutoBlockLength(type)
 
-getDefaultBlockShape()
-setDefaultBlockShape(shape=c("hypercube",
-                             "scale",
-                             "first-dim-grows-first",
-                             "last-dim-grows-first"))
+getAutoBlockShape()
+setAutoBlockShape(shape=c("hypercube",
+                          "scale",
+                          "first-dim-grows-first",
+                          "last-dim-grows-first"))
 }
 
 \arguments{
@@ -55,10 +55,11 @@ setDefaultBlockShape(shape=c("hypercube",
   }
   \item{block.length}{
     The length of the blocks i.e. the number of array elements per block.
-    By default \code{getDefaultBlockLength(type(x))} is used.
+    By default the automatic block length (returned by
+    \code{getAutoBlockLength(type(x))}) is used.
     Depending on how much memory is available on your machine, you might
-    want to increase (or decrease) the default block size with something
-    like \code{setDefaultBlockSize(5e8)}.
+    want to increase (or decrease) the automatic block length by adjusting
+    the automatic block size with \code{setAutoBlockSize()}.
   }
   \item{chunk.grid}{
     The grid of physical chunks.
@@ -68,7 +69,7 @@ setDefaultBlockShape(shape=c("hypercube",
     A string specifying the shape of the blocks.
     See \code{\link{makeCappedVolumeBox}} for a description of the
     supported shapes.
-    By default \code{getDefaultBlockShape()} is used.
+    By default \code{getAutoBlockShape()} is used.
   }
   \item{nrow}{
     The number of rows of the blocks. The bottommost blocks might have less.
@@ -79,27 +80,27 @@ setDefaultBlockShape(shape=c("hypercube",
     See examples below.
   }
   \item{size}{
-    The size of the blocks in bytes. Note that, except when the type of the
-    array data is \code{"character"}, the size of a block is its length
-    multiplied by the size of an array element. For example, a block of
-    500x1000x500 doubles has a length of 250 million elements and a size
-    of 2 Gb (each double occupies 8 bytes of memory).
+    The automatic block size in bytes. Note that, except when the type of
+    the array data is \code{"character"} or \code{"list"}, the size of a
+    block is its length multiplied by the size of an array element.
+    For example, a block of 500x1000x500 doubles has a length of 250 million
+    elements and a size of 2 Gb (each double occupies 8 bytes of memory).
 
-    The default block size is set to 100 Mb at package startup and can
-    be reset anytime to this value by calling \code{setDefaultBlockSize()}
+    The automatic block size is set to 100 Mb at package startup and can
+    be reset anytime to this value by calling \code{setAutoBlockSize()}
     with no argument.
   }
   \item{type}{
     A string specifying the type of the array data.
   }
   \item{shape}{
-    A string specifying the shape of the blocks.
+    A string specifying the automatic block shape.
     See \code{\link{makeCappedVolumeBox}} for a description of the
     supported shapes.
 
-    The default block shape is set to \code{"hypercube"} at package startup
-    and can be reset anytime to this value by calling
-    \code{setDefaultBlockShape()} with no argument.
+    The automatic block shape is set to \code{"hypercube"} at package
+    startup and can be reset anytime to this value by calling
+    \code{setAutoBlockShape()} with no argument.
   }
 }
 
@@ -107,8 +108,8 @@ setDefaultBlockShape(shape=c("hypercube",
   By default, primary block processing functions \code{\link{blockApply}()}
   and \code{\link{blockReduce}()} use the grid returned by \code{blockGrid(x)}
   to process array-like object \code{x} block by block. This can be changed
-  with \code{\link{setDefaultGridMaker}()}.
-  See \code{?\link{setDefaultGridMaker}} for more information.
+  with \code{\link{setAutoGridMaker}()}.
+  See \code{?\link{setAutoGridMaker}} for more information.
 }
 
 \value{
@@ -138,19 +139,19 @@ setDefaultBlockShape(shape=c("hypercube",
   \code{colGrid}: A \link{RegularArrayGrid} object on reference array \code{x}
   where the grid elements define blocks made of full columns of \code{x}.
 
-  \code{getDefaultBlockSize}: The current default block size in bytes
+  \code{getAutoBlockSize}: The current automatic block size in bytes
   as a single numeric value.
 
-  \code{setDefaultBlockSize}: The new default block size in bytes as an
+  \code{setAutoBlockSize}: The new automatic block size in bytes as an
   invisible single numeric value.
 
-  \code{getDefaultBlockLength}: The default block length as a single integer
+  \code{getAutoBlockLength}: The automatic block length as a single integer
   value.
 
-  \code{getDefaultBlockShape}: The current default block shape as a
+  \code{getAutoBlockShape}: The current automatic block shape as a
   single string.
 
-  \code{setDefaultBlockShape}: The new default block shape as an invisible
+  \code{setAutoBlockShape}: The new automatic block shape as an invisible
   single string.
 }
 
@@ -247,27 +248,27 @@ colGrid(m, ncol=5)   # 2 blocks of 5 cols each plus 1 block of 2 cols
 ## ---------------------------------------------------------------------
 ## CONTROL THE DEFAULT BLOCK SIZE (OR LENGTH) AND SHAPE
 ## ---------------------------------------------------------------------
-getDefaultBlockSize()
+getAutoBlockSize()
 
-getDefaultBlockLength("double")
-getDefaultBlockLength("integer")
-getDefaultBlockLength("logical")
-getDefaultBlockLength("raw")
+getAutoBlockLength("double")
+getAutoBlockLength("integer")
+getAutoBlockLength("logical")
+getAutoBlockLength("raw")
 
-setDefaultBlockSize(140)
-getDefaultBlockLength(type(m))
+setAutoBlockSize(140)
+getAutoBlockLength(type(m))
 blockGrid(m)
 lengths(blockGrid(m))
 dims(blockGrid(m))
 
-getDefaultBlockShape()
-setDefaultBlockShape("scale")
+getAutoBlockShape()
+setAutoBlockShape("scale")
 blockGrid(m)
 lengths(blockGrid(m))
 dims(blockGrid(m))
 
-## Reset default block size and shape to factory settings:
-setDefaultBlockSize()
-setDefaultBlockShape()
+## Reset automatic block size and shape to factory settings:
+setAutoBlockSize()
+setAutoBlockShape()
 }
 \keyword{utilities}

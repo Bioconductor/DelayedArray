@@ -77,7 +77,7 @@ test_DelayedArray_Math_ans_Arith <- function()
 test_DelayedArray_Ops_with_left_or_right_vector <- function()
 {
     test_delayed_Ops_on_array <- function(.Generic, a, A, m, M) {
-        on.exit(setDefaultBlockSize())
+        on.exit(setAutoBlockSize())
         GENERIC <- match.fun(.Generic)
 
         target_current <- list(
@@ -99,7 +99,7 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
             checkIdentical(target[0, 0, -2], as.array(current[0, 0, -2]))
             checkIdentical(target[ , 0, ], as.array(current[ , 0, ]))
             for (block_size in block_sizes2) {
-                setDefaultBlockSize(block_size)
+                setAutoBlockSize(block_size)
                 checkEquals(sum(target, na.rm=TRUE), sum(current, na.rm=TRUE))
             }
         }
@@ -144,7 +144,7 @@ test_DelayedArray_Ops_COMBINE_seeds <- function()
 
 test_DelayedArray_anyNA <- function()
 {
-    on.exit(setDefaultBlockSize())
+    on.exit(setAutoBlockSize())
     BLOCK_anyNA <- DelayedArray:::.BLOCK_anyNA
 
     A1 <- realize(a1)
@@ -153,7 +153,7 @@ test_DelayedArray_anyNA <- function()
     A <- realize(a)
 
     for (block_size in block_sizes2) {
-        setDefaultBlockSize(block_size)
+        setAutoBlockSize(block_size)
         checkIdentical(FALSE, anyNA(A1))
         checkIdentical(FALSE, BLOCK_anyNA(a1))
         checkIdentical(TRUE, anyNA(A))
@@ -163,7 +163,7 @@ test_DelayedArray_anyNA <- function()
 
 test_DelayedArray_which <- function()
 {
-    on.exit(setDefaultBlockSize())
+    on.exit(setAutoBlockSize())
     BLOCK_which <- DelayedArray:::BLOCK_which
 
     a <- a1 == 1L
@@ -173,7 +173,7 @@ test_DelayedArray_which <- function()
     target1 <- which(a)
     target2 <- which(a, arr.ind=TRUE, useNames=FALSE)
     for (block_size in block_sizes2) {
-        setDefaultBlockSize(block_size)
+        setAutoBlockSize(block_size)
         checkIdentical(target1, which(A))
         checkIdentical(target2, which(A, arr.ind=TRUE))
         checkIdentical(target1, BLOCK_which(a))
@@ -186,7 +186,7 @@ test_DelayedArray_which <- function()
     target1 <- integer(0)
     target2 <- matrix(integer(0), ncol=3)
     for (block_size in block_sizes2) {
-        setDefaultBlockSize(block_size)
+        setAutoBlockSize(block_size)
         checkIdentical(target1, which(A))
         checkIdentical(target2, which(A, arr.ind=TRUE))
         checkIdentical(target1, BLOCK_which(a))
@@ -196,7 +196,7 @@ test_DelayedArray_which <- function()
 test_DelayedArray_Summary <- function()
 {
     test_Summary <- function(.Generic, a, block_sizes) {
-        on.exit(setDefaultBlockSize())
+        on.exit(setAutoBlockSize())
         BLOCK_Summary <- DelayedArray:::.BLOCK_Summary
 
         GENERIC <- match.fun(.Generic)
@@ -204,7 +204,7 @@ test_DelayedArray_Summary <- function()
         target2 <- GENERIC(a, na.rm=TRUE)
         A <- realize(a)
         for (block_size in block_sizes) {
-            setDefaultBlockSize(block_size)
+            setAutoBlockSize(block_size)
             checkIdentical(target1, GENERIC(A))
             checkIdentical(target1, GENERIC(aperm(A)))
             checkIdentical(target1, BLOCK_Summary(.Generic, a))
@@ -236,7 +236,7 @@ test_DelayedArray_Summary <- function()
 
 test_DelayedArray_mean <- function()
 {
-    on.exit(setDefaultBlockSize())
+    on.exit(setAutoBlockSize())
 
     ## on a numeric array
     a <- a2
@@ -247,7 +247,7 @@ test_DelayedArray_mean <- function()
     target2 <- mean(a, na.rm=TRUE)
     target3 <- mean(a[ , 10:4, -2])
     for (block_size in block_sizes2) {
-        setDefaultBlockSize(block_size)
+        setAutoBlockSize(block_size)
         checkIdentical(target1, mean(A))
         checkIdentical(target1, mean(aperm(A)))
         checkIdentical(target2, mean(A, na.rm=TRUE))
