@@ -438,6 +438,29 @@ stash_DelayedUnaryIsoOpWithArgs <- function(x, OP,
     DelayedArray(op)
 }
 
+### stash_DelayedUnaryIsoOp() was introduced in BioC 3.7 and renamed
+### stash_DelayedUnaryIsoOpWithArgs() in BioC 3.8. The alias below is for
+### backward compatibility with objects that were serialized with BioC 3.7.
+### For example, the 'BS.cancer.ex.fit' dataset (a BSseq instance from the
+### bsseqData package and used in the bsseq_analysis.Rmd vignette from the
+### bsseq package) contains the "plogis" method for DelayedArray objects in
+### its "trans" slot, and this method contains a reference to
+### stash_DelayedUnaryIsoOp. This is the sign that this BSseq instance was
+### serialized with BioC 3.7. Without the alias below, the bsseq_analysis.Rmd
+### vignette chokes on this line:
+###
+###   BS.cancer.ex.tstat <- BSmooth.tstat(BS.cancer.ex.fit, ...)
+###
+### with the following error:
+###
+###   Error: processing vignette 'bsseq_analysis.Rmd' failed with diagnostics:
+###   could not find function "stash_DelayedUnaryIsoOp"
+###
+### Note that 'BS.cancer.ex.fit' contains 3 DelayedMatrix objects in
+### its "assays" slot.
+### TODO: Remove this alias at some point (e.g. in BioC 3.10).
+stash_DelayedUnaryIsoOp <- stash_DelayedUnaryIsoOpWithArgs
+
 stash_DelayedDimnames <- function(x, dimnames)
 {
     stopifnot(is(x, "DelayedArray"))
