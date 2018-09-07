@@ -145,7 +145,7 @@ set.seed(99L)
 
 test_DelayedSubset_constructor <- function(silent=FALSE)
 {
-    ## We also test nseed(), seed(), and isNoOp()
+    ## We also test nseed(), seed(), and is_noop()
 
     x <- new_DelayedSubset()
     checkTrue(is(x, "DelayedSubset"))
@@ -153,7 +153,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(new("array"), seed(x))
     checkIdentical(list(NULL), x@index)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a)
     checkTrue(is(x, "DelayedSubset"))
@@ -161,7 +161,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(NULL, NULL), x@index)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a, list(NULL, 5:4))
     checkTrue(is(x, "DelayedSubset"))
@@ -169,7 +169,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(NULL, 5:4), x@index)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     ## Test normalization of user-supplied 'Nindex' argument
 
@@ -188,7 +188,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(integer(0), c(5:4, 5:6)), x@index)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a, list(NULL, -3))
     checkTrue(is(x, "DelayedSubset"))
@@ -196,7 +196,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(NULL, c(1:2, 4:6)), x@index)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a, list(NULL, 1:6))
     checkTrue(is(x, "DelayedSubset"))
@@ -204,7 +204,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(NULL, NULL), x@index)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a, list(-22, TRUE))
     checkTrue(is(x, "DelayedSubset"))
@@ -212,7 +212,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(NULL, NULL), x@index)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a, list(NULL, c("E", "B", "C", "C")))
     checkTrue(is(x, "DelayedSubset"))
@@ -220,7 +220,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(NULL, c(5L, 2L, 3L, 3L)), x@index)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     x <- new_DelayedSubset(.TEST_MATRIX2a, list(IRanges(3:2, 5), IRanges(1, 6)))
     checkTrue(is(x, "DelayedSubset"))
@@ -228,7 +228,7 @@ test_DelayedSubset_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(c(3:5, 2:5), NULL), x@index)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     checkException(new_DelayedSubset(.TEST_MATRIX2a, list(NULL, IRanges(0, 3))),
                    silent=silent)
@@ -324,7 +324,7 @@ test_DelayedSubset_API <- function()
 
 test_DelayedAperm_constructor <- function(silent=FALSE)
 {
-    ## We also test nseed(), seed(), and isNoOp()
+    ## We also test nseed(), seed(), and is_noop()
 
     x <- new_DelayedAperm()
     checkTrue(is(x, "DelayedAperm"))
@@ -332,7 +332,7 @@ test_DelayedAperm_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(new("array"), seed(x))
     checkIdentical(1L, x@perm)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedAperm(.TEST_SAS3)
     checkTrue(is(x, "DelayedAperm"))
@@ -340,7 +340,7 @@ test_DelayedAperm_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_SAS3, seed(x))
     checkIdentical(1:3, x@perm)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedAperm(.TEST_SAS3, 3:1)
     checkTrue(is(x, "DelayedAperm"))
@@ -348,7 +348,7 @@ test_DelayedAperm_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_SAS3, seed(x))
     checkIdentical(3:1, x@perm)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     checkException(new_DelayedAperm(.TEST_SAS3, "2"), silent=silent)
     checkException(new_DelayedAperm(.TEST_SAS3, integer(0)), silent=silent)
@@ -362,7 +362,7 @@ test_DelayedAperm_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_SAS3, seed(x))
     checkIdentical(2:1, x@perm)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 }
 
 test_DelayedAperm_API <- function()
@@ -473,7 +473,7 @@ test_DelayedAperm_API <- function()
 
 test_DelayedUnaryIsoOpStack_constructor <- function(silent=FALSE)
 {
-    ## We also test nseed(), seed(), and isNoOp()
+    ## We also test nseed(), seed(), and is_noop()
 
     x <- new_DelayedUnaryIsoOpStack()
     checkTrue(is(x, "DelayedUnaryIsoOpStack"))
@@ -481,7 +481,7 @@ test_DelayedUnaryIsoOpStack_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(new("array"), seed(x))
     checkIdentical(list(), x@OPS)
-    #checkTrue(isNoOp(x))  # no isNoOp() yet for DelayedUnaryIsoOpStack objects
+    #checkTrue(is_noop(x))  # no is_noop() yet for DelayedUnaryIsoOpStack objects
 
     x <- new_DelayedUnaryIsoOpStack(.TEST_SAS3)
     checkTrue(is(x, "DelayedUnaryIsoOpStack"))
@@ -489,7 +489,7 @@ test_DelayedUnaryIsoOpStack_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_SAS3, seed(x))
     checkIdentical(list(), x@OPS)
-    #checkTrue(isNoOp(x))
+    #checkTrue(is_noop(x))
 
     OPS <- list(function(a) log(a),
                 function(a) a^2 + 1,
@@ -500,7 +500,7 @@ test_DelayedUnaryIsoOpStack_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_SAS3, seed(x))
     checkIdentical(OPS, x@OPS)
-    #checkIdentical(FALSE, isNoOp(x))
+    #checkIdentical(FALSE, is_noop(x))
 
     checkException(new_DelayedUnaryIsoOpStack(.TEST_SAS3, NULL),
                    silent=silent)
@@ -568,7 +568,7 @@ test_DelayedUnaryIsoOpStack_API <- function()
 
 test_DelayedUnaryIsoOpWithArgs_constructor <- function(silent=FALSE)
 {
-    ## We also test nseed(), seed(), and isNoOp()
+    ## We also test nseed(), seed(), and is_noop()
 
     x <- new_DelayedUnaryIsoOpWithArgs()
     checkTrue(is(x, "DelayedUnaryIsoOpWithArgs"))
@@ -576,7 +576,7 @@ test_DelayedUnaryIsoOpWithArgs_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(new("array"), seed(x))
     checkIdentical(identity, x@OP)
-    #checkTrue(isNoOp(x))  # no isNoOp() yet for DelayedUnaryIsoOpWithArgs
+    #checkTrue(is_noop(x))  # no is_noop() yet for DelayedUnaryIsoOpWithArgs
                            # objects
 
     x <- new_DelayedUnaryIsoOpWithArgs(.TEST_SAS3)
@@ -585,7 +585,7 @@ test_DelayedUnaryIsoOpWithArgs_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_SAS3, seed(x))
     checkIdentical(identity, x@OP)
-    #checkTrue(isNoOp(x))
+    #checkTrue(is_noop(x))
 
     OP <- `<=`
     e2 <- rep(c(5, 10), 20)
@@ -600,7 +600,7 @@ test_DelayedUnaryIsoOpWithArgs_constructor <- function(silent=FALSE)
     checkIdentical(Rargs, x@Rargs)
     checkIdentical(integer(0), x@Lalong)
     checkIdentical(1L, x@Ralong)
-    #checkIdentical(FALSE, isNoOp(x))
+    #checkIdentical(FALSE, is_noop(x))
 }
 
 test_DelayedUnaryIsoOpWithArgs_API <- function()
@@ -651,7 +651,7 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
 
 test_DelayedDimnames_constructor <- function(silent=FALSE)
 {
-    ## We also test nseed(), seed(), and isNoOp()
+    ## We also test nseed(), seed(), and is_noop()
 
     x <- new_DelayedDimnames()
     checkTrue(is(x, "DelayedDimnames"))
@@ -659,7 +659,7 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(new("array"), seed(x))
     checkIdentical(list(.INHERIT_FROM_SEED), x@dimnames)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedDimnames(.TEST_MATRIX2a)
     checkTrue(is(x, "DelayedDimnames"))
@@ -667,7 +667,7 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(rep(list(.INHERIT_FROM_SEED), 2), x@dimnames)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedDimnames(.TEST_MATRIX2a, dimnames(.TEST_MATRIX2a))
     checkTrue(is(x, "DelayedDimnames"))
@@ -675,7 +675,7 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(rep(list(.INHERIT_FROM_SEED), 2), x@dimnames)
-    checkTrue(isNoOp(x))
+    checkTrue(is_noop(x))
 
     x <- new_DelayedDimnames(.TEST_MATRIX2a, NULL)
     checkTrue(is(x, "DelayedDimnames"))
@@ -683,7 +683,7 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(.INHERIT_FROM_SEED, NULL), x@dimnames)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     x <- new_DelayedDimnames(.TEST_MATRIX2a, list(letters[1:5], NULL))
     checkTrue(is(x, "DelayedDimnames"))
@@ -691,7 +691,7 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(1L, nseed(x))
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(letters[1:5], NULL), x@dimnames)
-    checkIdentical(FALSE, isNoOp(x))
+    checkIdentical(FALSE, is_noop(x))
 
     checkException(new_DelayedDimnames(.TEST_MATRIX2a, letters),
                    silent=silent)
@@ -748,7 +748,7 @@ test_DelayedDimnames_API <- function()
 
 test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
 {
-    ## We also test nseed(), seed(), and isNoOp()
+    ## We also test nseed(), seed(), and is_noop()
 
     x <- new_DelayedNaryIsoOp()
     checkTrue(is(x, "DelayedNaryIsoOp"))
@@ -758,7 +758,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkIdentical(identity, x@OP)
     checkIdentical(list(new("array")), x@seeds)
     checkIdentical(list(), x@Rargs)
-    checkException(isNoOp(x), silent=silent)
+    checkException(is_noop(x), silent=silent)
 
     x <- new_DelayedNaryIsoOp(`/`, .TEST_ARRAY4a, .TEST_SAS4c)
     checkTrue(is(x, "DelayedNaryIsoOp"))
@@ -768,7 +768,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkIdentical(`/`, x@OP)
     checkIdentical(list(.TEST_ARRAY4a, .TEST_SAS4c), x@seeds)
     checkIdentical(list(), x@Rargs)
-    checkException(isNoOp(x), silent=silent)
+    checkException(is_noop(x), silent=silent)
 
     OP <- function(a1, a2, a3) (a1 + a2 + a3) / 3  # ternary mean
     x <- new_DelayedNaryIsoOp(OP, .TEST_ARRAY4a, .TEST_ARRAY4b, .TEST_SAS4c)
@@ -779,7 +779,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkIdentical(OP, x@OP)
     checkIdentical(list(.TEST_ARRAY4a, .TEST_ARRAY4b, .TEST_SAS4c), x@seeds)
     checkIdentical(list(), x@Rargs)
-    checkException(isNoOp(x), silent=silent)
+    checkException(is_noop(x), silent=silent)
 
     ## Two alternate ways to represent the above DelayedNaryIsoOp.
 
@@ -792,7 +792,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkIdentical(OP, x@OP)
     checkIdentical(list(.TEST_ARRAY4a, .TEST_ARRAY4b, .TEST_SAS4c), x@seeds)
     checkIdentical(list(), x@Rargs)
-    checkException(isNoOp(x), silent=silent)
+    checkException(is_noop(x), silent=silent)
 
     OP <- function(a1, a2, a3, d) (a1 + a2 + a3) / d 
     Rargs <- list(d=3)
@@ -805,7 +805,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkIdentical(OP, x@OP)
     checkIdentical(list(.TEST_ARRAY4a, .TEST_ARRAY4b, .TEST_SAS4c), x@seeds)
     checkIdentical(Rargs, x@Rargs)
-    checkException(isNoOp(x), silent=silent)
+    checkException(is_noop(x), silent=silent)
 
     checkException(new_DelayedNaryIsoOp(NULL),
                    silent=silent)

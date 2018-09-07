@@ -282,7 +282,7 @@ setClass("DelayedArray1",
 
     index <- lapply(unname(object1@index), unname)
     op <- new2("DelayedSubset", seed=seed, index=index)
-    if (!isNoOp(op))
+    if (!is_noop(op))
         seed <- op
 
     object1_dimnames <- lapply(seq_along(object1@index),
@@ -294,7 +294,7 @@ setClass("DelayedArray1",
         object1_dimnames <- NULL
 
     op <- new_DelayedDimnames(seed, object1_dimnames)
-    if (!isNoOp(op))
+    if (!is_noop(op))
         seed <- op
 
     ## Translate 'delayed_ops' slot as DelayedUnaryIsoOpWithArgs objects

@@ -5,7 +5,7 @@
 \alias{DelayedOp-class}
 \alias{DelayedOp}
 
-\alias{isNoOp}
+\alias{is_noop}
 \alias{summary.DelayedOp}
 \alias{summary,DelayedOp-method}
 
@@ -19,7 +19,7 @@
 \alias{DelayedSubset-class}
 \alias{DelayedSubset}
 
-\alias{isNoOp,DelayedSubset-method}
+\alias{is_noop,DelayedSubset-method}
 \alias{summary.DelayedSubset}
 \alias{summary,DelayedSubset-method}
 
@@ -35,7 +35,7 @@
 \alias{DelayedAperm-class}
 \alias{DelayedAperm}
 
-\alias{isNoOp,DelayedAperm-method}
+\alias{is_noop,DelayedAperm-method}
 \alias{summary.DelayedAperm}
 \alias{summary,DelayedAperm-method}
 
@@ -89,7 +89,7 @@
 \alias{DelayedDimnames-class}
 \alias{DelayedDimnames}
 
-\alias{isNoOp,DelayedDimnames-method}
+\alias{is_noop,DelayedDimnames-method}
 \alias{summary.DelayedDimnames}
 \alias{summary,DelayedDimnames-method}
 
@@ -143,7 +143,7 @@
 }
 
 \usage{
-isNoOp(x)
+is_noop(x)
 }
 
 \arguments{
@@ -183,9 +183,9 @@ isNoOp(x)
   \code{extract_array()}. See \code{?\link{extract_array}} for more
   information about the \emph{seed contract}.
 
-  \code{isNoOp()} can be called on a DelayedSubset, DelayedAperm, or
-  DelayedDimnames object and will return \code{TRUE} if the object
-  represents a no-op.
+  \code{is_noop()} can only be called on a DelayedSubset, DelayedAperm,
+  or DelayedDimnames object at the moment, and will return \code{TRUE}
+  if the object represents a no-op.
 }
 
 \note{

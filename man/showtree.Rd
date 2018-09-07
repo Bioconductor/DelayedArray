@@ -228,7 +228,7 @@ is_aligned_with_seed <- function(x)
         return(FALSE)
     op2 <- netSubsetAndAperm(x, as.DelayedOp=TRUE)
     op1 <- op2@seed
-    isNoOp(op1) && isNoOp(op2)
+    is_noop(op1) && is_noop(op2)
 }
 
 M <- DelayedArray(a[ , , 1])

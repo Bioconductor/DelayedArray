@@ -108,12 +108,12 @@ setMethod("simplify", "DelayedSubset",
         if (!.normarg_incremental(incremental))
             x@seed <- simplify(x@seed)
         x1 <- x@seed
-        if (isNoOp(x))
+        if (is_noop(x))
             return(x1)
         if (is(x1, "DelayedSubset")) {
             ## SQUASH + REMOVE IF NO-OP
             x1 <- subset_DelayedSubset(x1, x@index)
-            if (isNoOp(x1))
+            if (is_noop(x1))
                 return(x1@seed)
             return(x1)
         }
@@ -160,12 +160,12 @@ setMethod("simplify", "DelayedAperm",
         if (!.normarg_incremental(incremental))
             x@seed <- simplify(x@seed)
         x1 <- x@seed
-        if (isNoOp(x))
+        if (is_noop(x))
             return(x1)
         if (is(x1, "DelayedAperm")) {
             ## SQUASH + REMOVE IF NO-OP
             x1@perm <- x1@perm[x@perm]
-            if (isNoOp(x1))
+            if (is_noop(x1))
                 return(x1@seed)
             return(simplify(x1, incremental=TRUE))
         }
@@ -229,12 +229,12 @@ setMethod("simplify", "DelayedDimnames",
         if (!.normarg_incremental(incremental))
             x@seed <- simplify(x@seed)
         x1 <- x@seed
-        if (isNoOp(x))
+        if (is_noop(x))
             return(x1)
         if (is(x1, "DelayedDimnames")) {
             ## SQUASH + REMOVE IF NO-OP
             x <- new_DelayedDimnames(x1@seed, dimnames(x))
-            if (isNoOp(x))
+            if (is_noop(x))
                 return(x@seed)
             return(x)
         }
@@ -322,7 +322,7 @@ setMethod("netSubsetAndAperm", "ANY",
         if (as.DelayedOp)
             return(reduced)
         ans <- reduced@seed@index
-        if (!isNoOp(reduced))
+        if (!is_noop(reduced))
             attr(ans, "dimmap") <- reduced@perm
         ans
     }

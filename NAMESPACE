@@ -280,7 +280,7 @@ export(
     isLinear,
 
     ## DelayedOp-class.R:
-    isNoOp,
+    is_noop,
 
     ## showtree.R:
     simplify, netSubsetAndAperm,
@@ -313,7 +313,7 @@ exportMethods(
     read_block, write_block,
     mapToGrid, mapToRef,
     isLinear,
-    isNoOp,
+    is_noop,
     simplify, netSubsetAndAperm,
     matrixClass, DelayedArray, nseed, seed, "seed<-",
     chunkdim, chunkGrid,

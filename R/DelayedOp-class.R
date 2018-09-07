@@ -38,7 +38,7 @@
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
 ### NOT exported for now.
-setGeneric("isNoOp", function(x) standardGeneric("isNoOp"))
+setGeneric("is_noop", function(x) standardGeneric("is_noop"))
 
 ### S3/S4 combo for summary.DelayedOp
 
@@ -192,7 +192,7 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
     new2("DelayedSubset", seed=seed, index=index)
 }
 
-setMethod("isNoOp", "DelayedSubset",
+setMethod("is_noop", "DelayedSubset",
     function(x) all(S4Vectors:::sapply_isNULL(x@index))
 )
 
@@ -288,7 +288,7 @@ new_DelayedAperm <- function(seed=new("array"), perm=NULL)
     new2("DelayedAperm", seed=seed, perm=perm)
 }
 
-setMethod("isNoOp", "DelayedAperm",
+setMethod("is_noop", "DelayedAperm",
     function(x) isSequence(x@perm, length(dim(x@seed)))
 )
 
@@ -757,7 +757,7 @@ new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
     new2("DelayedDimnames", seed=seed, dimnames=dimnames)
 }
 
-setMethod("isNoOp", "DelayedDimnames",
+setMethod("is_noop", "DelayedDimnames",
     function(x)
         all(vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED))
 )
