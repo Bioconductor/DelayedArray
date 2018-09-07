@@ -10,6 +10,21 @@
 ### A much more condensed version of str().
 ###
 
+.node_as_one_line_summary <- function(x, show.node.dim=TRUE)
+{
+    if (is(x, "DelayedOp")) {
+        ans <- summary(x)
+    } else {
+        ans <- sprintf("[seed] %s object", class(x))
+    }
+    if (show.node.dim) {
+        dim_in1string <- paste0(dim(x), collapse="x")
+        sparse <- if (is_sparse(x)) ", sparse" else ""
+        ans <- sprintf("%s %s%s: %s", dim_in1string, type(x), sparse, ans)
+    }
+    ans
+}
+
 ### Avoid use of non-ASCII characters in R source code. There must be a much
 ### better way to do this.
 .VBAR  <- rawToChar(as.raw(c(0xe2, 0x94, 0x82)))
@@ -34,18 +49,8 @@
             ## 3-char prefix
             prefix <- paste0(if (last.child) .ELBOW else .TEE, .HBAR, " ")
         }
-
-        if (is(x, "DelayedOp")) {
-            x_as1string <- summary(x)
-        } else {
-            x_as1string <- sprintf("[seed] %s object", class(x))
-        }
-        if (show.node.dim) {
-            dim_in1string <- paste0(dim(x), collapse="x")
-            x_as1string <- sprintf("%s %s: %s", dim_in1string, type(x),
-                                                x_as1string)
-        }
-        cat(indent, prefix, x_as1string, "\n", sep="")
+        x_as1line <- .node_as_one_line_summary(x, show.node.dim=show.node.dim)
+        cat(indent, prefix, x_as1line, "\n", sep="")
         if (!is(x, "DelayedOp"))
             return(invisible(NULL))
     }

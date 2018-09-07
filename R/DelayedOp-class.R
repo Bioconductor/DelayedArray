@@ -473,6 +473,10 @@ summary.DelayedUnaryIsoOpStack <-
 
 setMethod("summary", "DelayedUnaryIsoOpStack", summary.DelayedUnaryIsoOpStack)
 
+### Seed contract.
+### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
+### derivatives, and overwite their "extract_array" method.
+
 setMethod("extract_array", "DelayedUnaryIsoOpStack",
     function(x, index)
     {
@@ -631,6 +635,8 @@ setMethod("summary", "DelayedUnaryIsoOpWithArgs",
 )
 
 ### Seed contract.
+### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
+### derivatives, and overwite their "extract_array" method.
 
 subset_args <- function(args, along, index)
 {
@@ -772,6 +778,8 @@ summary.DelayedDimnames <-
 setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
 
 ### Seed contract.
+### We inherit the "dim" and "extract_array" default methods for
+### DelayedUnaryIsoOp derivatives, and overwite their "dimnames" method.
 
 .get_DelayedDimnames_dimnames <- function(x)
 {
