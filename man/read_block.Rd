@@ -5,7 +5,7 @@
 \alias{write_block}
 \alias{write_block,ANY-method}
 
-\alias{isSparse}
+\alias{is_sparse}
 \alias{read_sparse_block}
 \alias{read_sparse_block,ANY-method}
 \alias{read_sparse_block,SparseArraySeed-method}

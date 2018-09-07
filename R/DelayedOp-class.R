@@ -223,12 +223,12 @@ setMethod("extract_array", "DelayedSubset",
     }
 )
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 
-setMethod("isSparse", "DelayedSubset",
+setMethod("is_sparse", "DelayedSubset",
     function(x)
     {
-        if (!isSparse(x@seed))
+        if (!is_sparse(x@seed))
             return(FALSE)
         ## Duplicates in x@index break structural sparsity.
         !any(vapply(x@index, anyDuplicated,
@@ -241,7 +241,7 @@ setMethod("extract_sparse_array", "DelayedSubset",
     {
         x2 <- subset_DelayedSubset(x, index)
         ## Assuming that the caller respected "extract_sparse_array() Terms
-        ## of Use" (see SparseArraySeed-class.R), 'isSparse(x)' should be
+        ## of Use" (see SparseArraySeed-class.R), 'is_sparse(x)' should be
         ## TRUE and the subscripts in 'index' should not contain duplicates.
         ## This in turn means that the subscripts in 'x2@index' should not
         ## contain duplicates either so the call below should also respect
@@ -346,9 +346,9 @@ setMethod("extract_array", "DelayedAperm",
     .extract_array_from_DelayedAperm
 )
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 
-setMethod("isSparse", "DelayedAperm", function(x) isSparse(x@seed))
+setMethod("is_sparse", "DelayedAperm", function(x) is_sparse(x@seed))
 
 setMethod("extract_sparse_array", "DelayedAperm",
     function(x, index)
@@ -404,12 +404,12 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
     x
 }
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 ### Like the 3 default methods above (seed contract), the 2 default methods
 ### below also implement a no-op semantic and are also inherited by
 ### DelayedArray objects.
 
-setMethod("isSparse", "DelayedUnaryIsoOp", function(x) isSparse(x@seed))
+setMethod("is_sparse", "DelayedUnaryIsoOp", function(x) is_sparse(x@seed))
 
 setMethod("extract_sparse_array", "DelayedUnaryIsoOp",
     function(x, index) extract_sparse_array(x@seed, index)
@@ -488,7 +488,7 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
     }
 )
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 
 ### Make an ordinary array of the specified type and number of dimensions,
 ### and with a single "zero" element. The single element is the "zero"
@@ -500,10 +500,10 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
     array(vector(type, length=1L), dim=rep.int(1L, ndim))
 }
 
-setMethod("isSparse", "DelayedUnaryIsoOpStack",
+setMethod("is_sparse", "DelayedUnaryIsoOpStack",
     function(x)
     {
-        if (!isSparse(x@seed))
+        if (!is_sparse(x@seed))
             return(FALSE)
         ## Structural sparsity will be propagated if the operations in
         ## x@OPS preserve the zeroes. To find out whether zeroes are preserved
@@ -523,7 +523,7 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpStack",
     function(x, index)
     {
         ## Assuming that the caller respected "extract_sparse_array() Terms
-        ## of Use" (see SparseArraySeed-class.R), 'isSparse(x)' should be
+        ## of Use" (see SparseArraySeed-class.R), 'is_sparse(x)' should be
         ## TRUE so we can assume that the operations in x@OPS preserve the
         ## zeroes and thus only need to apply them to the nonzero data.
         sas <- extract_sparse_array(x@seed, index)
@@ -662,11 +662,11 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
     }
 )
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 
 ### DelayedUnaryIsoOpWithArgs objects are NOT considered to propagate
 ### structural sparsity.
-setMethod("isSparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
+setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
 
 setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
     function(x, index)
@@ -898,12 +898,12 @@ setMethod("extract_array", "DelayedNaryIsoOp",
     }
 )
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 
-setMethod("isSparse", "DelayedNaryIsoOp",
+setMethod("is_sparse", "DelayedNaryIsoOp",
     function(x)
     {
-        ok <- vapply(x@seeds, isSparse, logical(1), USE.NAMES=FALSE)
+        ok <- vapply(x@seeds, is_sparse, logical(1), USE.NAMES=FALSE)
         if (!all(ok))
             return(FALSE)
         if (length(x@Rargs) != 0L)
@@ -1033,12 +1033,12 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
 
 setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
 
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 
-setMethod("isSparse", "DelayedAbind",
+setMethod("is_sparse", "DelayedAbind",
     function(x)
     {
-        all(vapply(x@seeds, isSparse, logical(1), USE.NAMES=FALSE))
+        all(vapply(x@seeds, is_sparse, logical(1), USE.NAMES=FALSE))
     }
 )
 

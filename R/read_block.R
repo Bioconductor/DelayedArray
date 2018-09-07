@@ -58,7 +58,7 @@ setMethod("write_block", "ANY",
 ###
 
 ### Like extract_sparse_array(), which it is based on, read_sparse_block()
-### should be called only on an array-like object 'x' for which 'isSparse(x)'
+### should be called only on an array-like object 'x' for which 'is_sparse(x)'
 ### is TRUE. For the sake of efficiency, this is NOT checked and is the
 ### responsibility of the user. See SparseArraySeed-class.R
 ### Must return a SparseArraySeed object.

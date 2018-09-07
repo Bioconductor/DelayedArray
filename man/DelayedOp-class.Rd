@@ -27,7 +27,7 @@
 \alias{dimnames,DelayedSubset-method}
 \alias{extract_array,DelayedSubset-method}
 
-\alias{isSparse,DelayedSubset-method}
+\alias{is_sparse,DelayedSubset-method}
 \alias{extract_sparse_array,DelayedSubset-method}
 
 % DelayedAperm objects
@@ -43,7 +43,7 @@
 \alias{dimnames,DelayedAperm-method}
 \alias{extract_array,DelayedAperm-method}
 
-\alias{isSparse,DelayedAperm-method}
+\alias{is_sparse,DelayedAperm-method}
 \alias{extract_sparse_array,DelayedAperm-method}
 
 % DelayedUnaryIsoOp objects
@@ -55,7 +55,7 @@
 \alias{dimnames,DelayedUnaryIsoOp-method}
 \alias{extract_array,DelayedUnaryIsoOp-method}
 
-\alias{isSparse,DelayedUnaryIsoOp-method}
+\alias{is_sparse,DelayedUnaryIsoOp-method}
 \alias{extract_sparse_array,DelayedUnaryIsoOp-method}
 
 % DelayedUnaryIsoOpStack objects
@@ -68,7 +68,7 @@
 
 \alias{extract_array,DelayedUnaryIsoOpStack-method}
 
-\alias{isSparse,DelayedUnaryIsoOpStack-method}
+\alias{is_sparse,DelayedUnaryIsoOpStack-method}
 \alias{extract_sparse_array,DelayedUnaryIsoOpStack-method}
 
 % DelayedUnaryIsoOpWithArgs objects
@@ -81,7 +81,7 @@
 
 \alias{extract_array,DelayedUnaryIsoOpWithArgs-method}
 
-\alias{isSparse,DelayedUnaryIsoOpWithArgs-method}
+\alias{is_sparse,DelayedUnaryIsoOpWithArgs-method}
 \alias{extract_sparse_array,DelayedUnaryIsoOpWithArgs-method}
 
 % DelayedDimnames objects
@@ -108,7 +108,7 @@
 \alias{dimnames,DelayedNaryIsoOp-method}
 \alias{extract_array,DelayedNaryIsoOp-method}
 
-\alias{isSparse,DelayedNaryIsoOp-method}
+\alias{is_sparse,DelayedNaryIsoOp-method}
 \alias{extract_sparse_array,DelayedNaryIsoOp-method}
 
 % DelayedAbind objects
@@ -119,7 +119,7 @@
 \alias{dimnames,DelayedAbind-method}
 \alias{extract_array,DelayedAbind-method}
 
-\alias{isSparse,DelayedAbind-method}
+\alias{is_sparse,DelayedAbind-method}
 \alias{extract_sparse_array,DelayedAbind-method}
 
 % updateObject()

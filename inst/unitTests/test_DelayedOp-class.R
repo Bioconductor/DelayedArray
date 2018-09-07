@@ -95,7 +95,7 @@ set.seed(99L)
 
 .check_extract_sparse_array_on_DelayedOp_with_DIM3 <- function(a, x)
 {
-    checkTrue(isSparse(x))
+    checkTrue(is_sparse(x))
 
     ## The behavior of extract_sparse_array() is **undefined** when the
     ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
@@ -244,7 +244,7 @@ test_DelayedSubset_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM2(.TEST_MATRIX2a, x1)
 
-    checkIdentical(FALSE, isSparse(x1))
+    checkIdentical(FALSE, is_sparse(x1))
 
     ## 2. Ordinary array seed
 
@@ -263,7 +263,7 @@ test_DelayedSubset_API <- function()
     current <- extract_array(x2, list(integer(0), NULL))
     checkIdentical(unname(a2[integer(0), ]), unname(current))
 
-    checkIdentical(FALSE, isSparse(x2))
+    checkIdentical(FALSE, is_sparse(x2))
 
     ## 3. Sparse seed -- no-op
 
@@ -288,7 +288,7 @@ test_DelayedSubset_API <- function()
     current <- extract_array(x4, list(7:5, 2L, integer(0)))
     checkIdentical(unname(a4[7:5, 2L, integer(0), drop=FALSE]), unname(current))
 
-    checkTrue(isSparse(x4))
+    checkTrue(is_sparse(x4))
     sas4 <- extract_sparse_array(.TEST_SAS3, index4)
     ## The behavior of extract_sparse_array() is **undefined** when the
     ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
@@ -319,7 +319,7 @@ test_DelayedSubset_API <- function()
     checkIdentical(dimnames(a5), dimnames(x5))
     checkIdentical(a5, as.array(x5))
 
-    checkIdentical(FALSE, isSparse(x5))  # structural sparsity not propagated!
+    checkIdentical(FALSE, is_sparse(x5))  # structural sparsity not propagated!
 }
 
 test_DelayedAperm_constructor <- function(silent=FALSE)
@@ -373,7 +373,7 @@ test_DelayedAperm_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM2(.TEST_MATRIX2a, x1)
 
-    checkIdentical(FALSE, isSparse(x1))
+    checkIdentical(FALSE, is_sparse(x1))
 
     ## 2. Ordinary array seed -- transposition
 
@@ -391,7 +391,7 @@ test_DelayedAperm_API <- function()
     current <- extract_array(x2, list(NULL, integer(0)))
     checkIdentical(unname(a2[ , integer(0)]), unname(current))
 
-    checkIdentical(FALSE, isSparse(x2))
+    checkIdentical(FALSE, is_sparse(x2))
 
     ## 3. Sparse seed -- no-op
 
@@ -417,7 +417,7 @@ test_DelayedAperm_API <- function()
     current <- extract_array(x4, list(integer(0), c(6:5, 6L), i3))
     checkIdentical(unname(a4[integer(0), c(6:5, 6L), i3]), unname(current))
 
-    checkTrue(isSparse(x4))
+    checkTrue(is_sparse(x4))
     sas4 <- aperm(.TEST_SAS3, 3:1)
     ## The behavior of extract_sparse_array() is **undefined** when the
     ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
@@ -452,7 +452,7 @@ test_DelayedAperm_API <- function()
     current <- extract_array(x5, list(c(6:5, 6L), integer(0)))
     checkIdentical(unname(a5[c(6:5, 6L), integer(0)]), unname(current))
 
-    checkTrue(isSparse(x5))
+    checkTrue(is_sparse(x5))
     sas5 <- aperm(.TEST_SAS3, 2:1)
     ## The behavior of extract_sparse_array() is **undefined** when the
     ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
@@ -519,7 +519,7 @@ test_DelayedUnaryIsoOpStack_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM2(.TEST_MATRIX2a, x1)
 
-    checkIdentical(FALSE, isSparse(x1))
+    checkIdentical(FALSE, is_sparse(x1))
 
     ## 2. Ordinary array seed -- 1 / (log(a)^2 + 1)
 
@@ -531,7 +531,7 @@ test_DelayedUnaryIsoOpStack_API <- function()
     a2 <- suppressWarnings(1 / (log(.TEST_MATRIX2a)^2 + 1))
     .basic_checks_on_DelayedOp_with_DIM2(a2, x2)
 
-    checkIdentical(FALSE, isSparse(x2))
+    checkIdentical(FALSE, is_sparse(x2))
 
     ## 3. Sparse seed -- no-op
 
@@ -563,7 +563,7 @@ test_DelayedUnaryIsoOpStack_API <- function()
     checkIdentical(dimnames(a5), dimnames(x5))
     checkIdentical(a5, as.array(x5))
 
-    checkIdentical(FALSE, isSparse(x5))  # structural sparsity not propagated!
+    checkIdentical(FALSE, is_sparse(x5))  # structural sparsity not propagated!
 }
 
 test_DelayedUnaryIsoOpWithArgs_constructor <- function(silent=FALSE)
@@ -614,7 +614,7 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM2(.TEST_MATRIX2a, x1)
 
-    checkIdentical(FALSE, isSparse(x1))
+    checkIdentical(FALSE, is_sparse(x1))
 
     ## 2. Ordinary array seed
 
@@ -626,7 +626,7 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
     a2 <- .TEST_MATRIX2a / e2
     .basic_checks_on_DelayedOp_with_DIM2(a2, x2)
 
-    checkIdentical(FALSE, isSparse(x2))
+    checkIdentical(FALSE, is_sparse(x2))
 
     ## 3. Sparse seed -- no-op
 
@@ -634,7 +634,7 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
 
-    checkIdentical(FALSE, isSparse(x3))
+    checkIdentical(FALSE, is_sparse(x3))
 
     ## 4. Sparse seed
 
@@ -646,7 +646,7 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
     a4 <- .TEST_ARRAY3 <= e2
     .basic_checks_on_DelayedOp_with_DIM3(a4, x4)
 
-    checkIdentical(FALSE, isSparse(x4))
+    checkIdentical(FALSE, is_sparse(x4))
 }
 
 test_DelayedDimnames_constructor <- function(silent=FALSE)
@@ -713,7 +713,7 @@ test_DelayedDimnames_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM2(.TEST_MATRIX2a, x1)
 
-    checkIdentical(FALSE, isSparse(x1))
+    checkIdentical(FALSE, is_sparse(x1))
 
     ## 2. Ordinary array seed
 
@@ -724,7 +724,7 @@ test_DelayedDimnames_API <- function()
     dimnames(a2) <- dimnames2
     .basic_checks_on_DelayedOp_with_DIM2(a2, x2)
 
-    checkIdentical(FALSE, isSparse(x2))
+    checkIdentical(FALSE, is_sparse(x2))
 
     ## 3. Sparse seed -- no-op
 
@@ -732,7 +732,7 @@ test_DelayedDimnames_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
 
-    checkTrue(isSparse(x3))
+    checkTrue(is_sparse(x3))
 
     ## 4. Sparse seed
 
@@ -743,7 +743,7 @@ test_DelayedDimnames_API <- function()
     dimnames(a4) <- dimnames4
     .basic_checks_on_DelayedOp_with_DIM3(a4, x4)
 
-    checkTrue(isSparse(x4))
+    checkTrue(is_sparse(x4))
 }
 
 test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
@@ -825,7 +825,7 @@ test_DelayedNaryIsoOp_API <- function()
     a1 <- OP1(.TEST_ARRAY4c)
     .basic_checks_on_DelayedOp_with_DIM4(a1, x1)
 
-    checkTrue(isSparse(x1))
+    checkTrue(is_sparse(x1))
 
     ## 2. Binary op
 
@@ -834,7 +834,7 @@ test_DelayedNaryIsoOp_API <- function()
     a2 <- .TEST_ARRAY4a / .TEST_ARRAY4c
     .basic_checks_on_DelayedOp_with_DIM4(a2, x2)
 
-    checkIdentical(FALSE, isSparse(x2))
+    checkIdentical(FALSE, is_sparse(x2))
 
     ## 3. Ternary op with right args
 
@@ -848,7 +848,7 @@ test_DelayedNaryIsoOp_API <- function()
     a3 <- OP3(.TEST_ARRAY4a, .TEST_ARRAY4b, .TEST_ARRAY4c, w2=0.5, w3=100L)
     .basic_checks_on_DelayedOp_with_DIM4(a3, x3)
 
-    checkIdentical(FALSE, isSparse(x3))
+    checkIdentical(FALSE, is_sparse(x3))
 
     ## 4-11. "Ops" group generics with propagation of structural sparsity
 
@@ -857,56 +857,56 @@ test_DelayedNaryIsoOp_API <- function()
     a4 <- .TEST_ARRAY4c + .TEST_ARRAY4d
     .basic_checks_on_DelayedOp_with_DIM4(a4, x4)
 
-    checkTrue(isSparse(x4))
+    checkTrue(is_sparse(x4))
 
     x5 <- new_DelayedNaryIsoOp("-", .TEST_SAS4c, .TEST_SAS4d)
 
     a5 <- .TEST_ARRAY4c - .TEST_ARRAY4d
     .basic_checks_on_DelayedOp_with_DIM4(a5, x5)
 
-    checkTrue(isSparse(x5))
+    checkTrue(is_sparse(x5))
 
     x6 <- new_DelayedNaryIsoOp("*", .TEST_SAS4c, .TEST_SAS4d)
 
     a6 <- .TEST_ARRAY4c * .TEST_ARRAY4d
     .basic_checks_on_DelayedOp_with_DIM4(a6, x6)
 
-    checkTrue(isSparse(x6))
+    checkTrue(is_sparse(x6))
 
     x7 <- new_DelayedNaryIsoOp(">", .TEST_SAS4c, .TEST_SAS4d)
 
     a7 <- .TEST_ARRAY4c > .TEST_ARRAY4d
     .basic_checks_on_DelayedOp_with_DIM4(a7, x7)
 
-    checkTrue(isSparse(x7))
+    checkTrue(is_sparse(x7))
 
     x8 <- new_DelayedNaryIsoOp("<", .TEST_SAS4c, .TEST_SAS4d)
 
     a8 <- .TEST_ARRAY4c < .TEST_ARRAY4d
     .basic_checks_on_DelayedOp_with_DIM4(a8, x8)
 
-    checkTrue(isSparse(x8))
+    checkTrue(is_sparse(x8))
 
     x9 <- new_DelayedNaryIsoOp("!=", .TEST_SAS4c, .TEST_SAS4d)
 
     a9 <- .TEST_ARRAY4c != .TEST_ARRAY4d
     .basic_checks_on_DelayedOp_with_DIM4(a9, x9)
 
-    checkTrue(isSparse(x9))
+    checkTrue(is_sparse(x9))
 
     x10 <- new_DelayedNaryIsoOp("&", .TEST_SAS2b, .TEST_SAS2c)
 
     a10 <- .TEST_ARRAY2b & .TEST_ARRAY2c
     .basic_checks_on_DelayedOp_with_DIM2(a10, x10)
 
-    checkTrue(isSparse(x10))
+    checkTrue(is_sparse(x10))
 
     x11 <- new_DelayedNaryIsoOp("|", .TEST_SAS2b, .TEST_SAS2c)
 
     a11 <- .TEST_ARRAY2b | .TEST_ARRAY2c
     .basic_checks_on_DelayedOp_with_DIM2(a11, x11)
 
-    checkTrue(isSparse(x11))
+    checkTrue(is_sparse(x11))
 
     ## 12. "pmax2" with propagation of structural sparsity
 

@@ -169,18 +169,18 @@ sparse2dense <- function(sas)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### isSparse() and extract_sparse_array()
+### is_sparse() and extract_sparse_array()
 ###
 
-### isSparse() detects **structural** sparsity which is a qualitative
+### is_sparse() detects **structural** sparsity which is a qualitative
 ### property of array-like object 'x'. So it doesn't look at the data in 'x'.
 ### It is NOT about quantitative sparsity measured by sparsity().
-setGeneric("isSparse", function(x) standardGeneric("isSparse"))
+setGeneric("is_sparse", function(x) standardGeneric("is_sparse"))
 
 ### By default, nothing is considered sparse.
-setMethod("isSparse", "ANY", function(x) FALSE)
+setMethod("is_sparse", "ANY", function(x) FALSE)
 
-setMethod("isSparse", "SparseArraySeed", function(x) TRUE)
+setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
 
 ### This is the workhorse behind read_sparse_block().
 ### Similar to extract_array() except that:
@@ -191,7 +191,7 @@ setMethod("isSparse", "SparseArraySeed", function(x) TRUE)
 ###       'dense2sparse(extract_array(x, index))'. This would defeat the
 ###       purpose of read_sparse_block().
 ###   (2) It should be called only on an array-like object 'x' for which
-###       'isSparse(x)' is TRUE.
+###       'is_sparse(x)' is TRUE.
 ###   (3) The subscripts in 'index' should NOT contain duplicates.
 ### IMPORTANT NOTE: For the sake of efficiency, (2) and (3) are NOT checked
 ### and are the responsibility of the user. We'll refer to (2) and (3) as
