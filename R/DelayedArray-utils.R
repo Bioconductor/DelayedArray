@@ -45,35 +45,44 @@ setMethod("bindROWS", "DelayedArray",
 ### Logic members: &, |
 ###
 
-.normarg_Ops_vector_arg <- function(e, x_nrow,
-                                    e_what="left object",
-                                    x_what="first dimension of right object",
-                                    x_what2=x_what,
-                                    check.only=FALSE)
+### Return TRUE if 'length(e)' is 1 or equal to 'nrow(x)', FALSE if it's a
+### divisor of 'nrow(x)', and an error otherwise.
+.check_Ops_vector_arg_length <-
+    function(e, x_nrow,
+             e_what="left object",
+             x_what="first dimension of right object",
+             x_what2=x_what)
 {
     e_len <- length(e)
     if (e_len == x_nrow || e_len == 1L)
-        return(e)
+        return(TRUE)
     if (e_len > x_nrow)
         stop(wmsg(e_what, " is longer than ", x_what))
     if (e_len == 0L || x_nrow %% e_len != 0L)
         stop(wmsg("length of ", e_what, " is not a divisor of ", x_what2))
-    if (check.only)
-        return(e)
-    rep(e, length.out=x_nrow)
+    FALSE
+}
+
+.normarg_Ops_vector_arg <- function(e, x_nrow,
+                                    e_what="left object",
+                                    x_what="first dimension of right object")
+{
+    ok <- .check_Ops_vector_arg_length(e, x_nrow, e_what=e_what, x_what=x_what)
+    if (!is.vector(e))
+        e <- as.vector(e)  # Will realize 'e' if it's a DelayedArray object.
+                           # It's important to keep the check on the length
+                           # (and to fail) **before** this potentially
+                           # expensive realization (e.g. if 'length(e)' is
+                           # very big and greater than 'x_nrow').
+    if (!ok)
+        e <- rep(e, length.out=x_nrow)
+    e
 }
 
 ### Return a DelayedArray object of the same dimensions as 'e1'.
 .DelayedArray_Ops_with_right_vector <- function(.Generic, e1, e2)
 {
     stopifnot(is(e1, "DelayedArray"))
-    e1_class <- class(e1)
-    e2_class <- class(e2)
-    if (!is.vector(e2))
-        e2 <- as.vector(e2)
-    if (!is.atomic(e2))
-        stop(wmsg("`", .Generic, "` between ", e1_class, " and ",
-                  e2_class, " objects is not supported"))
     e2 <- .normarg_Ops_vector_arg(e2, nrow(e1),
                                   e_what="right object",
                                   x_what="first dimension of left object")
@@ -90,13 +99,6 @@ setMethod("bindROWS", "DelayedArray",
 .DelayedArray_Ops_with_left_vector <- function(.Generic, e1, e2)
 {
     stopifnot(is(e2, "DelayedArray"))
-    e1_class <- class(e1)
-    e2_class <- class(e2)
-    if (!is.vector(e1))
-        e1 <- as.vector(e1)
-    if (!is.atomic(e1))
-        stop(wmsg("`", .Generic, "` between ", e1_class, " and ",
-                  e2_class, " objects is not supported"))
     e1 <- .normarg_Ops_vector_arg(e1, nrow(e2),
                                   e_what="left object",
                                   x_what="first dimension of right object")
@@ -109,12 +111,52 @@ setMethod("bindROWS", "DelayedArray",
     }
 }
 
-### Return a DelayedArray object of the same dimensions as 'e1' and 'e2'.
-.DelayedArray_Ops_COMBINE_seeds <- function(.Generic, e1, e2)
+### 'e1' and 'e2' must be DelayedArray objects. At least one of them must
+### be of length 1 (i.e. have all its dimensions equal to 1) so it can be
+### coerced to an ordinary vector of length 1 with as.vector(). Note that
+### this coercion triggers realization.
+.DelayedArray_Ops_with_a_length_one_arg <- function(.Generic, e1, e2)
 {
-    if (!identical(dim(e1), dim(e2)))
-        stop("non-conformable arrays")
-    DelayedArray(new_DelayedNaryIsoOp(.Generic, e1@seed, e2@seed))
+    stopifnot(is(e1, "DelayedArray"))
+    stopifnot(is(e2, "DelayedArray"))
+    e1_len <- length(e1)
+    e2_len <- length(e2)
+    if (e1_len == 1L && e2_len == 1L) {
+        ## The object with most dimensions "wins".
+        e1_ndim <- length(dim(e1))
+        e2_ndim <- length(dim(e2))
+        if (e1_ndim > e2_ndim) {
+            ## 'e1' wins.
+            e2 <- as.vector(e2)  # realization
+        } else if (e2_ndim > e1_ndim) {
+            ## 'e2' wins.
+            e1 <- as.vector(e1)  # realization
+        } else {
+            ## 'dim(e1)' is identical to 'dim(e2)' ==> nobody wins.
+        }
+    } else if (e1_len == 1L) {
+        ## 'e2' wins.
+        e1 <- as.vector(e1)  # realization
+    } else if (e2_len == 1L) {
+        ## 'e1' wins.
+        e2 <- as.vector(e2)  # realization
+    } else {
+        ## Should never happen.
+        stop(wmsg("'e1' or 'e2' must be of length 1"))
+    }
+    if (is.vector(e1)) {
+        ## 'e2' won.
+        stash_DelayedUnaryIsoOpStack(e2,
+            function(a) match.fun(.Generic)(e1, a))
+    } else if (is.vector(e2)) {
+        ## 'e1' won.
+        stash_DelayedUnaryIsoOpStack(e1,
+            function(a) match.fun(.Generic)(a, e2))
+    } else {
+        ## Nobody won and we know that this happened because 'dim(e1)'
+        ## is identical to 'dim(e2)' so 'e1' and 'e2' are conformable.
+        DelayedArray(new_DelayedNaryIsoOp(.Generic, e1@seed, e2@seed))
+    }
 }
 
 .DelayedArray_Ops <- function(.Generic, e1, e2)
@@ -122,17 +164,27 @@ setMethod("bindROWS", "DelayedArray",
     e1_dim <- dim(e1)
     e2_dim <- dim(e2)
     if (identical(e1_dim, e2_dim))
-        return(.DelayedArray_Ops_COMBINE_seeds(.Generic, e1, e2))
-    ## Effective dimensions.
-    effdim_idx1 <- which(e1_dim != 1L)
-    effdim_idx2 <- which(e2_dim != 1L)
-    if ((length(effdim_idx1) == 1L) == (length(effdim_idx2) == 1L))
-        stop("non-conformable arrays")
-    if (length(effdim_idx1) == 1L) {
-        .DelayedArray_Ops_with_left_vector(.Generic, e1, e2)
+        return(DelayedArray(new_DelayedNaryIsoOp(.Generic, e1@seed, e2@seed)))
+    ## If it has only 0 or 1 effective dimensions, 'e1' or 'e2' can
+    ## be treated as a vector-like argument (of length 1 if it has 0
+    ## effective dimensions).
+    e1_neffdim <- sum(e1_dim != 1L)
+    e2_neffdim <- sum(e2_dim != 1L)
+    if (e1_neffdim >= 2L && e2_neffdim >= 2L)
+        stop(wmsg("non-conformable array-like objects"))
+    if (e1_neffdim == 0L || e2_neffdim == 0L)
+        return(.DelayedArray_Ops_with_a_length_one_arg(.Generic, e1, e2))
+    if (e1_neffdim == 1L && e2_neffdim == 1L)
+        stop(wmsg("non-conformable array-like objects"))
+    ## The object with most effective dimensions "wins".
+    if (e1_neffdim == 1L) {
+        ## 'e2' wins
+        ans <- .DelayedArray_Ops_with_left_vector(.Generic, e1, e2)
     } else {
-        .DelayedArray_Ops_with_right_vector(.Generic, e1, e2)
+        ## 'e1' wins
+        ans <- .DelayedArray_Ops_with_right_vector(.Generic, e1, e2)
     }
+    ans
 }
 
 setMethod("Ops", c("DelayedArray", "vector"),
@@ -276,11 +328,10 @@ setMethod("sweep", "DelayedArray",
         ## error message (see .normarg_Ops_vector_arg() in this file). By
         ## checking the length early, we can display a more appropriate
         ## error message.
-        .normarg_Ops_vector_arg(STATS, x_dim[[MARGIN]],
-                                e_what="'STATS'",
-                                x_what="the extent of 'dim(x)[MARGIN]'",
-                                x_what2="'dim(x)[MARGIN]'",
-                                check.only=TRUE)
+        .check_Ops_vector_arg_length(STATS, x_dim[[MARGIN]],
+                                     e_what="'STATS'",
+                                     x_what="the extent of 'dim(x)[MARGIN]'",
+                                     x_what2="'dim(x)[MARGIN]'")
 
         perm <- c(MARGIN, seq_len(x_ndim)[-MARGIN])
         x2 <- aperm(x, perm)

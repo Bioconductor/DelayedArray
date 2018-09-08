@@ -847,7 +847,7 @@ setClass("DelayedNaryIsoOp",
     )
 )
 
-.objects_are_conformable_arrays <- function(objects)
+.arrays_are_conformable <- function(objects)
 {
     dims <- lapply(objects, dim)
     ndims <- lengths(dims)
@@ -857,7 +857,7 @@ setClass("DelayedNaryIsoOp",
     tmp <- unlist(dims, use.names=FALSE)
     if (is.null(tmp))
         return(FALSE)
-    dims <- matrix(tmp, nrow=first_ndim)
+    dims <- matrix(tmp, ncol=length(objects))
     first_dim <- dims[ , 1L]
     all(dims == first_dim)
 }
@@ -865,7 +865,7 @@ setClass("DelayedNaryIsoOp",
 .validate_DelayedNaryIsoOp <- function(x)
 {
     ## 'seeds' slot.
-    if (!.objects_are_conformable_arrays(x@seeds))
+    if (!.arrays_are_conformable(x@seeds))
         return(wmsg2("'x@seeds' must be a list of conformable ",
                      "array-like objects"))
     TRUE
@@ -878,7 +878,9 @@ new_DelayedNaryIsoOp <- function(OP=identity, seed=new("array"), ...,
 {
     OP <- match.fun(OP)
     seeds <- unname(list(seed, ...))
-    new2("DelayedNaryIsoOp", seeds=seeds, OP=OP, Rargs=Rargs)
+    if (!.arrays_are_conformable(seeds))
+        stop(wmsg("non-conformable array-like objects"))
+    new2("DelayedNaryIsoOp", seeds=seeds, OP=OP, Rargs=Rargs, check=FALSE)
 }
 
 ### S3/S4 combo for summary.DelayedNaryIsoOp
