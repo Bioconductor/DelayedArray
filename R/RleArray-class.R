@@ -25,21 +25,28 @@ setClass("SolidRleArraySeed",
 )
 
 ### The RleRealizationSink class is a concrete RealizationSink subclass that
-### implements realization of an array-like object as an RleArray object that
-### will have a ChunkedRleArraySeed seed (once writing to the sink is
-### complete).
+### implements realization of an array-like object as an RleArray object.
+### Once writing the array data to the RleRealizationSink object is complete,
+### the object will be turned into a ChunkedRleArraySeed object that will be
+### used as the seed of the RleArray object.
 setClass("RleRealizationSink",
     contains=c("RleArraySeed", "RealizationSink"),
     representation(
         type="character",
-        chunks="environment"
+        ## TODO: Add the 2 slots below to make RleRealizationSink
+        ## support a RegularArrayGrid of chunks.
+        #chunk_grid="RegularArrayGrid",        # Of length N.
+        #chunk_runs_along_last_dim="logical",  # Of length N.
+        chunks="environment"                  # Of length N (once all the
+                                              # chunks are written).
     )
 )
 
-### We support long ChunkedRleArraySeed objects but for now the chunks
-### cannot be long. Supporting long chunks would require that
-### S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a numeric
-### vector.
+### We support long ChunkedRleArraySeed objects but the chunks cannot be long.
+### Note that supporting long chunks would require (at least) that:
+###   1) we support long ArrayViewport objects,
+###   2) S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a numeric
+###      vector.
 setClass("ChunkedRleArraySeed",
     contains="RleRealizationSink",
     representation(
@@ -52,6 +59,14 @@ setClass("ChunkedRleArraySeed",
         breakpoints="numeric"
     )
 )
+
+## TODO: Replace ChunkedRleArraySeed above definition with definition below
+## to make ChunkedRleArraySeed support a RegularArrayGrid of chunks.
+#setClass("ChunkedRleArraySeed", contains="RleRealizationSink")
+
+#setMethod("parallelSlotNames", "ChunkedRleArraySeed",
+#    function(x) c("chunk_grid", "chunk_runs_along_last_dim", "chunks")
+#)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -131,6 +146,20 @@ setValidity2("SolidRleArraySeed", .validate_SolidRleArraySeed)
     ## 'type' slot.
     if (!isSingleString(x@type))
         return(wmsg2("'type' slot must be a single string"))
+
+    ## TODO: Add the 2 checks below when RleRealizationSink supports a
+    ## RegularArrayGrid of chunks.
+    ## 'chunk_grid' slot.
+    #if (!is(x@chunk_grid, "RegularArrayGrid"))
+    #    return(wmsg2("'chunk_grid' slot must be a RegularArrayGrid object"))
+    #if (!identical(x@DIM, refdim(x@chunk_grid)))
+    #    return(wmsg2("'chunk_grid' slot must be a grid that ",
+    #                 "fits the object"))
+    ## 'chunk_runs_along_last_dim' slot.
+    #if (!is.logical(x@chunk_runs_along_last_dim))
+    #    return(wmsg2("'chunk_runs_along_last_dim' slot must ",
+    #                 "be a logical vector"))
+
     ## 'chunks' slot.
     if (!is.environment(x@chunks))
         return(wmsg2("'chunks' slot must be an environment"))
@@ -170,6 +199,20 @@ setValidity2("RleRealizationSink", .validate_RleRealizationSink)
     # actually match the real ones.
     TRUE
 }
+
+### TODO: Replace validity method above with simpler method below when
+### ChunkedRleArraySeed supports a RegularArrayGrid of chunks.
+#.validate_ChunkedRleArraySeed <- function(x)
+#{
+#    ## 'chunk_runs_along_last_dim' slot.
+#    if (anyNA(x@chunk_runs_along_last_dim))
+#        return(wmsg2("'chunk_runs_along_last_dim' slot must ",
+#                     "be a logical vector with no NAs"))
+#    ## 'chunks' slot.
+#    if (!identical(lengths(x@chunk_grid), .get_chunk_lens(x@chunks)))
+#        return(wmsg2("chunk lengths don't match chunking grid element lengths"))
+#    TRUE
+#}
 setValidity2("ChunkedRleArraySeed", .validate_ChunkedRleArraySeed)
 
 
