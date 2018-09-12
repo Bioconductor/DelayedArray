@@ -5,35 +5,36 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setAutoBlockSize()
+### set/getAutoBlockSize()
 ###
 ### The automatic block size must be specified in bytes.
 ###
 
-getAutoBlockSize <- function()
+### We set the automatic block size to 100 Mb by default.
+set_auto.block.size <- function(size=1e8)
 {
-    size <- getOption("DelayedArray.auto.block.size")
-    if (!isSingleNumber(size) || size < 1)
-        stop(wmsg("Global option DelayedArray.auto.block.size ",
-                  "should be a single number >= 1. ",
-                  "Fix it with setAutoBlockSize()."))
-    size
+    set_user_option("auto.block.size", size)
 }
 
-### We set the automatic block size to 100 Mb by default.
 setAutoBlockSize <- function(size=1e8)
 {
     if (!isSingleNumber(size) || size < 1)
         stop(wmsg("the block size must be a single number >= 1"))
-    prev_size <- getOption("DelayedArray.auto.block.size")
-    if (isSingleNumber(prev_size)) {
-        previous_was <- c(" (was ", prev_size, ")")
-    } else {
-        previous_was <- ""
-    }
-    options(DelayedArray.auto.block.size=size)
-    message("automatic block size set to ", size, " bytes", previous_was)
+    prev_size <- get_user_option("auto.block.size")
+    set_auto.block.size(size)
+    message("automatic block size set to ", size, " bytes ",
+            "(was ", prev_size, ")")
     invisible(size)
+}
+
+getAutoBlockSize <- function()
+{
+    size <- get_user_option("auto.block.size")
+    if (!isSingleNumber(size) || size < 1)
+        stop(wmsg("DelayedArray user-controlled global option ",
+                  "auto.block.size should be a single number >= 1. ",
+                  "Fix it with setAutoBlockSize()."))
+    size
 }
 
 
@@ -101,7 +102,7 @@ getAutoBlockLength <- function(type)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setAutoBlockShape()
+### set/getAutoBlockShape()
 ###
 
 .SUPPORTED_SHAPES <- c("hypercube",
@@ -109,34 +110,35 @@ getAutoBlockLength <- function(type)
                        "first-dim-grows-first",
                        "last-dim-grows-first")
 
-getAutoBlockShape <- function()
+### We set the automatic block shape to "hypercube" by default.
+set_auto.block.shape <- function(shape="hypercube")
 {
-    shape <- getOption("DelayedArray.auto.block.shape")
-    if (!(isSingleString(shape) && shape %in% .SUPPORTED_SHAPES)) {
-        in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
-        stop(wmsg("Global option DelayedArray.auto.block.shape ",
-                  "should be one of: ", in1string, ". ",
-                  "Fix it with setAutoBlockShape()."))
-    }
-    shape
+    set_user_option("auto.block.shape", shape)
 }
 
-### We set the automatic block shape to "hypercube" by default.
 setAutoBlockShape <- function(shape=c("hypercube",
                                       "scale",
                                       "first-dim-grows-first",
                                       "last-dim-grows-first"))
 {
     shape <- match.arg(shape)
-    prev_shape <- getOption("DelayedArray.auto.block.shape")
-    if (isSingleString(prev_shape)) {
-        previous_was <- c(" (was \"", prev_shape, "\")")
-    } else {
-        previous_was <- ""
-    }
-    options(DelayedArray.auto.block.shape=shape)
-    message("automatic block shape set to \"", shape, "\"", previous_was)
+    prev_shape <- get_user_option("auto.block.shape")
+    set_auto.block.shape(shape)
+    message("automatic block shape set to \"", shape, "\" ",
+             "(was \"", prev_shape, "\")")
     invisible(shape)
+}
+
+getAutoBlockShape <- function()
+{
+    shape <- get_user_option("auto.block.shape")
+    if (!(isSingleString(shape) && shape %in% .SUPPORTED_SHAPES)) {
+        in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
+        stop(wmsg("DelayedArray user-controlled global option ",
+                  "auto.block.shape should be one of: ", in1string, ". ",
+                  "Fix it with setAutoBlockShape()."))
+    }
+    shape
 }
 
 

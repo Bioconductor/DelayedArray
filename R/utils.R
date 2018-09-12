@@ -334,3 +334,128 @@ get_rev_index <- function(part_index)
     rev_idx
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### set_user_option() / get_user_option()
+###
+### In the context of BiocParallel::bplapply() and family, we want the workers
+### to inherit the user-controlled options defined on the master. Workers can
+### also modify the inherited options or define new user-controlled options
+### but this should not affect the options defined on the master (one-way
+### communication). This mechanism should also work with nested levels of
+### parallelization i.e. if workers start subworkers and so on.
+### The mechanism implemented below achieves that. It relies on 2 important
+### assumptions:
+### 1st assumption: Environment variables defined in the environment of a
+###                 master R session are **always** inherited by the workers
+###                 started by BiocParallel::bplapply() and family. "Always"
+###                 here means "whatever the BPPARAM backend is".
+### 2nd assumption: Even though it has been reported that with some weird/rare
+###                 cluster configurations, workers don't necessarily see the
+###                 same partitions or file system as their master, we assume
+###                 that they can at least see the tempdir() of their
+###                 master and access it using the same path as the path
+###                 returned by calling tempdir() on their master.
+
+.make_new_filepath_for_my_own_file <- function(my_pid)
+{
+    filename <- paste0("DelayeArray-options.", my_pid)
+    file.path(tempdir(), filename)
+}
+
+.filepath_is_mine <- function(filepath, my_pid)
+{
+    filename <- basename(filepath)
+    if (!grepl(".", filename, fixed=TRUE))
+        return(FALSE)
+    ## We extract the PID embedded in the filename by grabbing everything
+    ## that is after the last occurence of '.'.
+    pid_from_filename <- sub("(.*)\\.([^.]*)$", "\\2", filename)
+    pid_from_filename == my_pid
+}
+
+### Create a file with no options in it.
+.create_root_file <- function(my_pid)
+{
+    new_filepath <- .make_new_filepath_for_my_own_file(my_pid)
+    saveRDS(list(), new_filepath)
+    new_filepath
+}
+
+.copy_file_if_not_mine <- function(filepath, my_pid)
+{
+    is_mine <- .filepath_is_mine(filepath, my_pid)
+    if (is_mine)
+        return(filepath)
+    ## If the file is not mine then the current process is a worker that
+    ## was started by a master, so I'm not allowed to write to the file.
+    ## I need to make my own copy it first.
+    new_filepath <- .make_new_filepath_for_my_own_file(my_pid)
+    ok <- file.copy(filepath, new_filepath)
+    stopifnot(ok)  # unlikely (see 2nd assumption above)
+    new_filepath
+}
+
+### Name of the environment variable that contains the path to the RDS file
+### containing the serialized options.
+.env_var_name <- "DelayedArray_OPTIONS_FILEPATH"
+
+.get_user_options_filepath <- function() Sys.getenv(.env_var_name)
+
+.set_user_options_filepath <- function(filepath)
+{
+    do.call(Sys.setenv, setNames(list(filepath), .env_var_name))
+}
+
+user_options_file_exists <- function() .get_user_options_filepath() != ""
+
+### Implements a copy-on-write mechanism in the context of multiple workers.
+set_user_option <- function(name, value)
+{
+    stopifnot(isSingleString(name))
+    filepath <- .get_user_options_filepath()
+    my_pid <- as.character(Sys.getpid())
+    if (filepath == "") {
+        ## Options file doesn't exist yet. This means that the current
+        ## process is the root of the (possibly nested) master/workers tree,
+        ## that is, the R session explicitely started by the user at the
+        ## command line (or via RStudio).
+        writable_filepath <- .create_root_file(my_pid)
+    } else {
+        ## The current process is a worker (which in turn could itself
+        ## become the master of some subworkers at some point).
+        writable_filepath <- .copy_file_if_not_mine(filepath, my_pid)
+    }
+    if (writable_filepath != filepath)
+        .set_user_options_filepath(writable_filepath)
+    user_options <- readRDS(writable_filepath)
+    ## We use 'x[name] <- list(value)' instead of 'x[[name]] <- value'
+    ## because the latter removes the list element if value is NULL and
+    ## we don't want that.
+    user_options[name] <- list(value)
+    saveRDS(user_options, writable_filepath)
+    invisible(value)
+}
+
+get_user_options <- function()
+{
+    ## Only 2 possibilities: either the current process "owns" 'filepath'
+    ## or not. In the latter case it means that the current process is a
+    ## worker that was started by a master.
+    filepath <- .get_user_options_filepath()
+    ## Because of the 2nd assumption (see above), a worker should be able
+    ## to read the options file of its master.
+    readRDS(filepath)
+}
+
+get_user_option <- function(name)
+{
+    stopifnot(isSingleString(name))
+    user_options <- get_user_options()
+    ## 'user_options' should be a list.
+    idx <- match(name, names(user_options))
+    if (is.na(idx))
+        stop(wmsg("Unkown DelayedArray user-controlled global option: ", name))
+    user_options[[idx]]
+}
+

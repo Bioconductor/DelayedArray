@@ -22,31 +22,22 @@ set_verbose_block_processing <- function(verbose)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setAutoGridMaker()
+### set/getAutoGridMaker()
 ###
-
-getAutoGridMaker <- function()
-{
-    getOption("DelayedArray.auto.grid.maker")
-}
 
 ### We set the automatic grid maker to blockGrid() by default.
 setAutoGridMaker <- function(GRIDMAKER="blockGrid")
 {
     match.fun(GRIDMAKER)  # sanity check
-    options(DelayedArray.auto.grid.maker=GRIDMAKER)
-    invisible(GRIDMAKER)
+    set_user_option("auto.grid.maker", GRIDMAKER)
 }
+
+getAutoGridMaker <- function() get_user_option("auto.grid.maker")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### get/setAutoBPPARAM()
+### set/getAutoBPPARAM()
 ###
-
-getAutoBPPARAM <- function()
-{
-    getOption("DelayedArray.auto.BPPARAM")
-}
 
 ### By default (i.e. when no argument is specified), we set the automatic
 ### BPPARAM to SerialParam() on Windows and to MulticoreParam() on other
@@ -68,9 +59,10 @@ setAutoBPPARAM <- function(BPPARAM=NULL)
         if (!is(BPPARAM, "BiocParallelParam"))
             stop(wmsg("'BPPARAM' must be a BiocParallelParam object"))
     }
-    options(DelayedArray.auto.BPPARAM=BPPARAM)
-    BPPARAM
+    set_user_option("auto.BPPARAM", BPPARAM)
 }
+
+getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
