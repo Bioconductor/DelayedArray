@@ -339,21 +339,7 @@ get_rev_index <- function(part_index)
 ### set_user_option() / get_user_option()
 ###
 
-set_user_option <- function(name, value)
-{
-    stopifnot(isSingleString(name))
-    name <- paste0("DelayedArray.", name)
-    options(setNames(list(value), name))
-    invisible(value)
-}
-
-get_user_option <- function(name)
-{
-    stopifnot(isSingleString(name))
-    name <- paste0("DelayedArray.", name)
-    getOption(name)
-}
-
+### --- DISABLED CODE ---
 if (FALSE) {
 ### In the context of BiocParallel::bplapply() and family, we want the workers
 ### to inherit the user-controlled options defined on the master. Workers can
@@ -489,5 +475,48 @@ get_user_option <- function(name)
         stop(wmsg("Unkown DelayedArray user-controlled global option: ", name))
     user_options[[idx]]
 }
+}
+### --- END OF DISABLED CODE ---
+
+set_user_option <- function(name, value)
+{
+    stopifnot(isSingleString(name))
+    name <- paste0("DelayedArray.", name)
+    options(setNames(list(value), name))
+    invisible(value)
+}
+
+get_user_option <- function(name)
+{
+    stopifnot(isSingleString(name))
+    name <- paste0("DelayedArray.", name)
+    getOption(name)
+}
+
+user_option_is_set <- function(name)
+{
+    stopifnot(isSingleString(name))
+    name <- paste0("DelayedArray.", name)
+    name %in% names(.Options)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### bplapply2()
+###
+### A simple wrapper to BiocParallel::bplapply() that propagates
+### base::.Options to the workers.
+### Should probably go in BiocParallel, or even better, replace bplapply().
+###
+
+bplapply2 <- function(X, FUN, ..., BPREDO=list(), BPPARAM=bpparam())
+{
+    FUN2 <- function(x, opts)
+    {
+        force(opts)
+        base::options(opts)
+        FUN(x, ...)
+    }
+    bplapply(X, FUN2, opts=base::.Options, BPREDO=BPREDO, BPPARAM=BPPARAM)
 }
 
