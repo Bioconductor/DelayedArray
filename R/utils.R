@@ -338,6 +338,23 @@ get_rev_index <- function(part_index)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### set_user_option() / get_user_option()
 ###
+
+set_user_option <- function(name, value)
+{
+    stopifnot(isSingleString(name))
+    name <- paste0("DelayedArray.", name)
+    options(setNames(list(value), name))
+    invisible(value)
+}
+
+get_user_option <- function(name)
+{
+    stopifnot(isSingleString(name))
+    name <- paste0("DelayedArray.", name)
+    getOption(name)
+}
+
+if (FALSE) {
 ### In the context of BiocParallel::bplapply() and family, we want the workers
 ### to inherit the user-controlled options defined on the master. Workers can
 ### also modify the inherited options or define new user-controlled options
@@ -471,5 +488,6 @@ get_user_option <- function(name)
     if (is.na(idx))
         stop(wmsg("Unkown DelayedArray user-controlled global option: ", name))
     user_options[[idx]]
+}
 }
 
