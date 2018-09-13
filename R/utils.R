@@ -350,12 +350,10 @@ get_rev_index <- function(part_index)
 ###                 master R session are **always** inherited by the workers
 ###                 started by BiocParallel::bplapply() and family. "Always"
 ###                 here means "whatever the BPPARAM backend is".
-### 2nd assumption: Even though it has been reported that with some weird/rare
-###                 cluster configurations, workers don't necessarily see the
-###                 same partitions or file system as their master, we assume
-###                 that they can at least see the tempdir() of their
-###                 master and access it using the same path as the path
-###                 returned by calling tempdir() on their master.
+### 2nd assumption: The workers can access the tempdir() of their master.
+###                 WARNING: It has been reported that with some cluster
+###                 configurations the nodes don't have access to the
+###                 tempdir() of the head. So this is NOT a safe assumption!
 
 .make_new_filepath_for_my_own_file <- function(my_pid)
 {
@@ -382,6 +380,16 @@ get_rev_index <- function(part_index)
     new_filepath
 }
 
+### If the 2nd assumption (see above) turns out to be incorrect then we want
+### to fail early and graciously. So perform the check below before trying
+### to read or copy the file located at 'filepath'.
+.check_2nd_assumption <- function(filepath)
+{
+    if (!file.exists(filepath))
+        stop(wmsg("worker cannot access file ", filepath,
+                  " created by master"))
+}
+
 .copy_file_if_not_mine <- function(filepath, my_pid)
 {
     is_mine <- .filepath_is_mine(filepath, my_pid)
@@ -390,9 +398,12 @@ get_rev_index <- function(part_index)
     ## If the file is not mine then the current process is a worker that
     ## was started by a master, so I'm not allowed to write to the file.
     ## I need to make my own copy it first.
+    .check_2nd_assumption(filepath)
     new_filepath <- .make_new_filepath_for_my_own_file(my_pid)
     ok <- file.copy(filepath, new_filepath)
-    stopifnot(ok)  # unlikely (see 2nd assumption above)
+    if (!ok)
+        stop(wmsg("worker was not able to copy file ", filepath,
+                  " created by master"))
     new_filepath
 }
 
@@ -443,9 +454,12 @@ get_user_options <- function()
     ## or not. In the latter case it means that the current process is a
     ## worker that was started by a master.
     filepath <- .get_user_options_filepath()
-    ## Because of the 2nd assumption (see above), a worker should be able
-    ## to read the options file of its master.
-    readRDS(filepath)
+    .check_2nd_assumption(filepath)
+    user_options <- try(readRDS(filepath), silent=TRUE)
+    if (inherits(user_options, "try-error"))
+        stop(wmsg("worker was not able to read file ", filepath,
+                  " created by master"))
+    user_options
 }
 
 get_user_option <- function(name)
