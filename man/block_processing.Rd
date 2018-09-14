@@ -9,8 +9,6 @@
 \alias{currentBlockId}
 \alias{currentViewport}
 
-\alias{write_array_to_sink}
-
 \alias{getAutoGridMaker}
 \alias{setAutoGridMaker}
 \alias{getAutoBPPARAM}

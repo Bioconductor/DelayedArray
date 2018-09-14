@@ -7,13 +7,38 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Internal helper to support block by block realization
 ###
-### Used by coercions to RleArray and to HDF5Array.
+### Used by coercion to RleArray, HDF5Array::writeHDF5Array(), and
+### HDF5Array::writeTENxMatrix().
 ###
 
-write_array_to_sink <- function(x, sink)
+BLOCK_write_to_sink <- function(x, sink)
 {
     stopifnot(identical(dim(x), dim(sink)))
-    block_APPLY(DelayedArray(x), identity, sink=sink)
+    ## 'x' and 'sink' might both have their physical chunks but we must
+    ## choose a grid that is compatible with the physical chunks of 'sink'.
+    ## Calling 'blockGrid()' on 'sink' will produce such grid.
+    ## Note that it might be beneficial to use a grid that is also compatible
+    ## with the physical chunks of 'x' so we might want to come up with a
+    ## dedicated utility for that e.g. 'blockGrid2(sink, x)'.
+    ## Also by using block.shape="first-dim-grows-first" in the call below
+    ## we'll get a grid that guarentees linear writing to the sink in case
+    ## 'chunkdim(sink)' is NULL.
+    grid <- blockGrid(sink, block.shape="first-dim-grows-first")
+    nblock <- length(grid)
+    for (b in seq_len(nblock)) {
+        viewport <- grid[[b]]
+        if (get_verbose_block_processing())
+            message("Realizing block ", b, "/", nblock, " ... ",
+                    appendLF=FALSE)
+        block <- read_block(x, viewport)
+        if (get_verbose_block_processing())
+            message("OK, writing it ... ",
+                    appendLF=FALSE)
+        write_block(sink, viewport, block)
+        if (get_verbose_block_processing())
+            message("OK")
+    }
+    sink
 }
 
 

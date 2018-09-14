@@ -5,8 +5,11 @@
 \alias{RleArraySeed-class}
 \alias{class:SolidRleArraySeed}
 \alias{SolidRleArraySeed-class}
+
 \alias{class:RleRealizationSink}
 \alias{RleRealizationSink-class}
+\alias{type,RleRealizationSink-method}
+
 \alias{class:ChunkedRleArraySeed}
 \alias{ChunkedRleArraySeed-class}
 

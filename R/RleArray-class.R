@@ -32,7 +32,7 @@ setClass("SolidRleArraySeed",
 setClass("RleRealizationSink",
     contains=c("RleArraySeed", "RealizationSink"),
     representation(
-        type="character",
+        type="character",                     # Single string.
         ## TODO: Add the 2 slots below to make RleRealizationSink
         ## support a RegularArrayGrid of chunks.
         #chunk_grid="RegularArrayGrid",        # Of length N.
@@ -41,6 +41,8 @@ setClass("RleRealizationSink",
                                               # chunks are written).
     )
 )
+
+setMethod("type", "RleRealizationSink", function(x) x@type)
 
 ### We support long ChunkedRleArraySeed objects but the chunks cannot be long.
 ### Note that supporting long chunks would require (at least) that:
@@ -436,7 +438,7 @@ setAs("RleRealizationSink", "DelayedArray", function(from) as(from, "RleArray"))
 .as_RleArray <- function(from)
 {
     sink <- RleRealizationSink(dim(from), dimnames(from), type(from))
-    write_array_to_sink(from, sink)
+    BLOCK_write_to_sink(from, sink)
     as(sink, "RleArray")
 }
 

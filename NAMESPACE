@@ -240,7 +240,7 @@ export(
     setAutoBPPARAM, getAutoBPPARAM,
     blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
-    write_array_to_sink,
+    BLOCK_write_to_sink,
 
     ## RealizationSink-class.R:
     supportedRealizationBackends,

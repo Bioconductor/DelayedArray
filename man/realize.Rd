@@ -1,5 +1,7 @@
 \name{realize}
 
+\alias{BLOCK_write_to_sink}
+
 \alias{realize}
 \alias{realize,ANY-method}
 

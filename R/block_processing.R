@@ -193,8 +193,7 @@ currentViewport <- function(block)
 ### OLD -
 ### OLD - 3 utility functions to process array-like objects by block.
 ### OLD -
-### OLD - Still used by write_array_to_sink() below and by the
-### OLD - DelayedMatrixStats package.
+### OLD - Still used by the DelayedMatrixStats package.
 
 ### An lapply-like function.
 block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)

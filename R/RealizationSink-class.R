@@ -7,13 +7,15 @@
 ### of DelayedArray backends. Concrete subclasses must implement:
 ###   1) A constructor function that takes argument 'dim', 'dimnames', and
 ###      'type'.
-###   2) "dim", "dimnames", and "type" methods.
+###   2) A "dim", "dimnames", and "type" method.
 ###   3) A "write_block" method.
 ###   4) A "close" method (optional).
 ###   5) Coercion to DelayedArray.
-### See the arrayRealizationSink class below, or the RleRealizationSink class
-### in RleArray-class.R, or the HDF5RealizationSink class in the HDF5Array
-### package, for examples of concrete RealizationSink subclasses.
+###
+### Examples of RealizationSink concrete subclasses: arrayRealizationSink
+### (see below), RleRealizationSink (see RleArray-class.R),
+### HDF5RealizationSink and TENxRealizationSink (see HDF5Array package).
+
 setClass("RealizationSink", representation("VIRTUAL"))
 
 setGeneric("close")
