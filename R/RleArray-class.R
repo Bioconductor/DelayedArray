@@ -300,7 +300,7 @@ setMethod("extract_array", "ChunkedRleArraySeed",
 RleRealizationSink <- function(dim, dimnames=NULL, type="double")
 {
     if (is.null(dimnames))
-        dimnames <- vector("list", length(dim))
+        dimnames <- vector("list", length=length(dim))
     chunks <- new.env(hash=TRUE, parent=emptyenv())
     new2("RleRealizationSink", DIM=dim, DIMNAMES=dimnames,
                                type=type, chunks=chunks)

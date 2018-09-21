@@ -86,7 +86,11 @@ setMethod("chunkdim", "DelayedSubset", .get_DelayedSubset_chunkdim)
 .get_DelayedAperm_chunkdim <- function(x)
 {
     seed_chunkdim <- chunkdim(x@seed)
-    seed_chunkdim[x@perm]
+    if (is.null(seed_chunkdim))
+        return(NULL)
+    ans <- seed_chunkdim[x@perm]
+    ans[is.na(x@perm)] <- 1L
+    ans
 }
 
 setMethod("chunkdim", "DelayedAperm", .get_DelayedAperm_chunkdim)

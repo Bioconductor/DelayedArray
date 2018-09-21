@@ -162,8 +162,8 @@ is_noop(x)
     DelayedUnaryOp (VIRTUAL)
     - DelayedSubset                Multi-dimensional single bracket
                                    subsetting.
-    - DelayedAperm                 Extended aperm() (can drop
-                                   dimensions).
+    - DelayedAperm                 Extended aperm() (can drop and/or
+                                   add ineffective dimensions).
     - DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
                                    geometry.
       - DelayedUnaryIsoOpStack     Simple ops stacked together.

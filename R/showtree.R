@@ -124,8 +124,8 @@ setMethod("simplify", "DelayedSubset",
         }
         if (is(x1, "DelayedAperm")) {
             ## SWAP
-            x2 <- new_DelayedSubset(x1@seed)
-            x2@index[x1@perm] <- x@index
+            index2 <- project_index_on_seed(x@index, x1)
+            x2 <- new_DelayedSubset(x1@seed, index2)
             x1@seed <- simplify(x2, incremental=TRUE)
             return(x1)
         }
@@ -181,8 +181,9 @@ setMethod("simplify", "DelayedAperm",
             return(x1)
         }
         if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
-            set_Lalong_to_NA <- !(x1@Lalong %in% x@perm)
-            set_Ralong_to_NA <- !(x1@Ralong %in% x@perm)
+            perm0 <- x@perm[!is.na(x@perm)]
+            set_Lalong_to_NA <- !(x1@Lalong %in% perm0)
+            set_Ralong_to_NA <- !(x1@Ralong %in% perm0)
             if (all(set_Lalong_to_NA) && all(set_Ralong_to_NA)) {
                 ## SWAP
                 x1@Lalong[set_Lalong_to_NA] <- NA_integer_

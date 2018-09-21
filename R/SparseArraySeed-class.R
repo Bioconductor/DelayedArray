@@ -342,16 +342,23 @@ setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_dgCMatrix)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
+### Extend base::aperm() by allowing dropping and/or adding ineffective
+### dimensions. See aperm2.R
+###
 
 .aperm.SparseArraySeed <- function(a, perm)
 {
     a_dim <- dim(a)
-    perm <- normarg_perm(perm, dim(a))
+    perm <- normarg_perm(perm, a_dim)
     msg <- validate_perm(perm, a_dim)
     if (!isTRUE(msg))
         stop(wmsg(msg))
-    BiocGenerics:::replaceSlots(a, dim=a_dim[perm],
-                                   aind=a@aind[ , perm, drop=FALSE],
+    ans_dim <- a_dim[perm]
+    ans_dim[is.na(perm)] <- 1L
+    ans_aind <- a@aind[ , perm, drop=FALSE]
+    ans_aind[ , is.na(perm)] <- 1L
+    BiocGenerics:::replaceSlots(a, dim=ans_dim,
+                                   aind=ans_aind,
                                    check=FALSE)
 }
 

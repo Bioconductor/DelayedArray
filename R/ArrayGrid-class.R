@@ -147,7 +147,7 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
     viewport_dim <- dim(viewport)
     viewport_refdim <- refdim(viewport)
     ndim <- length(viewport_dim)
-    Nindex <- vector(mode="list", length=ndim)
+    Nindex <- vector("list", length=ndim)
     is_not_missing <- viewport_dim < viewport_refdim
     if (expand.RangeNSBS) {
         expand_idx <- which(is_not_missing)
@@ -512,13 +512,6 @@ setMethod("show", "ArrayGrid",
 ### aperm() and t()
 ###
 
-### Unlike base::aperm(), the various methods implemented in the package
-### support dropping dimensions of array-like object 'a'. Note that only
-### "ineffective" dimensions can be dropped (i.e. dimensions equal to 1)
-### so abind() always preserves the length of 'a', that is, no data array
-### gets dropped.
-setGeneric("aperm", signature="a")
-
 ### S3/S4 combo for t.Array
 t.Array <- function(x)
 {
@@ -529,31 +522,17 @@ t.Array <- function(x)
 }
 setMethod("t", "Array", t.Array)
 
-### Does not perform full check/normalization e.g. won't say anything if
-### 'perm' contains NAs or values > length(a_dim). Use validate_perm()
-### on the value returned by normarg_perm() for a full check.
-normarg_perm <- function(perm, a_dim)
-{
-    if (missing(perm))
-        return(rev(seq_along(a_dim)))
-    if (is.null(perm))
-        return(seq_along(a_dim))
-    if (!is.numeric(perm))
-        stop(wmsg("'perm' must be an integer vector"))
-    if (!is.integer(perm))
-        perm <- as.integer(perm)
-    perm
-}
-
 .aperm.ArbitraryArrayGrid <- function(a, perm)
 {
-    ## We don't perform a full check of 'perm' (see normarg_perm() above)
-    ## because we want to allow duplicates in it. Instead we call
-    ## replaceSlots() with 'check=TRUE' to trigger validation of the
-    ## modified ArrayGrid object with the expectation that it will fail
-    ## if for example 'perm' contains NAs or values > length(dim(a)).
+    ## We don't perform a full check of 'perm' (see normarg_perm() in
+    ## aperm2.R) because we want to allow duplicates in it. Instead we
+    ## call replaceSlots() with 'check=TRUE' to trigger validation of
+    ## the modified ArrayGrid object with the expectation that it will
+    ## fail if for example 'perm' contains NAs or values > length(dim(a)).
     perm <- normarg_perm(perm, dim(a))
-    BiocGenerics:::replaceSlots(a, tickmarks=a@tickmarks[perm], check=TRUE)
+    ans_tickmarks <- a@tickmarks[perm]
+    ans_tickmarks[is.na(perm)] <- list(1L)
+    BiocGenerics:::replaceSlots(a, tickmarks=ans_tickmarks, check=TRUE)
 }
 ### S3/S4 combo for aperm.ArbitraryArrayGrid
 aperm.ArbitraryArrayGrid <-
@@ -565,8 +544,12 @@ setMethod("aperm", "ArbitraryArrayGrid", aperm.ArbitraryArrayGrid)
     ## See above for why it's important to call replaceSlots() with
     ## 'check=TRUE'.
     perm <- normarg_perm(perm, dim(a))
-    BiocGenerics:::replaceSlots(a, refdim=a@refdim[perm],
-                                   spacings=a@spacings[perm],
+    ans_refdim <- a@refdim[perm]
+    ans_refdim[is.na(perm)] <- 1L
+    ans_spacings <- a@spacings[perm]
+    ans_spacings[is.na(perm)] <- 1L
+    BiocGenerics:::replaceSlots(a, refdim=ans_refdim,
+                                   spacings=ans_spacings,
                                    check=TRUE)
 }
 ### S3/S4 combo for aperm.RegularArrayGrid

@@ -14,8 +14,8 @@
 ###     DelayedUnaryOp (VIRTUAL)
 ###     - DelayedSubset                Multi-dimensional single bracket
 ###                                    subsetting.
-###     - DelayedAperm                 Extended aperm() (can drop
-###                                    dimensions).
+###     - DelayedAperm                 Extended aperm() (can drop and/or
+###                                    add ineffective dimensions).
 ###     - DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
 ###                                    geometry.
 ###       - DelayedUnaryIsoOpStack     Simple ops stacked together.
@@ -170,7 +170,7 @@ new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
     seed_dim <- dim(seed)
     seed_ndim <- length(seed_dim)
     if (is.null(Nindex)) {
-        index <- rep.int(list(NULL), seed_ndim)
+        index <- vector("list", length=seed_ndim)
     } else {
         stopifnot(is.list(Nindex), length(Nindex) == seed_ndim)
         ## Normalize 'Nindex' i.e. check and turn its non-NULL list elements
@@ -236,6 +236,9 @@ setMethod("is_sparse", "DelayedSubset",
     }
 )
 
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedSubset",
     function(x, index)
     {
@@ -254,17 +257,24 @@ setMethod("extract_sparse_array", "DelayedSubset",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedAperm objects
 ###
-### Delayed "Extended aperm()" (can drop dimensions).
-### Note that only "ineffective" dimensions can be dropped (i.e. dimensions
-### equal to 1, so dropping them preserves the length).
+### Delayed "Extended aperm()" (can drop and/or add ineffective dimensions).
+### Note that since only "ineffective" dimensions (i.e. dimensions equal to 1)
+### can be dropped or added, length is always preserved.
 ###
 
 setClass("DelayedAperm",
     contains="DelayedUnaryOp",
     representation(
-        perm="integer"  # Index into dim(seed) describing the **rearrangement**
-                        # of the dimensions i.e. which dimensions of the input
-                        # to keep and in which order.
+        perm="integer"  # Index into 'dim(seed)' describing the
+                        # **rearrangement** of the dimensions i.e. which
+                        # dimensions of the input to keep and in which order.
+                        # Only ineffective dimensions can be dropped. Note
+                        # that NAs are allowed and indicate the addition of
+                        # an ineffective dimension. For example if 'dim(seed)'
+                        # is c(20, 1, 15, 2, 1) then a DelayedAperm object
+                        # where 'perm' is set to c(NA, NA, 3, 1, NA, 4, 5)
+                        # represents an operation that returns an array with
+                        # dimensions c(1, 1, 15, 20, 1, 2, 1).
     ),
     prototype(
         perm=1L
@@ -312,7 +322,9 @@ setMethod("summary", "DelayedAperm", summary.DelayedAperm)
 .get_DelayedAperm_dim <- function(x)
 {
     seed_dim <- dim(x@seed)
-    seed_dim[x@perm]
+    ans <- seed_dim[x@perm]
+    ans[is.na(x@perm)] <- 1L
+    ans
 }
 
 setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
@@ -327,19 +339,27 @@ setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
 
 setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
 
+project_index_on_seed <- function(index, x)
+{
+    stopifnot(is(x, "DelayedAperm"),
+              is.list(index),
+              length(index) == length(x@perm))
+    nonNA_idx <- which(!is.na(x@perm))
+    perm0 <- x@perm[nonNA_idx]
+    index0 <- index[nonNA_idx]
+    seed_dim <- dim(x@seed)
+    seed_index <- vector("list", length=length(seed_dim))
+    seed_index[perm0] <- index0
+    seed_index
+}
+
 .extract_array_from_DelayedAperm <- function(x, index)
 {
-    seed_dim <- dim(x@seed)
-    seed_index <- rep.int(list(1L), length(seed_dim))
-    seed_index[x@perm] <- index
+    seed_index <- project_index_on_seed(index, x)
     a <- extract_array(x@seed, seed_index)
-    ## We drop the dimensions not present in 'x@perm'. Even though the
-    ## dimensions to drop are guaranteed to be equal to 1, we should not
-    ## use drop() for this because this would drop **all** the dimensions
-    ## equal to 1, including some of the dimensions to keep (those can also
-    ## be equal to 1).
-    dim(a) <- dim(a)[sort(x@perm)]
-    aperm(a, perm=rank(x@perm))
+    a <- aperm2(a, x@perm)
+    index[!is.na(x@perm)] <- list(NULL)
+    subset_by_Nindex(a, index)
 }
 
 setMethod("extract_array", "DelayedAperm",
@@ -350,14 +370,17 @@ setMethod("extract_array", "DelayedAperm",
 
 setMethod("is_sparse", "DelayedAperm", function(x) is_sparse(x@seed))
 
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedAperm",
     function(x, index)
     {
-        seed_dim <- dim(x@seed)
-        seed_index <- rep.int(list(1L), length(seed_dim))
-        seed_index[x@perm] <- index
+        seed_index <- project_index_on_seed(index, x)
         sas <- extract_sparse_array(x@seed, seed_index)
-        aperm(sas, perm=x@perm)
+        sas <- aperm(sas, x@perm)
+        index[!is.na(x@perm)] <- list(NULL)
+        extract_sparse_array(sas, index)
     }
 )
 
@@ -411,6 +434,9 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 
 setMethod("is_sparse", "DelayedUnaryIsoOp", function(x) is_sparse(x@seed))
 
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedUnaryIsoOp",
     function(x, index) extract_sparse_array(x@seed, index)
 )
@@ -523,6 +549,9 @@ setMethod("is_sparse", "DelayedUnaryIsoOpStack",
     }
 )
 
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedUnaryIsoOpStack",
     function(x, index)
     {
@@ -945,6 +974,9 @@ setMethod("is_sparse", "DelayedNaryIsoOp",
     }
 )
 
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedNaryIsoOp",
     function(x, index)
     {
@@ -1048,7 +1080,7 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
     ans <- do.call(simple_abind, c(tmp, list(along=x@along)))
 
     ## Reorder the rows or columns in 'ans'.
-    Nindex <- vector(mode="list", length=length(index))
+    Nindex <- vector("list", length=length(index))
     Nindex[[x@along]] <- get_rev_index(part_idx)
     subset_by_Nindex(ans, Nindex)
 }
@@ -1064,6 +1096,9 @@ setMethod("is_sparse", "DelayedAbind",
     }
 )
 
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedAbind",
     function(x, index)
     {

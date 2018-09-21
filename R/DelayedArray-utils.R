@@ -740,7 +740,7 @@ setGeneric("apply", signature="X")
     ans_names <-  dimnames(X)[[MARGIN]]
     ans <- lapply(setNames(seq_len(X_dim[[MARGIN]]), ans_names),
         function(i) {
-            Nindex <- vector(mode="list", length=length(X_dim))
+            Nindex <- vector("list", length=length(X_dim))
             Nindex[[MARGIN]] <- i
             slice <- subset_by_Nindex(X, Nindex, drop=FALSE)
             slice <- set_dim(slice, dim(slice)[-MARGIN])

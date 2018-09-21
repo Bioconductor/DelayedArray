@@ -265,7 +265,7 @@ setMethod("type", "ANY",
 {
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
-    index <- rep.int(list(NULL), length(dim(x)))
+    index <- vector("list", length=length(dim(x)))
     ans <- extract_array(x, index)
     ans <- set_dimnames(ans, dimnames(x))
     if (drop)

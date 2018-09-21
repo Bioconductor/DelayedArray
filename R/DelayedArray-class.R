@@ -595,6 +595,9 @@ setReplaceMethod("path", "DelayedArray",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
+### Extend base::aperm() by allowing dropping and/or adding ineffective
+### dimensions. See aperm2.R
+###
 
 ### S3/S4 combo for aperm.DelayedArray
 aperm.DelayedArray <- function(a, perm, ...) stash_DelayedAperm(a, perm, ...)
