@@ -44,8 +44,6 @@
 \alias{maxlength,RegularArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
-\alias{t.Array}
-\alias{t,Array-method}
 \alias{aperm.ArbitraryArrayGrid}
 \alias{aperm,ArbitraryArrayGrid-method}
 \alias{aperm.RegularArrayGrid}

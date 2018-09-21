@@ -9,6 +9,9 @@
 \alias{isEmpty,Array-method}
 \alias{[[,Array-method}
 
+\alias{t.Array}
+\alias{t,Array-method}
+
 \alias{showAsCell,Array-method}
 
 \title{Array objects}

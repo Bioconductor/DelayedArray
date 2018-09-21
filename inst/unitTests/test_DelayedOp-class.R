@@ -760,7 +760,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkIdentical(list(), x@Rargs)
     checkException(is_noop(x), silent=silent)
 
-    x <- new_DelayedNaryIsoOp(`/`, .TEST_ARRAY4a, .TEST_SAS4c)
+    x <- new_DelayedNaryIsoOp("/", .TEST_ARRAY4a, .TEST_SAS4c)
     checkTrue(is(x, "DelayedNaryIsoOp"))
     checkTrue(validObject(x))
     checkIdentical(2L, nseed(x))
@@ -812,6 +812,8 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
     checkException(new_DelayedNaryIsoOp(list(NULL)),
                    silent=silent)
     checkException(new_DelayedNaryIsoOp("not-an-existing-function"),
+                   silent=silent)
+    checkException(new_DelayedNaryIsoOp("<="), array(dim=4:2), array(dim=2:4),
                    silent=silent)
 }
 

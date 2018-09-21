@@ -224,8 +224,8 @@ setGeneric("type", function(x) standardGeneric("type"))
 
 setMethod("type", "array", function(x) typeof(x))
 
-### type() works out-of-the-box on any array-like object for which
-### extract_array() works.
+### type() will work out-of-the-box on any array-like object that supports
+### extract_array().
 setMethod("type", "ANY",
     function(x)
     {

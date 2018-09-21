@@ -509,18 +509,8 @@ setMethod("show", "ArrayGrid",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### aperm() and t()
+### aperm()
 ###
-
-### S3/S4 combo for t.Array
-t.Array <- function(x)
-{
-    if (length(dim(x)) != 2L)
-        stop(wmsg("the ", class(x), " object to transpose ",
-                  "must have exactly 2 dimensions"))
-    aperm(x)
-}
-setMethod("t", "Array", t.Array)
 
 .aperm.ArbitraryArrayGrid <- function(a, perm)
 {
