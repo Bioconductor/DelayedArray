@@ -511,6 +511,9 @@ setMethod("show", "ArrayGrid",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
+### Extend base::aperm() by allowing dropping and/or adding ineffective
+### dimensions. See aperm2.R
+###
 
 .aperm.ArbitraryArrayGrid <- function(a, perm)
 {
