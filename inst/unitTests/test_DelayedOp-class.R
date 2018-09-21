@@ -813,7 +813,7 @@ test_DelayedNaryIsoOp_constructor <- function(silent=FALSE)
                    silent=silent)
     checkException(new_DelayedNaryIsoOp("not-an-existing-function"),
                    silent=silent)
-    checkException(new_DelayedNaryIsoOp("<="), array(dim=4:2), array(dim=2:4),
+    checkException(new_DelayedNaryIsoOp("<=", array(dim=4:2), array(dim=2:4)),
                    silent=silent)
 }
 
