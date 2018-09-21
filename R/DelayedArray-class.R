@@ -640,8 +640,6 @@ setMethod("drop", "DelayedArray",
     if (S4Vectors:::anyMissingOrOutside(value, 0L))
         stop(wmsg("the supplied dim vector cannot contain negative ",
                   "or NA values"))
-    if (length(value) > length(x_dim))
-        stop(wmsg("too many dimensions supplied"))
     prod1 <- prod(value)
     prod2 <- prod(x_dim)
     if (prod1 != prod2)
@@ -658,30 +656,21 @@ setMethod("drop", "DelayedArray",
     cannot_map_msg <- c(
         "Cannot map the supplied dim vector to the current dimensions of ",
         "the object. On a ", x_class, " object, the dim() setter can only ",
-        "be used to drop some of the \"ineffective\" dimensions (i.e. ",
-        "dimensions equal to 1, so dropping them preserves the length of ",
-        "the object)."
+        "be used to drop and/or add \"ineffective dimensions\" (i.e. ",
+        "dimensions equal to 1) to the object."
     )
-
     can_map <- function() {
         if (length(idx1) != length(idx2))
             return(FALSE)
         if (length(idx1) == 0L)
             return(TRUE)
-        if (!all(new_dim[idx1] == old_dim[idx2]))
-            return(FALSE)
-        tmp <- idx2 - idx1
-        tmp[[1L]] >= 0L && isSorted(tmp)
+        all(new_dim[idx1] == old_dim[idx2])
     }
     if (!can_map())
         stop(wmsg(cannot_map_msg))
 
-    new2old <- seq_along(new_dim) +
-        rep.int(c(0L, idx2 - idx1), diff(c(1L, idx1, length(new_dim) + 1L)))
-
-    if (new2old[[length(new2old)]] > length(old_dim))
-        stop(wmsg(cannot_map_msg))
-
+    new2old <- rep.int(NA_integer_, length(new_dim))
+    new2old[idx1] <- idx2
     new2old
 }
 
@@ -690,8 +679,9 @@ setMethod("drop", "DelayedArray",
     x_dim <- dim(x)
     value <- .normalize_dim_replacement_value(value, x_dim)
     new2old <- .map_new_to_old_dim(value, x_dim, class(x))
-    stopifnot(identical(value, x_dim[new2old]))  # sanity check
-    aperm(x, new2old)
+    ans <- aperm(x, new2old)
+    stopifnot(identical(dim(ans), value))  # sanity check
+    ans
 }
 
 setReplaceMethod("dim", "DelayedArray", .set_DelayedArray_dim)

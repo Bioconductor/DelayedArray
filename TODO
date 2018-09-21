@@ -11,18 +11,6 @@
   The optional methods are "chunkdim", "path", "path<-". See HDF5ArraySeed
   and TENxMatrixSeed for examples.
 
-- dim() setter allows dropping ineffective dimensions so should also allow
-  adding ineffective dimensions e.g. if dim(A) is c(2, 10, 8) we should be
-  able to do dim(A) <- c(1, 1, 2, 10, 1, 8).
-
-  One use case for this is to bind 2 conformable arrays with
-  dim(A) <- c(1, dim(A)); dim(B) <- c(1, dim(B)); abind(A, B, along=1).
-  So the resulting array has one extra dimension of extend 2.
-
-  Maybe another use case for this is that it could be the 1st step towards
-  supporting delayed array replication:
-    https://github.com/Bioconductor/DelayedArray/issues/8
-
 - Subsetting:
 
   - A[A == 1] should work on a 1D DelayedArray object (and return a 1D
