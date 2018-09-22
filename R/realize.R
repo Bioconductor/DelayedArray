@@ -25,18 +25,32 @@ BLOCK_write_to_sink <- function(x, sink)
     ## 'chunkdim(sink)' is NULL.
     grid <- blockGrid(sink, block.shape="first-dim-grows-first")
     nblock <- length(grid)
+    x_is_sparse <- is_sparse(x)
     for (b in seq_len(nblock)) {
         viewport <- grid[[b]]
-        if (get_verbose_block_processing())
-            message("Realizing block ", b, "/", nblock, " ... ",
-                    appendLF=FALSE)
-        block <- read_block(x, viewport)
-        if (get_verbose_block_processing())
-            message("OK, writing it ... ",
-                    appendLF=FALSE)
-        write_block(sink, viewport, block)
-        if (get_verbose_block_processing())
-            message("OK")
+        if (x_is_sparse) {
+            if (get_verbose_block_processing())
+                message("Realizing sparse block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            sparse_block <- read_sparse_block(x, viewport)
+            if (get_verbose_block_processing())
+                message("OK, writing it ... ",
+                        appendLF=FALSE)
+            write_sparse_block(sink, viewport, sparse_block)
+            if (get_verbose_block_processing())
+                message("OK")
+        } else {
+            if (get_verbose_block_processing())
+                message("Realizing block ", b, "/", nblock, " ... ",
+                        appendLF=FALSE)
+            block <- read_block(x, viewport)
+            if (get_verbose_block_processing())
+                message("OK, writing it ... ",
+                        appendLF=FALSE)
+            write_block(sink, viewport, block)
+            if (get_verbose_block_processing())
+                message("OK")
+        }
     }
     sink
 }

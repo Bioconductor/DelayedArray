@@ -10,6 +10,7 @@
 \alias{read_sparse_block,ANY-method}
 \alias{read_sparse_block,SparseArraySeed-method}
 \alias{write_sparse_block}
+\alias{write_sparse_block,ANY-method}
 
 \title{Read/write blocks of array data}
 

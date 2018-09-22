@@ -122,3 +122,11 @@ setGeneric("write_sparse_block", signature="x",
     }
 )
 
+setMethod("write_sparse_block", "ANY",
+    function(x, viewport, sparse_block)
+    {
+        block <- sparse2dense(sparse_block)
+        write_block(x, viewport, block)
+    }
+)
+
