@@ -91,9 +91,9 @@ getRealizationBackend <- function()
 }
 
 .SUPPORTED_REALIZATION_BACKENDS <- data.frame(
-    BACKEND=c("RleArray", "HDF5Array"),
-    package=c("DelayedArray", "HDF5Array"),
-    realization_sink_class=c("RleRealizationSink", "HDF5RealizationSink"),
+    BACKEND=c("RleArray", "HDF5Array", "TENxMatrix"),
+    package=c("DelayedArray", "HDF5Array", "HDF5Array"),
+    realization_sink_class=c("RleRealizationSink", "HDF5RealizationSink", "TENxRealizationSink"),
     stringsAsFactors=FALSE
 )
 
