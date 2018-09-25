@@ -202,7 +202,7 @@ setGeneric("extract_sparse_array",
         x_dim <- dim(x)
         if (is.null(x_dim))
             stop(wmsg("first argument to extract_sparse_array() ",
-                      "must have dimensions"))
+                      "must be an array-like object"))
         ans <- standardGeneric("extract_sparse_array")
         expected_dim <- get_Nindex_lengths(index, x_dim)
         ## TODO: Display a more user/developper-friendly error by

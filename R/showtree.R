@@ -34,7 +34,8 @@
 
 ### 'last.child' can be NA, TRUE, or FALSE. NA means 'x' is the root of the
 ### tree.
-.rec_showtree <- function(x, indent="", last.child=NA, show.node.dim=TRUE)
+.rec_showtree <- function(x, indent="", last.child=NA,
+                             prefix="", show.node.dim=TRUE)
 {
     stopifnot(isSingleString(indent))
     stopifnot(is.logical(last.child), length(last.child) == 1L)
@@ -43,14 +44,14 @@
         ## Display summary line.
 
         if (is.na(last.child)) {
-            ## No prefix.
-            prefix <- ""
+            ## No Tprefix.
+            Tprefix <- ""
         } else {
-            ## 3-char prefix
-            prefix <- paste0(if (last.child) .ELBOW else .TEE, .HBAR, " ")
+            ## 3-char Tprefix
+            Tprefix <- paste0(if (last.child) .ELBOW else .TEE, .HBAR, " ")
         }
         x_as1line <- .node_as_one_line_summary(x, show.node.dim=show.node.dim)
-        cat(indent, prefix, x_as1line, "\n", sep="")
+        cat(indent, Tprefix, prefix, x_as1line, "\n", sep="")
         if (!is(x, "DelayedOp"))
             return(invisible(NULL))
     }
@@ -59,11 +60,20 @@
 
     if (!is.na(last.child)) {
         ## Increase indent by 3 chars.
-        indent <- paste0(indent, if (last.child) " " else .VBAR, "  ")
+        indent <- paste0(indent,
+                         if (last.child) " " else .VBAR,
+                         strrep(" ", 2 + nchar(prefix)))
     }
     if (is(x, "DelayedUnaryOp")) {
-        .rec_showtree(x@seed, indent, last.child=TRUE,
-                      show.node.dim=show.node.dim)
+        if (is(x, "DelayedSubassign")) {
+            .rec_showtree(x@seed, indent, last.child=FALSE,
+                          show.node.dim=show.node.dim)
+            .rec_showtree(x@Rseed, indent, last.child=TRUE,
+                          prefix="right value: ", show.node.dim=show.node.dim)
+        } else {
+            .rec_showtree(x@seed, indent, last.child=TRUE,
+                          show.node.dim=show.node.dim)
+        }
     } else {
         if (is(x, "DelayedNaryOp"))
             x <- x@seeds
@@ -229,6 +239,31 @@ setMethod("simplify", "DelayedUnaryIsoOp",
     }
 )
 
+setMethod("simplify", "DelayedSubassign",
+    function(x, incremental=FALSE)
+    {
+        if (!.normarg_incremental(incremental)) {
+            x@seed <- simplify(x@seed)
+            x@Rseed <- simplify(x@Rseed)
+        }
+        x1 <- x@seed
+        if (is_noop(x))
+            return(x1)
+        Rseed <- x@Rseed
+        if (is(Rseed, "DelayedDimnames")) {
+            ## REMOVE Rseed
+            x@Rseed <- Rseed@seed
+        }
+        if (is(x1, "DelayedDimnames")) {
+            ## SWAP
+            x@seed <- x1@seed
+            x1@seed <- x
+            return(x1)
+        }
+        x
+    }
+)
+
 setMethod("simplify", "DelayedDimnames",
     function(x, incremental=FALSE)
     {
@@ -253,8 +288,12 @@ setMethod("simplify", "DelayedDimnames",
 ### contentIsPristine()
 ###
 
-### Return FALSE if the tree contains any DelayedUnaryIsoOpStack,
-### or DelayedUnaryIsoOpWithArgs, or DelayedNaryIsoOp node.
+### Return FALSE if the tree contains delayed operations that modify
+### the "original array values" (i.e. the values contained in the seeds).
+### The value-modifying nodes are:
+###   - DelayedUnaryIsoOpStack, DelayedUnaryIsoOpWithArgs, and
+###     DelayedNaryIsoOp nodes;
+###   - DelayedSubassign nodes that are not no-ops.
 contentIsPristine <- function(x)
 {
     if (!is.list(x)) {
@@ -265,6 +304,8 @@ contentIsPristine <- function(x)
             is(x, "DelayedNaryIsoOp"))
             return(FALSE)
         if (is(x, "DelayedUnaryOp")) {
+            if (is(x, "DelayedSubassign") && !is_noop(x))
+                return(FALSE)
             x <- list(x@seed)
         } else {
             x <- x@seeds

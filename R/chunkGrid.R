@@ -21,7 +21,7 @@ setGeneric("chunkdim",
     {
         x_dim <- dim(x)
         if (is.null(x_dim))
-            stop(wmsg("argument to chunkdim() must have dimensions"))
+            stop(wmsg("argument to chunkdim() must be an array-like object"))
         ans <- standardGeneric("chunkdim")
         if (is.null(ans))
             return(ans)

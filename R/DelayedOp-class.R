@@ -4,36 +4,38 @@
 ###
 ### In a DelayedArray object the delayed operations are stored as a tree of
 ### DelayedOp objects. Each node in the tree is represented by a DelayedOp
-### object. 7 types of nodes are currently supported. Each type is a concrete
+### object. 8 types of nodes are currently supported. Each type is a concrete
 ### DelayedOp subclass:
 ###
 ###   Node type                        Represented operation
 ###   -------------------------------------------------------------------
 ###   DelayedOp (VIRTUAL)
 ###   -------------------------------------------------------------------
-###     DelayedUnaryOp (VIRTUAL)
-###     - DelayedSubset                Multi-dimensional single bracket
+###   * DelayedUnaryOp (VIRTUAL)
+###     o DelayedSubset                Multi-dimensional single bracket
 ###                                    subsetting.
-###     - DelayedAperm                 Extended aperm() (can drop and/or
+###     o DelayedAperm                 Extended aperm() (can drop and/or
 ###                                    add ineffective dimensions).
-###     - DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
+###     o DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
 ###                                    geometry.
 ###       - DelayedUnaryIsoOpStack     Simple ops stacked together.
 ###       - DelayedUnaryIsoOpWithArgs  One op with vector-like arguments
 ###                                    along the dimensions of the input.
+###       - DelayedSubassign           Multi-dimensional single bracket
+###                                    subassignment.
 ###       - DelayedDimnames            Set/replace the dimnames.
 ###   -------------------------------------------------------------------
-###     DelayedNaryOp (VIRTUAL)
-###     - DelayedNaryIsoOp             N-ary op that preserves the
+###   * DelayedNaryOp (VIRTUAL)
+###     o DelayedNaryIsoOp             N-ary op that preserves the
 ###                                    geometry.
-###     - DelayedAbind                 abind()
+###     o DelayedAbind                 abind()
 ###   -------------------------------------------------------------------
 ###
 ### All the nodes are array-like objects that must comply with the "seed
 ### contract" i.e. they must support dim(), dimnames(), and extract_array().
 ###
 
-### This virtual class and its 7 concrete subclasses are for internal use
+### This virtual class and its 8 concrete subclasses are for internal use
 ### only and are not exported.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
@@ -84,9 +86,9 @@ setValidity2("DelayedUnaryOp", .validate_DelayedUnaryOp)
 setClass("DelayedSubset",
     contains="DelayedUnaryOp",
     representation(
-        index="list"  # List of subscripts as positive integer vectors, one
-                      # per dimension in the input. **Missing** list elements
-                      # are allowed and represented by NULLs.
+        index="list"  # List of subscripts as positive integer vectors,
+                      # one per dimension in the input. **Missing** list
+                      # elements are allowed and represented by NULLs.
     ),
     prototype(
         index=list(NULL)
@@ -134,61 +136,11 @@ subset_DelayedSubset <- function(x, index)
     x
 }
 
-normalizeSingleBracketSubscript2 <- function(i, x_len, x_names=NULL)
-{
-    ## We support subsetting by an array-like subscript but only if the
-    ## subscript is mono-dimensional, in which case we call as.vector() on
-    ## it. This will possibly trigger its realization e.g. if it's a
-    ## DelayedArray object.
-    i_dim <- dim(i)
-    if (!is.null(i_dim)) {
-        if (length(i_dim) != 1L)
-            stop(wmsg("subsetting a DelayedArray object with an array-like ",
-                      "subscript is only supported if the subscript has a ",
-                      "single dimension"))
-        i <- as.vector(i)
-    }
-    ## We create an artificial object 'x' of length 'x_len' with 'x_names' on
-    ## it. normalizeSingleBracketSubscript() will only look at its length and
-    ## names so what the object really is doesn't matter. Hence we make it
-    ## with the smallest possible memory footprint.
-    ## TODO: Change the signature of normalizeSingleBracketSubscript() in
-    ## S4Vectors to take 'x_len' and 'x_names' instead of 'x' so we won't
-    ## have to use this kind of trick.
-    if (is.null(x_names)) {
-        x <- Rle(0L, x_len)
-    } else {
-        x <- setNames(raw(x_len), x_names)
-    }
-    normalizeSingleBracketSubscript(i, x)
-}
-
-### 'Nindex' must be a "multidimensional subsetting Nindex" (see utils.R)
-### or NULL.
+### 'Nindex' must be a "multidimensional subsetting Nindex" (see
+### Nindex-utils.R) or NULL.
 new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
 {
-    seed_dim <- dim(seed)
-    seed_ndim <- length(seed_dim)
-    if (is.null(Nindex)) {
-        index <- vector("list", length=seed_ndim)
-    } else {
-        stopifnot(is.list(Nindex), length(Nindex) == seed_ndim)
-        ## Normalize 'Nindex' i.e. check and turn its non-NULL list elements
-        ## into positive integer vectors.
-        seed_dimnames <- dimnames(seed)
-        index <- lapply(seq_len(seed_ndim),
-            function(along) {
-                subscript <- Nindex[[along]]
-                if (is.null(subscript))
-                    return(NULL)
-                d <- seed_dim[[along]]
-                i <- normalizeSingleBracketSubscript2(subscript,
-                                    d, seed_dimnames[[along]])
-                if (isSequence(i, of.length=d))
-                    return(NULL)
-                i
-            })
-    }
+    index <- normalizeNindex(Nindex, seed)
     new2("DelayedSubset", seed=seed, index=index)
 }
 
@@ -719,6 +671,154 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
     function(x, index)
         stop(wmsg("extract_sparse_array() is not supported ",
                   "on DelayedUnaryIsoOpWithArgs objects"))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### DelayedSubassign objects
+###
+### Delayed "Multi-dimensional single bracket subassignment".
+###
+
+### Even though subassigment operates on 2 array-like objects, in many places
+### we'll treat DelayedSubassign nodes as unary nodes so we choose to make
+### DelayedSubassign extend DelayedUnaryOp (via DelayedUnaryIsoOp).
+setClass("DelayedSubassign",
+    contains="DelayedUnaryIsoOp",
+    representation(
+        seed="ANY",    # The array-like object on the left side of the
+                       # subassignment. Expected to comply with the "seed
+                       # contract".
+        index="list",  # List of subscripts as positive integer vectors,
+                       # one per dimension in the input. **Missing** list
+                       # elements are allowed and represented by NULLs.
+                       # Also NAs are allowed (unlike with the "index" slot
+                       # of a DelayedSubset object).
+        Rseed="ANY"    # The array-like object on the right side of the
+                       # subassignment. Expected to comply with the "seed
+                       # contract".
+    ),
+    prototype(
+        index=list(NULL),
+        Rseed=new("array")
+    )
+)
+
+.validate_DelayedSubassign <- function(x)
+{
+    ## TODO!
+    TRUE
+}
+
+setValidity2("DelayedSubassign", .validate_DelayedSubassign)
+
+### 'Nindex' must be a "multidimensional subsetting Nindex" (see
+### Nindex-utils.R) or NULL.
+new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL,
+                                 Rseed=new("array"))
+{
+    index <- normalizeNindex(Nindex, seed)
+    index <- lapply(index,
+        function(i) {
+            if (!is.null(i))
+                i[duplicated(i, fromLast=TRUE)] <- NA_integer_
+            i
+        })
+    Rseed_dim <- dim(Rseed)
+    if (is.null(Rseed_dim))
+        stop(wmsg("replacement value must be an array-like object"))
+    expected_Rseed_dim <- get_Nindex_lengths(index, dim(seed))
+    if (!identical(Rseed_dim, expected_Rseed_dim))
+        stop(wmsg("dimensions of replacement value are incompatible ",
+                  "with the number of array elements to replace"))
+    new2("DelayedSubassign", seed=seed, index=index, Rseed=Rseed)
+}
+
+### Is the subassignment a no-op with respect to its "seed" slot? Note that
+### even when zero array elements are being replaced, the subassignment can
+### alter the type.
+setMethod("is_noop", "DelayedSubassign",
+    function(x) length(x@Rseed) == 0L && type(x) == type(x@seed)
+)
+
+### S3/S4 combo for summary.DelayedSubassign
+
+.DelayedSubassign_summary <- function(object) "Subassign"
+
+summary.DelayedSubassign <-
+    function(object, ...) .DelayedSubassign_summary(object, ...)
+
+setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
+
+### Seed contract.
+### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
+### derivatives, and overwite their "extract_array" method.
+
+.make_stencil <- function(index2, dim)
+{
+    stopifnot(is.list(index2), length(index2) == length(dim))
+    ndim <- length(index2)
+    index3 <- lapply(seq_len(ndim),
+        function(along) {
+            i2 <- index2[[along]]
+            if (is.null(i2)) {
+                i2 <- logical(dim[[along]])
+            } else {
+                i2 <- is.na(i2)
+            }
+            !i2
+        })
+    outer2(index3, FUN=`&`)
+}
+
+setMethod("extract_array", "DelayedSubassign",
+    function(x, index)
+    {
+        a <- extract_array(x@seed, index)
+        index2 <- mapply(
+            function(i, i0, d) {
+                ## 'i' cannot contain NAs but 'i0' can!
+                if (!is.null(i)) {
+                    if (is.null(i0))
+                        return(i)
+                    return(match(i, i0))
+                }
+                if (is.null(i0))
+                    return(NULL)
+                ## A slightly faster version of match(seq_len(d), i0).
+                m <- rep.int(NA_integer_, d)
+                nonNA_idx <- which(!is.na(i0))
+                m[i0[nonNA_idx]] <- seq_along(i0)[nonNA_idx]
+                m
+            },
+            index,
+            x@index,
+            dim(x@seed))
+        a2 <- extract_array(x@Rseed, index2)
+        stencil <- .make_stencil(index2, dim(a2))
+        a[stencil] <- a2[stencil]
+        a
+    }
+)
+
+### is_sparse() and extract_sparse_array()
+
+setMethod("is_sparse", "DelayedSubassign",
+    function(x) {
+        ## We return FALSE for now.
+        ## TODO: Implement this.
+        FALSE
+    }
+)
+
+### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
+### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### in SparseArraySeed-class.R
+setMethod("extract_sparse_array", "DelayedSubassign",
+    function(x, index)
+    {
+        stop("NOT IMPLEMENTED YET!")
+    }
 )
 
 

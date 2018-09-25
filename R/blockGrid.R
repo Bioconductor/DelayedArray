@@ -204,7 +204,7 @@ blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
-        stop(wmsg("'x' must have dimensions"))
+        stop(wmsg("'x' must be an array-like object"))
     block_len <- .normarg_block.length(block.length, type(x))
     chunk_grid <- .normarg_chunk.grid(chunk.grid, x)
     block_shape <- .normarg_block.shape(block.shape)

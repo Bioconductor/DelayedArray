@@ -103,7 +103,8 @@ setGeneric("extract_array", signature="x",
     {
         x_dim <- dim(x)
         if (is.null(x_dim))
-            stop(wmsg("first argument to extract_array() must have dimensions"))
+            stop(wmsg("first argument to extract_array() ",
+                      "must be an array-like object"))
         ans <- standardGeneric("extract_array")
         expected_dim <- get_Nindex_lengths(index, x_dim)
         check_returned_array(ans, expected_dim, "extract_array", class(x))
@@ -180,7 +181,7 @@ extract_array_element <- function(x, i)
 }
 
 ### An enhanced version of extract_array() that accepts an Nindex (see
-### R/utils.R) and propagates the dimnames.
+### Nindex-utils.R) and propagates the dimnames.
 ### WARNING: The list elements in 'Nindex' can only be NULLs, integer
 ### vectors, or RangeNSBS objects at the moment. extract_array_by_Nindex()
 ### will break if they are not! See FIXME below.
@@ -199,11 +200,11 @@ extract_array_by_Nindex <- function(x, Nindex)
     ## the Nindex obtained at (2) to extract_array().
     ans_dimnames <- subset_dimnames_by_Nindex(dimnames(x), Nindex)
 
-    ## FIXME: The list elements of an Nindex can be anything (see utils.R)
-    ## so it's not enough to expand only those list elements that are
-    ## RangeNSBS objects. For example the call to extract_array() below
-    ## will fail if some subscripts in 'Nindex' are character vectors or
-    ## Rle objects. We need to perform a full normalization of 'Nindex'
+    ## FIXME: The list elements of an Nindex can be anything (see
+    ## Nindex-utils.R) so it's not enough to expand only those list elements
+    ## that are RangeNSBS objects. For example the call to extract_array()
+    ## below will fail if some subscripts in 'Nindex' are character vectors
+    ## or Rle objects. We need to perform a full normalization of 'Nindex'
     ## like we do in new_DelayedSubset() (see DelayedOp-class.R). Note that
     ## we're good for now because extract_array_by_Nindex() is only used
     ## in the context of show_compact_array() and the default "read_block"

@@ -75,134 +75,6 @@ simplify_NULL_dimnames <- function(dimnames)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Manipulating an Nindex
-###
-### An Nindex is a "multidimensional subsetting index". It's represented as a
-### list with one subscript per dimension in the array-like object to subset.
-### NULL list elements in it are interpreted as missing subscripts, that is, as
-### subscripts that run along the full extend of the corresponding dimension.
-### Before an Nindex can be used in a call to `[`, `[<-`, `[[` or `[[<-`, the
-### NULL list elements must be replaced with objects of class "name".
-###
-
-### For use in "[", "[<-", "[[", or "[[<-" methods to extract the user
-### supplied subscripts as an Nindex. NULL subscripts are replace with
-### integer(0). Missing subscripts are set to NULL.
-extract_Nindex_from_syscall <- function(call, eframe)
-{
-    Nindex <- lapply(seq_len(length(call) - 2L),
-        function(i) {
-            subscript <- call[[2L + i]]
-            if (missing(subscript))
-                return(NULL)
-            subscript <- eval(subscript, envir=eframe, enclos=eframe)
-            if (is.null(subscript))
-                return(integer(0))
-            subscript
-        }
-    )
-    argnames <- tail(names(call), n=-2L)
-    if (!is.null(argnames))
-        Nindex <- Nindex[!(argnames %in% c("drop", "exact", "value"))]
-    if (length(Nindex) == 1L && is.null(Nindex[[1L]]))
-        Nindex <- Nindex[0L]
-    Nindex
-}
-
-### Used in HDF5Array!
-expand_Nindex_RangeNSBS <- function(Nindex)
-{
-    stopifnot(is.list(Nindex))
-    expand_idx <- which(vapply(Nindex, is, logical(1), "RangeNSBS"))
-    if (length(expand_idx) != 0L)
-        Nindex[expand_idx] <- lapply(Nindex[expand_idx], as.integer)
-    Nindex
-}
-
-.make_subscripts_from_Nindex <- function(Nindex, x)
-{
-    stopifnot(is.list(Nindex), length(Nindex) == length(dim(x)))
-
-    if (is.array(x))
-        Nindex <- expand_Nindex_RangeNSBS(Nindex)
-
-    ## Replace NULLs with list elements of class "name".
-    subscripts <- rep.int(list(quote(expr=)), length(Nindex))
-    names(subscripts ) <- names(Nindex)
-    not_missing_idx <- which(!S4Vectors:::sapply_isNULL(Nindex))
-    subscripts[not_missing_idx] <- Nindex[not_missing_idx]
-
-    subscripts
-}
-
-subset_by_Nindex <- function(x, Nindex, drop=FALSE)
-{
-    subscripts <- .make_subscripts_from_Nindex(Nindex, x)
-    do.call(`[`, c(list(x), subscripts, list(drop=drop)))
-}
-
-### Return the modified array.
-replace_by_Nindex <- function(x, Nindex, value)
-{
-    subscripts <- .make_subscripts_from_Nindex(Nindex, x)
-    do.call(`[<-`, c(list(x), subscripts, list(value=value)))
-}
-
-subset_dimnames_by_Nindex <- function(dimnames, Nindex)
-{
-    stopifnot(is.list(Nindex))
-    if (is.null(dimnames))
-        return(NULL)
-    ndim <- length(Nindex)
-    stopifnot(is.list(dimnames), length(dimnames) == ndim)
-    ## Would mapply() be faster here?
-    ans <- lapply(seq_len(ndim),
-                  function(along) {
-                      dn <- dimnames[[along]]
-                      i <- Nindex[[along]]
-                      if (is.null(dn) || is.null(i))
-                          return(dn)
-                      extractROWS(dn, i)
-                  })
-    simplify_NULL_dimnames(ans)
-}
-
-### Used in HDF5Array!
-### Return the lengths of the subscripts in 'Nindex'. The length of a
-### missing subscript is the length it would have after expansion.
-get_Nindex_lengths <- function(Nindex, dim)
-{
-    stopifnot(is.list(Nindex), length(Nindex) == length(dim))
-    ans <- lengths(Nindex)
-    missing_idx <- which(S4Vectors:::sapply_isNULL(Nindex))
-    ans[missing_idx] <- dim[missing_idx]
-    ans
-}
-
-### Convert 'Nindex' to a "linear index".
-### Return the "linear index" as an integer vector if prod(dim) <=
-### .Machine$integer.max, otherwise as a vector of doubles.
-to_linear_index <- function(Nindex, dim)
-{
-    stopifnot(is.list(Nindex), is.integer(dim), length(Nindex) == length(dim))
-    if (prod(dim) <= .Machine$integer.max) {
-        ans <- p <- 1L
-    } else {
-        ans <- p <- 1
-    }
-    for (along in seq_along(Nindex)) {
-        d <- dim[[along]]
-        i <- Nindex[[along]]
-        if (is.null(i))
-            i <- seq_len(d)
-        ans <- rep((i - 1L) * p, each=length(ans)) + ans
-        p <- p * d
-    }
-    ans
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### combine_array_objects()
 ###
 ### NOT exported but used in unit tests.
@@ -269,6 +141,28 @@ validate_dimnames_slot <- function(x, dim, slotname="dimnames")
                      "must be NULL or a character vector along ",
                      "the corresponding dimension in the object"))
     TRUE
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### outer2()
+###
+### Outer product of an arbitrary number of objects. Typically used on
+### objects that are vectors and/or arrays.
+###
+
+outer2 <- function(objects, FUN="*", ...)
+{
+    stopifnot(is.list(objects), length(objects) != 0L)
+    nobject <- length(objects)
+    ans <- objects[[1L]]
+    if (nobject >= 2L) {
+        for (i in 2:nobject) {
+            idx <- objects[[i]]
+            ans <- outer(ans, idx, FUN=FUN, ...)
+        }
+    }
+    ans
 }
 
 

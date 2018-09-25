@@ -23,6 +23,7 @@ Suggests: Matrix, HDF5Array, genefilter, SummarizedExperiment, airway, pryr,
 License: Artistic-2.0
 VignetteBuilder: knitr
 Collate: utils.R
+	Nindex-utils.R
 	aperm2.R
 	linearInd.R
 	bind-arrays.R

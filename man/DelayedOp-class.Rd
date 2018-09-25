@@ -84,6 +84,20 @@
 \alias{is_sparse,DelayedUnaryIsoOpWithArgs-method}
 \alias{extract_sparse_array,DelayedUnaryIsoOpWithArgs-method}
 
+% DelayedSubassign objects
+\alias{class:DelayedSubassign}
+\alias{DelayedSubassign-class}
+\alias{DelayedSubassign}
+
+\alias{is_noop,DelayedSubassign-method}
+\alias{summary.DelayedSubassign}
+\alias{summary,DelayedSubassign-method}
+
+\alias{extract_array,DelayedSubassign-method}
+
+\alias{is_sparse,DelayedSubassign-method}
+\alias{extract_sparse_array,DelayedSubassign-method}
+
 % DelayedDimnames objects
 \alias{class:DelayedDimnames}
 \alias{DelayedDimnames-class}
@@ -101,6 +115,10 @@
 \alias{DelayedNaryOp}
 
 % DelayedNaryIsoOp objects
+\alias{class:DelayedNaryIsoOp}
+\alias{DelayedNaryIsoOp-class}
+\alias{DelayedNaryIsoOp}
+
 \alias{summary.DelayedNaryIsoOp}
 \alias{summary,DelayedNaryIsoOp-method}
 
@@ -112,6 +130,10 @@
 \alias{extract_sparse_array,DelayedNaryIsoOp-method}
 
 % DelayedAbind objects
+\alias{class:DelayedAbind}
+\alias{DelayedAbind-class}
+\alias{DelayedAbind}
+
 \alias{summary.DelayedAbind}
 \alias{summary,DelayedAbind-method}
 
@@ -153,28 +175,30 @@ is_noop(x)
 }
 
 \details{
-  7 types of nodes are currently supported. Each type is a DelayedOp subclass:
+  8 types of nodes are currently supported. Each type is a DelayedOp subclass:
 
   \preformatted{  Node type                        Represented operation
   ------------------------------------------------------------------
   DelayedOp (VIRTUAL)
   ------------------------------------------------------------------
-    DelayedUnaryOp (VIRTUAL)
-    - DelayedSubset                Multi-dimensional single bracket
+  * DelayedUnaryOp (VIRTUAL)
+    o DelayedSubset                Multi-dimensional single bracket
                                    subsetting.
-    - DelayedAperm                 Extended aperm() (can drop and/or
+    o DelayedAperm                 Extended aperm() (can drop and/or
                                    add ineffective dimensions).
-    - DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
+    o DelayedUnaryIsoOp (VIRTUAL)  Unary op that preserves the
                                    geometry.
       - DelayedUnaryIsoOpStack     Simple ops stacked together.
       - DelayedUnaryIsoOpWithArgs  One op with vector-like arguments
                                    along the dimensions of the input.
+      - DelayedSubassign           Multi-dimensional single bracket
+                                   subassignment.
       - DelayedDimnames            Set/replace the dimnames.
   ------------------------------------------------------------------
-    DelayedNaryOp (VIRTUAL)
-    - DelayedNaryIsoOp             N-ary op that preserves the
+  * DelayedNaryOp (VIRTUAL)
+    o DelayedNaryIsoOp             N-ary op that preserves the
                                    geometry.
-    - DelayedAbind                 abind()
+    o DelayedAbind                 abind()
   ------------------------------------------------------------------
   }
 
@@ -189,7 +213,7 @@ is_noop(x)
 }
 
 \note{
-  The DelayedOp virtual class and its 7 concrete subclasses are for
+  The DelayedOp virtual class and its 8 concrete subclasses are for
   internal use only and are not exported.
 }
 

@@ -481,8 +481,8 @@ stash_DelayedAbind <- function(x, objects, along)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### nseed()
 ###
-### Return the number of leaves in the tree of DelayedOp objects contained
-### in a DelayedArray object.
+### Return the number of leaves in the tree of DelayedOp nodes represented
+### by 'x'. Note that nseed(x) == 1 means that the tree is linear.
 ###
 
 setGeneric("nseed", function(x) standardGeneric("nseed"))
@@ -506,10 +506,10 @@ setMethod("nseed", "ANY",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### seed() getter/setter
 ###
+### If nseed(x) == 1 (i.e. if 'x' is a linear tree) then the seed() getter
+### and setter MUST work on 'x'.
+###
 
-### If the tree of DelayedOp objects contained in the DelayedArray object
-### has a single leaf (i.e. if the tree is linear), then seed() returns it.
-### Otherwise, it raises an error.
 setGeneric("seed", function(x) standardGeneric("seed"))
 
 setMethod("seed", "DelayedOp",
@@ -521,15 +521,12 @@ setMethod("seed", "DelayedOp",
         }
         x1 <- x@seed
         if (!is(x1, "DelayedOp"))
-            return(x1)  ## found the leaf seed
+            return(x1)  # found the leaf seed
         x <- x1
         callGeneric()  # recursive call
     }
 )
 
-### If the tree of DelayedOp objects contained in the DelayedArray object
-### has a single leaf (i.e. if the tree is linear), then the seed() setter
-### replaces it. Otherwise, it raises an error.
 setGeneric("seed<-", signature="x",
     function(x, ..., value) standardGeneric("seed<-")
 )
@@ -560,7 +557,8 @@ setReplaceMethod("seed", "DelayedOp",
             x@seed <- .normalize_seed_replacement_value(value, x1)
             return(x)
         }
-        seed(x@seed) <- value  # recursive call
+        seed(x1) <- value  # recursive call
+        x@seed <- x1
         x
     }
 )
