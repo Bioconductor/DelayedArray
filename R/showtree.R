@@ -65,10 +65,10 @@
                          strrep(" ", 2 + nchar(prefix)))
     }
     if (is(x, "DelayedUnaryOp")) {
-        if (is(x, "DelayedSubassign")) {
+        if (is(x, "DelayedSubassign") && !is.null(dim(x@Rvalue))) {
             .rec_showtree(x@seed, indent, last.child=FALSE,
                           show.node.dim=show.node.dim)
-            .rec_showtree(x@Rseed, indent, last.child=TRUE,
+            .rec_showtree(x@Rvalue, indent, last.child=TRUE,
                           prefix="right value: ", show.node.dim=show.node.dim)
         } else {
             .rec_showtree(x@seed, indent, last.child=TRUE,
@@ -215,20 +215,33 @@ setMethod("simplify", "DelayedAperm",
     }
 )
 
-setMethod("simplify", "DelayedUnaryIsoOp",
+setMethod("simplify", "DelayedUnaryIsoOpStack",
     function(x, incremental=FALSE)
     {
         if (!.normarg_incremental(incremental))
             x@seed <- simplify(x@seed)
         x1 <- x@seed
-        if (is(x1, "DelayedUnaryIsoOpStack") &&
-            is(x, "DelayedUnaryIsoOpStack"))
-        {
+        if (is(x1, "DelayedUnaryIsoOpStack")) {
             ## SQUASH
             x1@OPS <- c(x1@OPS, x@OPS)
             return(x1)
-
         }
+        if (is(x1, "DelayedDimnames")) {
+            ## SWAP
+            x@seed <- x1@seed
+            x1@seed <- simplify(x, incremental=TRUE)
+            return(x1)
+        }
+        x
+    }
+)
+
+setMethod("simplify", "DelayedUnaryIsoOpWithArgs",
+    function(x, incremental=FALSE)
+    {
+        if (!.normarg_incremental(incremental))
+            x@seed <- simplify(x@seed)
+        x1 <- x@seed
         if (is(x1, "DelayedDimnames")) {
             ## SWAP
             x@seed <- x1@seed
@@ -244,15 +257,15 @@ setMethod("simplify", "DelayedSubassign",
     {
         if (!.normarg_incremental(incremental)) {
             x@seed <- simplify(x@seed)
-            x@Rseed <- simplify(x@Rseed)
+            x@Rvalue <- simplify(x@Rvalue)
         }
         x1 <- x@seed
         if (is_noop(x))
             return(x1)
-        Rseed <- x@Rseed
-        if (is(Rseed, "DelayedDimnames")) {
-            ## REMOVE Rseed
-            x@Rseed <- Rseed@seed
+        Rvalue <- x@Rvalue
+        if (is(Rvalue, "DelayedDimnames")) {
+            ## REMOVE DelayedDimnames FROM Rvalue
+            x@Rvalue <- Rvalue@seed
         }
         if (is(x1, "DelayedDimnames")) {
             ## SWAP

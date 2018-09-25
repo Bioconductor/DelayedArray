@@ -694,13 +694,14 @@ setClass("DelayedSubassign",
                        # elements are allowed and represented by NULLs.
                        # Also NAs are allowed (unlike with the "index" slot
                        # of a DelayedSubset object).
-        Rseed="ANY"    # The array-like object on the right side of the
+        Rvalue="ANY"   # The array-like object on the right side of the
                        # subassignment. Expected to comply with the "seed
-                       # contract".
+                       # contract". Alternatively, it can be an ordinary
+                       # vector (atomic or list) of length 1.
     ),
     prototype(
         index=list(NULL),
-        Rseed=new("array")
+        Rvalue=NA
     )
 )
 
@@ -714,8 +715,7 @@ setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 
 ### 'Nindex' must be a "multidimensional subsetting Nindex" (see
 ### Nindex-utils.R) or NULL.
-new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL,
-                                 Rseed=new("array"))
+new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
 {
     index <- normalizeNindex(Nindex, seed)
     index <- lapply(index,
@@ -724,21 +724,30 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL,
                 i[duplicated(i, fromLast=TRUE)] <- NA_integer_
             i
         })
-    Rseed_dim <- dim(Rseed)
-    if (is.null(Rseed_dim))
-        stop(wmsg("replacement value must be an array-like object"))
-    expected_Rseed_dim <- get_Nindex_lengths(index, dim(seed))
-    if (!identical(Rseed_dim, expected_Rseed_dim))
-        stop(wmsg("dimensions of replacement value are incompatible ",
-                  "with the number of array elements to replace"))
-    new2("DelayedSubassign", seed=seed, index=index, Rseed=Rseed)
+    Rvalue_dim <- dim(Rvalue)
+    if (!is.null(Rvalue_dim)) {
+        expected_Rvalue_dim <- get_Nindex_lengths(index, dim(seed))
+        if (!identical(Rvalue_dim, expected_Rvalue_dim))
+            stop(wmsg("dimensions of replacement value are incompatible ",
+                      "with the number of array elements to replace"))
+    } else if (!(is.vector(Rvalue) && length(Rvalue) == 1L)) {
+        stop(wmsg("replacement value must be an array-like object ",
+                  "(or a vector-like object of length 1)"))
+    }
+    new2("DelayedSubassign", seed=seed, index=index, Rvalue=Rvalue)
 }
 
 ### Is the subassignment a no-op with respect to its "seed" slot? Note that
 ### even when zero array elements are being replaced, the subassignment can
-### alter the type.
+### still alter the type.
 setMethod("is_noop", "DelayedSubassign",
-    function(x) length(x@Rseed) == 0L && type(x) == type(x@seed)
+    function(x)
+    {
+        ## Is any array element being replaced by this subassignment?
+        if (all(get_Nindex_lengths(x@index, dim(x@seed)) != 0L))
+            return(FALSE)
+        type(x) == type(x@seed)
+    }
 )
 
 ### S3/S4 combo for summary.DelayedSubassign
@@ -794,9 +803,24 @@ setMethod("extract_array", "DelayedSubassign",
             index,
             x@index,
             dim(x@seed))
-        a2 <- extract_array(x@Rseed, index2)
-        stencil <- .make_stencil(index2, dim(a2))
-        a[stencil] <- a2[stencil]
+        ## The "stencil" is a logical array of the same dimensions as 'a'
+        ## indicating the array elements that need to be replaced in 'a'.
+        stencil <- .make_stencil(index2, dim(a))
+        if (is.null(dim(x@Rvalue))) {
+            ## 'x@Rvalue' is a vector-like object of length 1
+            a2 <- x@Rvalue
+        } else {
+            ## 'x@Rvalue' is an array-like object
+            Rindex <- lapply(index2,
+                function(i) {
+                    if (is.null(i))
+                        return(i)
+                    i[!is.na(i)]
+                }
+            )
+            a2 <- extract_array(x@Rvalue, Rindex)
+        }
+        a[stencil] <- a2
         a
     }
 )
