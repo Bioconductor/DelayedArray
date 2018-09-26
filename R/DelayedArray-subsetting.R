@@ -85,8 +85,16 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### [
 ###
-### Multi-dimensional form (e.g. x[3:1, , 6]) is delayed.
-### Linear form (e.g. x[5:2]) is block-processed.
+### Supported forms:
+###
+### - Multi-dimensional form (e.g. x[3:1, , 6]) is supported and delayed.
+###
+### - Linear form (i.e. x[i]) is supported except when the subscript 'i'
+###   is a numeric matrix where each row is an n-uplet representing an
+###   array index.
+###   So for example x[5:2] and x[x <= 0.05] are supported but
+###   x[which(x <= 0.05, arr.ind=TRUE)] is not at the moment.
+###   Linear form (when supported) is always block-processed.
 ###
 
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
@@ -161,25 +169,41 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### [<-
+### [<- (a.k.a. subassignment)
 ###
+### Supported forms:
+###
+### - Multi-dimensional form (e.g. x[3:1, , 6] <- 0) is supported.
+###
+### - Linear form (i.e. x[i] <- value) is supported only when the
+###   subscript 'i' is a logical DelayedArray object of the same
+###   dimensions as 'x' and 'value' an ordinary vector of length 1.
+###   So for example x[x <= 0.05] <- 0 is supported but x[5:2] <- 0
+###   is not at the moment.
+###
+### - Filling (i.e. x[] <- value) is supported only when 'value' is an
+###   ordinary vector with a length that is a divisor of 'nrow(x)'.
+###
+### All these forms of subassignment are delayed.
+###
+
 
 .filling_error_msg <- c(
     "filling a DelayedArray object 'x' with a value (i.e. 'x[] <- value') ",
-    "is supported only when 'value' is an atomic vector and 'length(value)' ",
-    "is a divisor of 'nrow(x)'"
+    "is supported only when 'value' is an ordinary vector with a length ",
+    "that is a divisor of 'nrow(x)'"
 )
 
-.subassign_error_msg <- c(
-    "subassignment to a DelayedArray object 'x' (i.e. 'x[i] <- value') is ",
-    "supported only when the subscript 'i' is a logical DelayedArray object ",
-    "with the same dimensions as 'x' and when 'value' is a scalar (i.e. an ",
-    "atomic vector of length 1)"
+.linear_subassign_error_msg <- c(
+    "linear subassignment to a DelayedArray object 'x' (i.e. 'x[i] <- value') ",
+    "is supported only when the subscript 'i' is a logical DelayedArray ",
+    "object of the same dimensions as 'x' and 'value' an ordinary vector ",
+    "of length 1)"
 )
 
 .fill_DelayedArray_with_value <- function(x, value)
 {
-    if (!(is.vector(value) && is.atomic(value)))
+    if (!is.vector(value))
         stop(wmsg(.filling_error_msg))
     value_len <- length(value)
     if (value_len == 1L)
@@ -206,17 +230,25 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
     nsubscript <- length(Nindex)
     if (nsubscript == 0L)
         return(.fill_DelayedArray_with_value(x, value))
-    if (nsubscript != 1L)
-        stop(wmsg(.subassign_error_msg))
-    i <- Nindex[[1L]]
-    if (!(is(i, "DelayedArray") &&
-          identical(dim(x), dim(i)) &&
-          type(i) == "logical"))
-        stop(wmsg(.subassign_error_msg))
-    if (!(is.vector(value) && is.atomic(value) && length(value) == 1L))
-        stop(wmsg(.subassign_error_msg))
-    DelayedArray(new_DelayedNaryIsoOp(`[<-`, x@seed, i@seed,
-                                             Rargs=list(value=value)))
+    x_dim <- dim(x)
+    x_ndim <- length(x_dim)
+    if (nsubscript == 1L && x_ndim != 1L) {
+        ## Linear form.
+        i <- Nindex[[1L]]
+        if (!(is(i, "DelayedArray") &&
+              identical(x_dim, dim(i)) &&
+              type(i) == "logical"))
+            stop(wmsg(.linear_subassign_error_msg))
+        if (!(is.vector(value) && length(value) == 1L))
+            stop(wmsg(.linear_subassign_error_msg))
+        ans <- DelayedArray(new_DelayedNaryIsoOp(`[<-`, x@seed, i@seed,
+                                                 Rargs=list(value=value)))
+        return(ans)
+    }
+    if (nsubscript != x_ndim)
+        stop("incorrect number of subscripts")
+    ## Multi-dimensional form.
+    stash_DelayedSubassign(x, Nindex, value)
 }
 
 setReplaceMethod("[", "DelayedArray", .subassign_DelayedArray)

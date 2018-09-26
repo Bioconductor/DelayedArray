@@ -461,6 +461,13 @@ stash_DelayedUnaryIsoOpWithArgs <- function(x, OP,
 ### TODO: Remove this alias at some point (e.g. in BioC 3.10).
 stash_DelayedUnaryIsoOp <- stash_DelayedUnaryIsoOpWithArgs
 
+stash_DelayedSubassign <- function(x, Nindex, value)
+{
+    stopifnot(is(x, "DelayedArray"))
+    op <- new_DelayedSubassign(x@seed, Nindex, value)
+    DelayedArray(op)
+}
+
 stash_DelayedDimnames <- function(x, dimnames)
 {
     stopifnot(is(x, "DelayedArray"))

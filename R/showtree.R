@@ -157,6 +157,10 @@ setMethod("simplify", "DelayedSubset",
                                                   Rargs=Rargs)
             return(x1)
         }
+        if (is(x1, "DelayedSubassign") && is.null(dim(x1@Rvalue))) {
+            ## SWAP
+
+        }
         if (is(x1, "DelayedDimnames")) {
             ## SWAP
             x_dimnames <- dimnames(x)

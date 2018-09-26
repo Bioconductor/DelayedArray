@@ -680,24 +680,26 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
 ### Delayed "Multi-dimensional single bracket subassignment".
 ###
 
-### Even though subassigment operates on 2 array-like objects, in many places
-### we'll treat DelayedSubassign nodes as unary nodes so we choose to make
+### Even though strictly speaking DelayedSubassign nodes are binary nodes
+### (subassigment operates on 2 array-like objects, the "left value" and the
+### "right value"), it turns out to be more convenient (and natural) to treat
+### them as unary nodes (e.g. in nseed() and seed()). This is why we make
 ### DelayedSubassign extend DelayedUnaryOp (via DelayedUnaryIsoOp).
 setClass("DelayedSubassign",
     contains="DelayedUnaryIsoOp",
     representation(
-        seed="ANY",    # The array-like object on the left side of the
-                       # subassignment. Expected to comply with the "seed
-                       # contract".
+        seed="ANY",    # The "left value" i.e. the array-like object on the
+                       # left side of the subassignment. Expected to comply
+                       # with the "seed contract".
         index="list",  # List of subscripts as positive integer vectors,
                        # one per dimension in the input. **Missing** list
                        # elements are allowed and represented by NULLs.
                        # Also NAs are allowed (unlike with the "index" slot
                        # of a DelayedSubset object).
-        Rvalue="ANY"   # The array-like object on the right side of the
-                       # subassignment. Expected to comply with the "seed
-                       # contract". Alternatively, it can be an ordinary
-                       # vector (atomic or list) of length 1.
+        Rvalue="ANY"   # The "right value" i.e. the array-like object on the
+                       # right side of the subassignment. Expected to comply
+                       # with the "seed contract". Alternatively, it can be
+                       # an ordinary vector (atomic or list) of length 1.
     ),
     prototype(
         index=list(NULL),
@@ -732,7 +734,7 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
                       "with the number of array elements to replace"))
     } else if (!(is.vector(Rvalue) && length(Rvalue) == 1L)) {
         stop(wmsg("replacement value must be an array-like object ",
-                  "(or a vector-like object of length 1)"))
+                  "(or an ordinary vector of length 1)"))
     }
     new2("DelayedSubassign", seed=seed, index=index, Rvalue=Rvalue)
 }
@@ -763,66 +765,55 @@ setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
 ### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
 ### derivatives, and overwite their "extract_array" method.
 
-.make_stencil <- function(index2, dim)
+.extract_array_from_DelayedSubassign <- function(x, index)
 {
-    stopifnot(is.list(index2), length(index2) == length(dim))
-    ndim <- length(index2)
-    index3 <- lapply(seq_len(ndim),
+    a <- extract_array(x@seed, index)
+    a_dim <- dim(a)
+    index2 <- lapply(seq_along(a_dim),
+        function(along) {
+            i <- index[[along]]
+            i0 <- x@index[[along]]
+            ## 'i' cannot contain NAs but 'i0' can!
+            if (!is.null(i)) {
+                if (is.null(i0))
+                    return(i)
+                return(match(i, i0))
+            }
+            if (is.null(i0))
+                return(NULL)
+            d <- a_dim[[along]]
+            ## A slightly faster version of 'match(seq_len(d), i0)'.
+            i2 <- rep.int(NA_integer_, d)
+            nonNA_idx <- which(!is.na(i0))
+            i2[i0[nonNA_idx]] <- seq_along(i0)[nonNA_idx]
+            i2
+        })
+    index3 <- lapply(seq_along(a_dim),
         function(along) {
             i2 <- index2[[along]]
-            if (is.null(i2)) {
-                i2 <- logical(dim[[along]])
-            } else {
-                i2 <- is.na(i2)
-            }
-            !i2
+            if (is.null(i2))
+                return(NULL)
+            which(!is.na(i2))
         })
-    outer2(index3, FUN=`&`)
+    if (is.null(dim(x@Rvalue))) {
+        ## 'x@Rvalue' is a vector-like object of length 1
+        a2 <- x@Rvalue
+    } else {
+        ## 'x@Rvalue' is an array-like object
+        Rindex <- lapply(index2,
+            function(i) {
+                if (is.null(i))
+                    return(NULL)
+                i[!is.na(i)]
+            }
+        )
+        a2 <- extract_array(x@Rvalue, Rindex)
+    }
+    replace_by_Nindex(a, index3, a2)
 }
 
 setMethod("extract_array", "DelayedSubassign",
-    function(x, index)
-    {
-        a <- extract_array(x@seed, index)
-        index2 <- mapply(
-            function(i, i0, d) {
-                ## 'i' cannot contain NAs but 'i0' can!
-                if (!is.null(i)) {
-                    if (is.null(i0))
-                        return(i)
-                    return(match(i, i0))
-                }
-                if (is.null(i0))
-                    return(NULL)
-                ## A slightly faster version of match(seq_len(d), i0).
-                m <- rep.int(NA_integer_, d)
-                nonNA_idx <- which(!is.na(i0))
-                m[i0[nonNA_idx]] <- seq_along(i0)[nonNA_idx]
-                m
-            },
-            index,
-            x@index,
-            dim(x@seed))
-        ## The "stencil" is a logical array of the same dimensions as 'a'
-        ## indicating the array elements that need to be replaced in 'a'.
-        stencil <- .make_stencil(index2, dim(a))
-        if (is.null(dim(x@Rvalue))) {
-            ## 'x@Rvalue' is a vector-like object of length 1
-            a2 <- x@Rvalue
-        } else {
-            ## 'x@Rvalue' is an array-like object
-            Rindex <- lapply(index2,
-                function(i) {
-                    if (is.null(i))
-                        return(i)
-                    i[!is.na(i)]
-                }
-            )
-            a2 <- extract_array(x@Rvalue, Rindex)
-        }
-        a[stencil] <- a2
-        a
-    }
+    .extract_array_from_DelayedSubassign
 )
 
 ### is_sparse() and extract_sparse_array()
