@@ -178,12 +178,12 @@ extract_array_element <- function(x, i)
     i <- normalizeDoubleBracketSubscript(i, x)
     index <- as.list(arrayInd(i, dim(x)))
     a <- extract_array(x, index)
-    ## 'a' is an ordinary array with a single element. We don't use as.vector()
-    ## to drop its "dim" attribute because it's broken on an array of type
-    ## "list". See:
-    ##     https://stat.ethz.ch/pipermail/r-devel/2018-September/thread.html
-    #as.vector(a)
-    a[1L]  # a more reliable way to drop the "dim" attribute
+    ## Don't use as.vector() to drop the "dim" attribute from an ordinary
+    ## array because as.vector() is broken (and won't be fixed) on an array
+    ## of type "list". See:
+    ##   https://stat.ethz.ch/pipermail/r-devel/2018-September/076892.html
+    dim(a) <- NULL  # this also drops the "dimnames" attribute if present
+    a
 }
 
 ### An enhanced version of extract_array() that accepts an Nindex (see

@@ -126,7 +126,7 @@ setMethod("simplify", "DelayedSubset",
         if (is_noop(x))
             return(x1)
         if (is(x1, "DelayedSubset")) {
-            ## SQUASH + REMOVE IF NO-OP
+            ## MERGE + REMOVE IF NO-OP
             x1 <- subset_DelayedSubset(x1, x@index)
             if (is_noop(x1))
                 return(x1@seed)
@@ -136,13 +136,16 @@ setMethod("simplify", "DelayedSubset",
             ## SWAP
             index2 <- project_index_on_seed(x@index, x1)
             x2 <- new_DelayedSubset(x1@seed, index2)
-            x1@seed <- simplify(x2, incremental=TRUE)
+            x2 <- simplify(x2, incremental=TRUE)
+            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2, check=FALSE)
             return(x1)
         }
         if (is(x1, "DelayedUnaryIsoOpStack")) {
             ## SWAP
-            x@seed <- x1@seed
-            x1@seed <- simplify(x, incremental=TRUE)
+            x2 <- x
+            x2@seed <- x1@seed
+            x2 <- simplify(x2, incremental=TRUE)
+            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2, check=FALSE)
             return(x1)
         }
         if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
@@ -154,19 +157,44 @@ setMethod("simplify", "DelayedSubset",
             Rargs <- subset_args(x1@Rargs, x1@Ralong, x@index)
             x1 <- BiocGenerics:::replaceSlots(x1, seed=x2,
                                                   Largs=Largs,
-                                                  Rargs=Rargs)
+                                                  Rargs=Rargs,
+                                                  check=FALSE)
             return(x1)
         }
-        if (is(x1, "DelayedSubassign") && is.null(dim(x1@Rvalue))) {
+        if (is(x1, "DelayedSubassign")) {
             ## SWAP
-
+            x2 <- x
+            x2@seed <- x1@seed
+            x2 <- simplify(x2, incremental=TRUE)
+            if (is.null(dim(x1@Rvalue))) {
+                ## 'x1@Rvalue' is an ordinary vector (atomic or list) of
+                ## length 1
+                Lindex2 <- make_Lindex(x@index, x1@Lindex)
+                Rvalue2 <- x1@Rvalue
+            } else {
+                ## 'x1@Rvalue' is an array-like object
+                Mindex <- make_Mindex(x@index, x1@Lindex, dim(x1@seed))
+                Lindex2 <- get_Lindex_from_Mindex(Mindex)
+                Rindex2 <- get_Rindex_from_Mindex(Mindex)
+                Rvalue2 <- new_DelayedSubset(x1@Rvalue, Rindex2)
+                Rvalue2 <- simplify(Rvalue2, incremental=TRUE)
+            }
+            ## Even though we replace all the slots of DelayedSubassign object
+            ## 'x1', this is cheaper than using new() or new_DelayedSubassign()
+            ## because we can avoid the cost of validation by using
+            ## 'check=FALSE'.
+            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2,
+                                                  Lindex=Lindex2,
+                                                  Rvalue=Rvalue2,
+                                                  check=FALSE)
+            return(x1)
         }
         if (is(x1, "DelayedDimnames")) {
             ## SWAP
-            x_dimnames <- dimnames(x)
-            x@seed <- x1@seed
-            x <- simplify(x, incremental=TRUE)
-            x1 <- new_DelayedDimnames(x, x_dimnames)
+            x2 <- x
+            x2@seed <- x1@seed
+            x2 <- simplify(x2, incremental=TRUE)
+            x1 <- new_DelayedDimnames(x2, dimnames(x))
             return(x1)
         }
         x
@@ -182,7 +210,7 @@ setMethod("simplify", "DelayedAperm",
         if (is_noop(x))
             return(x1)
         if (is(x1, "DelayedAperm")) {
-            ## SQUASH + REMOVE IF NO-OP
+            ## MERGE + REMOVE IF NO-OP
             x1@perm <- x1@perm[x@perm]
             if (is_noop(x1))
                 return(x1@seed)
@@ -226,7 +254,7 @@ setMethod("simplify", "DelayedUnaryIsoOpStack",
             x@seed <- simplify(x@seed)
         x1 <- x@seed
         if (is(x1, "DelayedUnaryIsoOpStack")) {
-            ## SQUASH
+            ## MERGE
             x1@OPS <- c(x1@OPS, x@OPS)
             return(x1)
         }
@@ -290,7 +318,7 @@ setMethod("simplify", "DelayedDimnames",
         if (is_noop(x))
             return(x1)
         if (is(x1, "DelayedDimnames")) {
-            ## SQUASH + REMOVE IF NO-OP
+            ## MERGE + REMOVE IF NO-OP
             x <- new_DelayedDimnames(x1@seed, dimnames(x))
             if (is_noop(x))
                 return(x@seed)

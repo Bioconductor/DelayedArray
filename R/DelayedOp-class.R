@@ -691,8 +691,13 @@ setClass("DelayedSubassign",
         Lindex="list",  # The "left index". List of subscripts as positive
                         # integer vectors, one per dimension in the input.
                         # **Missing** list elements are allowed and represented
-                        # by NULLs. Unlike with the "index" slot of a
-                        # DelayedSubset object, NAs are allowed.
+                        # by NULLs.
+                        # Allowed to contain duplicates BUT NO NAs when the
+                        # "Rvalue" slot is an ordinary vector (atomic or list)
+                        # of length 1.
+                        # Allowed to contain NAs BUT NO DUPLICATES when the
+                        # "Rvalue" slot is an array-like object.
+
         Rvalue="ANY"    # The "right value" i.e. the array-like object on the
                         # right side of the subassignment. Expected to comply
                         # with the "seed contract". Alternatively, it can be
@@ -716,22 +721,28 @@ setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 ### Nindex-utils.R) or NULL.
 new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
 {
-    index <- normalizeNindex(Nindex, seed)
-    Lindex <- lapply(index,
-        function(i) {
-            if (!is.null(i))
-                i[duplicated(i, fromLast=TRUE)] <- NA_integer_
-            i
-        })
+    Lindex <- normalizeNindex(Nindex, seed)
     Rvalue_dim <- dim(Rvalue)
-    if (!is.null(Rvalue_dim)) {
+    if (is.null(Rvalue_dim)) {
+        if (!(is.vector(Rvalue) && length(Rvalue) == 1L))
+            stop(wmsg("replacement value must be an array-like object ",
+                      "(or an ordinary vector of length 1)"))
+        ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
+    } else {
+        ## 'x@Rvalue' is an array-like object
         expected_Rvalue_dim <- get_Nindex_lengths(Lindex, dim(seed))
         if (!identical(Rvalue_dim, expected_Rvalue_dim))
             stop(wmsg("dimensions of replacement value are incompatible ",
                       "with the number of array elements to replace"))
-    } else if (!(is.vector(Rvalue) && length(Rvalue) == 1L)) {
-        stop(wmsg("replacement value must be an array-like object ",
-                  "(or an ordinary vector of length 1)"))
+        ## For each non-NULL subscript, keep **last** duplicate only and
+        ## replace all previous duplicates with NAs.
+        Lindex <- lapply(Lindex,
+            function(i) {
+                if (is.null(i))
+                    return(NULL)
+                i[duplicated(i, fromLast=TRUE)] <- NA_integer_
+                i
+            })
     }
     new2("DelayedSubassign", seed=seed, Lindex=Lindex, Rvalue=Rvalue)
 }
@@ -762,12 +773,12 @@ setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
 ### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
 ### derivatives, and overwite their "extract_array" method.
 
-match_index_to_Lindex <- function(index, Lindex, dim)
+make_Mindex <- function(index, Lindex, dim)
 {
     stopifnot(is.list(index), is.list(Lindex),
               length(index) == length(Lindex),
               length(index) == length(dim))
-    lapply(seq_along(dim),
+    lapply(seq_along(index),
         function(along) {
             i <- index[[along]]
             Li <- Lindex[[along]]
@@ -776,37 +787,63 @@ match_index_to_Lindex <- function(index, Lindex, dim)
             if (!is.null(i))
                 return(match(i, Li))  # 'i' cannot contain NAs but 'Li' can!
             d <- dim[[along]]
-            ## A slightly faster version of 'match(seq_len(d), Li)'.
-            i2 <- rep.int(NA_integer_, d)
+            ## A slightly faster version of 'match(seq_len(d), Li)'. All the
+            ## non-NA values in 'Li' are supposed to be >= 1 and <= d.
+            m <- rep.int(NA_integer_, d)
             nonNA_idx <- which(!is.na(Li))
-            i2[Li[nonNA_idx]] <- seq_along(Li)[nonNA_idx]
-            i2
+            m[Li[nonNA_idx]] <- seq_along(Li)[nonNA_idx]
+            m
+        })
+}
+
+get_Lindex_from_Mindex <- function(Mindex)
+{
+    lapply(Mindex,
+        function(m) {
+            if (is.null(m))
+                return(NULL)
+            which(!is.na(m))
+        })
+}
+
+### A more efficient version of get_Lindex_from_Mindex(make_Mindex(...))
+### that assumes that 'Lindex' does NOT contain NAs.
+make_Lindex <- function(index, Lindex)
+{
+    lapply(seq_along(index),
+        function(along) {
+            i <- index[[along]]
+            Li <- Lindex[[along]]
+            if (is.null(Li))
+                return(NULL)
+            if (is.null(i))
+                return(Li)
+            which(i %in% Li)
+        })
+}
+
+get_Rindex_from_Mindex <- function(Mindex)
+{
+    lapply(Mindex,
+        function(m) {
+            if (is.null(m))
+                return(NULL)
+            m[!is.na(m)]
         })
 }
 
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
     a <- extract_array(x@seed, index)
-    a_dim <- dim(a)
-    index2 <- match_index_to_Lindex(index, x@Lindex, a_dim)
-    Lindex2 <- lapply(index2,
-        function(i2) {
-            if (is.null(i2))
-                return(NULL)
-            which(!is.na(i2))
-        })
     if (is.null(dim(x@Rvalue))) {
-        ## 'x@Rvalue' is a vector-like object of length 1
+        ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
+        Lindex2 <- make_Lindex(index, x@Lindex)
         a2 <- x@Rvalue
     } else {
         ## 'x@Rvalue' is an array-like object
-        Rindex2 <- lapply(index2,
-            function(i2) {
-                if (is.null(i2))
-                    return(NULL)
-                i2[!is.na(i2)]
-            }
-        )
+        Mindex <- make_Mindex(index, x@Lindex, dim(a))
+        Lindex2 <- get_Lindex_from_Mindex(Mindex)
+        Rindex2 <- get_Rindex_from_Mindex(Mindex)
         a2 <- extract_array(x@Rvalue, Rindex2)
     }
     replace_by_Nindex(a, Lindex2, a2)
