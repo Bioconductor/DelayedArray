@@ -834,6 +834,19 @@ get_Rindex_from_Mindex <- function(Mindex)
 
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
+    if (all(S4Vectors:::sapply_isNULL(x@Lindex))) {
+        ## "Filling" mode. This is a degenerate case where we don't need to
+        ## extract any array data from 'x@seed'.
+        if (is.null(dim(x@Rvalue))) {
+            ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
+            a_dim <- get_Nindex_lengths(index, dim(x@seed))
+            a <- array(x@Rvalue, a_dim)
+        } else {
+            ## 'x@Rvalue' is an array-like object
+            a <- extract_array(x@Rvalue, index)
+        }
+        return(a)
+    }
     a <- extract_array(x@seed, index)
     if (is.null(dim(x@Rvalue))) {
         ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
