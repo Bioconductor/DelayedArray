@@ -132,36 +132,53 @@ type(x)
 }
 
 \section{Subsetting}{
-  A DelayedArray object can be subsetted with \code{[} like an ordinary array
+  A DelayedArray object can be subsetted with \code{[} like an ordinary array,
   but with the following differences:
   \itemize{
     \item \emph{Multi-dimensional single bracket subsetting} (i.e. subsetting
           of the form \code{x[i_1, i_2, ..., i_n]} with one (possibly missing)
           subscript per dimension) returns a DelayedArray object where the
           subsetting is actually delayed. So it's a very light operation.
+          Note that NAs in the subscripts are not supported.
 
     \item \emph{Linear single bracket subsetting} (a.k.a. 1D-style subsetting,
-          that is, subsetting of the form \code{x[i]}) only works if subscript
-          \code{i} is a numeric vector at the moment. Furthermore, \code{i}
-          cannot contain NAs and all the indices in it must be >= 1 and <=
-          \code{length(x)} for now. It returns an atomic vector of the same
-          length as \code{i}. This is NOT a delayed operation.
+          that is, subsetting of the form \code{x[i]}) only works if the
+          subscript \code{i} is a numeric vector at the moment. Furthermore,
+          \code{i} cannot contain NAs and all the indices in it must be >= 1
+          and <= \code{length(x)} for now. It returns an atomic vector of the
+          same length as \code{i}. This is NOT a delayed operation (block
+          processing is triggered).
   }
 
   Subsetting with \code{[[} is supported but only the \emph{linear} form
   of it at the moment i.e. the \code{x[[i]]} form where \code{i} is a
   \emph{single} numeric value >= 1 and <= \code{length(x)}. It is equivalent
-  to \code{x[i]}.
+  to \code{x[i][[1]]}.
 
-  DelayedArray objects support only 2 forms of subassignment at the moment:
-  \code{x[i] <- value} and \code{x[] <- value}. The former is supported only
-  when the subscript \code{i} is a logical DelayedArray object with the same
-  dimensions as \code{x} and when \code{value} is a \emph{scalar} (i.e. an
-  atomic vector of length 1). The latter is supported only when \code{value}
-  is an atomic vector and \code{length(value)} is a divisor of \code{nrow(x)}.
-  Both are delayed operations so are very light.
+  Subassignment to a DelayedArray object with \code{[<-} is also supported
+  like with an ordinary array, but with the following restrictions:
+  \itemize{
+    \item \emph{Multi-dimensional subassignment} (i.e. subassignment of the
+          form \code{x[i_1, i_2, ..., i_n] <- value} with one (possibly
+          missing) subscript per dimension) only accepts a replacement
+          value (a.k.a. right value) that is an array-like object (e.g.
+          ordinary array, dgCMatrix object, DelayedArray object, etc...)
+          or an ordinary vector (atomic or list) of length 1.
 
-  Single value replacement (\code{x[[...]] <- value}) is not supported.
+    \item \emph{Linear subassignment} (a.k.a. 1D-style subassignment, that
+          is, subassignment of the form \code{x[i] <- value}) only works if
+          the subscript \code{i} is a logical DelayedArray object of the same
+          dimensions as \code{x} and if the replacement value is an ordinary
+          vector (atomic or list) of length 1.
+
+    \item \emph{Filling} (i.e. subassignment of the form \code{x[] <- value})
+          only accepts a replacement value that is an ordinary vector (atomic
+          or list) of length a divisor of \code{nrow(x)}.
+  }
+  These 3 forms of subassignment are implemented as delayed operations so
+  are very light.
+
+  Single value replacement (\code{x[[...]] <- value}) is not supported yet.
 }
 
 \seealso{
@@ -198,14 +215,15 @@ type(x)
 a <- array(runif(1500000), dim=c(10000, 30, 5))
 A <- DelayedArray(a)
 A
-## The seed of A is treated as a "read-only" object so won't change when
-## we start operating on A:
+## The seed of a DelayedArray object is **always** treated as a
+## "read-only" object so will never be modified by the operations
+## we perform on A:
 stopifnot(identical(a, seed(A)))
 type(A)
 
 ## Multi-dimensional single bracket subsetting:
-m <- a[11:20 , 5, ]  # a matrix
-M <- A[11:20 , 5, ]  # a DelayedMatrix object
+m <- a[11:20 , 5, -3]  # an ordinary matrix
+M <- A[11:20 , 5, -3]  # a DelayedMatrix object
 stopifnot(identical(m, as.array(M)))
 
 ## Linear single bracket subsetting:
@@ -218,12 +236,16 @@ A[A < 0.2] <- NA
 a[a < 0.2] <- NA
 stopifnot(identical(a, as.array(A)))
 
+A[2:5, 1:2, ] <- array(1:40, c(4, 2, 5))
+a[2:5, 1:2, ] <- array(1:40, c(4, 2, 5))
+stopifnot(identical(a, as.array(A)))
+
 ## Other operations:
-toto <- function(x) (5 * x[ , , 1] ^ 3 + 1L) * log(x[, , 2])
-b <- toto(a)
+crazy <- function(x) (5 * x[ , , 1] ^ 3 + 1L) * log(x[, , 2])
+b <- crazy(a)
 head(b)
 
-B <- toto(A)  # very fast! (operations are delayed)
+B <- crazy(A)  # very fast! (all operations are delayed)
 B
 
 cs <- colSums(b)
@@ -259,7 +281,7 @@ A3
 is(A3, "DelayedArray")     # TRUE
 seed(A3)                   # an HDF5ArraySeed object
 
-B3 <- toto(A3)             # very fast! (operations are delayed)
+B3 <- crazy(A3)            # very fast! (all operations are delayed)
 B3                         # not an HDF5Array object anymore because
                            # now it carries delayed operations
 CS3 <- colSums(B3)

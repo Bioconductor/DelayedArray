@@ -688,21 +688,18 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
 setClass("DelayedSubassign",
     contains="DelayedUnaryIsoOp",
     representation(
-        seed="ANY",    # The "left value" i.e. the array-like object on the
-                       # left side of the subassignment. Expected to comply
-                       # with the "seed contract".
-        index="list",  # List of subscripts as positive integer vectors,
-                       # one per dimension in the input. **Missing** list
-                       # elements are allowed and represented by NULLs.
-                       # Also NAs are allowed (unlike with the "index" slot
-                       # of a DelayedSubset object).
-        Rvalue="ANY"   # The "right value" i.e. the array-like object on the
-                       # right side of the subassignment. Expected to comply
-                       # with the "seed contract". Alternatively, it can be
-                       # an ordinary vector (atomic or list) of length 1.
+        Lindex="list",  # The "left index". List of subscripts as positive
+                        # integer vectors, one per dimension in the input.
+                        # **Missing** list elements are allowed and represented
+                        # by NULLs. Unlike with the "index" slot of a
+                        # DelayedSubset object, NAs are allowed.
+        Rvalue="ANY"    # The "right value" i.e. the array-like object on the
+                        # right side of the subassignment. Expected to comply
+                        # with the "seed contract". Alternatively, it can be
+                        # an ordinary vector (atomic or list) of length 1.
     ),
     prototype(
-        index=list(NULL),
+        Lindex=list(NULL),
         Rvalue=NA
     )
 )
@@ -720,7 +717,7 @@ setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
 {
     index <- normalizeNindex(Nindex, seed)
-    index <- lapply(index,
+    Lindex <- lapply(index,
         function(i) {
             if (!is.null(i))
                 i[duplicated(i, fromLast=TRUE)] <- NA_integer_
@@ -728,7 +725,7 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
         })
     Rvalue_dim <- dim(Rvalue)
     if (!is.null(Rvalue_dim)) {
-        expected_Rvalue_dim <- get_Nindex_lengths(index, dim(seed))
+        expected_Rvalue_dim <- get_Nindex_lengths(Lindex, dim(seed))
         if (!identical(Rvalue_dim, expected_Rvalue_dim))
             stop(wmsg("dimensions of replacement value are incompatible ",
                       "with the number of array elements to replace"))
@@ -736,7 +733,7 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
         stop(wmsg("replacement value must be an array-like object ",
                   "(or an ordinary vector of length 1)"))
     }
-    new2("DelayedSubassign", seed=seed, index=index, Rvalue=Rvalue)
+    new2("DelayedSubassign", seed=seed, Lindex=Lindex, Rvalue=Rvalue)
 }
 
 ### Is the subassignment a no-op with respect to its "seed" slot? Note that
@@ -746,7 +743,7 @@ setMethod("is_noop", "DelayedSubassign",
     function(x)
     {
         ## Is any array element being replaced by this subassignment?
-        if (all(get_Nindex_lengths(x@index, dim(x@seed)) != 0L))
+        if (all(get_Nindex_lengths(x@Lindex, dim(x@seed)) != 0L))
             return(FALSE)
         type(x) == type(x@seed)
     }
@@ -765,32 +762,35 @@ setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
 ### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
 ### derivatives, and overwite their "extract_array" method.
 
+match_index_to_Lindex <- function(index, Lindex, dim)
+{
+    stopifnot(is.list(index), is.list(Lindex),
+              length(index) == length(Lindex),
+              length(index) == length(dim))
+    lapply(seq_along(dim),
+        function(along) {
+            i <- index[[along]]
+            Li <- Lindex[[along]]
+            if (is.null(Li))
+                return(i)
+            if (!is.null(i))
+                return(match(i, Li))  # 'i' cannot contain NAs but 'Li' can!
+            d <- dim[[along]]
+            ## A slightly faster version of 'match(seq_len(d), Li)'.
+            i2 <- rep.int(NA_integer_, d)
+            nonNA_idx <- which(!is.na(Li))
+            i2[Li[nonNA_idx]] <- seq_along(Li)[nonNA_idx]
+            i2
+        })
+}
+
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
     a <- extract_array(x@seed, index)
     a_dim <- dim(a)
-    index2 <- lapply(seq_along(a_dim),
-        function(along) {
-            i <- index[[along]]
-            i0 <- x@index[[along]]
-            ## 'i' cannot contain NAs but 'i0' can!
-            if (!is.null(i)) {
-                if (is.null(i0))
-                    return(i)
-                return(match(i, i0))
-            }
-            if (is.null(i0))
-                return(NULL)
-            d <- a_dim[[along]]
-            ## A slightly faster version of 'match(seq_len(d), i0)'.
-            i2 <- rep.int(NA_integer_, d)
-            nonNA_idx <- which(!is.na(i0))
-            i2[i0[nonNA_idx]] <- seq_along(i0)[nonNA_idx]
-            i2
-        })
-    index3 <- lapply(seq_along(a_dim),
-        function(along) {
-            i2 <- index2[[along]]
+    index2 <- match_index_to_Lindex(index, x@Lindex, a_dim)
+    Lindex2 <- lapply(index2,
+        function(i2) {
             if (is.null(i2))
                 return(NULL)
             which(!is.na(i2))
@@ -800,16 +800,16 @@ setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
         a2 <- x@Rvalue
     } else {
         ## 'x@Rvalue' is an array-like object
-        Rindex <- lapply(index2,
-            function(i) {
-                if (is.null(i))
+        Rindex2 <- lapply(index2,
+            function(i2) {
+                if (is.null(i2))
                     return(NULL)
-                i[!is.na(i)]
+                i2[!is.na(i2)]
             }
         )
-        a2 <- extract_array(x@Rvalue, Rindex)
+        a2 <- extract_array(x@Rvalue, Rindex2)
     }
-    replace_by_Nindex(a, index3, a2)
+    replace_by_Nindex(a, Lindex2, a2)
 }
 
 setMethod("extract_array", "DelayedSubassign",

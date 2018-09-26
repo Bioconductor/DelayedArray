@@ -278,7 +278,7 @@ setMethod("[[", "DelayedArray",
             dots <- dots[names(dots) != "exact"]
         if (!missing(j) || length(dots) > 0L)
             stop("incorrect number of subscripts")
-        extract_array_element(x, i)
+        extract_array_element(x, i)[[1L]]
     }
 )
 
