@@ -188,37 +188,34 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
 ###
 
 
-.filling_error_msg <- c(
-    "filling a DelayedArray object 'x' with a value (i.e. 'x[] <- value') ",
-    "is supported only when 'value' is an ordinary vector with a length ",
-    "that is a divisor of 'nrow(x)'"
-)
-
 .linear_subassign_error_msg <- c(
     "linear subassignment to a DelayedArray object 'x' (i.e. 'x[i] <- value') ",
-    "is supported only when the subscript 'i' is a logical DelayedArray ",
+    "is only supported when the subscript 'i' is a logical DelayedArray ",
     "object of the same dimensions as 'x' and 'value' an ordinary vector ",
     "of length 1)"
 )
 
-.fill_DelayedArray_with_value <- function(x, value)
+.filling_error_msg <- c(
+    "filling a DelayedArray object 'x' with a vector 'v' (i.e. 'x[] <- v') ",
+    "is only supported if 'v' is an ordinary vector of length a divisor ",
+    "of 'nrow(x)'"
+)
+
+.fill_DelayedArray_with_vector <- function(x, v)
 {
-    if (!is.vector(value))
-        stop(wmsg(.filling_error_msg))
-    value_len <- length(value)
-    if (value_len == 1L)
-        return(stash_DelayedSubassign(x, NULL, value))
+    stopifnot(is.vector(v))
     x_len <- length(x)
-    if (value_len > x_len)
-        stop(wmsg("'value' is longer than 'x'"))
+    v_len <- length(v)
+    if (v_len > x_len)
+        stop(wmsg("right value is longer than left value"))
     x_nrow <- nrow(x)
     if (x_nrow != 0L) {
-        if (value_len == 0L || x_nrow %% value_len != 0L)
+        if (v_len == 0L || x_nrow %% v_len != 0L)
             stop(wmsg(.filling_error_msg))
-        value <- rep(value, length.out=x_nrow)
+        v <- rep(v, length.out=x_nrow)
     }
     stash_DelayedUnaryIsoOpWithArgs(x, `[<-`,
-                                    Rargs=list(value=value), Ralong=1L)
+                                    Rargs=list(value=v), Ralong=1L)
 }
 
 .subassign_DelayedArray <- function(x, i, j, ..., value)
@@ -227,8 +224,6 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
         stop("'x' is missing")
     Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
     nsubscript <- length(Nindex)
-    if (nsubscript == 0L)
-        return(.fill_DelayedArray_with_value(x, value))
     x_dim <- dim(x)
     x_ndim <- length(x_dim)
     if (nsubscript == 1L && x_ndim != 1L) {
@@ -244,9 +239,17 @@ setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
                                                  Rargs=list(value=value)))
         return(ans)
     }
-    if (nsubscript != x_ndim)
-        stop("incorrect number of subscripts")
     ## Multi-dimensional form.
+    if (nsubscript == 0L) {
+        Nindex <- vector("list", length=x_ndim)
+        fill_mode <- TRUE
+    } else {
+        if (nsubscript != x_ndim)
+            stop("incorrect number of subscripts")
+        fill_mode <- all(S4Vectors:::sapply_isNULL(Nindex))
+    }
+    if (fill_mode && is.vector(value) && length(value) != 1L)
+        return(.fill_DelayedArray_with_vector(x, value))
     stash_DelayedSubassign(x, Nindex, value)
 }
 

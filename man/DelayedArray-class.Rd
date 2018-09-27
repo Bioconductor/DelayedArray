@@ -171,9 +171,10 @@ type(x)
           dimensions as \code{x} and if the replacement value is an ordinary
           vector (atomic or list) of length 1.
 
-    \item \emph{Filling} (i.e. subassignment of the form \code{x[] <- value})
-          only accepts a replacement value that is an ordinary vector (atomic
-          or list) of length a divisor of \code{nrow(x)}.
+    \item \emph{Filling with a vector}, that is, subassignment of the form
+          \code{x[] <- v} where \code{v} is an ordinary vector (atomic or
+          list), is only supported if the length of the vector is a divisor
+          of \code{nrow(x)}.
   }
   These 3 forms of subassignment are implemented as delayed operations so
   are very light.

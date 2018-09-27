@@ -688,24 +688,30 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
 setClass("DelayedSubassign",
     contains="DelayedUnaryIsoOp",
     representation(
-        Lindex="list",  # The "left index". List of subscripts as positive
-                        # integer vectors, one per dimension in the input.
-                        # **Missing** list elements are allowed and represented
-                        # by NULLs.
-                        # Allowed to contain duplicates BUT NO NAs when the
-                        # "Rvalue" slot is an ordinary vector (atomic or list)
-                        # of length 1.
-                        # Allowed to contain NAs BUT NO DUPLICATES when the
-                        # "Rvalue" slot is an array-like object.
+        Lindex="list",    # The "left index". List of subscripts as positive
+                          # integer vectors, one per dimension in the input.
+                          # **Missing** list elements are allowed and
+                          # represented by NULLs.
+                          # Allowed to contain duplicates BUT NO NAs when the
+                          # "Rvalue" slot is an ordinary vector (atomic or
+                          # list) of length 1.
+                          # Allowed to contain NAs BUT NO DUPLICATES when the
+                          # "Rvalue" slot is an array-like object.
 
-        Rvalue="ANY"    # The "right value" i.e. the array-like object on the
-                        # right side of the subassignment. Expected to comply
-                        # with the "seed contract". Alternatively, it can be
-                        # an ordinary vector (atomic or list) of length 1.
+        Rvalue="ANY",     # The "right value" i.e. the array-like object on the
+                          # right side of the subassignment. Expected to comply
+                          # with the "seed contract". Alternatively, it can be
+                          # an ordinary vector (atomic or list) of length 1.
+
+        .nogap="logical"  # One logical per dimension in the input indicating
+                          # whether the corresponding subscript in the "left
+                          # index" reaches all valid positions along the
+                          # seed dimension associated with it.
     ),
     prototype(
         Lindex=list(NULL),
-        Rvalue=NA
+        Rvalue=NA,
+        .nogap=TRUE
     )
 )
 
@@ -722,6 +728,8 @@ setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
 {
     Lindex <- normalizeNindex(Nindex, seed)
+    seed_dim <- dim(seed)
+    nogap <- subscript_has_nogap(Lindex, seed_dim)
     Rvalue_dim <- dim(Rvalue)
     if (is.null(Rvalue_dim)) {
         if (!(is.vector(Rvalue) && length(Rvalue) == 1L))
@@ -730,21 +738,22 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
         ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
     } else {
         ## 'x@Rvalue' is an array-like object
-        expected_Rvalue_dim <- get_Nindex_lengths(Lindex, dim(seed))
+        expected_Rvalue_dim <- get_Nindex_lengths(Lindex, seed_dim)
         if (!identical(Rvalue_dim, expected_Rvalue_dim))
             stop(wmsg("dimensions of replacement value are incompatible ",
                       "with the number of array elements to replace"))
         ## For each non-NULL subscript, keep **last** duplicate only and
         ## replace all previous duplicates with NAs.
         Lindex <- lapply(Lindex,
-            function(i) {
-                if (is.null(i))
+            function(Li) {
+                if (is.null(Li))
                     return(NULL)
-                i[duplicated(i, fromLast=TRUE)] <- NA_integer_
-                i
+                Li[duplicated(Li, fromLast=TRUE)] <- NA_integer_
+                Li
             })
     }
-    new2("DelayedSubassign", seed=seed, Lindex=Lindex, Rvalue=Rvalue)
+    new2("DelayedSubassign", seed=seed, Lindex=Lindex, Rvalue=Rvalue,
+                             .nogap=nogap)
 }
 
 ### Is the subassignment a no-op with respect to its "seed" slot? Note that
@@ -773,20 +782,29 @@ setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
 ### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
 ### derivatives, and overwite their "extract_array" method.
 
-make_Mindex <- function(index, Lindex, dim)
+### Do NOT use if 'x@Lindex' might contain duplicates! NAs are ok.
+### The returned index won't contain NAs along the dimensions with no gap
+### (i.e. along the dimensions for which 'x@.nogap' is TRUE).
+make_Mindex <- function(index, x)
 {
-    stopifnot(is.list(index), is.list(Lindex),
-              length(index) == length(Lindex),
-              length(index) == length(dim))
+    stopifnot(is(x, "DelayedSubassign"),
+              is.list(index),
+              length(index) == length(x@Lindex))
+    x_dim <- dim(x)
     lapply(seq_along(index),
         function(along) {
             i <- index[[along]]
-            Li <- Lindex[[along]]
+            Li <- x@Lindex[[along]]
             if (is.null(Li))
                 return(i)
-            if (!is.null(i))
-                return(match(i, Li))  # 'i' cannot contain NAs but 'Li' can!
-            d <- dim[[along]]
+            if (!is.null(i)) {
+                ## match() will do the right thing if 'Li' contains NAs but
+                ## NOT if it contains duplicates! This is because it will
+                ## find the match to the first duplicate when we need the
+                ## match to the last one.
+                return(match(i, Li))
+            }
+            d <- x_dim[[along]]
             ## A slightly faster version of 'match(seq_len(d), Li)'. All the
             ## non-NA values in 'Li' are supposed to be >= 1 and <= d.
             m <- rep.int(NA_integer_, d)
@@ -796,69 +814,81 @@ make_Mindex <- function(index, Lindex, dim)
         })
 }
 
-get_Lindex_from_Mindex <- function(Mindex)
+### The returned index should never contain NAs!
+get_Lindex2_from_Mindex <- function(Mindex, nogap)
 {
-    lapply(Mindex,
-        function(m) {
-            if (is.null(m))
+    lapply(seq_along(Mindex),
+        function(along) {
+            if (nogap[[along]])
                 return(NULL)
-            which(!is.na(m))
+            m <- Mindex[[along]]
+            Li2 <- which(!is.na(m))
+            if (length(Li2) == length(m))
+                return(NULL)
+            Li2
         })
 }
 
-### A more efficient version of get_Lindex_from_Mindex(make_Mindex(...))
-### that assumes that 'Lindex' does NOT contain NAs.
-make_Lindex <- function(index, Lindex)
+### A more efficient version of get_Lindex2_from_Mindex(make_Mindex(...))
+### that can only be used when the right value of the subassignment is an
+### ordinary vector of length 1.
+### Assume that 'x@Lindex' does NOT contain NAs. Duplicates are ok.
+### The returned index should never contain NAs!
+make_Lindex2 <- function(index, x)
 {
+    stopifnot(is(x, "DelayedSubassign"),
+              is.list(index),
+              length(index) == length(x@Lindex))
     lapply(seq_along(index),
         function(along) {
-            i <- index[[along]]
-            Li <- Lindex[[along]]
-            if (is.null(Li))
+            if (x@.nogap[[along]])
                 return(NULL)
+            i <- index[[along]]
+            Li <- x@Lindex[[along]]
             if (is.null(i))
                 return(Li)
-            which(i %in% Li)
+            Li2 <- which(i %in% Li)
+            if (length(Li2) == length(i))
+                return(NULL)
+            Li2
         })
 }
 
-get_Rindex_from_Mindex <- function(Mindex)
+### The returned index should never contain NAs!
+get_Rindex2_from_Mindex <- function(Mindex, nogap)
 {
-    lapply(Mindex,
-        function(m) {
-            if (is.null(m))
-                return(NULL)
+    lapply(seq_along(Mindex),
+        function(along) {
+            m <- Mindex[[along]]
+            if (nogap[[along]])
+                return(m)
             m[!is.na(m)]
         })
 }
 
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
-    if (all(S4Vectors:::sapply_isNULL(x@Lindex))) {
-        ## "Filling" mode. This is a degenerate case where we don't need to
-        ## extract any array data from 'x@seed'.
-        if (is.null(dim(x@Rvalue))) {
-            ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
-            a_dim <- get_Nindex_lengths(index, dim(x@seed))
-            a <- array(x@Rvalue, a_dim)
-        } else {
-            ## 'x@Rvalue' is an array-like object
-            a <- extract_array(x@Rvalue, index)
-        }
-        return(a)
-    }
-    a <- extract_array(x@seed, index)
     if (is.null(dim(x@Rvalue))) {
         ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
-        Lindex2 <- make_Lindex(index, x@Lindex)
+        Lindex2 <- make_Lindex2(index, x)
+        if (all(S4Vectors:::sapply_isNULL(Lindex2))) {
+            a_dim <- get_Nindex_lengths(index, dim(x@seed))
+            a <- array(x@Rvalue, a_dim)
+            return(a)
+        }
         a2 <- x@Rvalue
     } else {
         ## 'x@Rvalue' is an array-like object
-        Mindex <- make_Mindex(index, x@Lindex, dim(a))
-        Lindex2 <- get_Lindex_from_Mindex(Mindex)
-        Rindex2 <- get_Rindex_from_Mindex(Mindex)
+        Mindex <- make_Mindex(index, x)
+        Lindex2 <- get_Lindex2_from_Mindex(Mindex, x@.nogap)
+        if (all(S4Vectors:::sapply_isNULL(Lindex2))) {
+            a <- extract_array(x@Rvalue, Mindex)
+            return(a)
+        }
+        Rindex2 <- get_Rindex2_from_Mindex(Mindex, x@.nogap)
         a2 <- extract_array(x@Rvalue, Rindex2)
     }
+    a <- extract_array(x@seed, index)
     replace_by_Nindex(a, Lindex2, a2)
 }
 

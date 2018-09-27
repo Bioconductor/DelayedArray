@@ -46,9 +46,9 @@ normalizeSingleBracketSubscript2 <- function(i, x_len, x_names=NULL)
     normalizeSingleBracketSubscript(i, x)
 }
 
-### Normalize 'Nindex' i.e. check and turn each non-NULL list element into
-### a positive integer vector that is a valid subscript along the corresponding
-### dimension in 'x'.
+### Normalize 'Nindex' i.e. check and turn each non-NULL list element
+### into a positive integer vector that is a valid subscript along the
+### corresponding dimension in 'x'.
 normalizeNindex <- function(Nindex, x)
 {
     x_dim <- dim(x)
@@ -73,6 +73,29 @@ normalizeNindex <- function(Nindex, x)
                 return(NULL)
             i
         })
+}
+
+### Assume 'Nindex' is normalized (see above).
+### Return a logical vector with one logical per dimension indicating
+### whether the corresponding subscript in 'Nindex' reaches all valid
+### positions along the dimension.
+subscript_has_nogap <- function(Nindex, dim)
+{
+    stopifnot(is.list(Nindex), length(Nindex) == length(dim))
+    vapply(seq_along(Nindex),
+        function(along) {
+            Li <- Nindex[[along]]
+            if (is.null(Li))
+                return(TRUE)
+            d <- dim[[along]]
+            if (length(Li) < d)
+                return(FALSE)
+            hits <- logical(d)
+            hits[Li] <- TRUE
+            all(hits)
+        },
+        logical(1L),
+        USE.NAMES=FALSE)
 }
 
 
@@ -123,7 +146,7 @@ expand_Nindex_RangeNSBS <- function(Nindex)
 
     ## Replace NULLs with list elements of class "name".
     subscripts <- rep.int(list(quote(expr=)), length(Nindex))
-    names(subscripts ) <- names(Nindex)
+    names(subscripts) <- names(Nindex)
     not_missing_idx <- which(!S4Vectors:::sapply_isNULL(Nindex))
     subscripts[not_missing_idx] <- Nindex[not_missing_idx]
 

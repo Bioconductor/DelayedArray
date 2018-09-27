@@ -464,6 +464,8 @@ stash_DelayedUnaryIsoOp <- stash_DelayedUnaryIsoOpWithArgs
 stash_DelayedSubassign <- function(x, Nindex, value)
 {
     stopifnot(is(x, "DelayedArray"))
+    if (is(value, "DelayedArray"))
+        value <- value@seed
     op <- new_DelayedSubassign(x@seed, Nindex, value)
     DelayedArray(op)
 }
