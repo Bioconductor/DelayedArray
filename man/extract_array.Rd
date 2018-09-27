@@ -6,7 +6,6 @@
 \alias{extract_array,data.frame-method}
 \alias{extract_array,DataFrame-method}
 
-\alias{type,array-method}
 \alias{type,ANY-method}
 
 \alias{as.array.Array}
@@ -72,7 +71,7 @@ type(x)
   \code{extract_array(seed, list(c(1:3, 3:1), 2L))} need to be supported.
 
   \code{type(x)} returns the type of the elements in \code{x}. It's equivalent
-  to \code{typeof(x)} or \code{storage.mode(x)} on an ordinary array.
+  to \code{typeof(x)} or \code{storage.mode(x)} on an ordinary array or vector.
   It works out-of-the-box on any array-like object \code{x} for which
   \code{extract_array(x)} works.
 }

@@ -87,7 +87,9 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
 ###
 ### Supported forms:
 ###
-### - Multi-dimensional form (e.g. x[3:1, , 6]) is supported and delayed.
+### - Multi-dimensional form (e.g. x[3:1, , 6]) is supported and delayed,
+###   except when 'drop=TRUE' and the result has only one dimension, in
+###   which case it is returned as an ordinary vector.
 ###
 ### - Linear form (i.e. x[i]) is supported except when the subscript 'i'
 ###   is a numeric matrix where each row is an n-uplet representing an
@@ -96,6 +98,16 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
 ###   x[which(x <= 0.05, arr.ind=TRUE)] is not at the moment.
 ###   Linear form (when supported) is always block-processed.
 ###
+
+setMethod("drop", "DelayedArray",
+    function(x)
+    {
+        perm <- which(dim(x) != 1L)
+        if (length(perm) <= 1L)
+            return(as.vector(x))  # in-memory realization
+        aperm(x, perm)
+    }
+)
 
 .subset_DelayedArray <- function(x, i, j, ..., drop=TRUE)
 {

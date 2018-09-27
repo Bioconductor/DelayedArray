@@ -612,21 +612,6 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### drop()
-###
-
-setMethod("drop", "DelayedArray",
-    function(x)
-    {
-        perm <- which(dim(x) != 1L)
-        if (length(perm) == 0L)
-            perm <- 1L
-        aperm(x, perm)
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### dim() setter
 ###
 ### On a DelayedArray object, the dim() setter can only be used to drop some

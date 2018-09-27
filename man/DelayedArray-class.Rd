@@ -41,13 +41,12 @@
 \alias{aperm.DelayedArray}
 \alias{aperm,DelayedArray-method}
 
-\alias{drop,DelayedArray-method}
-
 \alias{dim<-,DelayedArray-method}
 \alias{dimnames<-,DelayedArray-method}
 \alias{names,DelayedArray-method}
 \alias{names<-,DelayedArray-method}
 
+\alias{drop,DelayedArray-method}
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
 
@@ -122,11 +121,12 @@ type(x)
   i.e. \code{dim()}, \code{length()}, and \code{dimnames()}.
   In addition, they support \code{seed()}, \code{nseed()}, \code{path()},
   and \code{type()}.
+
   \code{type()} is the DelayedArray equivalent of \code{typeof()} (or
-  \code{storage.mode()}) for ordinary arrays. Note that, for convenience
-  and consistency, \code{type()} also supports ordinary arrays and, more
-  generally, any array-like object, that is, any object \code{x} for which
-  \code{dim(x)} is not NULL.
+  \code{storage.mode()}) for ordinary arrays and vectors. Note that, for
+  convenience and consistency, \code{type()} also supports ordinary arrays
+  and vectors. It also supports any array-like object, that is, any object
+  \code{x} for which \code{dim(x)} is not NULL.
 
   \code{dimnames()}, \code{seed()}, and \code{path()} also work as setters.
 }
@@ -139,6 +139,9 @@ type(x)
           of the form \code{x[i_1, i_2, ..., i_n]} with one (possibly missing)
           subscript per dimension) returns a DelayedArray object where the
           subsetting is actually delayed. So it's a very light operation.
+          One notable exception to this is when \code{drop=TRUE} and the
+          result has only one dimension, in which case it is returned as an
+          ordinary vector (atomic or list).
           Note that NAs in the subscripts are not supported.
 
     \item \emph{Linear single bracket subsetting} (a.k.a. 1D-style subsetting,

@@ -229,17 +229,18 @@ extract_array_by_Nindex <- function(x, Nindex)
 ### Conflicts with Biostrings::type!
 setGeneric("type", function(x) standardGeneric("type"))
 
-setMethod("type", "array", function(x) typeof(x))
-
 ### type() will work out-of-the-box on any array-like object that supports
 ### extract_array().
 setMethod("type", "ANY",
     function(x)
     {
+        if (is.vector(x) || is.array(x))
+            return(typeof(x))
         x_dim <- dim(x)
         if (is.null(x_dim))
-            stop(wmsg("type() only supports array-like objects. ",
-                      "See ?type in the DelayedArray package."))
+            stop(wmsg("type() only supports array-like objects ",
+                      "and ordinary vectors. See ?type in the ",
+                      "DelayedArray package."))
         type(extract_empty_array(x))
     }
 )
