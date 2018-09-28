@@ -70,6 +70,8 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
           than) \code{maxvol}.
     \item The box fits in the \emph{constraining box} i.e. in the box whose
           dimensions are specified via \code{maxdim}.
+    \item The box has a non-zero volume if the \emph{constraining box} has
+          a non-zero volume.
     \item The shape of the box is as close as possible to the requested shape.
   }
 

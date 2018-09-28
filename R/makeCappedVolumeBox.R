@@ -7,7 +7,7 @@
 ### makeCappedVolumeBox()
 ###
 
-### 'maxvol' is assumed to be a single integer > 0 and < 'prod(maxdim)'
+### 'maxvol' is assumed to be a single integer >= 2 and < 'prod(maxdim)'.
 .make_capped_volume_hypercube_box <- function(maxvol, maxdim)
 {
     ans <- maxdim
@@ -40,14 +40,40 @@
     ans
 }
 
-### 'maxvol' is assumed to be a single integer > 0 and < 'prod(maxdim)'
+### 'maxvol' is assumed to be a single integer >= 2 and < 'prod(maxdim)'.
+### The algo used below could be improved. For exampe it does some weird
+### things like:
+###     > .make_capped_volume_scale_box(11, c(3, 50, 10))
+###     [1] 1 9 1
+###     > .make_capped_volume_scale_box(12, c(3, 50, 10))
+###     [1] 1 8 1
 .make_capped_volume_scale_box <- function(maxvol, maxdim)
 {
-    r <- (maxvol / prod(maxdim)) ^ (1 / length(maxdim))
-    as.integer(r * maxdim)
+    ## Some good properties of shrinkbox():
+    ## - The output dims are always >= 1.
+    ## - If r is < 1, then input dims that are > 1 will decrease and those
+    ##   at 1 will remain at 1.
+    shrinkbox <- function(bdim, r) pmax(as.integer(bdim * r), 1L)
+
+    p <- 1 / length(maxdim)
+    bdim <- maxdim                  # all(maxdim >= 1) is TRUE
+    ## Loop will typically go thru 2 to 18 iterations before it breaks.
+    ## An example that requires 18 iterations:
+    ## - maxvol <- 70000
+    ## - maxdim <- c(30, 15000000)
+    while (TRUE) {
+        bvol <- prod(bdim)          # can't be 0
+        if (bvol <= maxvol)
+            break
+        r <- (maxvol / bvol)^p      # < 1
+        bdim <- shrinkbox(bdim, r)  # reduce all dims (except those already
+                                    # at 1) so volume is guaranteed to reduce
+                                    # at each loop
+    }
+    bdim
 }
 
-### 'maxvol' is assumed to be a single integer > 0 and < 'prod(maxdim)'
+### 'maxvol' is assumed to be a single integer >= 2 and < 'prod(maxdim)'.
 .make_capped_volume_FDGF_box <- function(maxvol, maxdim)
 {
     p <- cumprod(maxdim)
@@ -69,7 +95,8 @@
 ### Return the dimensions of a box that satisfies the following properties:
 ###   1. Has a volume as close as possibe to (but not bigger than) 'maxvol'.
 ###   2. Fits in the "constraining box" i.e. in the box of dimensions 'maxdim'.
-###   3. Has a shape that is as close as possible to the requested shape.
+###   3. Has a non-zero volume if the "constraining box" has a non-zero volume.
+###   4. Has a shape that is as close as possible to the requested shape.
 makeCappedVolumeBox <- function(maxvol, maxdim, shape=c("hypercube",
                                                         "scale",
                                                         "first-dim-grows-first",
@@ -89,8 +116,11 @@ makeCappedVolumeBox <- function(maxvol, maxdim, shape=c("hypercube",
 
     shape <- match.arg(shape)
 
-    if (maxvol == 0L)
+    if (maxvol == 0L || any(maxdim == 0L))
         return(integer(length(maxdim)))
+
+    if (maxvol == 1L)
+        return(rep.int(1L, length(maxdim)))
 
     if (maxvol >= prod(maxdim))
         return(maxdim)
