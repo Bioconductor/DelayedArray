@@ -28,6 +28,20 @@ exportClasses(
     ## SparseArraySeed-class.R:
     SparseArraySeed,
 
+    ## DelayedOp-class.R:
+    DelayedOp,
+    DelayedUnaryOp,
+    DelayedSubset,
+    DelayedAperm,
+    DelayedUnaryIsoOp,
+    DelayedUnaryIsoOpStack,
+    DelayedUnaryIsoOpWithArgs,
+    DelayedSubassign,
+    DelayedDimnames,
+    DelayedNaryOp,
+    DelayedNaryIsoOp,
+    DelayedAbind,
+
     ## DelayedArray-class.R:
     DelayedArray, DelayedMatrix,
 
