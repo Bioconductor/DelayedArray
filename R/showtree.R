@@ -164,27 +164,9 @@ setMethod("simplify", "DelayedSubset",
         }
         if (is(x1, "DelayedSubassign")) {
             ## ACTION: swap ops.
-            x2 <- x
-            x2@seed <- x1@seed
-            x2 <- simplify(x2, incremental=TRUE)
-            if (is.null(dim(x1@Rvalue))) {
-                ## 'x1@Rvalue' is an ordinary vector (atomic or list) of
-                ## length 1
-                Lindex2 <- make_Lindex2(x@index, x1)
-                Rvalue2 <- x1@Rvalue
-            } else {
-                ## 'x1@Rvalue' is an array-like object
-                Mindex <- make_Mindex(x@index, x1)
-                Lindex2 <- get_Lindex2_from_Mindex(Mindex, x1@.nogap)
-                Rindex2 <- get_Rindex2_from_Mindex(Mindex, x1@.nogap)
-                Rvalue2 <- new_DelayedSubset(x1@Rvalue, Rindex2)
-                Rvalue2 <- simplify(Rvalue2, incremental=TRUE)
-            }
-            ## No need to update the ".nogap" slot.
-            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2,
-                                                  Lindex=Lindex2,
-                                                  Rvalue=Rvalue2,
-                                                  check=FALSE)
+            x1 <- subset_DelayedSubassign(x1, x@index)
+            x1@seed <- simplify(x1@seed, incremental=TRUE)
+            x1@Rvalue <- simplify(x1@Rvalue, incremental=TRUE)
             return(x1)
         }
         if (is(x1, "DelayedDimnames")) {

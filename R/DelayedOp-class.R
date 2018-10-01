@@ -778,10 +778,6 @@ summary.DelayedSubassign <-
 
 setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
 
-### Seed contract.
-### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
-### derivatives, and overwite their "extract_array" method.
-
 ### Do NOT use if 'x@Lindex' might contain duplicates! NAs are ok.
 ### The returned index won't contain NAs along the dimensions with no gap
 ### (i.e. along the dimensions for which 'x@.nogap' is TRUE).
@@ -815,7 +811,7 @@ make_Mindex <- function(index, x)
 }
 
 ### The returned index should never contain NAs!
-get_Lindex2_from_Mindex <- function(Mindex, nogap)
+.get_Lindex2_from_Mindex <- function(Mindex, nogap)
 {
     lapply(seq_along(Mindex),
         function(along) {
@@ -829,12 +825,12 @@ get_Lindex2_from_Mindex <- function(Mindex, nogap)
         })
 }
 
-### A more efficient version of get_Lindex2_from_Mindex(make_Mindex(...))
+### A more efficient version of .get_Lindex2_from_Mindex(make_Mindex(...))
 ### that can only be used when the right value of the subassignment is an
 ### ordinary vector of length 1.
 ### Assume that 'x@Lindex' does NOT contain NAs. Duplicates are ok.
 ### The returned index should never contain NAs!
-make_Lindex2 <- function(index, x)
+.make_Lindex2 <- function(index, x)
 {
     stopifnot(is(x, "DelayedSubassign"),
               is.list(index),
@@ -855,7 +851,7 @@ make_Lindex2 <- function(index, x)
 }
 
 ### The returned index should never contain NAs!
-get_Rindex2_from_Mindex <- function(Mindex, nogap)
+.get_Rindex2_from_Mindex <- function(Mindex, nogap)
 {
     lapply(seq_along(Mindex),
         function(along) {
@@ -866,11 +862,47 @@ get_Rindex2_from_Mindex <- function(Mindex, nogap)
         })
 }
 
+### 'index' is assumed to be a normalized Nindex compatible with
+### DelayedSubassign object 'x'.
+### Return a DelayedSubassign object that represents the action of subsetting
+### 'x' with 'index'. This new DelayedSubassign object is obtained by:
+### - replacing 'x@Lindex' with an index that contains strictly sorted
+###   subscripts with no NAs;
+### - wrapping 'x@seed' and 'x@Rvalue' in DelayedSubset objects.
+subset_DelayedSubassign <- function(x, index=NULL)
+{
+    stopifnot(is(x, "DelayedSubassign"))
+    if (is.null(index))
+        index <- vector("list", length=length(x@Lindex))
+    new_seed <- new2("DelayedSubset", seed=x@seed, index=index, check=FALSE)
+    if (is.null(dim(x@Rvalue))) {
+        ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
+        new_Lindex <- .make_Lindex2(index, x)
+        new_Rvalue <- x@Rvalue
+    } else {
+        ## 'x@Rvalue' is an array-like object
+        Mindex <- make_Mindex(index, x)
+        new_Lindex <- .get_Lindex2_from_Mindex(Mindex, x@.nogap)
+        Rindex2 <- .get_Rindex2_from_Mindex(Mindex, x@.nogap)
+        new_Rvalue <- new2("DelayedSubset", seed=x@Rvalue, index=Rindex2,
+                                            check=FALSE)
+    }
+    ## No need to update the ".nogap" slot.
+    BiocGenerics:::replaceSlots(x, seed=new_seed,
+                                   Lindex=new_Lindex,
+                                   Rvalue=new_Rvalue,
+                                   check=FALSE)
+}
+
+### Seed contract.
+### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
+### derivatives, and overwite their "extract_array" method.
+
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
     if (is.null(dim(x@Rvalue))) {
         ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
-        Lindex2 <- make_Lindex2(index, x)
+        Lindex2 <- .make_Lindex2(index, x)
         if (all(S4Vectors:::sapply_isNULL(Lindex2))) {
             a_dim <- get_Nindex_lengths(index, dim(x@seed))
             a <- array(x@Rvalue, a_dim)
@@ -880,12 +912,12 @@ get_Rindex2_from_Mindex <- function(Mindex, nogap)
     } else {
         ## 'x@Rvalue' is an array-like object
         Mindex <- make_Mindex(index, x)
-        Lindex2 <- get_Lindex2_from_Mindex(Mindex, x@.nogap)
+        Lindex2 <- .get_Lindex2_from_Mindex(Mindex, x@.nogap)
         if (all(S4Vectors:::sapply_isNULL(Lindex2))) {
             a <- extract_array(x@Rvalue, Mindex)
             return(a)
         }
-        Rindex2 <- get_Rindex2_from_Mindex(Mindex, x@.nogap)
+        Rindex2 <- .get_Rindex2_from_Mindex(Mindex, x@.nogap)
         a2 <- extract_array(x@Rvalue, Rindex2)
     }
     a <- extract_array(x@seed, index)
