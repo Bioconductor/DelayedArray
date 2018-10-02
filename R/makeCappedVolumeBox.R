@@ -116,14 +116,14 @@ makeCappedVolumeBox <- function(maxvol, maxdim, shape=c("hypercube",
 
     shape <- match.arg(shape)
 
-    if (maxvol == 0L || any(maxdim == 0L))
+    if (maxvol >= prod(maxdim))
+        return(maxdim)
+
+    if (maxvol == 0L)
         return(integer(length(maxdim)))
 
     if (maxvol == 1L)
         return(rep.int(1L, length(maxdim)))
-
-    if (maxvol >= prod(maxdim))
-        return(maxdim)
 
     FUN <- switch(shape,
                   hypercube=.make_capped_volume_hypercube_box,
