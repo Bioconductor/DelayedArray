@@ -21,6 +21,9 @@
 \alias{DelayedArray,DelayedArray-method}
 \alias{DelayedArray,DelayedOp-method}
 
+\alias{class:DelayedArray1}
+\alias{DelayedArray1-class}
+\alias{DelayedArray1}
 \alias{updateObject,DelayedArray-method}
 
 \alias{type}

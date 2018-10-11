@@ -44,6 +44,7 @@ exportClasses(
 
     ## DelayedArray-class.R:
     DelayedArray, DelayedMatrix,
+    DelayedArray1,
 
     ## chunkGrid.R:
     integer_OR_NULL,
