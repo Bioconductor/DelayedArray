@@ -36,7 +36,7 @@
 ###
 
 ### This virtual class and its 8 concrete subclasses are for internal use
-### only and are not exported.
+### only and never exposed to the end user.
 setClass("DelayedOp", contains="Array", representation("VIRTUAL"))
 
 ### NOT exported for now.
@@ -851,12 +851,12 @@ make_Mindex <- function(index, x)
 }
 
 ### The returned index should never contain NAs!
-.get_Rindex2_from_Mindex <- function(Mindex, nogap)
+.get_Rindex_from_Mindex <- function(Mindex, Lindex2)
 {
     lapply(seq_along(Mindex),
         function(along) {
             m <- Mindex[[along]]
-            if (nogap[[along]])
+            if (is.null(Lindex2[[along]]))
                 return(m)
             m[!is.na(m)]
         })
@@ -866,32 +866,37 @@ make_Mindex <- function(index, x)
 ### DelayedSubassign object 'x'.
 ### Return a DelayedSubassign object that represents the action of subsetting
 ### 'x' with 'index'. This new DelayedSubassign object is obtained by:
-### - replacing 'x@Lindex' with an index that contains strictly sorted
+### - replacing 'x@Lindex' with a left index that contains strictly sorted
 ###   subscripts with no NAs;
-### - wrapping 'x@seed' and 'x@Rvalue' in DelayedSubset objects.
+### - replacing 'x@seed' with a DelayedSubset object that represents the
+###   action of subsetting it with 'index';
+### - if 'x@Rvalue' is an array-like object, replacing it with a DelayedSubset
+###   object that represents the action of subsetting it with the index
+###   returned by .get_Rindex_from_Mindex().
 subset_DelayedSubassign <- function(x, index=NULL)
 {
     stopifnot(is(x, "DelayedSubassign"))
     if (is.null(index))
         index <- vector("list", length=length(x@Lindex))
-    new_seed <- new2("DelayedSubset", seed=x@seed, index=index, check=FALSE)
+    ans_seed <- new2("DelayedSubset", seed=x@seed, index=index, check=FALSE)
     if (is.null(dim(x@Rvalue))) {
         ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
-        new_Lindex <- .make_Lindex2(index, x)
-        new_Rvalue <- x@Rvalue
+        ans_Lindex <- .make_Lindex2(index, x)
+        ans_Rvalue <- x@Rvalue
     } else {
         ## 'x@Rvalue' is an array-like object
         Mindex <- make_Mindex(index, x)
-        new_Lindex <- .get_Lindex2_from_Mindex(Mindex, x@.nogap)
-        Rindex2 <- .get_Rindex2_from_Mindex(Mindex, x@.nogap)
-        new_Rvalue <- new2("DelayedSubset", seed=x@Rvalue, index=Rindex2,
+        ans_Lindex <- .get_Lindex2_from_Mindex(Mindex, x@.nogap)
+        Rindex <- .get_Rindex_from_Mindex(Mindex, ans_Lindex)
+        ans_Rvalue <- new2("DelayedSubset", seed=x@Rvalue, index=Rindex,
                                             check=FALSE)
     }
-    ## No need to update the ".nogap" slot.
-    BiocGenerics:::replaceSlots(x, seed=new_seed,
-                                   Lindex=new_Lindex,
-                                   Rvalue=new_Rvalue,
-                                   check=FALSE)
+    ans_nogap <- subscript_has_nogap(ans_Lindex, dim(ans_seed))
+    new2("DelayedSubassign", seed=ans_seed,
+                             Lindex=ans_Lindex,
+                             Rvalue=ans_Rvalue,
+                             .nogap=ans_nogap,
+                             check=FALSE)
 }
 
 ### Seed contract.
@@ -900,28 +905,23 @@ subset_DelayedSubassign <- function(x, index=NULL)
 
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
-    if (is.null(dim(x@Rvalue))) {
-        ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
-        Lindex2 <- .make_Lindex2(index, x)
-        if (all(S4Vectors:::sapply_isNULL(Lindex2))) {
-            a_dim <- get_Nindex_lengths(index, dim(x@seed))
-            a <- array(x@Rvalue, a_dim)
-            return(a)
-        }
-        a2 <- x@Rvalue
+    x2 <- subset_DelayedSubassign(x, index)
+    if (is.null(dim(x2@Rvalue))) {
+        ## 'x2@Rvalue' is an ordinary vector (atomic or list) of length 1
+        a2 <- x2@Rvalue
     } else {
-        ## 'x@Rvalue' is an array-like object
-        Mindex <- make_Mindex(index, x)
-        Lindex2 <- .get_Lindex2_from_Mindex(Mindex, x@.nogap)
-        if (all(S4Vectors:::sapply_isNULL(Lindex2))) {
-            a <- extract_array(x@Rvalue, Mindex)
-            return(a)
-        }
-        Rindex2 <- .get_Rindex2_from_Mindex(Mindex, x@.nogap)
-        a2 <- extract_array(x@Rvalue, Rindex2)
+        ## 'x2@Rvalue' is an array-like object
+        a2 <- extract_array(x2@Rvalue@seed, x2@Rvalue@index)
     }
-    a <- extract_array(x@seed, index)
-    replace_by_Nindex(a, Lindex2, a2)
+    if (all(x2@.nogap)) {
+        if (is.null(dim(x2@Rvalue))) {
+            a_dim <- get_Nindex_lengths(index, dim(x2@seed))
+            a2 <- array(a2, a_dim)
+        }
+        return(a2)
+    }
+    a <- extract_array(x2@seed@seed, x2@seed@index)
+    replace_by_Nindex(a, x2@Lindex, a2)
 }
 
 setMethod("extract_array", "DelayedSubassign",

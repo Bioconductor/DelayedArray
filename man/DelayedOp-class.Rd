@@ -214,7 +214,7 @@ is_noop(x)
 
 \note{
   The DelayedOp virtual class and its 8 concrete subclasses are for
-  internal use only and are not exported.
+  internal use only and never exposed to the end user.
 }
 
 \seealso{
