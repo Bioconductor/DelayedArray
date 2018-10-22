@@ -42,11 +42,46 @@
     as(sink, "DelayedArray")
 }
 
+setMethod("%*%", c("ANY", "DelayedMatrix"),
+    function(x, y)
+    {
+        if (!is.matrix(x)) {
+            if (!is.vector(x))
+                stop(wmsg("matrix multiplication of a ", class(x), " object ",
+                          "by a ", class(y), " object is not supported"))
+            x_len <- length(x)
+            y_nrow <- nrow(y)
+            if (x_len != 0L && x_len != y_nrow)
+                stop(wmsg("non-conformable arguments"))
+            x <- matrix(x, ncol=y_nrow)
+        }
+        .BLOCK_mult_by_left_matrix(x, y)
+    }
+)
+
+setMethod("%*%", c("DelayedMatrix", "ANY"),
+    function(x, y)
+    {
+        if (!is.matrix(y)) {
+            if (!is.vector(y))
+                stop(wmsg("matrix multiplication of a ", class(x), " object ",
+                          "by a ", class(y), " object is not supported"))
+            y_len <- length(y)
+            x_ncol <- ncol(x)
+            if (y_len != 0L && y_len != x_ncol)
+                stop(wmsg("non-conformable arguments"))
+            y <- matrix(y, nrow=x_ncol)
+        }
+        t(t(y) %*% t(x))
+    }
+)
+
 .BLOCK_matrix_mult <- function(x, y)
 {
-    stop(wmsg("multiplication of 2 DelayedMatrix objects is not ",
-              "supported, only multiplication of an ordinary matrix by ",
-              "a DelayedMatrix object at the moment"))
+    stop(wmsg("Matrix multiplication of 2 DelayedMatrix derivatives is not ",
+              "supported at the moment. Only matrix multiplication between ",
+              "a DelayedMatrix derivative and an ordinary matrix or vector ",
+              "is supported for now."))
 
     x_dim <- dim(x)
     y_dim <- dim(y)
@@ -58,14 +93,6 @@
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
 }
-
-setMethod("%*%", c("DelayedMatrix", "matrix"),
-    function(x, y) t(t(y) %*% t(x))
-)
-
-setMethod("%*%", c("matrix", "DelayedMatrix"),
-    .BLOCK_mult_by_left_matrix
-)
 
 setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 

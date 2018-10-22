@@ -73,8 +73,8 @@
 \alias{t}
 
 \alias{\%*\%}
-\alias{\%*\%,DelayedMatrix,matrix-method}
-\alias{\%*\%,matrix,DelayedMatrix-method}
+\alias{\%*\%,ANY,DelayedMatrix-method}
+\alias{\%*\%,DelayedMatrix,ANY-method}
 \alias{\%*\%,DelayedMatrix,DelayedMatrix-method}
 
 \title{Common operations on DelayedArray objects}
