@@ -1,0 +1,132 @@
+CHANGES IN VERSION 0.8.0
+------------------------
+
+NEW FEATURES
+
+    o Add get/setAutoBlockSize(), getAutoBlockLength(),
+      get/setAutoBlockShape() and get/setAutoGridMaker().
+
+    o Add rowGrid() and colGrid(), in addition to blockGrid().
+
+    o Add get/setAutoBPPARAM() to control the automatic 'BPPARAM' used by
+      blockApply().
+
+    o Reduce memory usage when realizing a sparse DelayedArray to disk
+    
+      On-disk realization of a DelayedArray object that is reported to be sparse
+      (by is_sparse()) to a "sparsity-optimized" backend (i.e. to a backend with
+      a memory efficient write_sparse_block() like the TENxMatrix backend imple-
+      mented in the HDF5Array package) now preserves sparse representation of
+      the data all the way. More precisely, each block of data is now kept in
+      a sparse form during the 3 steps that it goes thru: read from seed,
+      realize in memory, and write to disk.
+
+    o showtree() now displays whether a tree node or leaf is considered sparse
+      or not.
+
+    o Enhance "aperm" method and dim() setter for DelayedArray objects. In
+      addition to allowing dropping "ineffective dimensions" (i.e. dimensions
+      equal to 1) from a DelayedArray object, aperm() and the dim() setter now
+      allow adding "ineffective dimensions" to it.
+
+    o Enhance subassignment to a DelayedArray object.
+    
+      So far subassignment to a DelayedArray object only supported the **linear
+      form** (i.e. x[i] <- value) with strong restrictions (the subscript 'i'
+      must be a logical DelayedArray of the same dimensions as 'x', and 'value'
+      must be an ordinary vector of length 1).
+    
+      In addition to this linear form, subassignment to a DelayedArray object
+      now supports the **multi-dimensional form** (e.g. x[3:1, , 6] <- 0). In
+      this form, one subscript per dimension is supplied, and each subscript
+      can be missing or be anything that multi-dimensional subassignment to
+      an ordinary array supports. The replacement value (a.k.a. the right
+      value) can be an array-like object (e.g. ordinary array, dgCMatrix object,
+      DelayedArray object, etc...) or an ordinary vector of length 1. Like the
+      linear form, the multi-dimensional form is also implemented as a delayed
+      operation.
+
+    o Re-implement internal helper simple_abind() in C and support long arrays.
+      simple_abind() is the workhorse behind realization of arbind() and
+      acbind() operations on DelayedArray objects.
+
+    o Add "table" and (restricted) "unique" methods for DelayedArray objects,
+      both block-processed.
+
+    o range() (block-processed) now supports the 'finite' argument on a
+      DelayedArray object.
+
+    o %*% (block-processed) now works between a DelayedMatrix object and an
+      ordinary vector.
+
+    o Improve support for DelayedArray of type "list".
+
+    o Add TENxMatrix to list of supported realization backends.
+
+    o Add backend-agnostic RealizationSink() constructor.
+
+    o Add linearInd() utility for turning array indices into linear indices.
+      Note that linearInd() performs the reverse transformation of
+      base::arrayInd().
+
+    o Add low-level utilities mapToGrid() and mapToRef() for mapping reference
+      array positions to grid positions and vice-versa.
+
+    o Add downsample() for reducing the "resolution" of an ArrayGrid object.
+
+    o Add maxlength() generic and methods for ArrayGrid objects.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Multi-dimensional subsetting is no more delayed when drop=TRUE and the
+      result has only one dimension. In this case the result now is returned
+      as an **ordinary** vector (atomic or list). This is the only case of
+      multi-dimensional single bracket subsetting that is not delayed.
+
+    o Rename defaultGrid() -> blockGrid(). The 'max.block.length' argument
+      is replaced with the 'block.length' argument. 2 new arguments are
+      added: 'chunk.grid' and 'block.shape'.
+
+    o Major improvements to the block processing mechanism.
+      All block-processed operations (except realization by block) now support
+      blocks of **arbitrary** geometry instead of column-oriented blocks only.
+      'blockGrid(x)', which is called by the block-processed operations to get
+      the grid of blocks to use on 'x', has the following new features:
+      1) It's "chunk aware". This means that, when the chunk grid is known (i.e.
+         when 'chunkGrid(x)' is not NULL), 'blockGrid(x)' defines blocks that
+         are "compatible" with the chunks i.e. that any chunk is fully contained
+         in a block. In other words, blocks are chosen so that chunks don't
+         cross their boundaries.
+      2) When the chunk grid is unknown (i.e. when 'chunkGrid(x)' is NULL),
+         blocks are "isotropic", that is, they're as close as possible to an
+         hypercube instead of being "column-oriented" (column-oriented blocks,
+         also known as "linear blocks", are elongated along the 1st dimension,
+         then along the 2nd dimension, etc...)
+      3) The returned grid has the lowest "resolution" compatible with
+         'getAutoBlockSize()', that is, the blocks are made as big as possible
+         as long as their size in memory doesn't exceed 'getAutoBlockSize()'.
+         Note that this is not a new feature. What is new though is that an
+         exception now is made when the chunk grid is known and some chunks
+         are >= 'getAutoBlockSize()', in which case 'blockGrid(x)' returns a
+         grid that is the same as the chunk grid.
+      These new features are supposed to make the returned grid "optimal" for
+      block processing. (Some benchmarks still need to be done to
+      confirm/quantify this.)
+
+    o The automatic block size now is set to 100 Mb (instead of 4.5 Mb
+      previously) at package startup. Use setAutoBlockSize() to change the
+      automatic block size.
+
+    o No more 'BPREDO' argument to blockApply().
+
+    o Replace block_APPLY_and_COMBINE() with blockReduce().
+
+BUG FIXES
+
+    o No-op operations on a DelayedArray derivative really act like no-ops.
+      Operating on a DelayedArray derivative (e.g. RleArray, HDF5Array or
+      GDSArray) will now return an objet of the original class if the result
+      is "pristine" (i.e. if it doesn't carry delayed operations) instead of
+      degrading the object to a DelayedArray instance. This applies for example
+      to 't(t(x))' or 'dimnames(x) <- dimnames(x)' etc...
+
