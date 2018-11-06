@@ -96,3 +96,10 @@ setMethod("%*%", c("DelayedMatrix", "ANY"),
 
 setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
+setMethod("crossprod", c("DelayedMatrix", "ANY"), function(x, y) t(x) %*% y)
+
+setMethod("crossprod", c("ANY", "DelayedMatrix"), function(x, y) t(x) %*% y)
+
+setMethod("tcrossprod", c("DelayedMatrix", "ANY"), function(x, y) x %*% t(y))
+
+setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
