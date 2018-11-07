@@ -112,84 +112,123 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
 ### chunks of data can only be read in an atomic manner.
 ###
 
-.define_atomic_boundaries <- function(x)
-# Defines the atomic boundaries across rows or columns of 'x'.
-# Atomic boundaries refer to chunks that must be read in their entirety.
-# Wholly in-memory matrices have trivial boundaries, i.e., per row/column.
-# Boundaries for HDF5 matrices are defined by the chunks.
+.define_atomic_chunks <- function(x)
+# Defines atomic chunks across rows or columns of 'x'. These are subsets of 
+# contiguous rows or columns that must be read in their entirety. Wholly 
+# in-memory matrices have trivial boundaries, i.e., per row/column. Chunks
+# for HDF5 matrices are defined by the physical layout.
+#
+# The end-position boundary of each chunk along the relevant dimension
+# is returned, along with the chunk size (in terms of the numbers of rows
+# or columns it spans) and the cost of reading the chunk. The final
+# term is usually proportional to the size and can be weighted differently
+# if the file is file-backed vs in memory.
 {
     grid <- chunkGrid(x)
     if (is.null(grid)) {
-        out <- list(row=seq_len(nrow(x)), col=seq_len(ncol(x)))
+        row_out <- list(
+            bound=seq_len(nrow(x)), 
+            size=rep(1L, nrow(x))
+        )
+        row_out$cost <- row_out$size
+
+        col_out <- list(
+            bound=seq_len(ncol(x)), 
+            size=rep(1L, ncol(x))
+        )
+        col_out$cost <- col_out$size
+
     } else {
         N <- dim(grid)
         bygrid <- dims(grid)
-        out <- list(
-            row=cumsum(bygrid[seq_len(N[1]),1]),
-            col=cumsum(bygrid[seq_len(N[2]) * N[1],2])
+
+        row_dims <- bygrid[seq_len(N[1]),1]
+        row_out <- list(
+            bound=cumsum(row_dims),
+            size=row_dims
         )
+        # file-backed penalty (relative to 1).
+        # TODO: accommodate penalties for combined seeds that are only partially file-backed.
+        row_out$cost <- row_out$size * 10L 
+
+        col_dims <- bygrid[seq_len(N[2]) * N[1],2]
+        col_out <- list(
+            bound=cumsum(col_dims),
+            size=col_dims
+        )
+        col_out$cost <- col_out$size * 10L
     }
-    out
+
+    list(row=row_out, col=col_out)
 }
 
-.split_by_dimension <- function(boundaries, nworkers) 
+.split_by_dimension <- function(dim_info, nworkers) 
 # Splits a dimension of the matrix into 'nworkers' jobs,
-# rounded up to the nearest 'boundaries' where possible. 
+# rounded up to the nearest chunk boundaries where possible. 
+# Also computes the cost of the split for each job.
 {
+    boundaries <- dim_info$bound
+    chunk_size <- dim_info$size
+    chunk_cost <- dim_info$cost
+
     ndim <- tail(boundaries, 1) # last boundary is always the matrix end.
     ideal_split <- pmin(ndim, ndim/nworkers * seq_len(nworkers))
     rounded <- findInterval(ideal_split, boundaries, left.open=TRUE) + 1L
     by_bound <- rle(rounded)
-    bound_val <- by_bound$values
+    bound_idx <- by_bound$values
     bound_len <- by_bound$lengths
 
     # This part could be converted to C for speed, 
     # though for small numbers of workers this is probably negligible.
+    # TODO: cost balancing across workers.
     limits <- integer(nworkers)
     costs <- integer(nworkers)
     current <- 0L
 
-    for (i in seq_along(bound_val)) {
-        v <- bound_val[i]
+    for (i in seq_along(bound_idx)) {
+        b <- bound_idx[i]
         l <- bound_len[i]
 
         if (l==1L) {
-            cur_bound <- boundaries[v]
-            limits[current + 1L] <- cur_bound
-            if (current) {
-                costs[current + 1L] <- cur_bound - limits[current]
-            } else { 
-                costs[current + 1L] <- cur_bound
-            }
+            # One limit assigned to one chunk; the cost is equal
+            # to the sum of per-chunk costs for all chunks since
+            # the previous rounded limit.
+            limits[current + 1L] <- boundaries[b]
+            last_b <- if (i==1L) 0L else bound_idx[i-1L]
+            costs[current + 1L] <- sum(chunk_cost[seq(last_b + 1L, b)])
 
         } else {
-            if (v==1L) {
-                lower <- 0L
-            } else {
-                lower <- boundaries[v-1L]
-            }
-            cur_size <- boundaries[v] - lower
+            # Multiple limits assigned to one chunk; splitting
+            # the chunk into subchunks for distribution.
+            cur_size <- chunk_size[b]
             sub_size <- ceiling(cur_size/l)
             sub_split <- pmin(cur_size, sub_size * seq_len(l))
 
             chosen <- current + seq_len(l)
-            limits[chosen] <- sub_split + lower 
-            costs[chosen] <- cur_size
+            limits[chosen] <- sub_split + boundaries[b] - cur_size 
+
+            # Cost for each job is equal to the cost of the chunk. 
+            costs[chosen] <- chunk_cost[b]
         }
 
         current <- current + l
     }
 
-    list(split=limits, cost=costs)    
+    list(split=limits, cost=costs)
 }
 
-.evaluate_split_costs <- function(split, boundaries) 
-# Given a split, evaluate the costs with respect to read atomicity. 
-# To be used when 'split' is computed from a different matrix than 'boundaries'.
+.evaluate_split_costs <- function(split, dim_info) 
+# Given a split, evaluate the costs with respect to chunk atomicity. 
+# To be used when 'split' is computed from a different matrix than 'dim_info'.
 {
-    upper <- findInterval(split, boundaries, left.open=TRUE) + 1L
-    lower <- findInterval(head(split, -1L), boundaries)
-    boundaries[upper] - c(0L, boundaries[lower])
+    boundaries <- dim_info$bound
+    chunk_cost <- dim_info$cost
+
+    last_chunk <- findInterval(split, boundaries, left.open=TRUE) + 1L
+    prev_chunk <- findInterval(c(1L, head(split, -1L) + 1L), boundaries, left.open=TRUE)
+
+    cum_cost <- c(0L, cumsum(chunk_cost))
+    cum_cost[last_chunk+1L] - cum_cost[prev_chunk+1L]
 }
 
 .dispatch_mult <- function(x, y, nworkers, transposed.x=FALSE, transposed.y=FALSE) 
@@ -197,11 +236,11 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
 # Assessing based on the maximum cost for a given worker under each scheme,
 # with the aim being to minimize the maximum time to complete all jobs.
 {
-    atomic_x <- .define_atomic_boundaries(x)
+    atomic_x <- .define_atomic_chunks(x)
     nr_x <- as.double(nrow(x)) # use double to avoid overflow.
     nc_x <- as.double(ncol(x))
 
-    atomic_y <- .define_atomic_boundaries(y)
+    atomic_y <- .define_atomic_chunks(y)
     nr_y <- as.double(nrow(y))
     nc_y <- as.double(ncol(y))
 
@@ -219,13 +258,14 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
         nc_y <- tmp
     }
 
-    # Splitting 'x' by row, and multiplying with all of 'y'.
     x_by_row <- .split_by_dimension(atomic_x$row, nworkers)
-    cost_x_by_row <- max(x_by_row$cost * nc_x) + as.double(length(y))
+    y_by_col <- .split_by_dimension(atomic_y$col, nworkers)
+
+    # Splitting 'x' by row, and multiplying with all of 'y'.
+    cost_x_by_row <- max(x_by_row$cost * nc_x) + nr_y * sum(y_by_col$cost)
 
     # Splitting 'y' by column and multiplying with all of 'x'.
-    y_by_col <- .split_by_dimension(atomic_y$col, nworkers)
-    cost_y_by_col <- as.double(length(x)) + max(nr_y * y_by_col$cost)
+    cost_y_by_col <- sum(x_by_row$cost) * nc_x + max(nr_y * y_by_col$cost)
 
     # Splitting both of them by the common dimension.
     common_x <- .split_by_dimension(atomic_x$col, nworkers)
@@ -243,7 +283,7 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
 .dispatch_self <- function(x, nworkers, transposed=FALSE) 
 # Decides how to split jobs across multiple workers for crossprod(x).
 {
-    atomic <- .define_atomic_boundaries(x)
+    atomic <- .define_atomic_chunks(x)
     nr <- as.double(nrow(x)) # use double to avoid overflow.
     nc <- as.double(ncol(x))
 
@@ -257,7 +297,7 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
     # Splitting 'x' by column, and taking the crossproduct with all of 'x'.
     # This is the same the other way around, so we don't bother computing that.
     single <- .split_by_dimension(atomic$col, nworkers)
-    cost_single <- max(nr * single$cost) + as.double(length(x))
+    cost_single <- max(nr * single$cost) + sum(single$cost) * nr
 
     # Splitting by the common dimension, i.e., along the rows of 'x'
     # and taking the crossproduct of each split block.
@@ -265,7 +305,7 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
     cost_both <- max(both$cost * nc) * 2
 
     all_options <- c(both=cost_both, single=cost_single)
-    choice <- names(all_options)[which.min(all.options)]
+    choice <- names(all_options)[which.min(all_options)]
     splits <- switch(choice, both=both$split, single=single$split)
     list(choice=choice, split=splits)
 }
