@@ -103,3 +103,82 @@ setMethod("crossprod", c("ANY", "DelayedMatrix"), function(x, y) t(x) %*% y)
 setMethod("tcrossprod", c("DelayedMatrix", "ANY"), function(x, y) x %*% t(y))
 
 setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) x %*% t(y))
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Parallelized matrix multiplication
+###
+### We make some careful decisions about how to parallelize %*% operations.
+### This is done to minimize the redundant data processing, especially when
+### chunks of data can only be read in an atomic manner.
+###
+
+.define_atomic_boundaries <- function(x)
+# Defines the atomic boundaries across rows or columns of 'x'.
+# Atomic boundaries refer to chunks that must be read in their entirety.
+# Wholly in-memory matrices have trivial boundaries, i.e., per row/column.
+# Boundaries for HDF5 matrices are defined by the chunks.
+{
+    grid <- chunkGrid(x)
+    if (is.null(grid)) {
+        out <- list(row=seq_len(nrow(x)), col=seq_len(ncol(x)))
+    } else {
+        N <- dim(grid)
+        bygrid <- dims(grid)
+        out <- list(
+            row=cumsum(bygrid[seq_len(N[1]),1]),
+            col=cumsum(bygrid[seq_len(N[2]) * N[1],2])
+        )
+    }
+    out
+}
+
+.split_by_dimension <- function(ndim, nworkers, boundaries) 
+# Splits a dimension of the matrix into 'nworkers' jobs,
+# rounded up to the nearest 'boundaries' where possible. 
+{
+    ideal_split <- pmin(ndim, ndim/nworkers * seq_len(nworkers))
+    rounded <- findInterval(ideal_split, boundaries, left.open=TRUE) + 1L
+    by_bound <- rle(rounded)
+    bound_val <- by_bound$values
+    bound_len <- by_bound$lengths
+
+    # This part could be converted to C for speed, 
+    # though for small numbers of workers this is probably negligible.
+    limits <- integer(nworkers)
+    costs <- integer(nworkers)
+    current <- 0L
+
+    for (i in seq_along(bound_val)) {
+        v <- bound_val[i]
+        l <- bound_len[i]
+
+        if (l==1L) {
+            cur_bound <- boundaries[v]
+            limits[current + 1L] <- cur_bound
+            if (current) {
+                costs[current + 1L] <- cur_bound - limits[current]
+            } else { 
+                costs[current + 1L] <- cur_bound
+            }
+
+        } else {
+            if (v==1L) {
+                lower <- 0L
+            } else {
+                lower <- boundaries[v-1L]
+            }
+            cur_size <- boundaries[v] - lower
+            sub_size <- ceiling(cur_size/l)
+            sub_split <- pmin(cur_size, sub_size * seq_len(l))
+
+            chosen <- current + seq_len(l)
+            limits[chosen] <- sub_split + lower 
+            costs[chosen] <- cur_size
+        }
+
+        current <- current + l
+    }
+
+    list(bounds=limits, costs=costs)    
+}
+
