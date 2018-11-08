@@ -242,7 +242,7 @@ export(
     setAutoBlockSize, getAutoBlockSize,
     get_type_size, getAutoBlockLength,
     setAutoBlockShape, getAutoBlockShape,
-    blockGrid, rowGrid, colGrid,
+    blockGrid, rowGrid, colGrid, multGrids,
 
     ## showtree.R:
     showtree, contentIsPristine,

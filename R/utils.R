@@ -19,6 +19,56 @@ seq2 <- function(to, by)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Greatest common divisor and least common multiple of 2 integers
+###
+### Currently not used.
+###
+### TODO: Maybe should go to S4Vectors (and be implemented in C).
+###
+
+if (FALSE) {  # ------------ BEGIN DISABLED CODE ------------
+
+### Greatest common divisor of 2 integers.
+### Can be about 10x faster than this recursive (and vectorized) solution
+### from SO:
+###   https://stackoverflow.com/questions/21502181/finding-the-gcd-without-looping-r
+### Also check user input and handle edge cases.
+GCD <- function(x, y)
+{
+    stopifnot(isSingleNumber(x), isSingleNumber(y))
+    if (!is.integer(x))
+        x <- as.integer(x)
+    if (!is.integer(y))
+        y <- as.integer(y)
+    if (y == 0L) {
+        if (x == 0L)
+            return(NA_integer_)
+        return(x)
+    }
+    while (TRUE) {
+        r <- x %% y
+        if (r == 0L)
+            return(y)
+        x <- y
+        y <- r
+    }
+}
+
+### Least common multiple of 2 integers.
+LCM <- function(x, y)
+{
+    stopifnot(isSingleNumber(x), isSingleNumber(y))
+    if (!is.integer(x))
+        x <- as.integer(x)
+    if (!is.integer(y))
+        y <- as.integer(y)
+    gcd <- GCD(x, y)
+    (x %/% gcd) * y  # could overflow
+}
+}             # ------------- END DISABLED CODE -------------
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies
 ### of 'x'
 ###
@@ -219,8 +269,8 @@ get_rev_index <- function(part_index)
 ### set_user_option() / get_user_option()
 ###
 
-### --- DISABLED CODE ---
-if (FALSE) {
+if (FALSE) {  # ------------ BEGIN DISABLED CODE ------------
+
 ### In the context of BiocParallel::bplapply() and family, we want the workers
 ### to inherit the user-controlled options defined on the master. Workers can
 ### also modify the inherited options or define new user-controlled options
@@ -355,8 +405,7 @@ get_user_option <- function(name)
         stop(wmsg("Unkown DelayedArray user-controlled global option: ", name))
     user_options[[idx]]
 }
-}
-### --- END OF DISABLED CODE ---
+}             # ------------- END DISABLED CODE -------------
 
 set_user_option <- function(name, value)
 {
