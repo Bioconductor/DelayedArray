@@ -11,7 +11,8 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 Version: 0.9.0
 Encoding: UTF-8
 Author: Hervé Pagès <hpages@fredhutch.org>, with contributions from
-	Peter Hickey <peter.hickey@gmail.com>
+	Peter Hickey <peter.hickey@gmail.com> and
+	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 Depends: R (>= 3.4), methods, stats4, matrixStats, BiocGenerics (>= 0.27.1),

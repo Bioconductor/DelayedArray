@@ -290,6 +290,7 @@ lsHDF5DumpFile()
 ## Use setHDF5DumpFile() and setHDF5DumpName() from the HDF5Array package
 ## to control the location of automatically created HDF5 datasets.
 
-stopifnot(identical(as.array(P1), as.array(P2)))
+stopifnot(identical(dim(P1), dim(P2)),
+          all.equal(as.array(P1), as.array(P2)))
 }
 \keyword{methods}

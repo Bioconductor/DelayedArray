@@ -96,8 +96,11 @@ setMethod("%*%", c("DelayedMatrix", "ANY"),
 
 setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Costing calculations for parallelized multiplication
+###
+### by Aaron Lun
 ###
 ### We make some careful decisions about how to parallelize %*% operations.
 ### This is done to minimize the redundant data processing, especially when
@@ -105,21 +108,21 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 ###
 
 .define_atomic_chunks <- function(x)
-# Defines atomic chunks across rows or columns of 'x'. These are subsets of 
-# contiguous rows or columns that must be read in their entirety. Wholly 
+# Defines atomic chunks across rows or columns of 'x'. These are subsets of
+# contiguous rows or columns that must be read in their entirety. Wholly
 # in-memory matrices have trivial boundaries, i.e., per row/column. Chunks
 # for HDF5 matrices are defined by the physical layout.
 {
     grid <- chunkGrid(x)
     if (is.null(grid)) {
         row_out <- list(
-            bound=seq_len(nrow(x)), 
+            bound=seq_len(nrow(x)),
             size=rep(1L, nrow(x))
         )
         row_out$cost <- row_out$size
 
         col_out <- list(
-            bound=seq_len(ncol(x)), 
+            bound=seq_len(ncol(x)),
             size=rep(1L, ncol(x))
         )
         col_out$cost <- col_out$size
@@ -135,7 +138,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         )
         # file-backed penalty (relative to 1).
         # TODO: accommodate penalties for combined seeds that are only partially file-backed.
-        row_out$cost <- row_out$size * 10L 
+        row_out$cost <- row_out$size * 10L
 
         col_dims <- bygrid[seq_len(N[2]) * N[1],2]
         col_out <- list(
@@ -149,14 +152,14 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 }
 
 .grid_by_dimension <- function(x, nworkers)
-# Splits a dimension of the matrix into at least 'nworkers' blocks. 
-# If the block size is too large, it is reduced to obtain the desired 
+# Splits a dimension of the matrix into at least 'nworkers' blocks.
+# If the block size is too large, it is reduced to obtain the desired
 # number of blocks in order for parallelization to be effective.
 {
     old <- getAutoBlockSize()
     element_size <- switch(type(x), double=8, 4)
 
-    ideal_size_by_row <- ceiling(nrow(x)/nworkers) * as.double(ncol(x)) * element_size 
+    ideal_size_by_row <- ceiling(nrow(x)/nworkers) * as.double(ncol(x)) * element_size
     if (old > ideal_size_by_row) {
         setAutoBlockSize(ideal_size_by_row) # TODO: avoid setting the block size just to compute this?
         row_grid <- rowGrid(x)
@@ -165,7 +168,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         row_grid <- rowGrid(x)
     }
 
-    ideal_size_by_col <- ceiling(ncol(x)/nworkers) * as.double(nrow(x)) * 8 
+    ideal_size_by_col <- ceiling(ncol(x)/nworkers) * as.double(nrow(x)) * 8
     if (old > ideal_size_by_col) {
         setAutoBlockSize(ideal_size_by_col)
         col_grid <- colGrid(x)
@@ -177,8 +180,8 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     list(row=row_grid, col=col_grid)
 }
 
-.evaluate_split_costs <- function(split, dim_info) 
-# Given a split, evaluate the costs with respect to chunk atomicity. 
+.evaluate_split_costs <- function(split, dim_info)
+# Given a split, evaluate the costs with respect to chunk atomicity.
 {
     boundaries <- dim_info$bound
     chunk_cost <- dim_info$cost
@@ -190,7 +193,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     cum_cost[last_chunk+1L] - cum_cost[prev_chunk+1L]
 }
 
-.dispatch_mult <- function(x, y, nworkers, transposed.x=FALSE, transposed.y=FALSE) 
+.dispatch_mult <- function(x, y, nworkers, transposed.x=FALSE, transposed.y=FALSE)
 # Decides how to split jobs across multiple workers for x %*% y
 # or equivalent operations involving their transposes.
 {
@@ -201,13 +204,13 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     atomic_y <- .define_atomic_chunks(y)
     nr_y <- as.double(nrow(y))
     nc_y <- as.double(ncol(y))
-    
+
     x_grids <- .grid_by_dimension(x, nworkers)
     y_grids <- .grid_by_dimension(y, nworkers)
 
     # Mimicking the effect of supplying t(x) or t(y) (without actually computing them).
     if (transposed.x) {
-        atomic_x <- list(row=atomic_x$col, col=atomic_x$row) 
+        atomic_x <- list(row=atomic_x$col, col=atomic_x$row)
         x_grids <- list(row=t(x_grids$col), col=t(x_grids$row))
         tmp <- nr_x
         nr_x <- nc_x
@@ -215,7 +218,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     }
 
     if (transposed.y) {
-        atomic_y <- list(row=atomic_y$col, col=atomic_y$row) 
+        atomic_y <- list(row=atomic_y$col, col=atomic_y$row)
         y_grids <- list(row=t(y_grids$col), col=t(y_grids$row))
         tmp <- nr_y
         nr_y <- nc_y
@@ -236,11 +239,11 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     cost_x_by_row <- max(x_by_row_cost * nc_x) + nr_y * sum(y_by_col_cost)
     cost_y_by_col <- sum(x_by_row_cost) * nc_x + max(nr_y * y_by_col_cost)
     cost_common_x <- max(
-        nr_x * .evaluate_split_costs(x_by_col, atomic_x$col) + 
+        nr_x * .evaluate_split_costs(x_by_col, atomic_x$col) +
         .evaluate_split_costs(x_by_col, atomic_y$row) * nc_y
     )
     cost_common_y <- max(
-        nr_x * .evaluate_split_costs(y_by_row, atomic_x$col) + 
+        nr_x * .evaluate_split_costs(y_by_row, atomic_x$col) +
         .evaluate_split_costs(y_by_row, atomic_y$row) * nc_y
     )
 
@@ -250,12 +253,12 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     if (choice=="x_by_row" || choice=="y_by_col") {
         # Both are returned though only one is used at any given time;
         # see .super_BLOCK_mult() for why we need both available.
-        grid <- list(x=x_grids$row, y=y_grids$col) 
+        grid <- list(x=x_grids$row, y=y_grids$col)
 
     } else if (choice=="common_x") {
-        grid <- list(x=x_grids$col, 
+        grid <- list(x=x_grids$col,
             y=ArbitraryArrayGrid(list(
-                cumsum(dims(x_grids$col)[,2]), 
+                cumsum(dims(x_grids$col)[,2]),
                 as.integer(nc_y)
             ))
         )
@@ -279,7 +282,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     list(choice=choice, grid=grid)
 }
 
-.dispatch_self <- function(x, nworkers, transposed=FALSE) 
+.dispatch_self <- function(x, nworkers, transposed=FALSE)
 # Decides how to split jobs across multiple workers for crossprod(x).
 {
     atomic <- .define_atomic_chunks(x)
@@ -288,7 +291,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     grids <- .grid_by_dimension(x, nworkers)
 
     if (transposed) {
-        atomic <- list(row=atomic$col, col=atomic$row) 
+        atomic <- list(row=atomic$col, col=atomic$row)
         grids <- list(row=t(grids$col), col=t(grids$row))
         tmp <- nr
         nr <- nc
@@ -318,8 +321,11 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     list(choice=choice, grid=grid)
 }
 
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Parallelized schemes for matrix multiplication.
+###
+### by Aaron Lun
 ###
 ### This splits one or both matrices into blocks according to the
 ### desired parallelization scheme, and distributes them to workers.
@@ -367,8 +373,8 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     MULT(block_x, block_y)
 }
 
-.super_BLOCK_mult <- function(x, y, MULT, transposed.x=FALSE, transposed.y=FALSE, BPPARAM=bpparam()) 
-# Controller function that split jobs for a multiplication function "MULT". 
+.super_BLOCK_mult <- function(x, y, MULT, transposed.x=FALSE, transposed.y=FALSE, BPPARAM=bpparam())
+# Controller function that split jobs for a multiplication function "MULT".
 # This accommodates %*%, crossprod and tcrossprod for two arguments.
 {
     scheme_out <- .dispatch_mult(x, y, bpnworkers(BPPARAM), transposed.x=transposed.x, transposed.y=transposed.y)
@@ -384,18 +390,18 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
             x=x, y=y, MULT=MULT, BPPARAM=BPPARAM, REDUCE=function(x, y) x + y)
 
     } else {
-        # Switch to iteration over the other argument if the chosen one is 
+        # Switch to iteration over the other argument if the chosen one is
         # single-block and non-DA (at which point you might as well iterate
-        # over the other argument anyway). This avoids infinite recursion 
+        # over the other argument anyway). This avoids infinite recursion
         # when 'x' or 'y' fail to get realized via read_block().
         if (chosen_scheme=="x" && length(chosen_grids$x)==1L && !is(x, "DelayedMatrix")) {
-            chosen_scheme <- "y"            
+            chosen_scheme <- "y"
         } else if (chosen_scheme=="y" && length(chosen_grids$y)==1L && !is(y, "DelayedMatrix")) {
             chosen_scheme <- "x"
         }
 
         if (chosen_scheme=="x") {
-            out <- bpiterate(.single_grid_iterate(chosen_grids$x), FUN=.left_mult, 
+            out <- bpiterate(.single_grid_iterate(chosen_grids$x), FUN=.left_mult,
                 x=x, y=y, MULT=MULT, BPPARAM=BPPARAM)
             ans <- do.call(rbind, out)
         } else if (chosen_scheme=="y") {
@@ -431,8 +437,8 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
     MULT(block)
 }
 
-.super_BLOCK_self <- function(x, MULT, transposed=FALSE, BPPARAM=bpparam()) 
-# Controller function that split jobs for a multiplication function "MULT". 
+.super_BLOCK_self <- function(x, MULT, transposed=FALSE, BPPARAM=bpparam())
+# Controller function that split jobs for a multiplication function "MULT".
 # This accommodates crossprod and tcrossprod for single arguments.
 {
     scheme_out <- .dispatch_self(x, bpnworkers(BPPARAM), transposed=transposed)
@@ -444,7 +450,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
     register(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
 
     if (chosen_scheme=="single") {
-        out <- bpiterate(.single_grid_iterate(chosen_grids), FUN=.left_mult, 
+        out <- bpiterate(.single_grid_iterate(chosen_grids), FUN=.left_mult,
             x=x, y=x, MULT=MULT, BPPARAM=SerialParam())
         ans <- do.call(rbind, out)
 
@@ -460,3 +466,4 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
 setMethod("crossprod", c("DelayedMatrix", "missing"), function(x, y) .super_BLOCK_self(x, MULT=crossprod))
 
 setMethod("tcrossprod", c("DelayedMatrix", "missing"), function(x, y) .super_BLOCK_self(x, MULT=tcrossprod, transposed=TRUE))
+
