@@ -12,7 +12,7 @@ import(BiocGenerics)
 import(S4Vectors)
 import(IRanges)
 import(BiocParallel)
-
+importFrom(Matrix, crossprod, tcrossprod)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
@@ -313,7 +313,7 @@ export(
     realize,
 
     ## DelayedArray-utils.R:
-    pmax2, pmin2, apply,
+    pmax2, pmin2, apply, crossprod, tcrossprod,
 
     ## DelayedMatrix-stats.R:
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
@@ -334,7 +334,7 @@ exportMethods(
     chunkdim, chunkGrid,
     close,
     realize,
-    pmax2, pmin2, apply,
+    pmax2, pmin2, apply, crossprod, tcrossprod,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 
