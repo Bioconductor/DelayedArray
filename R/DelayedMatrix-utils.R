@@ -161,18 +161,18 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
     ideal_size_by_row <- ceiling(nrow(x)/nworkers) * as.double(ncol(x)) * element_size
     if (old > ideal_size_by_row) {
-        setAutoBlockSize(ideal_size_by_row) # TODO: avoid setting the block size just to compute this?
+        suppressMessages(setAutoBlockSize(ideal_size_by_row)) # TODO: avoid setting the block size just to compute this?
         row_grid <- rowGrid(x)
-        setAutoBlockSize(old)
+        suppressMessages(setAutoBlockSize(old))
     } else {
         row_grid <- rowGrid(x)
     }
 
     ideal_size_by_col <- ceiling(ncol(x)/nworkers) * as.double(nrow(x)) * 8
     if (old > ideal_size_by_col) {
-        setAutoBlockSize(ideal_size_by_col)
+        suppressMessages(setAutoBlockSize(ideal_size_by_col))
         col_grid <- colGrid(x)
-        setAutoBlockSize(old)
+        suppressMessages(setAutoBlockSize(old))
     } else {
         col_grid <- colGrid(x)
     }
