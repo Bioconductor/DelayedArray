@@ -414,21 +414,37 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     DelayedArray(ans)
 }
 
-setMethod("%*%", c("DelayedMatrix", "ANY"), function(x, y) .super_BLOCK_mult(x, y, MULT=`%*%`))
+setMethod("%*%", c("DelayedMatrix", "ANY"), function(x, y) {
+    if (is.null(dim(y))) y <- cbind(y)
+    .super_BLOCK_mult(x, y, MULT=`%*%`)
+})
 
-setMethod("%*%", c("ANY", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=`%*%`))
+setMethod("%*%", c("ANY", "DelayedMatrix"), function(x, y) {
+    if (is.null(dim(x))) x <- rbind(x)
+    .super_BLOCK_mult(x, y, MULT=`%*%`)
+})
 
 setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=`%*%`))
 
-setMethod("crossprod", c("DelayedMatrix", "ANY"), function(x, y) .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE))
+setMethod("crossprod", c("DelayedMatrix", "ANY"), function(x, y) {
+    if (is.null(dim(y))) y <- cbind(y)
+    .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE)
+})
 
-setMethod("crossprod", c("ANY", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE))
+setMethod("crossprod", c("ANY", "DelayedMatrix"), function(x, y) {
+    if (is.null(dim(x))) x <- rbind(x)
+    .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE)
+})
 
 setMethod("crossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE))
 
+# tcrossprod with vector 'y' doesn't work in base, and so it won't work here either.
 setMethod("tcrossprod", c("DelayedMatrix", "ANY"), function(x, y) .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE))
 
-setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE))
+setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) {
+    if (is.null(dim(x))) x <- rbind(x)
+    .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE)
+})
 
 setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE))
 
