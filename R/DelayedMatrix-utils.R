@@ -411,7 +411,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         }
     }
 
-    ans
+    DelayedArray(ans)
 }
 
 setMethod("%*%", c("DelayedMatrix", "ANY"), function(x, y) .super_BLOCK_mult(x, y, MULT=`%*%`))
@@ -460,7 +460,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
 
     }
 
-    ans
+    DelayedArray(ans)
 }
 
 setMethod("crossprod", c("DelayedMatrix", "missing"), function(x, y) .super_BLOCK_self(x, MULT=crossprod))
