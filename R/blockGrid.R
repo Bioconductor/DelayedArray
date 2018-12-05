@@ -239,11 +239,12 @@ blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
     x_ncol <- x_dim[[2L]]
     block_len <- .normarg_block.length(block.length, x_type)
     nrow <- block_len %/% x_ncol
-    if (nrow < 1L)
-        return(1L)
-    if (nrow > x_nrow)
+
+    if (is.na(nrow)) # NA if x_ncol=0.
         return(x_nrow)
-    nrow
+    if (nrow < 1L)
+        nrow <- 1L
+    min(x_nrow, nrow)
 }
 
 ### Return a RegularArrayGrid object describing a grid on matrix-like
