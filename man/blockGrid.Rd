@@ -167,7 +167,7 @@ setAutoBlockShape(shape=c("hypercube",
 
     \item \code{\link{chunkGrid}}.
 
-    \item Advanced users: \link{RealizationSink} objects for writing an 
+    \item Advanced users: \link{RealizationSink} objects for writing an
           array-like object block by block to disk (or to memory).
   }
 }

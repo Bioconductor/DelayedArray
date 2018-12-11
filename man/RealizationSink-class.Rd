@@ -25,7 +25,7 @@
   \code{getRealizationBackend} or \code{setRealizationBackend}.
 
   Advanced users: Create a RealizationSink object with the backend-agnostic
-  \code{RealizationSink()} constructor. Use this object to write an 
+  \code{RealizationSink()} constructor. Use this object to write an
   array-like object block by block to disk (or to memory).
 }
 

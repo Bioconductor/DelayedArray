@@ -160,8 +160,8 @@
   DelayedOp objects are used inside \link{DelayedArray} objects and are not
   intended to be manipulated directly by the end user.
 
-  \code{\link{showtree}} and \code{\link{simplify}} can be used to visualize
-  and simplify this tree.
+  \code{\link{showtree}} and \code{\link{simplify}} can be used to visualize,
+  inspect, and simplify this tree.
 }
 
 \usage{
@@ -221,8 +221,12 @@ is_noop(x)
   \itemize{
     \item \link{DelayedArray} objects.
 
-    \item \code{\link{showtree}} to visualize, simplify, and inspect the
-          tree of delayed operations in a \link{DelayedArray} object.
+    \item \code{\link{showtree}} to visualize and access the leaves of
+          a tree of delayed operations carried by a \link{DelayedArray}
+          object.
+
+    \item \code{\link{simplify}} to simplify the tree of delayed operations
+          carried by a \link{DelayedArray} object.
 
     \item \code{\link{extract_array}}.
   }
