@@ -1,6 +1,7 @@
 useDynLib(DelayedArray)
 
 import(methods)
+import(utils, object.size)
 importFrom(stats, setNames,
                   dnorm, pnorm, qnorm,
                   dbinom, pbinom, qbinom,
@@ -248,7 +249,10 @@ export(
     blockGrid, rowGrid, colGrid, multGrids,
 
     ## showtree.R:
-    showtree, contentIsPristine,
+    showtree, seedApply,
+
+    ## simplify.R:
+    contentIsPristine,
 
     ## DelayedArray-class.R:
     new_DelayedArray,
@@ -301,10 +305,13 @@ export(
     is_noop,
 
     ## showtree.R:
+    nseed, seed, "seed<-",
+
+    ## simplify.R:
     simplify, netSubsetAndAperm,
 
     ## DelayedArray-class.R:
-    matrixClass, DelayedArray, nseed, seed, "seed<-",
+    matrixClass, DelayedArray,
 
     ## chunkGrid.R:
     chunkdim, chunkGrid,
@@ -332,8 +339,9 @@ exportMethods(
     mapToGrid, mapToRef,
     isLinear,
     is_noop,
+    nseed, seed, "seed<-",
     simplify, netSubsetAndAperm,
-    matrixClass, DelayedArray, nseed, seed, "seed<-",
+    matrixClass, DelayedArray,
     chunkdim, chunkGrid,
     close,
     realize,

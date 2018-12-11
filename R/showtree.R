@@ -1,5 +1,5 @@
 ### =========================================================================
-### Visualize and simplify a tree of delayed operations
+### Visualize and access the leaves of a tree of delayed operations
 ### -------------------------------------------------------------------------
 ###
 
@@ -25,7 +25,7 @@
     ans
 }
 
-### Avoid use of non-ASCII characters in R source code. There must be a much
+### Avoid use of non-ASCII characters in R source code. There must be a
 ### better way to do this.
 .VBAR  <- rawToChar(as.raw(c(0xe2, 0x94, 0x82)))
 .TEE   <- rawToChar(as.raw(c(0xe2, 0x94, 0x9c)))
@@ -96,283 +96,53 @@ setMethod("show", "DelayedOp", function(object) .rec_showtree(object))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### simplify()
+### nseed()
+###
+### Return the number of leaves in the tree of DelayedOp nodes represented
+### by 'x'. Note that nseed(x) == 1 means that the tree is linear.
 ###
 
-.normarg_incremental <- function(incremental)
-{
-    if (!isTRUEorFALSE(incremental))
-        stop("'incremental' must be TRUE or FALSE")
-    incremental
-}
+setGeneric("nseed", function(x) standardGeneric("nseed"))
 
-setGeneric("simplify", signature="x",
-    function(x, incremental=FALSE) standardGeneric("simplify")
-)
-
-setMethod("simplify", "ANY",
-    function(x, incremental=FALSE)
+setMethod("nseed", "ANY",
+    function(x)
     {
-        .normarg_incremental(incremental)
-        x
-    }
-)
-
-setMethod("simplify", "DelayedSubset",
-    function(x, incremental=FALSE)
-    {
-        if (!.normarg_incremental(incremental))
-            x@seed <- simplify(x@seed)
-        x1 <- x@seed
-        if (is_noop(x))
-            return(x1)
-        if (is(x1, "DelayedSubset")) {
-            ## ACTION: merge ops + remove if no-op.
-            x1 <- subset_DelayedSubset(x1, x@index)
-            if (is_noop(x1))
-                return(x1@seed)
-            return(x1)
-        }
-        if (is(x1, "DelayedAperm")) {
-            ## ACTION: swap ops.
-            index2 <- project_index_on_seed(x@index, x1)
-            x2 <- new_DelayedSubset(x1@seed, index2)
-            x2 <- simplify(x2, incremental=TRUE)
-            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2, check=FALSE)
-            return(x1)
-        }
-        if (is(x1, "DelayedUnaryIsoOpStack")) {
-            ## ACTION: swap ops.
-            x2 <- x
-            x2@seed <- x1@seed
-            x2 <- simplify(x2, incremental=TRUE)
-            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2, check=FALSE)
-            return(x1)
-        }
-        if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
-            ## ACTION: swap ops.
-            x2 <- x
-            x2@seed <- x1@seed
-            x2 <- simplify(x2, incremental=TRUE)
-            Largs <- subset_args(x1@Largs, x1@Lalong, x@index)
-            Rargs <- subset_args(x1@Rargs, x1@Ralong, x@index)
-            x1 <- BiocGenerics:::replaceSlots(x1, seed=x2,
-                                                  Largs=Largs,
-                                                  Rargs=Rargs,
-                                                  check=FALSE)
-            return(x1)
-        }
-        if (is(x1, "DelayedSubassign")) {
-            ## ACTION: swap ops.
-            x1 <- subset_DelayedSubassign(x1, x@index)
-            x1@seed <- simplify(x1@seed, incremental=TRUE)
-            x1@Rvalue <- simplify(x1@Rvalue, incremental=TRUE)
-            return(x1)
-        }
-        if (is(x1, "DelayedDimnames")) {
-            ## ACTION: swap ops.
-            x2 <- x
-            x2@seed <- x1@seed
-            x2 <- simplify(x2, incremental=TRUE)
-            x1 <- new_DelayedDimnames(x2, dimnames(x))
-            return(x1)
-        }
-        x
-    }
-)
-
-setMethod("simplify", "DelayedAperm",
-    function(x, incremental=FALSE)
-    {
-        if (!.normarg_incremental(incremental))
-            x@seed <- simplify(x@seed)
-        x1 <- x@seed
-        if (is_noop(x))
-            return(x1)
-        if (is(x1, "DelayedAperm")) {
-            ## ACTION: merge ops + remove if no-op.
-            x1@perm <- x1@perm[x@perm]
-            if (is_noop(x1))
-                return(x1@seed)
-            return(simplify(x1, incremental=TRUE))
-        }
-        if (is(x1, "DelayedUnaryIsoOpStack")) {
-            ## ACTION: swap ops.
-            x@seed <- x1@seed
-            x1@seed <- simplify(x, incremental=TRUE)
-            return(x1)
-        }
-        if (is(x1, "DelayedUnaryIsoOpWithArgs")) {
-            perm0 <- x@perm[!is.na(x@perm)]
-            set_Lalong_to_NA <- !(x1@Lalong %in% perm0)
-            set_Ralong_to_NA <- !(x1@Ralong %in% perm0)
-            if (all(set_Lalong_to_NA) && all(set_Ralong_to_NA)) {
-                ## ACTION: swap ops.
-                x1@Lalong[set_Lalong_to_NA] <- NA_integer_
-                x1@Ralong[set_Ralong_to_NA] <- NA_integer_
-                x@seed <- x1@seed
-                x1@seed <- simplify(x, incremental=TRUE)
-                return(x1)
-            }
-        }
-        if (is(x1, "DelayedDimnames")) {
-            ## ACTION: swap ops.
-            x2 <- x
-            x2@seed <- x1@seed
-            x2 <- simplify(x2, incremental=TRUE)
-            x1 <- new_DelayedDimnames(x2, dimnames(x))
-            return(x1)
-        }
-        x
-    }
-)
-
-setMethod("simplify", "DelayedUnaryIsoOpStack",
-    function(x, incremental=FALSE)
-    {
-        if (!.normarg_incremental(incremental))
-            x@seed <- simplify(x@seed)
-        x1 <- x@seed
-        if (is(x1, "DelayedUnaryIsoOpStack")) {
-            ## ACTION: merge ops.
-            x1@OPS <- c(x1@OPS, x@OPS)
-            return(x1)
-        }
-        if (is(x1, "DelayedDimnames")) {
-            ## ACTION: swap ops.
-            x@seed <- x1@seed
-            x1@seed <- simplify(x, incremental=TRUE)
-            return(x1)
-        }
-        x
-    }
-)
-
-setMethod("simplify", "DelayedUnaryIsoOpWithArgs",
-    function(x, incremental=FALSE)
-    {
-        if (!.normarg_incremental(incremental))
-            x@seed <- simplify(x@seed)
-        x1 <- x@seed
-        if (is(x1, "DelayedDimnames")) {
-            ## ACTION: swap ops.
-            x@seed <- x1@seed
-            x1@seed <- simplify(x, incremental=TRUE)
-            return(x1)
-        }
-        x
-    }
-)
-
-setMethod("simplify", "DelayedSubassign",
-    function(x, incremental=FALSE)
-    {
-        if (!.normarg_incremental(incremental)) {
-            x@seed <- simplify(x@seed)
-            x@Rvalue <- simplify(x@Rvalue)
-        }
-        x1 <- x@seed
-        if (is_noop(x))
-            return(x1)
-        if (all(x@.nogap) && !is.null(dim(x@Rvalue))) {
-            ## "Full replacement" case with an array-like object on the right.
-            ## 'x' represents a subassignment that replaces all the array
-            ## elements in the left value. This is a degenerate case of
-            ## subassignment where we never need to extract any array element
-            ## from 'x@seed'.
-            if (all(S4Vectors:::sapply_isNULL(x@Lindex))) {
-                ## "Filling" case (a special case of "Full replacement") with
-                ## an array-like object on the right.
-                ## ACTION: replace DelayedSubassign op with right value.
-                x1 <- x@Rvalue
-            } else {
-                ## ACTION: replace DelayedSubassign op with a subset of
-                ## right value.
-                index <- vector("list", length=length(x@Lindex))
-                Mindex <- make_Mindex(index, x)
-                x1 <- new_DelayedSubset(x@Rvalue, Mindex)
-                x1 <- simplify(x1, incremental=TRUE)
-            }
-            ## Propagate dimnames of left value.
-            x <- new_DelayedDimnames(x1, dimnames(x@seed))
-            x <- simplify(x, incremental=TRUE)
-            return(x)
-        }
-        Rvalue <- x@Rvalue
-        if (is(Rvalue, "DelayedDimnames")) {
-            ## ACTION: remove DelayedDimnames op from right value.
-            x@Rvalue <- Rvalue@seed
-        }
-        if (is(x1, "DelayedDimnames")) {
-            ## ACTION: swap ops.
-            x@seed <- x1@seed
-            x1@seed <- x
-            return(x1)
-        }
-        x
-    }
-)
-
-setMethod("simplify", "DelayedDimnames",
-    function(x, incremental=FALSE)
-    {
-        if (!.normarg_incremental(incremental))
-            x@seed <- simplify(x@seed)
-        x1 <- x@seed
-        if (is_noop(x))
-            return(x1)
-        if (is(x1, "DelayedDimnames")) {
-            ## ACTION: merge ops + remove if no-op.
-            x <- new_DelayedDimnames(x1@seed, dimnames(x))
-            if (is_noop(x))
-                return(x@seed)
-            return(x)
-        }
-        x
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### contentIsPristine()
-###
-
-### Return FALSE if the tree contains delayed operations that modify
-### the "original array values" (i.e. the values contained in the seeds).
-### The value-modifying nodes are:
-###   - DelayedUnaryIsoOpStack, DelayedUnaryIsoOpWithArgs, and
-###     DelayedNaryIsoOp nodes;
-###   - DelayedSubassign nodes that are not no-ops.
-contentIsPristine <- function(x)
-{
-    if (!is.list(x)) {
-        if (!is(x, "DelayedOp"))
-            return(TRUE)
-        if (is(x, "DelayedUnaryIsoOpStack") ||
-            is(x, "DelayedUnaryIsoOpWithArgs") ||
-            is(x, "DelayedNaryIsoOp"))
-            return(FALSE)
-        if (is(x, "DelayedUnaryOp")) {
-            if (is(x, "DelayedSubassign") && !is_noop(x))
-                return(FALSE)
-            x <- list(x@seed)
-        } else {
+        if (is(x, "DelayedUnaryOp"))
+            return(nseed(x@seed))
+        if (is(x, "DelayedNaryOp"))
             x <- x@seeds
+        if (is.list(x)) {
+            ans <- sum(vapply(x, nseed, integer(1), USE.NAMES=FALSE))
+            return(ans)
         }
+        return(1L)
     }
-    nchildren <- length(x)
-    for (i in seq_len(nchildren)) {
-        if (!contentIsPristine(x[[i]]))
-            return(FALSE)
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### seedApply()
+###
+
+seedApply <- function(x, FUN, ...)
+{
+    if (is(x, "DelayedUnaryOp"))
+        return(seedApply(x@seed, FUN, ...))
+    if (is(x, "DelayedNaryOp"))
+        x <- x@seeds
+    if (is.list(x)) {
+        ans <- lapply(x, seedApply, FUN, ...)
+        return(unlist(ans, recursive=FALSE, use.names=FALSE))
     }
-    TRUE
+    list(FUN(x, ...))
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### netSubsetAndAperm()
+### seed() getter/setter
 ###
-### Only supported if nseed() == 1
+### If nseed(x) == 1 (i.e. if 'x' is a linear tree) then the seed() getter
+### and setter MUST work on 'x'.
 ###
 
 IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
@@ -380,47 +150,100 @@ IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS <- c(
     "moment. Note that you can check the number of seeds with nseed()."
 )
 
-### Remove DelayedUnaryIsoOp nodes from a linear tree.
-### Raise an error if the tree is not linear.
-.remove_unary_iso_ops <- function(x)
-{
-    if (!is(x, "DelayedOp"))
-        return(x)
-    if (is(x, "DelayedNaryOp")) {
-        ## Tree is not linear.
-        stop(wmsg("netSubsetAndAperm() ",
-                  IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
-    }
-    x1 <- .remove_unary_iso_ops(x@seed)
-    if (is(x, "DelayedUnaryIsoOp")) {
-        x <- x1
-    } else {
-        x@seed <- x1
-    }
-    x
-}
+setGeneric("seed", function(x) standardGeneric("seed"))
 
-setGeneric("netSubsetAndAperm", signature="x",
-    function(x, as.DelayedOp=FALSE) standardGeneric("netSubsetAndAperm")
+setMethod("seed", "DelayedOp",
+    function(x)
+    {
+        if (is(x, "DelayedNaryOp")) {
+            ## Tree is not linear.
+            stop(wmsg("seed() ", IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS,
+                      " You can use 'seedApply(x, identity)' to extract ",
+                      "all the seeds as a list."))
+        }
+        x1 <- x@seed
+        if (!is(x1, "DelayedOp"))
+            return(x1)  # found the leaf seed
+        x <- x1
+        callGeneric()  # recursive call
+    }
 )
 
-setMethod("netSubsetAndAperm", "ANY",
-    function(x, as.DelayedOp=FALSE)
+setGeneric("seed<-", signature="x",
+    function(x, ..., value) standardGeneric("seed<-")
+)
+
+.normalize_seed_replacement_value <- function(value, x_seed)
+{
+    if (!is(value, class(x_seed)))
+        stop(wmsg("supplied seed must be a ", class(x_seed), " object"))
+    if (!identical(dim(value), dim(x_seed)))
+        stop(wmsg("supplied seed must have the same dimensions ",
+                  "as current seed"))
+    if (!identical(dimnames(value), dimnames(x_seed)))
+        stop(wmsg("supplied seed must have the same dimnames ",
+                  "as current seed"))
+    value
+}
+
+setReplaceMethod("seed", "DelayedOp",
+    function(x, value)
     {
-        if (!isTRUEorFALSE(as.DelayedOp))
-            stop("'as.DelayedOp' must be TRUE or FALSE")
-        reduced <- simplify(.remove_unary_iso_ops(x))
-        if (!is(reduced, "DelayedAperm"))
-            reduced <- new_DelayedAperm(reduced)
-        x1 <- reduced@seed
-        if (!is(x1, "DelayedSubset"))
-            reduced@seed <- new_DelayedSubset(x1)
-        if (as.DelayedOp)
-            return(reduced)
-        ans <- reduced@seed@index
-        if (!is_noop(reduced))
-            attr(ans, "dimmap") <- reduced@perm
-        ans
+        if (is(x, "DelayedNaryOp")) {
+            ## Tree is not linear.
+            stop(wmsg("the seed() setter ", IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
+        }
+        x1 <- x@seed
+        if (!is(x1, "DelayedOp")) {
+            ## Replace the leaf seed.
+            x@seed <- .normalize_seed_replacement_value(value, x1)
+            return(x)
+        }
+        seed(x1) <- value  # recursive call
+        x@seed <- x1
+        x
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### path() getter/setter
+###
+
+### The path of a DelayedOp object is the path of its leaf seed. So path()
+### will work on a DelayedOp object only if it works on its leaf seed.
+### For example it will work if its leaf seed is an on-disk object (e.g. an
+### HDF5ArraySeed object) but not if it's an in-memory object (e.g. an
+### ordinary array or RleArraySeed object).
+setMethod("path", "DelayedOp",
+    function(object, ...)
+    {
+        object_seed <- try(seed(object), silent=TRUE)
+        if (is(object_seed, "try-error")) {
+            ## Tree is not linear.
+            stop(wmsg("path() ", IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS,
+                      " You can use 'seedApply(x, path)' to extract ",
+                      "all the seed paths as a list."))
+        }
+        path(object_seed, ...)
+    }
+)
+
+### The path() setter will work on a DelayedOp object only if it works on
+### its leaf seed. For example it will work if its leaf seed is an on-disk
+### object (e.g. an HDF5ArraySeed object) but not if it's an in-memory object
+### (e.g. an ordinary array or RleArraySeed object).
+setReplaceMethod("path", "DelayedOp",
+    function(object, ..., value)
+    {
+        object_seed <- try(seed(object), silent=TRUE)
+        if (is(object_seed, "try-error")) {
+            ## Tree is not linear.
+            stop(wmsg("path() ", IS_NOT_SUPOORTED_IF_MULTIPLE_SEEDS))
+        }
+        path(object_seed, ...) <- value
+        seed(object) <- object_seed
+        object
     }
 )
 

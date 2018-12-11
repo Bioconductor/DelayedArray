@@ -28,18 +28,6 @@
 
 \alias{type}
 
-\alias{nseed}
-\alias{nseed,ANY-method}
-
-\alias{seed}
-\alias{seed,DelayedOp-method}
-\alias{seed<-}
-\alias{seed<-,DelayedOp-method}
-
-\alias{path}
-\alias{path,DelayedArray-method}
-\alias{path<-,DelayedArray-method}
-
 \alias{aperm}
 \alias{aperm.DelayedArray}
 \alias{aperm,DelayedArray-method}
@@ -82,9 +70,6 @@
 
 \usage{
 DelayedArray(seed)  # constructor function
-seed(x)             # seed getter
-nseed(x)            # seed counter
-path(object, ...)   # path getter
 type(x)
 }
 
@@ -92,13 +77,11 @@ type(x)
   \item{seed}{
     An array-like object.
   }
-  \item{x, object}{
-    A DelayedArray object. For \code{type()}, \code{x} can also be any
-    array-like object, that is, any object for which \code{dim(x)} is not
-    NULL.
-  }
-  \item{...}{
-    Additional arguments passed to methods.
+  \item{x}{
+    Typically a DelayedArray object. More generally \code{type()} is
+    expected to work on any array-like object (that is, any object for
+    which \code{dim(x)} is not NULL), or any ordinary vector (i.e.
+    atomic or non-atomic).
   }
 }
 
@@ -122,16 +105,17 @@ type(x)
 \section{Accessors}{
   DelayedArray objects support the same set of getters as ordinary arrays
   i.e. \code{dim()}, \code{length()}, and \code{dimnames()}.
-  In addition, they support \code{seed()}, \code{nseed()}, \code{path()},
-  and \code{type()}.
+  In addition, they support \code{type()}, \code{\link{nseed}()},
+  \code{\link{seed}()}, and \code{\link{path}()}.
 
   \code{type()} is the DelayedArray equivalent of \code{typeof()} (or
   \code{storage.mode()}) for ordinary arrays and vectors. Note that, for
   convenience and consistency, \code{type()} also supports ordinary arrays
-  and vectors. It also supports any array-like object, that is, any object
-  \code{x} for which \code{dim(x)} is not NULL.
+  and vectors. It should also support any array-like object, that is, any
+  object \code{x} for which \code{dim(x)} is not NULL.
 
-  \code{dimnames()}, \code{seed()}, and \code{path()} also work as setters.
+  \code{dimnames()}, \code{\link{seed}()}, and \code{\link{path}()} also
+  work as setters.
 }
 
 \section{Subsetting}{
@@ -190,6 +174,9 @@ type(x)
 
 \seealso{
   \itemize{
+    \item \code{\link{showtree}} for \link{DelayedArray} accessors
+          \code{nseed}, \code{seed}, and \code{path}.
+
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
 
