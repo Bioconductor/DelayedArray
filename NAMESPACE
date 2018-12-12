@@ -1,7 +1,7 @@
 useDynLib(DelayedArray)
 
 import(methods)
-import(utils, object.size)
+importFrom(utils, object.size)
 importFrom(stats, setNames,
                   dnorm, pnorm, qnorm,
                   dbinom, pbinom, qbinom,
