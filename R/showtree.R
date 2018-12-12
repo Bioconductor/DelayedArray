@@ -121,7 +121,7 @@ setMethod("nseed", "ANY",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### seedApply()
+### seedApply() and modify_seeds()
 ###
 
 seedApply <- function(x, FUN, ...)
@@ -135,6 +135,21 @@ seedApply <- function(x, FUN, ...)
         return(unlist(ans, recursive=FALSE, use.names=FALSE))
     }
     list(FUN(x, ...))
+}
+
+### 'FUN' must take a seed and return a seed of the same dimensions.
+### Dangerous so not intended for the end user.
+### Used in HDF5Array!
+modify_seeds <- function(x, FUN, ...)
+{
+    if (is(x, "DelayedUnaryOp")) {
+        x@seed <- modify_seeds(x@seed, FUN, ...)
+    } else  if (is(x, "DelayedNaryOp")) {
+        x@seeds <- lapply(x@seeds, modify_seeds, FUN, ...)
+    } else {
+        x <- FUN(x, ...)
+    }
+    x
 }
 
 

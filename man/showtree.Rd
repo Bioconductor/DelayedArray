@@ -16,6 +16,7 @@
 \alias{path<-,DelayedOp-method}
 
 \alias{seedApply}
+\alias{modify_seeds}
 
 \title{Visualize and access the leaves of a tree of delayed operations}
 

@@ -249,7 +249,7 @@ export(
     blockGrid, rowGrid, colGrid, multGrids,
 
     ## showtree.R:
-    showtree, seedApply,
+    showtree, seedApply, modify_seeds,
 
     ## simplify.R:
     contentIsPristine,
