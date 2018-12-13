@@ -5,8 +5,15 @@
 
 static const R_CallMethodDef callMethods[] = {
 
+/* compress_atomic_vector.c */
+	CALLMETHOD_DEF(C_simple_object_size, 1),
+	CALLMETHOD_DEF(C_encode_atomic_vector, 1),
+	CALLMETHOD_DEF(C_decode_atomic_vector, 1),
+	CALLMETHOD_DEF(C_compress_atomic_vector, 1),
+	CALLMETHOD_DEF(C_decompress_atomic_vector, 1),
+
 /* abind.c */
-	CALLMETHOD_DEF(abind, 3),
+	CALLMETHOD_DEF(C_abind, 3),
 
 	{NULL, NULL, 0}
 };

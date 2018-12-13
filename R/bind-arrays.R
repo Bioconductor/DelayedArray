@@ -100,7 +100,7 @@ combine_dimnames_along <- function(objects, dims, along)
     if (length(idx) != 0L)
         objects[idx] <- lapply(objects[idx], `storage.mode<-`, typeof(x0))
 
-    .Call("abind", objects, nblock, ans_dim, PACKAGE="DelayedArray")
+    .Call("C_abind", objects, nblock, ans_dim, PACKAGE="DelayedArray")
 }
 
 ### A stripped-down version of abind::abind().

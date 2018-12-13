@@ -1,5 +1,5 @@
 /****************************************************************************
- *                 A Nested Containment List implementation                 *
+ *                                C_abind()                                 *
  *                            Author: H. Pag\`es                            *
  ****************************************************************************/
 #include "DelayedArray.h"
@@ -43,10 +43,10 @@ static long long int get_xnum_val(SEXP x, R_xlen_t i)
 
 
 /****************************************************************************
- * abind()
+ * C_abind()
  */
 
-SEXP abind(SEXP objects, SEXP nblock, SEXP ans_dim)
+SEXP C_abind(SEXP objects, SEXP nblock, SEXP ans_dim)
 {
 	int nobject;
 	long long int nblock0, i, j, ans_offset, ans_block_nelt, block_nelt;
