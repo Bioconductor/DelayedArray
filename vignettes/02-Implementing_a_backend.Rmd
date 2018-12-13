@@ -205,7 +205,7 @@ a fully functional DelayedArray object.
 
 These classes are not strictly needed but add a nice level of convenience.
 
-## Class definitions
+## ADSArray class definition
 
 An ADSArray or ADSMatrix object is a DelayedArray derivative that doesn't
 carry delayed operations yet. As soon as the user will start operating on it,
@@ -213,11 +213,55 @@ it will be degraded to a DelayedArray *instance*.
 
 The ADSArray and ADSMatrix classes should extend the DelayedArray and
 DelayedMatrix classes, respectively, without adding any slot to them.
+
 So just:
 
-    setClass("ADSArray", contains="DelayedArray")
+    setClass("ADSArray",
+        contains="DelayedArray",
+        representation(seed="ADSArraySeed")
+    )
 
-    setClass("ADSMatrix", contains=c("DelayedMatrix", "ADSArray"))
+We'll define the ADSMatrix class later.
+
+## `ADSArray()` constructor
+
+Add a `DelayedArray` method for ADSArraySeed objects that does:
+
+    setMethod("DelayedArray", "ADSArraySeed",
+        function(seed) new_DelayedArray(seed, Class="ADSArray")
+    )
+
+Now you should be able to construct an ADSArray object with:
+
+    DelayedArray(ADSArraySeed(...))
+
+The `ADSArray` constructor should just do that:
+
+    ADSArray <- function(filepath, other args)
+        DelayedArray(ADSArraySeed(filepath, other args))
+
+However, it's also nice to be able to pass an ADSArraySeed object to
+this constructor (with `ADSArray(seed)`). This can easily be supported
+with something like:
+
+    ### Works directly on an ADSArraySeed object, in which case it must be
+    ### called with a single argument.
+    ADSArray <- function(filepath, other args)
+    {
+        if (is(filepath, "ADSArraySeed")) {
+            if (!(missing(other arg1) && missing(other arg2) && ...))
+                stop(wmsg("ADSArray() must be called with a single argument ",
+                          "when passed an ADSArraySeed object"))
+            seed <- filepath
+        } else {
+            seed <- ADSArraySeed(filepath, other args)
+        }
+        DelayedArray(seed)
+    }
+
+## ADSMatrix class definition
+
+    setClass("ADSMatrix", contains=c("ADSArray", "DelayedMatrix"))
 
 ## Going from ADSArray to ADSMatrix
 
@@ -255,55 +299,6 @@ when `x` is an ADSMatrix object. The easiest (and recommended) way to
 achieve this is to define the following coercion method:
 
     setAs("ADSMatrix", "ADSArray", function(from) from)  # no-op
-
-## Constructor
-
-Add a `DelayedArray` method for ADSArraySeed objects that does:
-
-    setMethod("DelayedArray", "ADSArraySeed",
-        function(seed) new_DelayedArray(seed, Class="ADSArray")
-    )
-
-Now you should be able to construct an ADSArray object with:
-
-    DelayedArray(ADSArraySeed(...))
-
-The `ADSArray` constructor should just do that:
-
-    ADSArray <- function(filepath, other args)
-        DelayedArray(ADSArraySeed(filepath, other args))
-
-However, it's also nice to be able to pass an ADSArraySeed object to
-this constructor (with `ADSArray(seed)`). This can easily be supported
-with something like:
-
-    ### Works directly on an ADSArraySeed object, in which case it must be
-    ### called with a single argument.
-    ADSArray <- function(filepath, other args)
-    {
-        if (is(filepath, "ADSArraySeed")) {
-            if (!(missing(other arg1) && missing(other arg2) && ...))
-                stop(wmsg("ADSArray() must be called with a single argument ",
-                          "when passed an ADSArraySeed object"))
-            seed <- filepath
-        } else {
-            seed <- ADSArraySeed(filepath, other args)
-        }
-        DelayedArray(seed)
-    }
-
-## Validity method
-
-It's also highly recommended to define a validity method for ADSArray objects:
-
-    .validate_ADSArray <- function(x)
-    {
-        if (!is(x@seed, "ADSArraySeed"))
-            return(wmsg("'x@seed' must be an ADSArraySeed object"))
-        TRUE
-    }
-
-    setValidity2("ADSArray", .validate_ADSArray)
 
 ## What to export?
 
