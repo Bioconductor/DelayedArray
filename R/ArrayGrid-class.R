@@ -40,6 +40,7 @@ setClass("ArrayViewport",
     x_dim <- width(x_ranges)
     if (prod(x_dim) > .Machine$integer.max)
         return("a viewport cannot be longer than .Machine$integer.max")
+
     TRUE
 }
 
@@ -604,8 +605,11 @@ setMethod("downsample", "RegularArrayGrid",
     function(x, ratio=1L)
     {
         ratio <- .normarg_ratio(ratio, dim(x))
-        ans_spacings <- pmin(x@spacings * ratio, refdim(x))
-        RegularArrayGrid(refdim(x), ans_spacings)
+        x_refdim <- refdim(x)
+        ## We turn 'ratio' into a double vector to prevent a potential
+        ## integer overflow.
+        ans_spacings <- pmin(x@spacings * as.double(ratio), x_refdim)
+        RegularArrayGrid(x_refdim, ans_spacings)
     }
 )
 
