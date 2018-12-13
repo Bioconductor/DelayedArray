@@ -27,19 +27,19 @@ setClass("ArrayViewport",
     x_ranges <- x@ranges
     x_refdim <- x@refdim
     if (length(x_ranges) != length(x_refdim))
-        return(wmsg2("'ranges' and 'refdim' slots must have the same length"))
+        return("'ranges' and 'refdim' slots must have the same length")
 
     ## Check that the viewport is contained in the reference array.
     x_start <- start(x_ranges)
     x_end <- end(x_ranges)
     if (!(all(x_start >= 1L) && all(x_end <= x_refdim)))
-        return(wmsg2("object represents a viewport that is not ",
-                     "within the bounds of the reference array"))
+        return(c("object represents a viewport that is not ",
+                 "within the bounds of the reference array"))
 
     ## A viewport cannot be longer than 2^31-1.
     x_dim <- width(x_ranges)
     if (prod(x_dim) > .Machine$integer.max)
-        return(wmsg2("a viewport cannot be longer than .Machine$integer.max"))
+        return("a viewport cannot be longer than .Machine$integer.max")
     TRUE
 }
 
@@ -47,10 +47,10 @@ setClass("ArrayViewport",
 {
     msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
-        return(msg)
+        return(wmsg2(msg))
     msg <- .validate_ranges_slot(x)
     if (!isTRUE(msg))
-        return(msg)
+        return(wmsg2(msg))
     TRUE
 }
 
@@ -308,10 +308,10 @@ setValidity2("ArbitraryArrayGrid", .validate_ArbitraryArrayGrid)
 {
     msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
-        return(msg)
+        return(wmsg2(msg))
     msg <- validate_dim_slot(x, "spacings")
     if (!isTRUE(msg))
-        return(msg)
+        return(wmsg2(msg))
     x_spacings <- x@spacings
     x_refdim <- x@refdim
     if (length(x_spacings) != length(x_refdim))

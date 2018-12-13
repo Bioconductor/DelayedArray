@@ -117,10 +117,10 @@ setClass("ChunkedRleArraySeed",
 {
     msg <- validate_dim_slot(x, "DIM")
     if (!isTRUE(msg))
-        return(msg)
+        return(wmsg2(msg))
     msg <- validate_dimnames_slot(x, x@DIM, "DIMNAMES")
     if (!isTRUE(msg))
-        return(msg)
+        return(wmsg2(msg))
     TRUE
 }
 setValidity2("RleArraySeed", .validate_RleArraySeed)
