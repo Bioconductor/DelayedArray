@@ -4,8 +4,9 @@
         representation(seed="HDF5ArraySeed")
     )
   This would avoid the need for a validity method.
-  This change was done for HDF5Array on Dec 13, 2018. Still need to be
-  done for RleArray and TENxMatrix.
+  This change was done for HDF5Array and TENxMatrix on Dec 13, 2018.
+  Still need to be done for RleArray and DelayedArray backends implemented
+  in other packages.
 
 - In 02-Implementing_a_backend.Rmd, add a "Other optional (but highly
   recommended) methods" subsection after "The seed contract" subsection.
