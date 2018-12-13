@@ -4,13 +4,13 @@
 ###
 
 
-### NOT exported but used in HDF5Array!
+### NOT exported but used in the HDF5Array package!
 get_verbose_block_processing <- function()
 {
     getOption("DelayedArray.verbose.block.processing", default=FALSE)
 }
 
-### NOT exported but used in HDF5Array!
+### NOT exported but used in the HDF5Array package!
 set_verbose_block_processing <- function(verbose)
 {
     if (!isTRUEorFALSE(verbose))

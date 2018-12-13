@@ -412,7 +412,7 @@
     .print_nDarray_data(x, n1, n2, quote=quote)
 }
 
-### NOT exported but used in the HDF5Array package.
+### NOT exported but used in the HDF5Array package!
 array_as_one_line_summary <- function(x)
 {
     dim_in1string <- paste0(dim(x), collapse=" x ")

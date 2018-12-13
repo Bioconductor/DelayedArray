@@ -148,6 +148,7 @@ combine_array_objects <- function(objects)
 ### Used in validity methods
 ###
 
+### NOT exported but used in the HDF5Array package!
 validate_dim_slot <- function(x, slotname="dim")
 {
     x_dim <- slot(x, slotname)
