@@ -360,7 +360,7 @@ setClass("DelayedArray1",
 
 .updateObject_DelayedArray <- function(object, ..., verbose=FALSE)
 {
-    object@seed <- updateObject(object@seed, verbose=verbose)
+    object@seed <- updateObject(object@seed, ..., verbose=verbose)
 
     internals_version <- .get_DelayedArray_internals_version(object)
     pkgversion <- .get_pkgversion_from_internals_version(internals_version)
