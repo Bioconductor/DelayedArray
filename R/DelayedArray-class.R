@@ -92,8 +92,8 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 .msg_for_old_internals <- function(object, pkgversion)
 {
     paste0(class(object), " object uses internal representation ",
-           "from DelayedArray\n  ", pkgversion, " and cannot be displayed ",
-           "or used. Please update it with:\n\n",
+           "from DelayedArray\n  ", pkgversion, " and cannot be ",
+           "displayed or used. Please update it with:\n\n",
            "      object <- updateObject(object, verbose=TRUE)\n\n",
            "  and re-serialize it.")
 }
@@ -114,15 +114,15 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 {
     pkgversion <- .get_DelayedArray_pkgversion(x)
     if (pkgversion != "current")
-        return(paste0("\n  ", .msg_for_old_internals(x, pkgversion)))
+        return(.msg_for_old_internals(x, pkgversion))
 #    seed_dim <- dim(x@seed)
 #    seed_ndim <- length(seed_dim)
 #    ## In the context of validObject(), 'class(x)' is always "DelayedArray"
 #    ## and not the real class of 'x', which seems to be a bug in validObject().
 #    ## This prevents us from doing the check below.
 #    if (seed_ndim == 2L && !is(x, matrixClass(x)))
-#        return(c("'x' has 2 dimensions but is not a ",
-#                 matrixClass(x), " derivative"))
+#        return(paste0("'x' has 2 dimensions but is not a ",
+#                      matrixClass(x), " derivative"))
     TRUE
 }
 

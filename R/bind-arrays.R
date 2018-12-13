@@ -5,9 +5,9 @@
 
 
 ### Return a matrix with one row per dim and one column per object if the
-### objects are "bindable". Otherwise return a character vector describing
-### why they are not. This design allows the function to be used in the
-### context of a validity method.
+### objects are "bindable". Otherwise return a string describing why they
+### are not. This design allows the function to be used in the context of
+### a validity method.
 get_dims_to_bind <- function(objects, along)
 {
     if (!(isSingleInteger(along) && along >= 1L))
@@ -19,8 +19,8 @@ get_dims_to_bind <- function(objects, along)
         stop(wmsg("the array-like objects to bind must have at least ",
                   along, " dimensions for this binding operation"))
     if (!all(ndims == ndim))
-        return(c("all the objects to bind must have ",
-                 "the same number of dimensions"))
+        return(paste0("all the objects to bind must have ",
+                      "the same number of dimensions"))
     tmp <- unlist(dims, use.names=FALSE)
     if (is.null(tmp))
         return("the objects to bind have no dimensions")

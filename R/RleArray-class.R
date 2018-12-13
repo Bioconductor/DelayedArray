@@ -133,8 +133,8 @@ setValidity2("RleArraySeed", .validate_RleArraySeed)
     x_len <- length(x)
     data_len <- length(x@rle)
     if (x_len != data_len)
-        return(c("object dimensions [product ", x_len, "] do not ",
-                 "match the length of its data [" , data_len, "]"))
+        return(paste0("object dimensions [product ", x_len, "] do not ",
+                      "match the length of its data [" , data_len, "]"))
     ## Until S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a
     ## numeric vector, we cannot support long SolidRleArraySeed objects.
     if (x_len > .Machine$integer.max)
@@ -181,13 +181,13 @@ setValidity2("RleRealizationSink", .validate_RleRealizationSink)
      || S4Vectors:::anyMissing(x@breakpoints)
      || is.unsorted(x@breakpoints, strictly=TRUE)
      || length(x@breakpoints) != 0L && x@breakpoints[[1L]] <= 0L)
-        return(c("'x@breakpoints' must be a numeric vector containing ",
-                 "strictly sorted positive values"))
+        return(paste0("'x@breakpoints' must be a numeric vector containing ",
+                      "strictly sorted positive values"))
     x_len <- length(x)
     data_len <- .get_data_length_from_breakpoints(x@breakpoints)
     if (data_len != x_len)
-        return(c("length of object data [" , data_len, "] does not ",
-                 "match object dimensions [product ", x_len, "]"))
+        return(paste0("length of object data [" , data_len, "] does not ",
+                      "match object dimensions [product ", x_len, "]"))
     chunk_lens <- diff(c(0, x@breakpoints))  # chunk lengths as inferred from
                                              # 'breakpoints'
     ## Until S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a
@@ -205,8 +205,8 @@ setValidity2("RleRealizationSink", .validate_RleRealizationSink)
 #{
 #    ## 'chunk_runs_along_last_dim' slot.
 #    if (anyNA(x@chunk_runs_along_last_dim))
-#        return(c("'chunk_runs_along_last_dim' slot must ",
-#                 "be a logical vector with no NAs"))
+#        return(paste0("'chunk_runs_along_last_dim' slot must ",
+#                      "be a logical vector with no NAs"))
 #    ## 'chunks' slot.
 #    if (!identical(lengths(x@chunk_grid), .get_chunk_lens(x@chunks)))
 #        return("chunk lengths don't match chunking grid element lengths")

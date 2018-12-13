@@ -153,12 +153,12 @@ validate_dim_slot <- function(x, slotname="dim")
 {
     x_dim <- slot(x, slotname)
     if (!is.integer(x_dim))
-        return(sprintf("'%s' slot must be an integer vector", slotname))
+        return(paste0("'", slotname, "' slot must be an integer vector"))
     if (length(x_dim) == 0L)
-        return(sprintf("'%s' slot cannot be empty", slotname))
+        return(paste0("'", slotname, "' slot cannot be empty"))
     if (S4Vectors:::anyMissingOrOutside(x_dim, 0L))
-        return(sprintf("'%s' slot cannot contain negative or NA values",
-                       slotname))
+        return(paste0("'", slotname, "' slot cannot contain negative ",
+                      "or NA values"))
     TRUE
 }
 
@@ -166,10 +166,10 @@ validate_dimnames_slot <- function(x, dim, slotname="dimnames")
 {
     x_dimnames <- slot(x, slotname)
     if (!is.list(x_dimnames))
-        return(sprintf("'%s' slot must be a list", slotname))
+        return(paste0("'", slotname, "' slot must be a list"))
     if (length(x_dimnames) != length(dim))
-        return(c(sprintf("'%s' slot must have ", slotname),
-                 "one list element per dimension in the object"))
+        return(paste0("'", slotname, "' slot must have ",
+                      "one list element per dimension in the object"))
     ok <- vapply(seq_along(dim),
                  function(along) {
                    dn <- x_dimnames[[along]]
@@ -180,9 +180,9 @@ validate_dimnames_slot <- function(x, dim, slotname="dimnames")
                  logical(1),
                  USE.NAMES=FALSE)
     if (!all(ok))
-        return(c(sprintf("each list element in '%s' slot ", slotname),
-                 "must be NULL or a character vector along ",
-                 "the corresponding dimension in the object"))
+        return(paste0("each list element in '", slotname, "' slot ",
+                      "must be NULL or a character vector along ",
+                      "the corresponding dimension in the object"))
     TRUE
 }
 

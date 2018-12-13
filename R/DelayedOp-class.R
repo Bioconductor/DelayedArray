@@ -105,8 +105,8 @@ setClass("DelayedSubset",
     ok <- lapply(x@index,
               function(i) {is.null(i) || is.integer(i) && is.null(names(i))})
     if (!all(unlist(ok)))
-        return(c("each list element in 'x@index' must be NULL ",
-                 "or an integer vector with no names on it"))
+        return(paste0("each list element in 'x@index' must be NULL ",
+                      "or an integer vector with no names on it"))
     TRUE
 }
 
@@ -977,8 +977,8 @@ setClass("DelayedDimnames",
 
     ## 'dimnames' slot.
     if (length(x@dimnames) != seed_ndim)
-        return(c("'x@dimnames' must have one list element per dimension ",
-                 "in 'x@seed'"))
+        return(paste0("'x@dimnames' must have one list element per ",
+                      "dimension in 'x@seed'"))
     ok <- mapply(function(dn, d) {
                      identical(dn, .INHERIT_FROM_SEED) ||
                      is.null(dn) ||
@@ -987,10 +987,10 @@ setClass("DelayedDimnames",
                  x@dimnames, seed_dim,
                  SIMPLIFY=FALSE, USE.NAMES=FALSE)
     if (!all(unlist(ok)))
-        return(c("each list element in 'x@dimnames' must be NULL, ",
-                 "or a character vector of length the extent of ",
-                 "the corresponding dimension, or special value ",
-                 .INHERIT_FROM_SEED))
+        return(paste0("each list element in 'x@dimnames' must be NULL, ",
+                      "or a character vector of length the extent of ",
+                      "the corresponding dimension, or special value ",
+                      .INHERIT_FROM_SEED))
     TRUE
 }
 
@@ -1234,8 +1234,8 @@ setClass("DelayedAbind",
         return("'x@along' must be a single positive integer")
     ndim <- length(dim(x@seeds[[1L]]))
     if (ndim < x@along)
-        return(c("the array-like objects to bind must have at least ",
-                 x@along, " dimensions for this binding operation"))
+        return(paste0("the array-like objects to bind must have at least ",
+                      x@along, " dimensions for this binding operation"))
 
     dims <- get_dims_to_bind(x@seeds, x@along)
     if (is.character(dims))

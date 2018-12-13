@@ -35,15 +35,15 @@ setClass("SparseArraySeed",
         return("'aind' slot must be an integer matrix")
     x_dim <- x@dim
     if (ncol(x_aind) != length(x_dim))
-        return(c("'aind' slot must be a matrix with ",
-                 "one column per dimension"))
+        return(paste0("'aind' slot must be a matrix with ",
+                      "one column per dimension"))
     for (along in seq_along(x_dim)) {
-        notok <- S4Vectors:::anyMissingOrOutside(x_aind[ , along],
-                                                 1L, x_dim[[along]])
-        if (notok)
-            return(c("'aind' slot must contain valid indices, ",
-                     "that is, indices that are not NA and are ",
-                     ">= 1 and <= their corresponding dimension"))
+        not_ok <- S4Vectors:::anyMissingOrOutside(x_aind[ , along],
+                                                  1L, x_dim[[along]])
+        if (not_ok)
+            return(paste0("'aind' slot must contain valid indices, ",
+                          "that is, indices that are not NA and are ",
+                          ">= 1 and <= their corresponding dimension"))
     }
     TRUE
 }
@@ -52,8 +52,8 @@ setClass("SparseArraySeed",
 {
     x_nzdata <- x@nzdata
     if (!(is.vector(x_nzdata) && length(x_nzdata) == nrow(x@aind)))
-        return(c("'nzdata' slot must be a vector of length ",
-                 "the number of rows in the 'aind' slot"))
+        return(paste0("'nzdata' slot must be a vector of length ",
+                      "the number of rows in the 'aind' slot"))
     TRUE
 }
 
