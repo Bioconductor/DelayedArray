@@ -148,14 +148,6 @@ combine_array_objects <- function(objects)
 ### Used in validity methods
 ###
 
-### A modified version of S4Vectors::wmsg() that is better suited for use
-### by validity methods.
-### TODO: Put this in S4Vectors next to wmsg(). Would probably need a better
-### name.
-wmsg2 <- function(...)
-    paste0("\n    ",
-           paste0(strwrap(paste0(c(...), collapse="")), collapse="\n    "))
-
 validate_dim_slot <- function(x, slotname="dim")
 {
     x_dim <- slot(x, slotname)

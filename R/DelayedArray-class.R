@@ -121,8 +121,8 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 #    ## and not the real class of 'x', which seems to be a bug in validObject().
 #    ## This prevents us from doing the check below.
 #    if (seed_ndim == 2L && !is(x, matrixClass(x)))
-#        return(wmsg2("'x' has 2 dimensions but is not a ",
-#                     matrixClass(x), " derivative"))
+#        return(c("'x' has 2 dimensions but is not a ",
+#                 matrixClass(x), " derivative"))
     TRUE
 }
 
@@ -133,7 +133,7 @@ setValidity2("DelayedArray", .validate_DelayedArray)
 .validate_DelayedMatrix <- function(x)
 {
     if (length(dim(x)) != 2L)
-        return(wmsg2("'x' must have exactly 2 dimensions"))
+        return("'x' must have exactly 2 dimensions")
     TRUE
 }
 

@@ -47,10 +47,10 @@ setClass("ArrayViewport",
 {
     msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     msg <- .validate_ranges_slot(x)
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     TRUE
 }
 
@@ -291,15 +291,15 @@ get_RegularArrayGrid_dim <- function(refdim, spacings)
 {
     x_tickmarks <- x@tickmarks
     if (!is.list(x_tickmarks))
-        return(wmsg2("'tickmarks' slot must be a list"))
+        return("'tickmarks' slot must be a list")
     ok <- vapply(x_tickmarks, .valid_tickmarks, logical(1), USE.NAMES=FALSE)
     if (!all(ok))
-        return(wmsg2("each list element in 'tickmarks' slot must be a ",
-                     "sorted integer vector of non-negative values"))
+        return(c("each list element in 'tickmarks' slot must be a ",
+                 "sorted integer vector of non-negative values"))
     x_maxlen <- .get_ArbitraryArrayGrid_maxlength(x)
     if (x_maxlen > .Machine$integer.max)
-        return(wmsg2("grid is too coarse (all grid elements must have a ",
-                     "length <= .Machine$integer.max)"))
+        return(c("grid is too coarse (all grid elements must have a ",
+                 "length <= .Machine$integer.max)"))
     TRUE
 }
 setValidity2("ArbitraryArrayGrid", .validate_ArbitraryArrayGrid)
@@ -308,25 +308,24 @@ setValidity2("ArbitraryArrayGrid", .validate_ArbitraryArrayGrid)
 {
     msg <- validate_dim_slot(x, "refdim")
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     msg <- validate_dim_slot(x, "spacings")
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     x_spacings <- x@spacings
     x_refdim <- x@refdim
     if (length(x_spacings) != length(x_refdim))
-        return(wmsg2("'spacings' and 'refdim' slots must have ",
-                     "the same length"))
+        return("'spacings' and 'refdim' slots must have the same length")
     if (!all(x_spacings <= x_refdim))
-        return(wmsg2("values in 'spacings' slot must be <= their ",
-                     "corresponding value in 'refdim' slot"))
+        return(c("values in 'spacings' slot must be <= their ",
+                 "corresponding value in 'refdim' slot"))
     if (any(x_spacings == 0L & x_refdim != 0L))
-        return(wmsg2("values in 'spacings' slot cannot be 0 unless their ",
-                     "corresponding value in 'refdim' slot is also 0"))
+        return(c("values in 'spacings' slot cannot be 0 unless their ",
+                 "corresponding value in 'refdim' slot is also 0"))
     x_maxlen <- .get_RegularArrayGrid_maxlength(x)
     if (x_maxlen > .Machine$integer.max)
-        return(wmsg2("grid is too coarse (all grid elements must have a ",
-                     "length <= .Machine$integer.max)"))
+        return(c("grid is too coarse (all grid elements must have a ",
+                 "length <= .Machine$integer.max)"))
     TRUE
 }
 setValidity2("RegularArrayGrid", .validate_RegularArrayGrid)

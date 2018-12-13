@@ -117,10 +117,10 @@ setClass("ChunkedRleArraySeed",
 {
     msg <- validate_dim_slot(x, "DIM")
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     msg <- validate_dimnames_slot(x, x@DIM, "DIMNAMES")
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     TRUE
 }
 setValidity2("RleArraySeed", .validate_RleArraySeed)
@@ -129,16 +129,16 @@ setValidity2("RleArraySeed", .validate_RleArraySeed)
 {
     ## 'rle' slot.
     if (!is(x@rle, "Rle"))
-        return(wmsg2("'rle' slot must be an Rle object"))
+        return("'rle' slot must be an Rle object")
     x_len <- length(x)
     data_len <- length(x@rle)
     if (x_len != data_len)
-        return(wmsg2("object dimensions [product ", x_len, "] do not ",
-                     "match the length of its data [" , data_len, "]"))
+        return(c("object dimensions [product ", x_len, "] do not ",
+                 "match the length of its data [" , data_len, "]"))
     ## Until S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a
     ## numeric vector, we cannot support long SolidRleArraySeed objects.
     if (x_len > .Machine$integer.max)
-        return(wmsg2("long SolidRleArraySeed objects are not supported yet"))
+        return("long SolidRleArraySeed objects are not supported yet")
     TRUE
 }
 setValidity2("SolidRleArraySeed", .validate_SolidRleArraySeed)
@@ -147,24 +147,22 @@ setValidity2("SolidRleArraySeed", .validate_SolidRleArraySeed)
 {
     ## 'type' slot.
     if (!isSingleString(x@type))
-        return(wmsg2("'type' slot must be a single string"))
+        return("'type' slot must be a single string")
 
     ## TODO: Add the 2 checks below when RleRealizationSink supports a
     ## RegularArrayGrid of chunks.
     ## 'chunk_grid' slot.
     #if (!is(x@chunk_grid, "RegularArrayGrid"))
-    #    return(wmsg2("'chunk_grid' slot must be a RegularArrayGrid object"))
+    #    return("'chunk_grid' slot must be a RegularArrayGrid object")
     #if (!identical(x@DIM, refdim(x@chunk_grid)))
-    #    return(wmsg2("'chunk_grid' slot must be a grid that ",
-    #                 "fits the object"))
+    #    return("'chunk_grid' slot must be a grid that fits the object")
     ## 'chunk_runs_along_last_dim' slot.
     #if (!is.logical(x@chunk_runs_along_last_dim))
-    #    return(wmsg2("'chunk_runs_along_last_dim' slot must ",
-    #                 "be a logical vector"))
+    #    return("'chunk_runs_along_last_dim' slot must be a logical vector")
 
     ## 'chunks' slot.
     if (!is.environment(x@chunks))
-        return(wmsg2("'chunks' slot must be an environment"))
+        return("'chunks' slot must be an environment")
     # TODO: Validate the content of 'chunks'.
     TRUE
 }
@@ -183,20 +181,19 @@ setValidity2("RleRealizationSink", .validate_RleRealizationSink)
      || S4Vectors:::anyMissing(x@breakpoints)
      || is.unsorted(x@breakpoints, strictly=TRUE)
      || length(x@breakpoints) != 0L && x@breakpoints[[1L]] <= 0L)
-        return(wmsg2("'x@breakpoints' must be a numeric vector containing ",
-                     "strictly sorted positive values"))
+        return(c("'x@breakpoints' must be a numeric vector containing ",
+                 "strictly sorted positive values"))
     x_len <- length(x)
     data_len <- .get_data_length_from_breakpoints(x@breakpoints)
     if (data_len != x_len)
-        return(wmsg2("length of object data [" , data_len, "] does not ",
-                     "match object dimensions [product ", x_len, "]"))
+        return(c("length of object data [" , data_len, "] does not ",
+                 "match object dimensions [product ", x_len, "]"))
     chunk_lens <- diff(c(0, x@breakpoints))  # chunk lengths as inferred from
                                              # 'breakpoints'
     ## Until S4Vectors:::extract_positions_from_Rle() accepts 'pos' as a
     ## numeric vector, the chunks cannot be long Rle objects.
     if (any(chunk_lens > .Machine$integer.max))
-        return(wmsg2("ChunkedRleArraySeed objects do not support ",
-                     "long chunks yet"))
+        return("ChunkedRleArraySeed objects do not support long chunks yet")
     # TODO: Check that the chunk lengths as inferred from 'breakpoints'
     # actually match the real ones.
     TRUE
@@ -208,11 +205,11 @@ setValidity2("RleRealizationSink", .validate_RleRealizationSink)
 #{
 #    ## 'chunk_runs_along_last_dim' slot.
 #    if (anyNA(x@chunk_runs_along_last_dim))
-#        return(wmsg2("'chunk_runs_along_last_dim' slot must ",
-#                     "be a logical vector with no NAs"))
+#        return(c("'chunk_runs_along_last_dim' slot must ",
+#                 "be a logical vector with no NAs"))
 #    ## 'chunks' slot.
 #    if (!identical(lengths(x@chunk_grid), .get_chunk_lens(x@chunks)))
-#        return(wmsg2("chunk lengths don't match chunking grid element lengths"))
+#        return("chunk lengths don't match chunking grid element lengths")
 #    TRUE
 #}
 setValidity2("ChunkedRleArraySeed", .validate_ChunkedRleArraySeed)
@@ -379,7 +376,7 @@ setMethod("matrixClass", "RleArray", function(x) "RleMatrix")
 .validate_RleArray <- function(x)
 {
     if (!is(x@seed, "RleArraySeed"))
-        return(wmsg2("'x@seed' must be an RleArraySeed object"))
+        return("'x@seed' must be an RleArraySeed object")
     TRUE
 }
 

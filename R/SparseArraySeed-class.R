@@ -61,13 +61,13 @@ setClass("SparseArraySeed",
 {
     msg <- validate_dim_slot(x, "dim")
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     msg <- .validate_aind_slot(x)
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     msg <- .validate_nzdata_slot(x)
     if (!isTRUE(msg))
-        return(wmsg2(msg))
+        return(msg)
     TRUE
 }
 

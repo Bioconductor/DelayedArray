@@ -70,7 +70,7 @@ setClass("DelayedUnaryOp",
 .validate_DelayedUnaryOp <- function(x)
 {
     if (length(dim(x@seed)) == 0L)
-        return(wmsg2("the supplied seed must have dimensions"))
+        return("the supplied seed must have dimensions")
     TRUE
 }
 
@@ -99,15 +99,14 @@ setClass("DelayedSubset",
 {
     ## 'index' slot.
     if (length(x@index) != length(dim(x@seed)))
-        return(wmsg2("'x@index' must have one list element per dimension ",
-                     "in 'x@seed'"))
+        return("'x@index' must have one list element per dimension in 'x@seed'")
     if (!is.null(names(x@index)))
-        return(wmsg2("'x@index' should not have names"))
+        return("'x@index' should not have names")
     ok <- lapply(x@index,
               function(i) {is.null(i) || is.integer(i) && is.null(names(i))})
     if (!all(unlist(ok)))
-        return(wmsg2("each list element in 'x@index' must be NULL ",
-                     "or an integer vector with no names on it"))
+        return(c("each list element in 'x@index' must be NULL ",
+                 "or an integer vector with no names on it"))
     TRUE
 }
 
@@ -978,8 +977,8 @@ setClass("DelayedDimnames",
 
     ## 'dimnames' slot.
     if (length(x@dimnames) != seed_ndim)
-        return(wmsg2("'x@dimnames' must have one list element per dimension ",
-                     "in 'x@seed'"))
+        return(c("'x@dimnames' must have one list element per dimension ",
+                 "in 'x@seed'"))
     ok <- mapply(function(dn, d) {
                      identical(dn, .INHERIT_FROM_SEED) ||
                      is.null(dn) ||
@@ -988,10 +987,10 @@ setClass("DelayedDimnames",
                  x@dimnames, seed_dim,
                  SIMPLIFY=FALSE, USE.NAMES=FALSE)
     if (!all(unlist(ok)))
-        return(wmsg2("each list element in 'x@dimnames' must be NULL, ",
-                     "or a character vector of length the extent of ",
-                     "the corresponding dimension, or special value ",
-                     .INHERIT_FROM_SEED))
+        return(c("each list element in 'x@dimnames' must be NULL, ",
+                 "or a character vector of length the extent of ",
+                 "the corresponding dimension, or special value ",
+                 .INHERIT_FROM_SEED))
     TRUE
 }
 
@@ -1085,7 +1084,7 @@ setClass("DelayedNaryOp",
 .validate_DelayedNaryOp <- function(x)
 {
     if (length(x@seeds) == 0L)
-        return(wmsg2("'x@seeds' cannot be empty"))
+        return("'x@seeds' cannot be empty")
     TRUE
 }
 
@@ -1134,8 +1133,7 @@ setClass("DelayedNaryIsoOp",
 {
     ## 'seeds' slot.
     if (!.arrays_are_conformable(x@seeds))
-        return(wmsg2("'x@seeds' must be a list of conformable ",
-                     "array-like objects"))
+        return("'x@seeds' must be a list of conformable array-like objects")
     TRUE
 }
 
@@ -1233,15 +1231,15 @@ setClass("DelayedAbind",
 {
     ## 'along' slot.
     if (!(isSingleInteger(x@along) && x@along >= 1L))
-        return(wmsg2("'x@along' must be a single positive integer"))
+        return("'x@along' must be a single positive integer")
     ndim <- length(dim(x@seeds[[1L]]))
     if (ndim < x@along)
-        return(wmsg2("the array-like objects to bind must have at least ",
-                     x@along, " dimensions for this binding operation"))
+        return(c("the array-like objects to bind must have at least ",
+                 x@along, " dimensions for this binding operation"))
 
     dims <- get_dims_to_bind(x@seeds, x@along)
     if (is.character(dims))
-        return(wmsg2(dims))
+        return(dims)
     TRUE
 }
 
