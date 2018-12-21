@@ -1,9 +1,9 @@
 
 test_RleArray <- function()
 {
-    rle <- Rle(1:200000, 125)
-    A1 <- RleArray(rle, c(62500, 400))
-    A2 <- RleArray(rle, c(62500, 400), chunksize=1e8)
+    data <- Rle(1:200000, 125)
+    A1 <- RleArray(data, c(62500, 400))
+    A2 <- RleArray(data, c(62500, 400), chunksize=1e8)
 
     on.exit(setAutoBlockSize())
     setAutoBlockSize(10e6)
@@ -19,36 +19,45 @@ test_RleArray <- function()
 
 test_long_RleArray <- function()
 {
-    ## Right now it's not possible to create a long RleArray object with
-    ## the RleArray() constructor function. So we use the low-level RleArray
-    ## construction API to do this:
-    RleRealizationSink <- DelayedArray:::RleRealizationSink
-    append_Rle_to_sink <- DelayedArray:::.append_Rle_to_sink
-    sink <- RleRealizationSink(c(30000L, 75000L), type="integer")
-    #rle1 <- Rle(1:500000, 2000)
-    rle1 <- Rle(1:5000, 200000)
-    append_Rle_to_sink(rle1, sink)
-    #rle2 <- Rle(1:2000000, 125)
-    rle2 <- Rle(1:20000, 12500)
-    append_Rle_to_sink(rle2, sink)
-    #rle3 <- Rle(1:5000000, 200)
-    rle3 <- Rle(1:50000, 20000)
-    append_Rle_to_sink(rle3, sink)
-    A <- as(sink, "RleArray")
-
+    data <- list(Rle(1:5000, 200000), Rle(1:20000, 12500), Rle(1:50000, 20000))
+    A <- RleArray(data, dim=c(30000, 75000))
     checkTrue(validObject(A, complete=TRUE))
     checkTrue(is(seed(A), "ChunkedRleArraySeed"))
 
     ## TODO: Add more tests...
 }
 
-test_coercion_to_RleArray <- function() {
-    from <- RleList()
-    checkIdentical(as(from, "RleArray"), RleArray(Rle(), c(0, 0)))
-    from <- RleList(A = Rle(1, 10), B = Rle(2, 10))
-    checkIdentical(as(from, "RleArray"),
-                   RleArray(Rle(c(1, 2), c(10, 10)), c(10, 2),
-                            list(NULL, c("A", "B"))))
-    from <- RleList(A = Rle(1, 10), B = Rle(2, 9))
-    checkException(as(from, "RleArray"), silent = TRUE)
+test_coercion_to_RleArray <- function()
+{
+    TYPES <- c("logical", "integer", "double", "complex", "character", "raw")
+    for (type in TYPES) {
+        x0 <- vector(type)
+        from <- as(Rle(x0), "CompressedRleList")
+        current <- as(from, "RleArray")
+        checkTrue(is(current, "RleMatrix"))
+        checkTrue(validObject(current, complete=TRUE))
+        checkIdentical(c(0L, 0L), dim(current))
+        checkIdentical(type, type(current))
+        checkIdentical(matrix(x0, nrow=0, ncol=0), as.matrix(current))
+    }
+
+    from <- RleList(compress=FALSE)
+    current <- as(from, "RleArray")
+    checkTrue(is(current, "RleMatrix"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkIdentical(c(0L, 0L), dim(current))
+    checkIdentical("logical", type(current))
+    checkIdentical(matrix(nrow=0, ncol=0), as.matrix(current))
+
+    from <- RleList(A=Rle(1, 10), B=Rle(2, 10))
+    current <- as(from, "RleArray")
+    checkTrue(is(current, "RleMatrix"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkIdentical(c(10L, 2L), dim(current))
+    checkIdentical("double", type(current))
+    checkIdentical(cbind(A=rep(1, 10), B=rep(2, 10)), as.matrix(current))
+
+    from <- RleList(A=Rle(1, 10), B=Rle(2, 9))
+    checkException(as(from, "RleArray"))
 }
+

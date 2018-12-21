@@ -16,7 +16,7 @@ Author: Hervé Pagès <hpages@fredhutch.org>, with contributions from
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 Depends: R (>= 3.4), methods, stats4, matrixStats, BiocGenerics (>= 0.27.1),
-	S4Vectors (>= 0.21.7), IRanges (>= 2.11.17), BiocParallel
+	S4Vectors (>= 0.21.7), IRanges (>= 2.17.3), BiocParallel
 Imports: stats, Matrix
 LinkingTo: S4Vectors
 Suggests: Matrix, HDF5Array, genefilter, SummarizedExperiment, airway, pryr,
