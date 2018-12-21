@@ -89,8 +89,8 @@ setClass("ChunkedRleArraySeed",
     ## 'unlist(eapply(envir, length))' but the list returned by eapply()
     ## is not guaranteed to be sorted and eapply() does not have a 'sorted'
     ## argument. So would need to manually sort it.
-    ## Another possibility would be to vapply() on the sorted symbols returned
-    ## by 'ls(envir, sorted=TRUE)'.
+    ## Another possibility would be to vapply() on the sorted symbols
+    ## returned by 'ls(envir, sorted=TRUE)'.
     vapply(seq_len(length(envir)),
            function(k) length(.get_chunk(envir, k)),
            numeric(1))
@@ -227,23 +227,40 @@ setMethod("dimnames", "RleArraySeed",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Coercion to Rle objects
+### Going from RleArraySeed to Rle or RleList
 ###
 
 setAs("SolidRleArraySeed", "Rle", function(from) from@rle)
 
-### In practice this coercion is not used on an RleRealizationSink instance
-### but on a *ChunkedRleArraySeed* instance (by the coercion method from
-### ChunkedRleArraySeed to SolidRleArraySeed defined below in this file).
-setAs("RleRealizationSink", "Rle",
+### Return an unnamed RleList object with 1 list element per chunk in 'from'.
+setAs("RleRealizationSink", "RleList",
     function(from)
     {
-        ans <- Rle(vector(from@type))
+        x0 <- vector(from@type)
+        ## When the object is empty, return a CompressedRleList, NOT a
+        ## SimpleRleList object, so unlist() can be used on it.
         if (length(from@chunks) == 0L)
-            return(ans)
-        list_of_Rles <- c(list(ans), unname(as.list(from@chunks, sorted=TRUE)))
-        do.call(c, list_of_Rles)
+            return(as(Rle(x0), "CompressedRleList"))
+        chunks <- unname(as.list(from@chunks, sorted=TRUE))
+        chunks <- lapply(chunks,
+               function(chunk) {
+                   chunk_vals <- runValue(chunk)
+                   if (typeof(chunk_vals) != from@type) {
+                       chunk_vals <- S4Vectors:::coerce2(chunk_vals, x0)
+                       runValue(chunk) <- chunk_vals
+                   }
+                   chunk
+               })
+        as(chunks, "SimpleRleList")
     }
+)
+
+### In practice this coercion is not used on an RleRealizationSink instance
+### but on a *ChunkedRleArraySeed* instance (e.g. by coercion methods from
+### ChunkedRleArraySeed to SolidRleArraySeed or from RleArray to Rle defined
+### below in this file).
+setAs("RleRealizationSink", "Rle",
+    function(from) unlist(as(from, "RleList"), use.names=FALSE)
 )
 
 
@@ -290,7 +307,7 @@ setMethod("extract_array", "ChunkedRleArraySeed",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Construction of RleRealizationSink and RleArraySeed objects
+### RleRealizationSink constructor
 ###
 
 ### NOT exported!
@@ -303,17 +320,52 @@ RleRealizationSink <- function(dim, dimnames=NULL, type="double")
                                type=type, chunks=chunks)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### RleArraySeed constructor
+###
+
+### 'data' must be a non-zero length list-like object where all the list
+### elements are Rle objects.
+.normalize_data_as_list_of_Rles <- function(data)
+{
+    if (length(data) == 0L)
+        stop(wmsg("the input cannot be a list-like object of length 0"))
+    if (is(data, "CompressedRleList"))
+        return(as.list(data))
+    if (!is(data, "RleList")) {
+        ok <- vapply(data, is, logical(1), "Rle", USE.NAMES=FALSE)
+        if (!all(ok))
+            stop(wmsg("all the list elements in the input object ",
+                      "must be Rle objects"))
+    }
+    ## Turn 'data' into an ordinary list where all the list elements are
+    ## Rle objects of the same type.
+    data0 <- lapply(data, function(x) runValue(x)[integer(0)])
+    data_type <- typeof(unlist(data0, use.names=FALSE))
+    x0 <- vector(data_type)
+    lapply(data,
+        function(x) {
+            x_vals <- runValue(x)
+            if (typeof(x_vals) != data_type) {
+                x_vals <- S4Vectors:::coerce2(x_vals, x0)
+                runValue(x) <- x_vals
+            }
+            x
+        })
+}
+
 .append_Rle_to_sink <- function(x, sink)
 {
     stopifnot(is(x, "Rle"))
     if (length(x) == 0L)
         return()  # nothing to do
     if (sink@type == "integer") {
-        run_values <- runValue(x)
+        x_vals <- runValue(x)
         ## Replace integer-Rle with raw-Rle if this doesn't loose
         ## information.
-        if (!S4Vectors:::anyMissingOrOutside(run_values, 0L, 255L))
-            runValue(x) <- as.raw(run_values)
+        if (!S4Vectors:::anyMissingOrOutside(x_vals, 0L, 255L))
+            runValue(x) <- as.raw(x_vals)
     }
     .append_chunk(sink@chunks, x)
 }
@@ -328,8 +380,12 @@ setAs("RleRealizationSink", "ChunkedRleArraySeed",
     }
 )
 
+### 'data' must be an Rle object or a list-like object where all the list
+### elements are Rle objects. In the former case, and if 'chunksize' is
+### not specified, a SolidRleArraySeed object is returned. Otherwise a
+### ChunkedRleArraySeed object is returned.
 ### NOT exported!
-RleArraySeed <- function(rle, dim, dimnames=NULL, chunksize=NULL)
+RleArraySeed <- function(data, dim, dimnames=NULL, chunksize=NULL)
 {
     if (!is.numeric(dim))
         stop(wmsg("the supplied dim vector must be numeric"))
@@ -338,17 +394,42 @@ RleArraySeed <- function(rle, dim, dimnames=NULL, chunksize=NULL)
     if (is.null(dimnames))
         dimnames <- vector("list", length=length(dim))
 
-    if (is.null(chunksize))
-        return(new2("SolidRleArraySeed", DIM=dim, DIMNAMES=dimnames, rle=rle))
+    if (is(data, "Rle")) {
+        ans_len <- length(data)
+        if (ans_len != prod(dim))
+            stop(wmsg("length of input data [" , ans_len, "] does not ",
+                      "match object dimensions [product ", prod(dim), "]"))
+        if (ans_len > .Machine$integer.max)
+            stop(wmsg("Input data is too long (>= 2^31). Please supply an ",
+                      "ordinary list of Rle objects instead, or an RleList ",
+                      "object, or a DataFrame object where all the columns ",
+                      "are Rle objects."))
+        if (is.null(chunksize))
+            return(new2("SolidRleArraySeed", DIM=dim, DIMNAMES=dimnames,
+                                             rle=data))
+        ans_type <- typeof(runValue(data))
+        ## FIXME: breakInChunks() does not accept a 'totalsize' >= 2^31 at
+        ## the moment so this won't work on a long Rle.
+        partitioning <- breakInChunks(ans_len, chunksize=chunksize)
+        data <- relist(data, partitioning)
+    } else if (is(data, "list_OR_List")) {
+        data <- .normalize_data_as_list_of_Rles(data)
+        ans_len <- sum(lengths(data))  # can be >= 2^31
+        if (ans_len != prod(dim))
+            stop(wmsg("total length of input data [" , ans_len, "] does not ",
+                      "match object dimensions [product ", prod(dim), "]"))
+        if (!is.null(chunksize))
+            warning(wmsg("'chunksize' is currently ignored ",
+                         "when the input is a list-like object"))
+        ans_type <- typeof(runValue(data[[1L]]))
+    } else {
+        stop(wmsg("'data' must be an Rle object or a list-like object ",
+                  "where all the list elements are Rle objects"))
+    }
 
-    type <- typeof(runValue(rle))
-    sink <- RleRealizationSink(dim, dimnames, type)
-    ## FIXME: breakInChunks() does not accept a 'totalsize' >= 2^31 at the
-    ## moment so this won't work on a long Rle.
-    partitioning <- breakInChunks(length(rle), chunksize=chunksize)
-    rle_list <- relist(rle, partitioning)
-    for (k in seq_along(rle_list))
-        .append_Rle_to_sink(rle_list[[k]], sink)
+    sink <- RleRealizationSink(dim, dimnames, ans_type)
+    for (k in seq_along(data))
+        .append_Rle_to_sink(data[[k]], sink)
     as(sink, "ChunkedRleArraySeed")
 }
 
@@ -390,22 +471,28 @@ setMethod("DelayedArray", "RleArraySeed",
     function(seed) new_DelayedArray(seed, Class="RleArray")
 )
 
-### Works directly on an RleArraySeed object, in which case it must be called
-### with a single argument.
-RleArray <- function(rle, dim, dimnames=NULL, chunksize=NULL)
+### 'data' must be an Rle object or a list-like object where all the list
+### elements are Rle objects. In the former case, and if 'chunksize' is
+### not specified, the returned RleArray will be a "solid" RleArray i.e.
+### its seed will be a SolidRleArraySeed object. Otherwise it will be
+### "chunked" i.e. its seed will be a ChunkedRleArraySeed object.
+### In addition RleArray() also works directly on an RleArraySeed object,
+### in which case it must be called with a single argument.
+RleArray <- function(data, dim, dimnames=NULL, chunksize=NULL)
 {
-    if (is(rle, "RleArraySeed")) {
+    if (is(data, "RleArraySeed")) {
         if (!(missing(dim) && is.null(dimnames) && is.null(chunksize)))
             stop(wmsg("RleArray() must be called with a single argument ",
                       "when passed an RleArraySeed object"))
-        seed <- rle
+        seed <- data
     } else {
-        seed <- RleArraySeed(rle, dim, dimnames=dimnames, chunksize=chunksize)
+        seed <- RleArraySeed(data, dim, dimnames=dimnames, chunksize=chunksize)
     }
     DelayedArray(seed)
 }
 
 ### Deconstruction.
+### The returned Rle has the length of the RleArray object.
 setAs("RleArray", "Rle", function(from) as(from@seed, "Rle"))
 
 
@@ -450,7 +537,61 @@ setAs("DelayedMatrix", "RleMatrix", .as_RleArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Switching between DataFrame and RleMatrix representation
+### Switching between RleList and RleMatrix
+###
+
+### From RleList to RleMatrix.
+### Return an RleMatrix object with 1 column per list element in the RleList
+### object. More precisely, when the RleList object has at least 1 column,
+### the returned RleMatrix object is "chunked" and has 1 chunk per column
+### (so 1 chunk per list element in the original RleList object).
+.from_RleList_to_RleMatrix <- function(from)
+{
+    ans_ncol <- length(from)
+    if (ans_ncol == 0L) {
+        unlisted_from <- unlist(from, use.names=FALSE)
+        return(RleArray(unlisted_from, c(0L, 0L)))
+    }
+    from_lens <- lengths(from, use.names = FALSE)
+    ans_nrow <- from_lens[[1L]]
+    if (!all(from_lens == ans_nrow))
+        stop(wmsg("all the list elements in the RleList object ",
+                  "to coerce must have the same length"))
+    RleArray(from, c(ans_nrow, ans_ncol),
+             dimnames=list(NULL, names(from)))
+}
+
+setAs("RleList", "RleArray", .from_RleList_to_RleMatrix)
+
+### From RleMatrix to RleList.
+### Return an RleList object with 1 list element per column in the RleMatrix
+### object. More precisely, when the length of the RleMatrix object is < 2^31,
+### then a CompressedRleList object is returned. Otherwise, a SimpleRleList
+### object is returned. Note that in this case, the current implementation
+### only knows how to handle the situation where the RleMatrix has 1 chunk
+### per column.
+.from_RleMatrix_to_RleList <- function(from)
+{
+    if (length(from) <= .Machine$integer.max) {
+        unlisted_ans <- as(from, "Rle")
+        ans_breakpoints <- seq_len(ncol(from)) * nrow(from)
+        ans_partitioning <- PartitioningByEnd(ans_breakpoints,
+                                              names=colnames(from))
+        return(relist(unlisted_ans, ans_partitioning))
+    }
+    ## 'from@seed' is guaranteed to be a ChunkedRleArraySeed object.
+    chunk_lens <- .get_chunk_lens(from@seed@chunks)
+    if (!all(chunk_lens == nrow(from)))
+        stop(wmsg("coercing this RleMatrix object to an RleArray object ",
+                  "is not supported at the moment"))
+    setNames(as(from@seed, "RleList"), colnames(from))
+}
+
+setAs("RleMatrix", "RleList", .from_RleMatrix_to_RleList)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Switching between DataFrame and RleMatrix
 ###
 
 ### From DataFrame to RleMatrix.
@@ -464,15 +605,10 @@ setAs("DataFrame", "RleArray", .from_DataFrame_to_RleMatrix)
 ### From RleMatrix to DataFrame.
 .from_RleMatrix_to_DataFrame <- function(from)
 {
-    ## We mangle the colnames exactly like as.data.frame() would do.
-    ans_colnames <- colnames(as.data.frame(from[0L, ]))
-    rle <- as(from@seed, "Rle")
-    partitioning <- PartitioningByEnd(nrow(from) * seq_len(ncol(from)),
-                                      names=ans_colnames)
-    listData <- as.list(relist(rle, partitioning))
-    new2("DataFrame", listData=listData,
-                      nrows=nrow(from),
-                      rownames=rownames(from))
+    listData <- as.list(as(from, "RleList"))
+    ans <- S4Vectors:::new_DataFrame(listData, nrows=nrow(from))
+    rownames(ans) <- rownames(from)
+    ans
 }
 
 setAs("RleMatrix", "DataFrame", .from_RleMatrix_to_DataFrame)
@@ -481,38 +617,4 @@ setAs("RleMatrix", "DataFrame", .from_RleMatrix_to_DataFrame)
 setAs("DelayedMatrix", "DataFrame",
     function(from) as(as(from, "RleMatrix"), "DataFrame")
 )
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Switching between RleList and RleMatrix representation
-###
-
-### From RleList to RleMatrix.
-.from_RleList_to_RleMatrix <- function(from)
-{
-    ans_ncol <- length(from)
-    unlisted_from <- unlist(from, use.names=FALSE)
-    if (ans_ncol == 0L)
-        return(RleArray(unlisted_from, c(0L, 0L)))
-    from_lens <- lengths(from, use.names = FALSE)
-    ans_nrow <- from_lens[[1L]]
-    if (!all(from_lens == ans_nrow))
-        stop(wmsg("all the list elements in the RleList object ",
-                  "to coerce must have the same length"))
-    RleArray(unlisted_from, c(ans_nrow, ans_ncol),
-             dimnames=list(NULL, names(from)))
-}
-
-setAs("RleList", "RleArray", .from_RleList_to_RleMatrix)
-
-### From RleMatrix to RleList.
-.from_RleMatrix_to_RleList <- function(from)
-{
-    unlisted_ans <- as(from, "Rle")
-    ans_partitioning <- PartitioningByEnd(seq_len(ncol(from)) * nrow(from),
-                                          names=colnames(from))
-    relist(unlisted_ans, ans_partitioning)
-}
-
-setAs("RleMatrix", "RleList", .from_RleMatrix_to_RleList)
 

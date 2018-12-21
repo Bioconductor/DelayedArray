@@ -17,6 +17,7 @@
 \alias{dimnames,RleArraySeed-method}
 
 \alias{coerce,SolidRleArraySeed,Rle-method}
+\alias{coerce,RleRealizationSink,RleList-method}
 \alias{coerce,RleRealizationSink,Rle-method}
 
 \alias{extract_array,SolidRleArraySeed-method}
@@ -47,12 +48,12 @@
 \alias{coerce,DelayedArray,RleArray-method}
 \alias{coerce,DelayedMatrix,RleMatrix-method}
 
+\alias{coerce,RleList,RleArray-method}
+\alias{coerce,RleMatrix,RleList-method}
+
 \alias{coerce,DataFrame,RleArray-method}
 \alias{coerce,RleMatrix,DataFrame-method}
 \alias{coerce,DelayedMatrix,DataFrame-method}
-
-\alias{coerce,RleList,RleArray-method}
-\alias{coerce,RleMatrix,RleList-method}
 
 \title{RleArray objects}
 
@@ -63,12 +64,16 @@
 }
 
 \usage{
-RleArray(rle, dim, dimnames=NULL, chunksize=NULL)  # constructor function
+RleArray(data, dim, dimnames=NULL, chunksize=NULL)  # constructor function
 }
 
 \arguments{
-  \item{rle}{
-    An \link[S4Vectors]{Rle} object.
+  \item{data}{
+    An \link[S4Vectors]{Rle} object, or an ordinary list of Rle objects,
+    or an \link[IRanges]{RleList} object, or a \link[S4Vectors]{DataFrame}
+    object where all the columns are Rle objects. More generally speaking,
+    \code{data} can be any list-like object where all the list elements
+    are Rle objects.
   }
   \item{dim}{
     The dimensions of the object to be created, that is, an integer vector
@@ -91,7 +96,8 @@ RleArray(rle, dim, dimnames=NULL, chunksize=NULL)  # constructor function
 
 \seealso{
   \itemize{
-    \item \link[S4Vectors]{Rle} objects in the \pkg{S4Vectors} package.
+    \item \link[S4Vectors]{Rle} objects in the \pkg{S4Vectors} package and
+          \link[IRanges]{RleList} objects in the \pkg{IRanges} package.
 
     \item \link{DelayedArray} objects.
 
@@ -110,6 +116,10 @@ RleArray(rle, dim, dimnames=NULL, chunksize=NULL)  # constructor function
 }
 
 \examples{
+## ---------------------------------------------------------------------
+## BASIC EXAMPLES
+## ---------------------------------------------------------------------
+
 rle <- Rle(sample(6L, 500000, replace=TRUE), 8)
 a <- array(rle, dim=c(50, 20, 4000))  # array() expands the Rle object
                                       # internally with as.vector()
@@ -125,30 +135,56 @@ stopifnot(identical(a, as.array(A)))
 as(A, "Rle")  # deconstruction
 
 toto <- function(x) (5 * x[ , , 1] ^ 3 + 1L) * log(x[, , 2])
-b <- toto(a)
-head(b)
+m1 <- toto(a)
+head(m1)
 
-B <- toto(A)  # very fast! (operations are delayed)
-B
+M1 <- toto(A)  # very fast! (operations are delayed)
+M1
 
-stopifnot(identical(b, as.array(B)))
+stopifnot(identical(m1, as.array(M1)))
 
-cs <- colSums(b)
-CS <- colSums(B)
+cs <- colSums(m1)
+CS <- colSums(M1)
 stopifnot(identical(cs, CS))
 
-## Coercion of a DelayedMatrix object to DataFrame produces a DataFrame
+## Coercing a DelayedMatrix object to DataFrame produces a DataFrame
 ## object with Rle columns:
-as(B, "DataFrame")
+as(M1, "DataFrame")
 
-## Coercion of an RleList object to RleArray only works if all the list
-## elements in the RleList have the same length. Column names are taken
-## from the names of the list elements.
+## Coercing an RleList object to RleMatrix only works if all the list
+## elements in the former have the same length. It returns an RleMatrix
+## object with 1 column per list element in the RleList object. The
+## names on the RleList object are propagated as the colnames of the
+## returned object.
 rle_list <- RleList(A=Rle(sample(3L, 100, replace=TRUE)),
                     B=Rle(sample(3L, 100, replace=TRUE)))
-C <- as(rle_list, "RleArray")
-C
-stopifnot(identical(as(C, "RleList"), rle_list))
+M2 <- as(rle_list, "RleMatrix")
+M2
+stopifnot(identical(as(M2, "RleList"), rle_list))
+
+## ---------------------------------------------------------------------
+## CONSTRUCTING A LARGE RleArray OBJECT
+## ---------------------------------------------------------------------
+
+## The RleArray() constructor does not accept a long Rle object at the
+## moment:
+\dontrun{
+  RleArray(Rle(5, 3e9), dim=c(3, 1e9))  # error!
+}
+
+## The workaround is to supply a list of Rle objects instead:
+data <- lapply(1:500, function(j) Rle(runif(99), 1e6 + 99:1))
+dim <- c(6750, 73337, 100)
+A <- RleArray(data, dim)
+A
+
+## If we first turn 'data' into an RleList object, then we can use
+## this object to construct an RleMatrix where each column corresponds
+## to a list element in the RleList object:
+rle_list <- as(data, "RleList")
+M3 <- as(rle_list, "RleMatrix")
+M3
+stopifnot(identical(as(M3, "RleList"), rle_list))
 }
 \keyword{classes}
 \keyword{methods}
