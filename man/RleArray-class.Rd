@@ -64,7 +64,7 @@
 }
 
 \usage{
-RleArray(data, dim, dimnames=NULL, chunksize=NULL)  # constructor function
+RleArray(data, dim, dimnames, chunksize=NULL)  # constructor function
 }
 
 \arguments{
@@ -80,9 +80,9 @@ RleArray(data, dim, dimnames=NULL, chunksize=NULL)  # constructor function
     of length one or more giving the maximal indices in each dimension.
   }
   \item{dimnames}{
-    Either \code{NULL} or the names for the dimensions. This must a list of
-    length the number of dimensions. Each list element must be either
-    \code{NULL} or a character vector along the corresponding dimension.
+    The \emph{dimnames} of the object to be created. Must be \code{NULL} or
+    a list of length the number of dimensions. Each list element must be
+    either \code{NULL} or a character vector along the corresponding dimension.
   }
   \item{chunksize}{
     Experimental. Don't use!
@@ -117,14 +117,14 @@ RleArray(data, dim, dimnames=NULL, chunksize=NULL)  # constructor function
 
 \examples{
 ## ---------------------------------------------------------------------
-## BASIC EXAMPLES
+## A. BASIC EXAMPLE
 ## ---------------------------------------------------------------------
 
-rle <- Rle(sample(6L, 500000, replace=TRUE), 8)
-a <- array(rle, dim=c(50, 20, 4000))  # array() expands the Rle object
-                                      # internally with as.vector()
+data <- Rle(sample(6L, 500000, replace=TRUE), 8)
+a <- array(data, dim=c(50, 20, 4000))  # array() expands the Rle object
+                                       # internally with as.vector()
 
-A <- RleArray(rle, dim=c(50, 20, 4000))  # Rle object is NOT expanded
+A <- RleArray(data, dim=c(50, 20, 4000))  # Rle object is NOT expanded
 A
 
 object.size(a)
@@ -151,19 +151,88 @@ stopifnot(identical(cs, CS))
 ## object with Rle columns:
 as(M1, "DataFrame")
 
-## Coercing an RleList object to RleMatrix only works if all the list
-## elements in the former have the same length. It returns an RleMatrix
-## object with 1 column per list element in the RleList object. The
-## names on the RleList object are propagated as the colnames of the
-## returned object.
-rle_list <- RleList(A=Rle(sample(3L, 100, replace=TRUE)),
-                    B=Rle(sample(3L, 100, replace=TRUE)))
-M2 <- as(rle_list, "RleMatrix")
+## ---------------------------------------------------------------------
+## B. MAKING AN RleArray OBJECT FROM A LIST-LIKE OBJECT OF Rle OBJECTS
+## ---------------------------------------------------------------------
+
+## From a DataFrame object:
+DF <- DataFrame(A=Rle(sample(3L, 100, replace=TRUE)),
+                B=Rle(sample(3L, 100, replace=TRUE)),
+                C=Rle(sample(3L, 100, replace=TRUE) - 0.5),
+                row.names=sprintf("ID\%03d", 1:100))
+
+M2 <- RleArray(DF)
 M2
-stopifnot(identical(as(M2, "RleList"), rle_list))
+
+A3 <- RleArray(DF, dim=c(25, 6, 2))
+A3
+
+M4 <- RleArray(DF, dim=c(25, 12), dimnames=list(LETTERS[1:25], NULL))
+M4
+
+## From an ordinary list:
+## If all the supplied Rle objects have the same length and if the 'dim'
+## argument is not specified, then the RleArray() constructor returns an
+## RleMatrix object with 1 column per Rle object. If the 'dimnames'
+## argument is not specified, then the names on the list are propagated
+## as the colnames of the returned object.
+data <- as.list(DF)
+M2b <- RleArray(data)
+A3b <- RleArray(data, dim=c(25, 6, 2))
+M4b <- RleArray(data, dim=c(25, 12), dimnames=list(LETTERS[1:25], NULL))
+
+data2 <- list(Rle(sample(3L, 9, replace=TRUE)) * 11L,
+              Rle(sample(3L, 15, replace=TRUE)))
+\dontrun{
+  RleArray(data2)  # error! (cannot infer the dim)
+}
+RleArray(data2, dim=c(4, 6))
+
+## From an RleList object:
+data <- RleList(data)
+M2c <- RleArray(data)
+A3c <- RleArray(data, dim=c(25, 6, 2))
+M4c <- RleArray(data, dim=c(25, 12), dimnames=list(LETTERS[1:25], NULL))
+
+data2 <- RleList(data2)
+\dontrun{
+  RleArray(data2)  # error! (cannot infer the dim)
+}
+RleArray(data2, dim=4:2)
+
+## Sanity checks:
+data0 <- as.vector(unlist(DF, use.names=FALSE))
+m2 <- matrix(data0, ncol=3, dimnames=dimnames(M2))
+stopifnot(identical(m2, as.matrix(M2)))
+rownames(m2) <- NULL
+stopifnot(identical(m2, as.matrix(M2b)))
+stopifnot(identical(m2, as.matrix(M2c)))
+a3 <- array(data0, dim=c(25, 6, 2))
+stopifnot(identical(a3, as.array(A3)))
+stopifnot(identical(a3, as.array(A3b)))
+stopifnot(identical(a3, as.array(A3c)))
+m4 <- matrix(data0, ncol=12, dimnames=dimnames(M4))
+stopifnot(identical(m4, as.matrix(M4)))
+stopifnot(identical(m4, as.matrix(M4b)))
+stopifnot(identical(m4, as.matrix(M4c)))
 
 ## ---------------------------------------------------------------------
-## CONSTRUCTING A LARGE RleArray OBJECT
+## C. COERCING FROM RleList OR DataFrame TO RleMatrix
+## ---------------------------------------------------------------------
+
+## Coercing an RleList object to RleMatrix only works if all the list
+## elements in the former have the same length.
+x <- RleList(A=Rle(sample(3L, 20, replace=TRUE)),
+             B=Rle(sample(3L, 20, replace=TRUE)))
+M <- as(x, "RleMatrix")
+stopifnot(identical(x, as(M, "RleList")))
+
+x <- DataFrame(A=x[[1]], B=x[[2]], row.names=letters[1:20])
+M <- as(x, "RleMatrix")
+stopifnot(identical(x, as(M, "DataFrame")))
+
+## ---------------------------------------------------------------------
+## D. CONSTRUCTING A LARGE RleArray OBJECT
 ## ---------------------------------------------------------------------
 
 ## The RleArray() constructor does not accept a long Rle object at the
@@ -178,13 +247,13 @@ dim <- c(6750, 73337, 100)
 A <- RleArray(data, dim)
 A
 
-## If we first turn 'data' into an RleList object, then we can use
-## this object to construct an RleMatrix where each column corresponds
-## to a list element in the RleList object:
-rle_list <- as(data, "RleList")
-M3 <- as(rle_list, "RleMatrix")
-M3
-stopifnot(identical(as(M3, "RleList"), rle_list))
+## Because all the Rle objects in 'data' have the same length, we can
+## call RleArray() on it without specifying the 'dim' argument. This
+## returns an RleMatrix object where each column corresponds to an Rle
+## object in 'data':
+M <- RleArray(data)
+M
+stopifnot(identical(as(data, "RleList"), as(M, "RleList")))
 }
 \keyword{classes}
 \keyword{methods}

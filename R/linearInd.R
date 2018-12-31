@@ -5,7 +5,7 @@
 ### Performs the reverse transformation of arrayInd().
 ###
 
-.normarg_dim <- function(dim)
+.normarg_dim2 <- function(dim)
 {
     if (!is.integer(dim) || S4Vectors:::anyMissingOrOutside(dim, 0L))
         stop(wmsg("'dim' must be a vector (or matrix) ",
@@ -42,7 +42,7 @@ normarg_aind <- function(aind, ndim, what="'aind'")
 ### Return an integer vector with one element per row in 'aind'.
 linearInd <- function(aind, dim)
 {
-    dim <- .normarg_dim(dim)
+    dim <- .normarg_dim2(dim)
     ndim <- ncol(dim)
     aind <- normarg_aind(aind, ndim)
     if (nrow(dim) != 1L && nrow(dim) != nrow(aind))
@@ -72,12 +72,12 @@ normarg_ind <- function(ind, what="'ind'")
     ind
 }
 
-### An improved version of arrayInd() that accepts a matrix with 1 row per
-### element in 'ind' for 'dim'.
+### An improved version of arrayInd() that accepts a 'dim' that is a matrix
+### with 1 row per element in 'ind'.
 ### NOT exported.
 arrayInd2 <- function(ind, dim)
 {
-    dim <- .normarg_dim(dim)
+    dim <- .normarg_dim2(dim)
     ndim <- ncol(dim)
     ind <- normarg_ind(ind)
     if (nrow(dim) != 1L && nrow(dim) != length(ind))
