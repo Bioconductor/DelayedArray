@@ -1,52 +1,21 @@
 \name{RleArray-class}
 \docType{class}
 
-\alias{class:RleArraySeed}
-\alias{RleArraySeed-class}
-\alias{class:SolidRleArraySeed}
-\alias{SolidRleArraySeed-class}
-
-\alias{class:RleRealizationSink}
-\alias{RleRealizationSink-class}
-\alias{type,RleRealizationSink-method}
-
-\alias{class:ChunkedRleArraySeed}
-\alias{ChunkedRleArraySeed-class}
-
-\alias{dim,RleArraySeed-method}
-\alias{dimnames,RleArraySeed-method}
-
-\alias{coerce,SolidRleArraySeed,Rle-method}
-\alias{coerce,RleRealizationSink,RleList-method}
-\alias{coerce,RleRealizationSink,Rle-method}
-
-\alias{extract_array,SolidRleArraySeed-method}
-\alias{extract_array,ChunkedRleArraySeed-method}
-
-\alias{coerce,RleRealizationSink,ChunkedRleArraySeed-method}
-\alias{coerce,ChunkedRleArraySeed,SolidRleArraySeed-method}
-
 \alias{class:RleArray}
 \alias{RleArray-class}
+\alias{RleArray}
+
+\alias{DelayedArray,RleArraySeed-method}
+\alias{coerce,RleArray,Rle-method}
 
 \alias{class:RleMatrix}
 \alias{RleMatrix-class}
 \alias{RleMatrix}
 
-\alias{coerce,RleArray,RleMatrix-method}
 \alias{matrixClass,RleArray-method}
+\alias{coerce,RleArray,RleMatrix-method}
+\alias{coerce,RleMatrix,RleArray-method}
 \alias{coerce,ANY,RleMatrix-method}
-
-\alias{DelayedArray,RleArraySeed-method}
-\alias{RleArray}
-\alias{coerce,RleArray,Rle-method}
-
-\alias{write_block,RleRealizationSink-method}
-\alias{coerce,RleRealizationSink,RleArray-method}
-\alias{coerce,RleRealizationSink,DelayedArray-method}
-\alias{coerce,ANY,RleArray-method}
-\alias{coerce,DelayedArray,RleArray-method}
-\alias{coerce,DelayedMatrix,RleMatrix-method}
 
 \alias{coerce,RleList,RleArray-method}
 \alias{coerce,RleMatrix,RleList-method}
@@ -55,16 +24,26 @@
 \alias{coerce,RleMatrix,DataFrame-method}
 \alias{coerce,DelayedMatrix,DataFrame-method}
 
+\alias{write_block,RleRealizationSink-method}
+\alias{coerce,RleRealizationSink,RleArray-method}
+\alias{coerce,RleRealizationSink,DelayedArray-method}
+\alias{coerce,ANY,RleArray-method}
+\alias{coerce,DelayedArray,RleArray-method}
+\alias{coerce,DelayedMatrix,RleMatrix-method}
+
 \title{RleArray objects}
 
 \description{
-  The RleArray class is an array-like container where the values are stored
-  in a run-length encoding format. RleArray objects support delayed operations
-  and block processing.
+  The RleArray class is a \link[DelayedArray]{DelayedArray} subclass
+  for representing an in-memory Run Length Encoded array-like dataset.
+
+  All the operations available for \link[DelayedArray]{DelayedArray}
+  objects work on RleArray objects.
 }
 
 \usage{
-RleArray(data, dim, dimnames, chunksize=NULL)  # constructor function
+## Constructor function:
+RleArray(data, dim, dimnames, chunksize=NULL)
 }
 
 \arguments{
@@ -89,15 +68,15 @@ RleArray(data, dim, dimnames, chunksize=NULL)  # constructor function
   }
 }
 
-\details{
-  RleArray extends \link{DelayedArray}. All the operations available on
-  \link{DelayedArray} objects work on RleArray objects.
+\value{
+  An RleArray object.
 }
 
 \seealso{
   \itemize{
-    \item \link[S4Vectors]{Rle} objects in the \pkg{S4Vectors} package and
-          \link[IRanges]{RleList} objects in the \pkg{IRanges} package.
+    \item \link[S4Vectors]{Rle} and \link[S4Vectors]{DataFrame} objects
+          in the \pkg{S4Vectors} package and \link[IRanges]{RleList} objects
+          in the \pkg{IRanges} package.
 
     \item \link{DelayedArray} objects.
 
@@ -109,9 +88,7 @@ RleArray(data, dim, dimnames, chunksize=NULL)  # constructor function
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 
-    \item \link[S4Vectors]{DataFrame} objects in the \pkg{S4Vectors} package.
-
-    \item \link[base]{array} objects in base R.
+    \item The \link{RleArraySeed} helper class.
   }
 }
 
