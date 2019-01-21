@@ -307,21 +307,27 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         nc <- tmp
     }
 
-    # Splitting 'x' by column, and taking the crossproduct with all of 'x'.
-    # This is the same the other way around, so we don't bother computing that.
-    by_col <- cumsum(dims(grids$col)[,2])
-    by_col_cost <- .evaluate_split_costs(by_col, atomic$col)
-    cost_single <- max(nr * by_col_cost) + nr * sum(by_col_cost)
+    if (getAutoMultParallelAgnostic()) {
+        choice <- "single"
+        grid <- grids$col
 
-    # Splitting by the common dimension, i.e., along the rows of 'x'
-    # and taking the crossproduct of each split block.
-    by_row <- cumsum(dims(grids$row)[,1])
-    by_row_cost <- .evaluate_split_costs(by_row, atomic$row)
-    cost_both <- max(by_row_cost * nc)
-
-    all_options <- c(both=cost_both, single=cost_single)
-    choice <- names(all_options)[which.min(all_options)]
-    grid <- switch(choice, both=grids$row, single=grids$col)
+    } else {
+        # Splitting 'x' by column, and taking the crossproduct with all of 'x'.
+        # This is the same the other way around, so we don't bother computing that.
+        by_col <- cumsum(dims(grids$col)[,2])
+        by_col_cost <- .evaluate_split_costs(by_col, atomic$col)
+        cost_single <- max(nr * by_col_cost) + nr * sum(by_col_cost)
+    
+        # Splitting by the common dimension, i.e., along the rows of 'x'
+        # and taking the crossproduct of each split block.
+        by_row <- cumsum(dims(grids$row)[,1])
+        by_row_cost <- .evaluate_split_costs(by_row, atomic$row)
+        cost_both <- max(by_row_cost * nc)
+    
+        all_options <- c(both=cost_both, single=cost_single)
+        choice <- names(all_options)[which.min(all_options)]
+        grid <- switch(choice, both=grids$row, single=grids$col)
+    }
 
     # Obtaining the grid for the original 'x'.
     if (transposed) {
