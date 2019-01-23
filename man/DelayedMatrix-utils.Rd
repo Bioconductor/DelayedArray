@@ -71,16 +71,17 @@
 ## ---------------------------------------------------------------------
 library(HDF5Array)
 set.seed(123)
-m0 <- matrix(runif(60000), nrow=1200,
-             dimnames=list(NULL, sprintf("C\%02d", 1:50)))
-M0 <- writeHDF5Array(m0, chunkdim=c(20, 20))
-group <- sample(80, nrow(M0), replace=TRUE)
+m0 <- matrix(runif(14400000), ncol=2250,
+             dimnames=list(NULL, sprintf("C\%04d", 1:2250)))
+M0 <- writeHDF5Array(m0, chunkdim=c(200, 250))
+dimnames(M0) <- dimnames(m0)
+group <- sample(300, nrow(M0), replace=TRUE)
 
 rs0 <- rowsum(M0, group)
 
 ## Let's see block processing in action:
 DelayedArray:::set_verbose_block_processing(TRUE)
-setAutoBlockSize(1e4)
+setAutoBlockSize(4e5)
 rs <- rowsum(M0, group)
 setAutoBlockSize()
 
