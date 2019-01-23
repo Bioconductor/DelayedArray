@@ -17,6 +17,8 @@
         set_auto.block.shape()
     if (!user_option_is_set("auto.BPPARAM"))
         setAutoBPPARAM()
+    if (!user_option_is_set("auto.mult.parallel.agnostic"))
+        setAutoMultParallelAgnostic()
 }
 
 .onUnload <- function(libpath)

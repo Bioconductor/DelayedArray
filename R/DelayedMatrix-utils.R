@@ -317,16 +317,25 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
     cost_x_by_row <- max(x_by_row_cost * nc_x) + nr_y * sum(y_by_col_cost)
     cost_y_by_col <- sum(x_by_row_cost) * nc_x + max(nr_y * y_by_col_cost)
-    cost_common_x <- max(
-        nr_x * .evaluate_split_costs(x_by_col, atomic_x$col) +
-        .evaluate_split_costs(x_by_col, atomic_y$row) * nc_y
-    )
-    cost_common_y <- max(
-        nr_x * .evaluate_split_costs(y_by_row, atomic_x$col) +
-        .evaluate_split_costs(y_by_row, atomic_y$row) * nc_y
-    )
 
-    all_options <- c(x_by_row=cost_x_by_row, y_by_col=cost_y_by_col, common_x=cost_common_x, common_y=cost_common_y)
+    if (getAutoMultParallelAgnostic()) { 
+        # Ignoring splitting by the common dimension, as this is not
+        # agnostic with respect to the number of workers.
+        all_options <- c(x_by_row=cost_x_by_row, y_by_col=cost_y_by_col)
+            
+    } else {
+        cost_common_x <- max(
+            nr_x * .evaluate_split_costs(x_by_col, atomic_x$col) +
+            .evaluate_split_costs(x_by_col, atomic_y$row) * nc_y
+        )
+        cost_common_y <- max(
+            nr_x * .evaluate_split_costs(y_by_row, atomic_x$col) +
+            .evaluate_split_costs(y_by_row, atomic_y$row) * nc_y
+        )
+
+        all_options <- c(x_by_row=cost_x_by_row, y_by_col=cost_y_by_col, common_x=cost_common_x, common_y=cost_common_y)
+    } 
+
     choice <- names(all_options)[which.min(all_options)]
 
     if (choice=="x_by_row" || choice=="y_by_col") {
@@ -377,21 +386,27 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         nc <- tmp
     }
 
-    # Splitting 'x' by column, and taking the crossproduct with all of 'x'.
-    # This is the same the other way around, so we don't bother computing that.
-    by_col <- cumsum(dims(grids$col)[,2])
-    by_col_cost <- .evaluate_split_costs(by_col, atomic$col)
-    cost_single <- max(nr * by_col_cost) + nr * sum(by_col_cost)
+    if (getAutoMultParallelAgnostic()) {
+        choice <- "single"
+        grid <- grids$col
 
-    # Splitting by the common dimension, i.e., along the rows of 'x'
-    # and taking the crossproduct of each split block.
-    by_row <- cumsum(dims(grids$row)[,1])
-    by_row_cost <- .evaluate_split_costs(by_row, atomic$row)
-    cost_both <- max(by_row_cost * nc)
-
-    all_options <- c(both=cost_both, single=cost_single)
-    choice <- names(all_options)[which.min(all_options)]
-    grid <- switch(choice, both=grids$row, single=grids$col)
+    } else {
+        # Splitting 'x' by column, and taking the crossproduct with all of 'x'.
+        # This is the same the other way around, so we don't bother computing that.
+        by_col <- cumsum(dims(grids$col)[,2])
+        by_col_cost <- .evaluate_split_costs(by_col, atomic$col)
+        cost_single <- max(nr * by_col_cost) + nr * sum(by_col_cost)
+    
+        # Splitting by the common dimension, i.e., along the rows of 'x'
+        # and taking the crossproduct of each split block.
+        by_row <- cumsum(dims(grids$row)[,1])
+        by_row_cost <- .evaluate_split_costs(by_row, atomic$row)
+        cost_both <- max(by_row_cost * nc)
+    
+        all_options <- c(both=cost_both, single=cost_single)
+        choice <- names(all_options)[which.min(all_options)]
+        grid <- switch(choice, both=grids$row, single=grids$col)
+    }
 
     # Obtaining the grid for the original 'x'.
     if (transposed) {
@@ -562,3 +577,22 @@ setMethod("crossprod", c("DelayedMatrix", "missing"), function(x, y) .super_BLOC
 
 setMethod("tcrossprod", c("DelayedMatrix", "missing"), function(x, y) .super_BLOCK_self(x, MULT=tcrossprod, transposed=TRUE))
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### User-visible global settings for parallelized matrix multiplication.
+###
+### by Aaron Lun
+###
+### This allows the user to specify whether or not they want to guarantee 
+### the identical matrix products regardless of the number of workers. 
+### This is because splitting by the common dimension does not preserve the
+### order of addition operations, which changes the output due to numerical
+### imprecision in the inner products of each vector.
+###
+
+setAutoMultParallelAgnostic <- function(agnostic=TRUE) {
+    set_user_option("auto.mult.parallel.agnostic", agnostic)
+}
+
+getAutoMultParallelAgnostic <- function() {
+    get_user_option("auto.mult.parallel.agnostic")
+}
