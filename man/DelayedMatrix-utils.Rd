@@ -75,13 +75,13 @@ m0 <- matrix(runif(14400000), ncol=2250,
              dimnames=list(NULL, sprintf("C\%04d", 1:2250)))
 M0 <- writeHDF5Array(m0, chunkdim=c(200, 250))
 dimnames(M0) <- dimnames(m0)
-group <- sample(300, nrow(M0), replace=TRUE)
+group <- sample(90, nrow(M0), replace=TRUE)
 
 rs0 <- rowsum(M0, group)
 
 ## Let's see block processing in action:
 DelayedArray:::set_verbose_block_processing(TRUE)
-setAutoBlockSize(4e5)
+setAutoBlockSize(2e6)
 rs <- rowsum(M0, group)
 setAutoBlockSize()
 
