@@ -80,8 +80,8 @@
           \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
           for row/col summarization of an ordinary matrix.
 
-    \item \link{DelayedArray-utils} for other common operations on
-          \link{DelayedArray} objects.
+    \item \link{DelayedMatrix-utils} for other common operations on
+          \link{DelayedMatrix} objects.
 
     \item \link{DelayedMatrix} objects.
 
