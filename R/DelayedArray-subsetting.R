@@ -53,7 +53,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
     ## on the blocks touched by linear index 'i', that is, on the blocks
     ## that contain array elements located at the positions corresponding
     ## to linear index 'i'.
-    grid <- .normarg_grid(grid, x)
+    grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     x_dim <- dim(x)
     majmin <- mapToGrid(arrayInd(i, x_dim), grid, linear=TRUE)

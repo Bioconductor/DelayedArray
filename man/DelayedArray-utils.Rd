@@ -2,8 +2,6 @@
 
 \alias{DelayedArray-utils}
 
-% DelayedArray utils
-
 \alias{arbind,DelayedArray-method}
 \alias{acbind,DelayedArray-method}
 \alias{rbind}
@@ -68,15 +66,6 @@
 \alias{apply}
 \alias{apply,DelayedArray-method}
 
-% DelayedMatrix utils
-
-\alias{t}
-
-\alias{\%*\%}
-\alias{\%*\%,ANY,DelayedMatrix-method}
-\alias{\%*\%,DelayedMatrix,ANY-method}
-\alias{\%*\%,DelayedMatrix,DelayedMatrix-method}
-
 \title{Common operations on DelayedArray objects}
 
 \description{
@@ -98,7 +87,6 @@
     \item \code{nchar}, \code{tolower}, \code{toupper},
           \code{grepl}, \code{sub}, \code{gsub}
     \item \code{pmax2} and \code{pmin2}
-    \item \code{t}
     \item statistical functions like \code{dnorm}, \code{dbinom}, \code{dpois},
           and \code{dlogis} (for the Normal, Binomial, Poisson, and Logistic
           distribution, respectively) and related functions (documented in
@@ -112,10 +100,6 @@
     \item all the members of the \code{\link[methods]{Summary}} group
     \item \code{mean}
     \item \code{apply}
-    \item matrix multiplication (\%*\%) of an ordinary matrix by a
-          \link{DelayedMatrix} object
-    \item matrix row/col summarization (see
-          \code{?`\link{DelayedMatrix-stats}`})
   }
 }
 
@@ -134,19 +118,14 @@
           \pkg{base} package for the corresponding operations on ordinary
           arrays or matrices.
 
+    \item \link{DelayedMatrix-utils} for common operations on
+          \link{DelayedMatrix} objects.
+
     \item \link{DelayedArray-stats} for statistical functions on
-          DelayedArray objects.
+          \link{DelayedArray} objects.
 
     \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
           summarization.
-
-    \item \code{\link{setRealizationBackend}} for how to set a
-          \emph{realization backend}.
-
-    \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
-          package for writing an array-like object to an HDF5 file and other
-          low-level utilities to control the location of automatically created
-          HDF5 datasets.
 
     \item \link{DelayedArray} objects.
 
@@ -253,44 +232,5 @@ range(M1)
 
 cmeans <- colMeans(M2)         # block-processed
 sweep(M2, 2, cmeans)           # delayed
-
-## ---------------------------------------------------------------------
-## MATRIX MULTIPLICATION
-## ---------------------------------------------------------------------
-
-## Matrix multiplication is not delayed: the output matrix is realized
-## block by block. The current "realization backend" controls where
-## realization happens e.g. in memory if set to NULL or in an HDF5 file
-## if set to "HDF5Array". See '?realize' for more information about
-## "realization backends".
-## The output matrix is returned as a DelayedMatrix object with no delayed
-## operations on it. The exact class of the object depends on the backend
-## e.g. it will be HDF5Matrix with "HDF5Array" backend.
-
-m <- matrix(runif(50000), ncol=nrow(M1))
-
-## Set backend to NULL for in-memory realization:
-setRealizationBackend()
-P1 <- m \%*\% M1
-P1
-
-## Set backend to HDF5Array for realization in HDF5 file:
-setRealizationBackend("HDF5Array")
-
-## With the HDF5Array backend, the output matrix will be written to an
-## automatic location on disk:
-getHDF5DumpFile()  # HDF5 file where the output matrix will be written
-lsHDF5DumpFile()
-
-P2 <- m \%*\% M1
-P2
-
-lsHDF5DumpFile()
-
-## Use setHDF5DumpFile() and setHDF5DumpName() from the HDF5Array package
-## to control the location of automatically created HDF5 datasets.
-
-stopifnot(identical(dim(P1), dim(P2)),
-          all.equal(as.array(P1), as.array(P2)))
 }
 \keyword{methods}

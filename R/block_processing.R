@@ -71,7 +71,7 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 ### 2 utility functions to process array-like objects by block.
 ###
 
-.normarg_grid <- function(grid, x)
+normarg_grid <- function(grid, x)
 {
     if (is.null(grid)) {
         etc <- c("Please use setAutoGridMaker() ",
@@ -116,7 +116,7 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
 {
     FUN <- match.fun(FUN)
-    grid <- .normarg_grid(grid, x)
+    grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     bplapply(seq_len(nblock),
         function(b) {
@@ -142,7 +142,7 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
     FUN <- match.fun(FUN)
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
-    grid <- .normarg_grid(grid, x)
+    grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     for (b in seq_len(nblock)) {
         if (get_verbose_block_processing())

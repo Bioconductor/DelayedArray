@@ -184,12 +184,15 @@ type(x)
           of an array-like object.
 
     \item \link{DelayedArray-utils} for common operations on
-          \link{DelayedArray} objects.
+          DelayedArray objects.
+
+    \item \link{DelayedMatrix-utils} for common operations on
+          DelayedMatrix objects.
 
     \item \link{DelayedArray-stats} for statistical functions on
           DelayedArray objects.
 
-    \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
+    \item \link{DelayedMatrix-stats} for DelayedMatrix row/col
           summarization.
 
     \item \link{RleArray} objects.
@@ -375,7 +378,7 @@ row_normalized_p1 <- Diagonal(x=1/sqrt(Matrix::rowSums(p^2))) %*% p
 ## block processing strategy behind the scene so it doesn't consume
 ## too much memory.
 
-## First, let's see the block processing in action:
+## First, let's see block processing in action:
 DelayedArray:::set_verbose_block_processing(TRUE)
 ## and check the automatic block size:
 getAutoBlockSize()
