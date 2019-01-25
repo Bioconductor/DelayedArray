@@ -260,18 +260,19 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 }
 
 .evaluate_split_costs <- function(split, dim_info)
-# Given a split, evaluate the costs with respect to chunk atomicity.
+# Given a split of a matrix dimension into putative blocks, 
+# evaluate the costs with respect to chunk atomicity.
 {
     boundaries <- dim_info$bound
     if (length(boundaries)==0L) { return(0) } # avoid NAs from zero-length dim.
     chunk_cost <- dim_info$cost
 
-    right_block <- findInterval(split, boundaries, left.open=TRUE) + 1L
+    right_chunk_index <- findInterval(split, boundaries, left.open=TRUE) + 1L
     block_starts <- c(1L, head(split, -1L) + 1L)
-    left_block <- findInterval(block_starts, boundaries, left.open=TRUE) + 1L
+    left_chunk_index <- findInterval(block_starts, boundaries, left.open=TRUE) + 1L
 
     cum_cost <- c(0L, cumsum(chunk_cost))
-    cum_cost[right_block+1L] - cum_cost[left_block]
+    cum_cost[right_chunk_index+1L] - cum_cost[left_chunk_index]
 }
 
 .dispatch_mult <- function(x, y, nworkers, transposed.x=FALSE, transposed.y=FALSE)
