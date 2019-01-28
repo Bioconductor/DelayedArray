@@ -7,6 +7,8 @@
 \alias{rowsum}
 \alias{rowsum.DelayedMatrix}
 \alias{rowsum,DelayedMatrix-method}
+\alias{colsum}
+\alias{colsum,DelayedMatrix-method}
 
 \alias{\%*\%}
 \alias{\%*\%,ANY,DelayedMatrix-method}
@@ -30,7 +32,7 @@
 
   Block-processed operations:
   \itemize{
-    \item \code{rowsum}
+    \item \code{rowsum} and \code{colsum}
     \item matrix multiplication (\%*\%) of an ordinary matrix by a
           \link{DelayedMatrix} object
     \item matrix row/col summarization (see
@@ -40,6 +42,10 @@
 
 \seealso{
   \itemize{
+    \item \code{\link[base]{rowsum}} in the \pkg{base} package for
+          computing column sums across rows of an ordinary matrix
+          for each level of a grouping variable.
+
     \item \link{DelayedArray-utils} for common operations on
           \link{DelayedArray} objects.
 
@@ -67,7 +73,7 @@
 
 \examples{
 ## ---------------------------------------------------------------------
-## rowsum()
+## rowsum() / colsum()
 ## ---------------------------------------------------------------------
 library(HDF5Array)
 set.seed(123)
@@ -75,17 +81,42 @@ m0 <- matrix(runif(14400000), ncol=2250,
              dimnames=list(NULL, sprintf("C\%04d", 1:2250)))
 M0 <- writeHDF5Array(m0, chunkdim=c(200, 250))
 dimnames(M0) <- dimnames(m0)
-group <- sample(90, nrow(M0), replace=TRUE)
 
-rs0 <- rowsum(M0, group)
+## --- rowsum() ---
+
+group <- sample(90, nrow(M0), replace=TRUE)  # define groups of rows
+rs <- rowsum(M0, group)
+rs[1:5, 1:8]
+rs2 <- rowsum(M0, group, reorder=FALSE)
+rs2[1:5, 1:8]
 
 ## Let's see block processing in action:
 DelayedArray:::set_verbose_block_processing(TRUE)
 setAutoBlockSize(2e6)
-rs <- rowsum(M0, group)
+rs3 <- rowsum(M0, group)
 setAutoBlockSize()
+DelayedArray:::set_verbose_block_processing(FALSE)
 
-stopifnot(all.equal(rs0, rs))
+## Sanity checks:
+stopifnot(all.equal(rowsum(m0, group), rs))
+stopifnot(all.equal(rowsum(m0, group, reorder=FALSE), rs2))
+stopifnot(all.equal(rs, rs3))
+
+## --- colsum() ---
+
+group <- sample(30, ncol(M0), replace=TRUE)  # define groups of cols
+cs <- colsum(M0, group)
+cs[1:5, 1:7]
+cs2 <- colsum(M0, group, reorder=FALSE)
+cs2[1:5, 1:7]
+
+## Sanity checks:
+stopifnot(all.equal(colsum(m0, group), cs))
+stopifnot(all.equal(cs, t(rowsum(t(m0), group))))
+stopifnot(all.equal(cs, t(rowsum(t(M0), group))))
+stopifnot(all.equal(colsum(m0, group, reorder=FALSE), cs2))
+stopifnot(all.equal(cs2, t(rowsum(t(m0), group, reorder=FALSE))))
+stopifnot(all.equal(cs2, t(rowsum(t(M0), group, reorder=FALSE))))
 
 ## ---------------------------------------------------------------------
 ## MATRIX MULTIPLICATION
