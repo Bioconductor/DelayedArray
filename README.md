@@ -1,4 +1,4 @@
-[<img src="https://www.bioconductor.org/images/logo/jpg/bioconductor_logo_rgb.jpg" width="300" align="right"/>]
+[<img src="https://www.bioconductor.org/images/logo/jpg/bioconductor_logo_rgb.jpg" width="200" align="right"/>](https://bioconductor.org/)
 
 _DelayedArray_ is an R/Bioconductor package that provides a unified framework for working transparently with on-disk and in-memory array-like datasets.
 
