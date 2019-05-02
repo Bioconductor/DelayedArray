@@ -1,3 +1,22 @@
+CHANGES IN VERSION 0.10.0
+-------------------------
+
+NEW FEATURES
+
+    o Many improvements to matrix multiplication (%*%) of DelayedMatrix
+      objects by Aaron Lun. Also add limited support for (t)crossprod methods.
+
+    o Add rowsum() and colsum() methods for DelayedMatrix objects.
+      These methods are block-processed operations.
+
+    o Many improvements to the RleArray() contructor (see messages for
+      commits 582234a7 and 0a36ee01 for more info).
+
+    o Add seedApply()
+
+    o Add multGrids() utility (still a work-in-progress, not documented yet)
+
+
 CHANGES IN VERSION 0.8.0
 ------------------------
 
