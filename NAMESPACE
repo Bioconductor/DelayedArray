@@ -221,10 +221,10 @@ exportMethods(
 
     ## Methods for generics defined in the S4Vectors package:
     showAsCell, isEmpty,
+    splitAsList,
 
     ## Methods for generics defined in the IRanges package:
-    ranges, start, end, width,
-    splitAsList
+    ranges, start, end, width
 )
 
 
