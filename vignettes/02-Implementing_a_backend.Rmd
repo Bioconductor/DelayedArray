@@ -15,11 +15,13 @@ vignette: |
 
 # Introduction
 
-The DelayedArray framework currently supports the HDF5 on-disk backend
-(via the _HDF5Array_ package) but can be extended to support other on-disk
-backends, that is, to support other file formats. In theory, it should be
-possible to implement a DelayedArray backend for any file format that has
-the capability to store array data with fast random access.
+The DelayedArray framework currently supports a small number of on-disk
+backends: HDF5 (via the _HDF5Array_ package), GDS (via the _GDSArray_ package),
+and VCF (via the _VCFArray_ package). This can be extended to support other
+on-disk backends. In theory, it should be possible to implement a DelayedArray
+backend for any file format that has the capability to store array data with
+fast random access.
+
 Let's assume that the ADS format (Array Data Store) is such format (this
 is a made-up format for the purpose of this vignette only). Implementing a
 DelayedArray backend for ADS files should typically be done in a dedicated
@@ -32,7 +34,7 @@ The _ADSArray_ package will need to implement:
   name it ADSArraySeed.
 
 - Two high-level classes that derive from DelayedArray: ADSArray and
-  ADSMatrix. Only the latter is needed if the ADS format supports only
+  ADSMatrix. Only the latter is needed if the ADS format only supports
   2-dimensional arrays.
 
 - A "realization sink" class if you also want to support realization of
@@ -299,6 +301,45 @@ when `x` is an ADSMatrix object. The easiest (and recommended) way to
 achieve this is to define the following coercion method:
 
     setAs("ADSMatrix", "ADSArray", function(from) from)  # no-op
+
+## Implementing optimized backend-specific methods
+
+It is possible, and enouraged, to overwrite current DelayedArray
+block-processed operations (e.g. `max`, `colSums`, `%*%`, etc...) with
+optimized backend-specific methods. For example, let's imagine that ADS
+files have the capability to store some precomputed stats about the dataset.
+Then one could define a fast `max` method for ADSArray objects with
+something like:
+
+    setMethod("max", "ADSArraySeed",
+        function(x, na.rm=FALSE)
+        {
+            get the precomputed max from the file
+        }
+    )
+
+    setMethod("max", "ADSArray",
+        function(x, na.rm=FALSE) max(x@seed, na.rm=na.rm)
+    )
+
+Note that delayed operations like setting dimnames on an ADSArray object
+(with `dimnames(A) <- new_dimnames`) or transposing an ADSMatrix object
+(with `M2 <- t(M)`) will demote the object to a DelayedArray or DelayedMatrix
+instance, causing `max(A)` and `max(M2)` to use the far less efficient
+block-processed `max` method defined for DelayedArray objects. There is
+clearly room for improvement here and work will be done in the near future
+to make the `max` method (and other block-processed methods) for DelayedArray
+objects try to take advantage of the backend-specific method whenever it can.
+
+However in the meantime, backend authors should resist the temptation to
+overwrite the `dimnames<-` and `t` methods for DelayedArray objects with
+backend-specific methods that modify the seed. This would be a violation
+of the "never touch the seed" principle which is central to the DelayedArray
+framework. More precisely, no matter what delayed operations are performed
+on a DelayedArray object, the seeds of the result should always be identical
+to the original seeds (e.g. `seed(t(M))` should always be identical to
+`seed(M)`).
+
 
 ## What to export?
 
