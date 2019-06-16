@@ -256,7 +256,7 @@ export(
     showtree, seedApply, modify_seeds,
 
     ## simplify.R:
-    contentIsPristine,
+    isPristine, contentIsPristine,
 
     ## DelayedArray-class.R:
     new_DelayedArray,

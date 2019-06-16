@@ -14,7 +14,8 @@
 
 \alias{simplify,DelayedArray-method}
 
-% contentIsPristine()
+% isPristine() & contentIsPristine()
+\alias{isPristine}
 \alias{contentIsPristine}
 
 % netSubsetAndAperm()
@@ -36,6 +37,12 @@
   \code{simplify} can be used to simplify the tree of delayed operations
   in a \link{DelayedArray} object.
 
+  \code{isPristine} can be used to know whether a \link{DelayedArray}
+  object is \emph{pristine} or not. A \link{DelayedArray} object is
+  considered \emph{pristine} when it carries no delayed operation.
+  Note that an object that carries delayed operations that do nothing
+  (e.g. \code{A + 0}) is not considered \emph{pristine}.
+
   \code{contentIsPristine} can be used to know whether the delayed
   operations in a \link{DelayedArray} object \emph{touch} its array
   elements or not.
@@ -48,6 +55,7 @@
 \usage{
 simplify(x, incremental=FALSE)
 
+isPristine(x, ignore.dimnames=FALSE)
 contentIsPristine(x)
 netSubsetAndAperm(x, as.DelayedOp=FALSE)
 }
@@ -55,13 +63,19 @@ netSubsetAndAperm(x, as.DelayedOp=FALSE)
 \arguments{
   \item{x}{
     Typically a \link{DelayedArray} object but can also be a \link{DelayedOp}
-    object.
+    object (except for \code{isPristine}).
   }
   \item{incremental}{
     For internal use.
   }
+  \item{ignore.dimnames}{
+    \code{TRUE} or \code{FALSE}. When \code{TRUE}, the object is considered
+    \emph{pristine} even if its dimnames have been modified and no longer
+    match the dimnames of its seed (in which case the object carries a
+    single delayed operations of type \link{DelayedDimnames}).
+  }
   \item{as.DelayedOp}{
-    \code{TRUE} or \code{FALSE}. Control the form of the returned object.
+    \code{TRUE} or \code{FALSE}. Controls the form of the returned object.
     See details below.
   }
 }
@@ -172,9 +186,29 @@ Z@seed@seeds[[2]]@seed                      # reaching to M1
 Z@seed@seeds[[1]]@seed@seed@seed@seed@seed  # reaching to Y
 
 ## ---------------------------------------------------------------------
+## isPristine()
+## ---------------------------------------------------------------------
+m <- matrix(1:20, ncol=4, dimnames=list(letters[1:5], NULL))
+M <- DelayedArray(m)
+
+isPristine(M)                 # TRUE
+isPristine(log(M))            # FALSE
+isPristine(M + 0)             # FALSE
+isPristine(t(M))              # FALSE
+isPristine(t(t(M)))           # TRUE
+isPristine(cbind(M, M))       # FALSE
+isPristine(cbind(M))          # TRUE
+
+dimnames(M) <- NULL
+isPristine(M)                 # FALSE
+isPristine(M, ignore.dimnames=TRUE)  # TRUE
+isPristine(t(t(M)), ignore.dimnames=TRUE)  # TRUE
+isPristine(cbind(M, M), ignore.dimnames=TRUE)  # FALSE
+
+## ---------------------------------------------------------------------
 ## contentIsPristine()
 ## ---------------------------------------------------------------------
-a <- array(1:120, c(4, 5, 2))
+a <- array(1:40, c(4, 5, 2))
 A <- DelayedArray(a)
 
 stopifnot(contentIsPristine(A))
@@ -191,7 +225,7 @@ contentIsPristine(A * A)      # FALSE
 ## ---------------------------------------------------------------------
 ## netSubsetAndAperm()
 ## ---------------------------------------------------------------------
-a <- array(1:120, c(4, 5, 2))
+a <- array(1:40, c(4, 5, 2))
 M <- aperm(DelayedArray(a)[ , -1, ] / 100)[ , , 3] + 99:98
 M
 showtree(M)

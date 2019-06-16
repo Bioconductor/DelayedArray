@@ -213,18 +213,6 @@ setMethod("DelayedArray", "DelayedOp",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Pristine objects
-###
-### A pristine DelayedArray object is an object that does not carry any
-### delayed operation.
-###
-
-### Note that false negatives happen when 'x' carries delayed operations that
-### do nothing, but that's ok.
-is_pristine <- function(x) { !is(x@seed, "DelayedOp") }
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### simplify()
 ###
 

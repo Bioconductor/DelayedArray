@@ -263,6 +263,26 @@ setMethod("simplify", "DelayedAbind",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### isPristine()
+###
+### A pristine DelayedArray object is an object that carries no delayed
+### operation. Note that an object that carries delayed operations that
+### do nothing (e.g. A + 0) is not considered pristine.
+###
+
+isPristine <- function(x, ignore.dimnames=FALSE)
+{
+    if (!is(x, "DelayedArray"))
+        stop(wmsg("'x' must be a DelayedArray object"))
+    if (!isTRUEorFALSE(ignore.dimnames))
+        stop(wmsg("'ignore.dimnames' should be TRUE or FALSE"))
+    if (ignore.dimnames && is(x@seed, "DelayedDimnames"))
+        x@seed <- x@seed@seed  # drop DelayedDimnames op
+    !is(x@seed, "DelayedOp")
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### contentIsPristine()
 ###
 
