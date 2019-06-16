@@ -1250,6 +1250,10 @@ new_DelayedAbind <- function(seeds, along)
     new2("DelayedAbind", seeds=seeds, along=along)
 }
 
+setMethod("is_noop", "DelayedAbind",
+    function(x) length(x@seeds) == 1L
+)
+
 ### S3/S4 combo for summary.DelayedAbind
 
 .DelayedAbind_summary <-

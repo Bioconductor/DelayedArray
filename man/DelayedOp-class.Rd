@@ -134,6 +134,7 @@
 \alias{DelayedAbind-class}
 \alias{DelayedAbind}
 
+\alias{is_noop,DelayedAbind-method}
 \alias{summary.DelayedAbind}
 \alias{summary,DelayedAbind-method}
 
@@ -153,9 +154,9 @@
 \title{DelayedOp objects}
 
 \description{
-  In a \link{DelayedArray} object the delayed operations are stored as a tree
-  of DelayedOp objects. Each node in the tree is represented by a DelayedOp
-  object.
+  In a \link{DelayedArray} object, the delayed operations are stored as a
+  tree of DelayedOp objects. Each node in this tree is a DelayedOp
+  object that represents a delayed operation.
 
   DelayedOp objects are used inside \link{DelayedArray} objects and are not
   intended to be manipulated directly by the end user.

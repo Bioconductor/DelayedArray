@@ -9,6 +9,9 @@
 \alias{simplify,DelayedUnaryIsoOpWithArgs-method}
 \alias{simplify,DelayedSubassign-method}
 \alias{simplify,DelayedDimnames-method}
+\alias{simplify,DelayedNaryIsoOp-method}
+\alias{simplify,DelayedAbind-method}
+
 \alias{simplify,DelayedArray-method}
 
 % contentIsPristine()
@@ -26,14 +29,20 @@
   developers. End users of \link{DelayedArray} objects will typically not
   need them.
 
-  \code{simplify} can be used to simplify this tree.
+  In a \link{DelayedArray} object, the delayed operations are stored as a
+  tree of \link{DelayedOp} objects. See \code{?\link{DelayedOp}} for more
+  information about this tree.
 
-  \code{contentIsPristine} can be used to know whether the operations in
-  this tree leave the values of the array elements intact or not.
+  \code{simplify} can be used to simplify the tree of delayed operations
+  in a \link{DelayedArray} object.
+
+  \code{contentIsPristine} can be used to know whether the delayed
+  operations in a \link{DelayedArray} object \emph{touch} its array
+  elements or not.
 
   \code{netSubsetAndAperm} returns an object that represents the \emph{net
-  subsetting} and \emph{net dimension rearrangement} of all the operations
-  in this tree.
+  subsetting} and \emph{net dimension rearrangement} of all the delayed
+  operations in a \link{DelayedArray} object.
 }
 
 \usage{

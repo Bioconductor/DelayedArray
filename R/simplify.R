@@ -241,6 +241,26 @@ setMethod("simplify", "DelayedDimnames",
     }
 )
 
+setMethod("simplify", "DelayedNaryIsoOp",
+    function(x, incremental=FALSE)
+    {
+        if (!.normarg_incremental(incremental))
+            x@seeds <- lapply(x@seeds, simplify)
+        x
+    }
+)
+
+setMethod("simplify", "DelayedAbind",
+    function(x, incremental=FALSE)
+    {
+        if (!.normarg_incremental(incremental))
+            x@seeds <- lapply(x@seeds, simplify)
+        if (is_noop(x))
+            return(x@seeds[[1L]])
+        x
+    }
+)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### contentIsPristine()
