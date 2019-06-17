@@ -17,7 +17,7 @@
 ## of the SummarizedExperiment-based application so it makes the development of
 ## such applications more complicated. Having the assay data stored in an
 ## on-disk container like HDF5Matrix should greatly simplify this: the goal is
-## to make it possible for the end-user to manipulate the big
+## to make it possible for the end user to manipulate the big
 ## SummarizedExperiment object as a whole and have the split/process/combine
 ## mechanism automatically and transparently happen behind the scene .
 

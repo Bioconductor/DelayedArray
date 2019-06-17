@@ -282,7 +282,7 @@ Also coercion from ADSArray to ADSMatrix needs to be supported with:
 
     setAs("ADSArray", "ADSMatrix", function(from) new("ADSMatrix", from))
 
-This coercion will make sure that the end-user gets the following error
+This coercion will make sure that the end user gets the following error
 when trying to coerce an ADSArray object that is not 2-dimensional to
 ADSMatrix:
 

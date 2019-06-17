@@ -39,7 +39,7 @@
   RleArraySeed is a low-level helper class for representing an in-memory
   Run Length Encoded array-like dataset.
   RleArraySeed objects are not intended to be used directly. Most
-  end-users should create and manipulate \link{RleArray} objects
+  end users should create and manipulate \link{RleArray} objects
   instead. See \code{?\link{RleArray}} for more information.
 }
 
