@@ -344,7 +344,7 @@ to the original seeds (e.g. `seed(t(M))` should always be identical to
 ## What to export?
 
 Make sure to export the ADSArray and ADSMatrix classes, the `ADSArray`
-constructor, and the `coerce` methods.
+constructor, the `coerce` methods, and any backend-specific method.
 
 
 # Testing
