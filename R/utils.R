@@ -69,6 +69,36 @@ LCM <- function(x, y)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### normarg_dim() and normarg_dimnames()
+###
+
+normarg_dim <- function(dim)
+{
+    if (!is.numeric(dim))
+        stop(wmsg("'dim' must be an integer vector"))
+    if (!is.integer(dim))
+        dim <- as.integer(dim)
+    if (length(dim) == 0L)
+        stop(wmsg("'dim' cannot be an empty vector"))
+    if (S4Vectors:::anyMissingOrOutside(dim, 0L))
+        stop(wmsg("'dim' cannot contain negative or NA values"))
+    dim
+}
+
+normarg_dimnames <- function(dimnames, dim)
+{
+    ndim <- length(dim)
+    if (missing(dimnames) || is.null(dimnames))
+        return(vector("list", length=ndim))
+    if (!is.list(dimnames))
+        stop(wmsg("'dimnames' must be NULL or a list"))
+    if (length(dimnames) != ndim)
+        stop(wmsg("'dimnames' must have one list element per dimension"))
+    dimnames
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### 2 wrappers to dim<- and dimnames<- that try to avoid unnecessary copies
 ### of 'x'
 ###

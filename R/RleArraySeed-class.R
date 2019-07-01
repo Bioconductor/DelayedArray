@@ -309,36 +309,11 @@ setMethod("extract_array", "ChunkedRleArraySeed",
 ### RleRealizationSink constructor
 ###
 
-.normarg_dim <- function(dim)
-{
-    if (!is.numeric(dim))
-        stop(wmsg("'dim' must be an integer vector"))
-    if (!is.integer(dim))
-        dim <- as.integer(dim)
-    if (length(dim) == 0L)
-        stop(wmsg("'dim' cannot be an empty vector"))
-    if (S4Vectors:::anyMissingOrOutside(dim, 0L))
-        stop(wmsg("'dim' cannot contain negative or NA values"))
-    dim
-}
-
-.normarg_dimnames <- function(dimnames, dim)
-{
-    ndim <- length(dim)
-    if (missing(dimnames) || is.null(dimnames))
-        return(vector("list", length=ndim))
-    if (!is.list(dimnames))
-        stop(wmsg("'dimnames' must be NULL or a list"))
-    if (length(dimnames) != ndim)
-        stop(wmsg("'dimnames' must have one list element per dimension"))
-    dimnames
-}
-
 ### NOT exported!
 RleRealizationSink <- function(dim, dimnames=NULL, type="double")
 {
-    dim <- .normarg_dim(dim)
-    dimnames <- .normarg_dimnames(dimnames, dim)
+    dim <- normarg_dim(dim)
+    dimnames <- normarg_dimnames(dimnames, dim)
     chunks <- new.env(hash=TRUE, parent=emptyenv())
     new2("RleRealizationSink", DIM=dim, DIMNAMES=dimnames,
                                type=type, chunks=chunks)
@@ -401,8 +376,8 @@ setAs("RleRealizationSink", "ChunkedRleArraySeed",
 ### Otherwise return a ChunkedRleArraySeed instance.
 .make_RleArraySeed_from_Rle <- function(data, dim, dimnames, chunksize=NULL)
 {
-    dim <- .normarg_dim(dim)
-    dimnames <- .normarg_dimnames(dimnames, dim)
+    dim <- normarg_dim(dim)
+    dimnames <- normarg_dimnames(dimnames, dim)
     ans_len <- length(data)
     if (ans_len != prod(dim))
         stop(wmsg("length of input data [" , ans_len, "] does not ",
@@ -496,13 +471,13 @@ setAs("RleRealizationSink", "ChunkedRleArraySeed",
         if (missing(dimnames))
             dimnames <- .infer_dimnames(data)
     } else {
-        dim <- .normarg_dim(dim)
+        dim <- normarg_dim(dim)
         ans_len <- sum(lengths(data))  # can be >= 2^31
         if (ans_len != prod(dim))
             stop(wmsg("total length of input data [" , ans_len, "] does not ",
                       "match object dimensions [product ", prod(dim), "]"))
     }
-    dimnames <- .normarg_dimnames(dimnames, dim)
+    dimnames <- normarg_dimnames(dimnames, dim)
     if (length(data) == 0L) {
         unlisted_data <- unlist(data, use.names=FALSE)
         if (is.null(unlisted_data))
