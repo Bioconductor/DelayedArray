@@ -212,11 +212,12 @@ exportMethods(
     crossprod, tcrossprod,
 
     ## Methods for generics defined in the BiocGenerics package:
-    dims,
     cbind, rbind,
+    dims,
     grepl,
-    table,
     path, "path<-",
+    table,
+    type,
     updateObject,
 
     ## Methods for generics defined in the S4Vectors package:
@@ -287,7 +288,7 @@ export(
     arbind, acbind,
 
     ## extract_array.R:
-    extract_array, type,
+    extract_array,
 
     ## ArrayGrid-class.R:
     refdim, maxlength, aperm, downsample,
@@ -339,7 +340,7 @@ export(
 ### Exactly the same list as above.
 exportMethods(
     arbind, acbind,
-    extract_array, type,
+    extract_array,
     refdim, maxlength, aperm, downsample,
     aind, nzdata, sparsity, is_sparse, extract_sparse_array,
     read_block, write_block,

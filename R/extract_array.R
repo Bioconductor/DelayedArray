@@ -223,11 +223,8 @@ extract_array_by_Nindex <- function(x, Nindex)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### type() generic and default method
+### type() default method (the generic is defined in BiocGenerics)
 ###
-
-### Conflicts with Biostrings::type!
-setGeneric("type", function(x) standardGeneric("type"))
 
 ### type() will work out-of-the-box on any array-like object that supports
 ### extract_array().
