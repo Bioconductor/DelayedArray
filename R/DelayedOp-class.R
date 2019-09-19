@@ -722,6 +722,36 @@ setClass("DelayedSubassign",
 
 setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 
+.normarg_Rvalue <- function(Rvalue, selection_dim)
+{
+    Rvalue_dim <- dim(Rvalue)
+    if (is.null(Rvalue_dim) && !is.vector(Rvalue))
+        stop(wmsg("replacement value must be an array-like object ",
+                  "or an ordinary vector"))
+    ## 'Rvalue' is an array-like object or an ordinary vector (atomic or list).
+    if (length(Rvalue) != prod(selection_dim))
+        stop(wmsg("length of replacement value must equal the number ",
+                  "of array elements to replace"))
+    if (is.null(Rvalue_dim)) {
+        ## 'x@Rvalue' is an ordinary vector (atomic or list).
+        dim(Rvalue) <- selection_dim
+        return(Rvalue)
+    }
+    same_dims <- function(dim1, dim2) length(dim1) == length(dim2) &&
+                                      all(dim1 == dim2)
+    if (same_dims(Rvalue_dim, selection_dim))
+        return(Rvalue)
+    ## We're going to reshape 'Rvalue' but only if its effective dimensions
+    ## are the same as the effective dimensions of the selection.
+    Rvalue_effdim <- Rvalue_dim[Rvalue_dim != 1L]
+    selection_effdim <- selection_dim[selection_dim != 1L]
+    if (!same_dims(Rvalue_effdim, selection_effdim))
+        stop(wmsg("dimensions of replacement value are incompatible ",
+                  "with the selection of the subassignment"))
+    dim(Rvalue) <- selection_dim
+    Rvalue
+}
+
 ### 'Nindex' must be a "multidimensional subsetting Nindex" (see
 ### Nindex-utils.R) or NULL.
 new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
@@ -729,18 +759,9 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
     Lindex <- normalizeNindex(Nindex, seed)
     seed_dim <- dim(seed)
     nogap <- subscript_has_nogap(Lindex, seed_dim)
-    Rvalue_dim <- dim(Rvalue)
-    if (is.null(Rvalue_dim)) {
-        if (!(is.vector(Rvalue) && length(Rvalue) == 1L))
-            stop(wmsg("replacement value must be an array-like object ",
-                      "(or an ordinary vector of length 1)"))
-        ## 'x@Rvalue' is an ordinary vector (atomic or list) of length 1
-    } else {
-        ## 'x@Rvalue' is an array-like object
-        expected_Rvalue_dim <- get_Nindex_lengths(Lindex, seed_dim)
-        if (!identical(Rvalue_dim, expected_Rvalue_dim))
-            stop(wmsg("dimensions of replacement value are incompatible ",
-                      "with the number of array elements to replace"))
+    if (!(is.null(dim(Rvalue)) && is.vector(Rvalue) && length(Rvalue) == 1L)) {
+        selection_dim <- get_Nindex_lengths(Lindex, seed_dim)
+        Rvalue <- .normarg_Rvalue(Rvalue, selection_dim)
         ## For each non-NULL subscript, keep **last** duplicate only and
         ## replace all previous duplicates with NAs.
         Lindex <- lapply(Lindex,
