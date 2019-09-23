@@ -1017,20 +1017,6 @@ setClass("DelayedDimnames",
 
 setValidity2("DelayedDimnames", .validate_DelayedDimnames)
 
-### TODO: Also make sure that each 'dimnames' list element is either NULL or
-### a character vector of the correct length.
-.normalize_dimnames <- function(dimnames, ndim)
-{
-    if (is.null(dimnames))
-        return(vector("list", length=ndim))
-    if (!is.list(dimnames))
-        stop("the supplied dimnames must be a list")
-    if (length(dimnames) != ndim)
-        stop(wmsg("the supplied dimnames must have one list element ",
-                  "per dimension in the array-like object"))
-    dimnames
-}
-
 new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
 {
     seed_dim <- dim(seed)
@@ -1038,7 +1024,7 @@ new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
     if (identical(dimnames, .INHERIT_FROM_SEED)) {
         dimnames <- rep.int(list(.INHERIT_FROM_SEED), seed_ndim)
     } else {
-        dimnames <- .normalize_dimnames(dimnames, seed_ndim)
+        dimnames <- normarg_dimnames(dimnames, seed_dim)
         seed_dimnames <- dimnames(seed)
         dimnames <- lapply(seq_len(seed_ndim),
                            function(along) {

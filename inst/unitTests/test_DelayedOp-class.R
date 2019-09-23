@@ -699,7 +699,7 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
                    silent=silent)
     checkException(new_DelayedDimnames(.TEST_MATRIX2a, list(NULL, NULL, NULL)),
                    silent=silent)
-    checkException(new_DelayedDimnames(.TEST_MATRIX2a, list(1:5, NULL)),
+    checkException(new_DelayedDimnames(.TEST_MATRIX2a, list(ls, NULL)),
                    silent=silent)
     checkException(new_DelayedDimnames(.TEST_MATRIX2a, list(letters, NULL)),
                    silent=silent)

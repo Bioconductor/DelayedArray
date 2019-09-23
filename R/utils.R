@@ -91,10 +91,27 @@ normarg_dimnames <- function(dimnames, dim)
     if (missing(dimnames) || is.null(dimnames))
         return(vector("list", length=ndim))
     if (!is.list(dimnames))
-        stop(wmsg("'dimnames' must be NULL or a list"))
+        stop(wmsg("the supplied 'dimnames' must be NULL or a list"))
     if (length(dimnames) != ndim)
-        stop(wmsg("'dimnames' must have one list element per dimension"))
-    dimnames
+        stop(wmsg("the supplied 'dimnames' must have one list element ",
+                  "per dimension"))
+    lapply(seq_len(ndim),
+        function(along) {
+            dn <- dimnames[[along]]
+            if (is.null(dn))
+                return(dn)
+            if (!(is.vector(dn) && is.atomic(dn) || is.factor(dn)))
+                stop(wmsg("each list element in the supplied 'dimnames' ",
+                          "must be NULL or a character vector"))
+            if (!is.character(dn))
+                dn <- as.character(dn)
+            if (length(dn) != dim[[along]])
+                stop(wmsg("length of 'dimnames[[", along, "]]' ",
+                          "(", length(dn), ") must equal the ",
+                          "array extent (", dim[[along]], ")"))
+            dn
+        }
+    )
 }
 
 
