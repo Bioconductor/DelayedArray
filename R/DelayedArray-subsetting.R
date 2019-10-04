@@ -150,7 +150,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Coercion to sparse matrix (requires the Matrix package)
+### Coercion to sparse matrix
 ###
 ### Based on BLOCK_which().
 ###

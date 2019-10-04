@@ -169,18 +169,18 @@ sparse2dense <- function(sas)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### is_sparse() and extract_sparse_array()
+### The is_sparse() and extract_sparse_array() generics
 ###
 
 ### is_sparse() detects **structural** sparsity which is a qualitative
-### property of array-like object 'x'. So it doesn't look at the data in 'x'.
-### It is NOT about quantitative sparsity measured by sparsity().
+### property of array-like object 'x' rather than a quantitative one.
+### In other words it doesn't look at the data in 'x' to decide whether 'x'
+### should be considered sparse or not. Said otherwise, it is NOT about
+### quantitative sparsity measured by sparsity().
 setGeneric("is_sparse", function(x) standardGeneric("is_sparse"))
 
 ### By default, nothing is considered sparse.
 setMethod("is_sparse", "ANY", function(x) FALSE)
-
-setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
 
 ### This is the workhorse behind read_sparse_block().
 ### Similar to extract_array() except that:
@@ -215,6 +215,14 @@ setGeneric("extract_sparse_array",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_sparse(), extract_sparse_array(), and extract_array() methods for
+### SparseArraySeed objects
+###
+
+setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
+
 ### IMPORTANT NOTE: The returned SparseArraySeed object is guaranteed to be
 ### **correct** ONLY if the subscripts in 'index' do NOT contain duplicates!
 ### If they contain duplicates, the correct SparseArraySeed object to return
@@ -245,15 +253,9 @@ setGeneric("extract_sparse_array",
     ans_nzdata <- x@nzdata[keep_idx]
     SparseArraySeed(ans_dim, ans_aind, ans_nzdata, check=FALSE)
 }
-
 setMethod("extract_sparse_array", "SparseArraySeed",
     .extract_sparse_array_from_SparseArraySeed
 )
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### extract_array()
-###
 
 .extract_array_from_SparseArraySeed <- function(x, index)
 {
@@ -282,9 +284,25 @@ setMethod("extract_sparse_array", "SparseArraySeed",
         return(ans0)
     subset_by_Nindex(ans0, sm_index)
 }
-
 setMethod("extract_array", "SparseArraySeed",
     .extract_array_from_SparseArraySeed
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_sparse() and extract_sparse_array() methods for dgCMatrix objects
+###
+
+setMethod("is_sparse", "dgCMatrix", function(x) TRUE)
+
+.extract_sparse_array_from_dgCMatrix <- function(x, index)
+{
+    stopifnot(is(x, "dgCMatrix"))
+    x <- as(x, "SparseArraySeed")
+    .extract_sparse_array_from_SparseArraySeed(x, index)
+}
+setMethod("extract_sparse_array", "dgCMatrix",
+    .extract_sparse_array_from_dgCMatrix
 )
 
 

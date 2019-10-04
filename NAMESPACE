@@ -8,7 +8,8 @@ importFrom(stats, setNames,
                   dpois, ppois, qpois,
                   dlogis, plogis, qlogis)
 importFrom(stats4, summary)
-importFrom(Matrix, crossprod, tcrossprod)
+importClassFrom(Matrix, dgCMatrix)
+importFrom(Matrix, sparseMatrix, crossprod, tcrossprod)
 import(matrixStats)
 import(BiocGenerics)
 import(S4Vectors)

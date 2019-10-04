@@ -16,11 +16,14 @@
 \alias{sparse2dense}
 
 \alias{is_sparse,ANY-method}
-\alias{is_sparse,SparseArraySeed-method}
 \alias{extract_sparse_array}
-\alias{extract_sparse_array,SparseArraySeed-method}
 
+\alias{is_sparse,SparseArraySeed-method}
+\alias{extract_sparse_array,SparseArraySeed-method}
 \alias{extract_array,SparseArraySeed-method}
+
+\alias{is_sparse,dgCMatrix-method}
+\alias{extract_sparse_array,dgCMatrix-method}
 
 \alias{as.array.SparseArraySeed}
 \alias{as.array,SparseArraySeed-method}

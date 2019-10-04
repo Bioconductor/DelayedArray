@@ -415,8 +415,13 @@
 ### NOT exported but used in the HDF5Array package!
 array_as_one_line_summary <- function(x)
 {
-    dim_in1string <- paste0(dim(x), collapse=" x ")
-    sprintf("<%s> %s object of type \"%s\"", dim_in1string, class(x), type(x))
+    x_dim <- dim(x)
+    sprintf("<%s>%s %s of class %s and type \"%s\"",
+            paste0(x_dim, collapse=" x "),
+            if (is_sparse(x)) " sparse" else "",
+            if (length(x_dim) == 2L) "matrix" else "array",
+            class(x),
+            type(x))
 }
 
 ### Work on any array-like object that complies with the "seed contract" i.e.

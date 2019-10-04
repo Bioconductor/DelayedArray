@@ -8,7 +8,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, and ordinary arrays and
 	data frames.
-Version: 0.11.6
+Version: 0.11.7
 Encoding: UTF-8
 Author: Hervé Pagès <hpages@fredhutch.org>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
@@ -19,7 +19,7 @@ Depends: R (>= 3.4), methods, stats4, matrixStats, BiocGenerics (>= 0.31.5),
 	S4Vectors (>= 0.21.7), IRanges (>= 2.17.3), BiocParallel
 Imports: stats, Matrix
 LinkingTo: S4Vectors
-Suggests: Matrix, HDF5Array, genefilter, SummarizedExperiment, airway, pryr,
+Suggests: HDF5Array, genefilter, SummarizedExperiment, airway, pryr,
 	DelayedMatrixStats, knitr, BiocStyle, RUnit
 License: Artistic-2.0
 VignetteBuilder: knitr
