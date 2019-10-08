@@ -40,7 +40,7 @@
     stopifnot(isSingleString(indent))
     stopifnot(is.logical(last.child), length(last.child) == 1L)
 
-    if (!is.list(x)) {
+    if (!is.list(x) || is.array(x)) {
         ## Display summary line.
 
         if (is.na(last.child)) {
@@ -111,7 +111,7 @@ setMethod("nseed", "ANY",
             return(nseed(x@seed))
         if (is(x, "DelayedNaryOp"))
             x <- x@seeds
-        if (is.list(x)) {
+        if (is.list(x) && !is.array(x)) {
             ans <- sum(vapply(x, nseed, integer(1), USE.NAMES=FALSE))
             return(ans)
         }
@@ -130,7 +130,7 @@ seedApply <- function(x, FUN, ...)
         return(seedApply(x@seed, FUN, ...))
     if (is(x, "DelayedNaryOp"))
         x <- x@seeds
-    if (is.list(x)) {
+    if (is.list(x) && !is.array(x)) {
         ans <- lapply(x, seedApply, FUN, ...)
         return(unlist(ans, recursive=FALSE, use.names=FALSE))
     }

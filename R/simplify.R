@@ -294,7 +294,7 @@ isPristine <- function(x, ignore.dimnames=FALSE)
 ###   - DelayedSubassign nodes that are not no-ops.
 contentIsPristine <- function(x)
 {
-    if (!is.list(x)) {
+    if (!is.list(x) || is.array(x)) {
         if (!is(x, "DelayedOp"))
             return(TRUE)
         if (is(x, "DelayedUnaryIsoOpStack") ||
