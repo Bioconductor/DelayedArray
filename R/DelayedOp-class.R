@@ -1029,7 +1029,19 @@ new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
         dimnames <- lapply(setNames(seq_len(seed_ndim), names(dimnames)),
                            function(along) {
                                dn <- dimnames[[along]]
-                               if (identical(dn, seed_dimnames[[along]]))
+                               seed_dn <- seed_dimnames[[along]]
+                               ## Let's play nice with seeds that return
+                               ## dimnames() that are not NULL or a character
+                               ## vector e.g.
+                               ##   library(GDSArray)
+                               ##   gds <- seqExampleFileName("gds")
+                               ##   ga1 <- GDSArray(gds, "genotype/data")
+                               ##   sapply(dimnames(ga1), class)
+                               ##   #  variant.id   sample.id   ploidy.id
+                               ##   # "character" "character"   "integer"
+                               if (!(is.null(seed_dn) || is.character(seed_dn)))
+                                   seed_dn <- as.character(seed_dn)
+                               if (identical(dn, seed_dn))
                                    return(.INHERIT_FROM_SEED)
                                dn
                            })
