@@ -1026,7 +1026,7 @@ new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
     } else {
         dimnames <- normarg_dimnames(dimnames, seed_dim)
         seed_dimnames <- dimnames(seed)
-        dimnames <- lapply(seq_len(seed_ndim),
+        dimnames <- lapply(setNames(seq_len(seed_ndim), names(dimnames)),
                            function(along) {
                                dn <- dimnames[[along]]
                                if (identical(dn, seed_dimnames[[along]]))
