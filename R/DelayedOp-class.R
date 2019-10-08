@@ -1051,7 +1051,11 @@ new_DelayedDimnames <- function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
 
 setMethod("is_noop", "DelayedDimnames",
     function(x)
-        all(vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED))
+    {
+        ok <- vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED,
+                     USE.NAMES=FALSE)
+        all(ok) && identical(names(x@dimnames), names(dimnames(x@seed)))
+    }
 )
 
 ### S3/S4 combo for summary.DelayedDimnames
