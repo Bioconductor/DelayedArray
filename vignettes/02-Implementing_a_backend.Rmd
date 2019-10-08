@@ -105,10 +105,13 @@ package.
 Seed objects are expected to comply with the "seed contract" i.e. to
 support `dim()`, `dimnames()`, and `extract_array()`. This is normally
 done by implementing methods for these generics, but, as we will
-see below, a method is rarely needed for `dim()` or `dimnames()`.
+see below, explicitly defining `dim()` or `dimnames()` methods is
+rarely needed.
 
-For example, the `dim` method for ADSArraySeed objects could look like
-this:
+### dim() and dimnames()
+
+For example, the `dim()` method for ADSArraySeed objects could look
+like this:
 
     ### An implementation that extracts the dimensions from the file
     ### each time the method is called.
@@ -121,20 +124,37 @@ this:
         }
     )
 
-Note that the above `dim` method consults the ADS file each time it's
+Note that the above `dim()` method consults the ADS file each time it's
 called. However this can be avoided by adding a `dim` (and `dimnames`)
 slot (of type `integer` for `dim`, of type `list` for `dimnames`) to
 the ADSArraySeed class, and to populate it at construction time, so this
-information is retrieved from the file only once. With this approach,
-the `dim` and  `dimnames` methods are actually not needed, because, by
-default, the `dim` and `dimnames` primitive functions return the content
-of these slots if present.
+information is retrieved from the file only once. With this approach
+`dim()` and `dimnames()` work out-of-the-box on ADSArraySeed objects
+i.e. there is no need to define `dim()` and  `dimnames()` methods for
+these objects. This is because the `dim()` and `dimnames()` primitive
+functions in base R return the content of these slots if present.
 
 If the ADS format does not allow storage of the dimnames, then there
-is no need to implement a `dimnames` method or to add a `dimnames` slot
-to the ADSArraySeed class.
+is no need to implement a `dimnames()` method or to add a `dimnames()`
+slot to the ADSArraySeed class. Calling `dimnames(x)` then will simply
+return `NULL` for any ADSArraySeed object `x`.
 
-`extract_array` is a generic function defined in the _DelayedArray_ package:
+If the ADS format allows storage of the dimnames, make sure that `dimnames()`
+always returns them in the _standard form_, that is:
+
+- The dimnames must be returned as a `NULL` (if the dataset has no dimnames)
+  or as an ordinary list with one list element per dimension in the dataset.
+
+- Each element in the returned list is either `NULL` or a character vector
+  of length the extend of the dataset along the corresponding dimension.
+  It is particularly important to make sure that the vectors in the list
+  returned by `dimnames()` are character vectors. Other types like factors
+  or integer vectors are not allowed and _will_ break downstream code.
+
+### extract\_array()
+
+`extract_array()` is a generic function defined in the _DelayedArray_
+package:
 
     library(DelayedArray)
     ?extract_array
@@ -146,19 +166,19 @@ Empty and missing subscripts (represented by `integer(0)` and `NULL` list
 elements, respectively) are allowed. The subscripts in `index` can contain
 duplicated indices. They cannot contain NAs or non-positive values.
 
-The `extract_array` method must return an *ordinary* array of the
+The `extract_array()` method must return an *ordinary* array of the
 appropriate type (i.e. `integer`, `double`, etc...). For example, if
 `x` is an ADSArraySeed object representing an M x N on-disk matrix
 of complex numbers, `extract_array(x, list(NULL, 2L))` must
 return its 2nd column as an *ordinary* M x 1 matrix of type `complex`.
 
-Note that the `extract_array` method needs to support empty and missing
+Note that the `extract_array()` method needs to support empty and missing
 subscripts e.g. `extract_array(x, list(NULL, integer(0)))` must return
 an M x 0 matrix of type `complex` and
 `extract_array(x, list(integer(0), integer(0)))` a 0 x 0 matrix of
-type `complex`. This last edge case is important because the `type`
-and `show` methods for DelayedArray objects rely on it to work.
-More precisely, once the `extract_array` method supports an `index`
+type `complex`. This last edge case is important because the `type()`
+and `show()` methods for DelayedArray objects rely on it to work.
+More precisely, once the `extract_array()` method supports an `index`
 with empty integer vectors, the following should work:
 
     seed <- ADSArraySeed(...)
@@ -227,7 +247,7 @@ We'll define the ADSMatrix class later.
 
 ## `ADSArray()` constructor
 
-Add a `DelayedArray` method for ADSArraySeed objects that does:
+Add a `DelayedArray()` method for ADSArraySeed objects that does:
 
     setMethod("DelayedArray", "ADSArraySeed",
         function(seed) new_DelayedArray(seed, Class="ADSArray")
@@ -267,11 +287,11 @@ with something like:
 
 ## Going from ADSArray to ADSMatrix
 
-Define a `matrixClass` method for ADSArray objects as follow:
+Define a `matrixClass()` method for ADSArray objects as follow:
 
     setMethod("matrixClass", "ADSArray", function(x) "ADSMatrix")
 
-`matrixClass` is a generic function defined in the _DelayedArray_ package.
+`matrixClass()` is a generic function defined in the _DelayedArray_ package.
 When passed an ADSArraySeed object, low-level constructor `new_DelayedArray`
 (see below) will generally return an ADSArray *instance*, except when the
 ADSArraySeed object is 2-dimensional, in which case it needs to return an
@@ -308,7 +328,7 @@ It is possible, and enouraged, to overwrite current DelayedArray
 block-processed operations (e.g. `max`, `colSums`, `%*%`, etc...) with
 optimized backend-specific methods. For example, let's imagine that ADS
 files have the capability to store some precomputed stats about the dataset.
-Then one could define a fast `max` method for ADSArray objects with
+Then one could define a fast `max()` method for ADSArray objects with
 something like:
 
     setMethod("max", "ADSArraySeed",
@@ -326,13 +346,14 @@ Note that delayed operations like setting dimnames on an ADSArray object
 (with `dimnames(A) <- new_dimnames`) or transposing an ADSMatrix object
 (with `M2 <- t(M)`) will demote the object to a DelayedArray or DelayedMatrix
 instance, causing `max(A)` and `max(M2)` to use the far less efficient
-block-processed `max` method defined for DelayedArray objects. There is
+block-processed `max()` method defined for DelayedArray objects. There is
 clearly room for improvement here and work will be done in the near future
-to make the `max` method (and other block-processed methods) for DelayedArray
-objects try to take advantage of the backend-specific method whenever it can.
+to make the `max()` method (and other block-processed methods) for
+DelayedArray objects try to take advantage of the backend-specific methods
+whenever it can.
 
 However in the meantime, backend authors should resist the temptation to
-overwrite the `dimnames<-` and `t` methods for DelayedArray objects with
+overwrite the `dimnames<-()` and `t()` methods for DelayedArray objects with
 backend-specific methods that modify the seed. This would be a violation
 of the "never touch the seed" principle which is central to the DelayedArray
 framework. More precisely, no matter what delayed operations are performed
