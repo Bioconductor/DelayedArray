@@ -166,11 +166,11 @@ Empty and missing subscripts (represented by `integer(0)` and `NULL` list
 elements, respectively) are allowed. The subscripts in `index` can contain
 duplicated indices. They cannot contain NAs or non-positive values.
 
-The `extract_array()` method must return an *ordinary* array of the
+The `extract_array()` method must return an _ordinary array_ of the
 appropriate type (i.e. `integer`, `double`, etc...). For example, if
 `x` is an ADSArraySeed object representing an M x N on-disk matrix
 of complex numbers, `extract_array(x, list(NULL, 2L))` must
-return its 2nd column as an *ordinary* M x 1 matrix of type `complex`.
+return its 2nd column as an M x 1 _ordinary matrix_ of type `complex`.
 
 Note that the `extract_array()` method needs to support empty and missing
 subscripts e.g. `extract_array(x, list(NULL, integer(0)))` must return
@@ -231,7 +231,7 @@ These classes are not strictly needed but add a nice level of convenience.
 
 An ADSArray or ADSMatrix object is a DelayedArray derivative that doesn't
 carry delayed operations yet. As soon as the user will start operating on it,
-it will be degraded to a DelayedArray *instance*.
+it will be degraded to a DelayedArray _instance_.
 
 The ADSArray and ADSMatrix classes should extend the DelayedArray and
 DelayedMatrix classes, respectively, without adding any slot to them.
@@ -245,7 +245,7 @@ So just:
 
 We'll define the ADSMatrix class later.
 
-## `ADSArray()` constructor
+## The ADSArray() constructor
 
 Add a `DelayedArray()` method for ADSArraySeed objects that does:
 
@@ -293,9 +293,9 @@ Define a `matrixClass()` method for ADSArray objects as follow:
 
 `matrixClass()` is a generic function defined in the _DelayedArray_ package.
 When passed an ADSArraySeed object, low-level constructor `new_DelayedArray`
-(see below) will generally return an ADSArray *instance*, except when the
+(see below) will generally return an ADSArray _instance_, except when the
 ADSArraySeed object is 2-dimensional, in which case it needs to return an
-ADSMatrix *instance*. It will obtain the name of the class of the object to
+ADSMatrix _instance_. It will obtain the name of the class of the object to
 return (`"ADSMatrix"` in this case) by calling `matrixClass`.
 
 Also coercion from ADSArray to ADSMatrix needs to be supported with:
@@ -344,8 +344,8 @@ something like:
 
 Note that delayed operations like setting dimnames on an ADSArray object
 (with `dimnames(A) <- new_dimnames`) or transposing an ADSMatrix object
-(with `M2 <- t(M)`) will demote the object to a DelayedArray or DelayedMatrix
-instance, causing `max(A)` and `max(M2)` to use the far less efficient
+(with `M2 <- t(M)`) will degrade the object to a DelayedArray or DelayedMatrix
+_instance_, causing `max(A)` and `max(M2)` to use the far less efficient
 block-processed `max()` method defined for DelayedArray objects. There is
 clearly room for improvement here and work will be done in the near future
 to make the `max()` method (and other block-processed methods) for
