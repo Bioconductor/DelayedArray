@@ -1071,7 +1071,7 @@ setMethod("summary", "DelayedDimnames", summary.DelayedDimnames)
 {
     x_dimnames <- x@dimnames
     seed_dimnames <- dimnames(x@seed)
-    ans <- lapply(seq_along(x_dimnames),
+    ans <- lapply(setNames(seq_along(x_dimnames), names(x_dimnames)),
                   function(along) {
                       dn <- x_dimnames[[along]]
                       if (identical(dn, .INHERIT_FROM_SEED))

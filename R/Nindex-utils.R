@@ -174,7 +174,7 @@ subset_dimnames_by_Nindex <- function(dimnames, Nindex)
     ndim <- length(Nindex)
     stopifnot(is.list(dimnames), length(dimnames) == ndim)
     ## Would mapply() be faster here?
-    ans <- lapply(seq_len(ndim),
+    ans <- lapply(setNames(seq_len(ndim), names(dimnames)),
                   function(along) {
                       dn <- dimnames[[along]]
                       i <- Nindex[[along]]
