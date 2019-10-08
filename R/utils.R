@@ -95,7 +95,7 @@ normarg_dimnames <- function(dimnames, dim)
     if (length(dimnames) != ndim)
         stop(wmsg("the supplied 'dimnames' must have one list element ",
                   "per dimension"))
-    lapply(seq_len(ndim),
+    lapply(setNames(seq_len(ndim), names(dimnames)),
         function(along) {
             dn <- dimnames[[along]]
             if (is.null(dn))
