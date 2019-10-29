@@ -1,3 +1,31 @@
+CHANGES IN VERSION 0.12.0
+-------------------------
+
+NEW FEATURES
+
+    o Add isPristine()
+
+    o Delayed subassignment now accepts a right value with dimensions that are
+      not strictly the same as the dimensions of the selection as long as the
+      "effective dimensions" are the same
+
+    o Small improvement to delayed dimnames setter: atomic vectors or factors
+      in the supplied 'dimnames' list are now accepted and passed thru
+      as.character()
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Improve show() method for DelayedArray objects (see commit 54540856)
+
+BUG FIXES
+
+    o Setting and getting the dimnames of a DelayedArray object or derivative
+      now preserves the names on the dimnames
+
+    o Some fixes related to DelayedArray objects with list array seeds (see
+      commit 6c94eac7)
+
+
 CHANGES IN VERSION 0.10.0
 -------------------------
 
@@ -31,7 +59,7 @@ NEW FEATURES
       blockApply().
 
     o Reduce memory usage when realizing a sparse DelayedArray to disk
-    
+
       On-disk realization of a DelayedArray object that is reported to be sparse
       (by is_sparse()) to a "sparsity-optimized" backend (i.e. to a backend with
       a memory efficient write_sparse_block() like the TENxMatrix backend imple-
@@ -49,12 +77,12 @@ NEW FEATURES
       allow adding "ineffective dimensions" to it.
 
     o Enhance subassignment to a DelayedArray object.
-    
+
       So far subassignment to a DelayedArray object only supported the **linear
       form** (i.e. x[i] <- value) with strong restrictions (the subscript 'i'
       must be a logical DelayedArray of the same dimensions as 'x', and 'value'
       must be an ordinary vector of length 1).
-    
+
       In addition to this linear form, subassignment to a DelayedArray object
       now supports the **multi-dimensional form** (e.g. x[3:1, , 6] <- 0). In
       this form, one subscript per dimension is supplied, and each subscript
