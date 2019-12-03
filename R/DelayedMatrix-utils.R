@@ -8,7 +8,7 @@
 ### rowsum() / colsum()
 ###
 
-colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
+.colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
 {
     t(rowsum(t(x), group, reorder=reorder, na.rm=na.rm, ...))
 }
@@ -25,7 +25,7 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
     viewport <- grid[[i, j]]
     block <- read_block(x, viewport)
     group2 <- extractROWS(group, ranges(viewport)[2L])
-    colsum(block, group2, reorder=FALSE, na.rm=na.rm)
+    .colsum(block, group2, reorder=FALSE, na.rm=na.rm)
 }
 
 .compute_rowsum_for_grid_col <- function(x, grid, j, group, ugroup,
@@ -145,7 +145,7 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
 }
 
 setGeneric("rowsum", signature="x")
-setGeneric("colsum", signature="x")
+setGeneric("colsum", function(x, group, reorder=TRUE, ...) standardGeneric("colsum"))
 
 ### S3/S4 combo for rowsum.DelayedMatrix
 rowsum.DelayedMatrix <- function(x, group, reorder=TRUE, ...)
@@ -154,6 +154,29 @@ setMethod("rowsum", "DelayedMatrix", .BLOCK_rowsum)
 
 setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
 
+setMethod("rowsum", "matrix", rowsum.default)
+
+setMethod("colsum", "matrix", .colsum)
+
+setMethod("colsum", "ANY", function(x, group, reorder=TRUE, ...) {
+    by.group <- split(seq_len(ncol(x)), group)
+    out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE]))
+    out <- do.call(cbind, out)
+    if (!reorder) {
+        out <- out[,unique(group),drop=FALSE]
+    }
+    out
+})
+
+setMethod("rowsum", "ANY", function(x, group, reorder=TRUE, ...) {
+    by.group <- split(seq_len(nrow(x)), group)
+    out <- lapply(by.group, function(i) colSums(x[i,,drop=FALSE]))
+    out <- do.call(rbind, out)
+    if (!reorder) {
+        out <- out[unique(group),,drop=FALSE]
+    }
+    out
+})
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Matrix multiplication
