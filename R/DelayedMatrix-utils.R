@@ -542,7 +542,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     MULT(block_x, block_y)
 }
 
-.super_BLOCK_mult <- function(x, y, MULT, transposed.x=FALSE, transposed.y=FALSE, BPPARAM=bpparam())
+.super_BLOCK_mult <- function(x, y, MULT, transposed.x=FALSE, transposed.y=FALSE, BPPARAM=getAutoBPPARAM())
 # Controller function that split jobs for a multiplication function "MULT".
 # This accommodates %*%, crossprod and tcrossprod for two arguments.
 {
@@ -550,9 +550,9 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     chosen_scheme <- scheme_out$choice
     chosen_grids <- scheme_out$grid
 
-    old <- bpparam()
-    on.exit(register(old))
-    register(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
+    old <- getAutoBPPARAM()
+    on.exit(setAutoBPPARAM(old))
+    setAutoBPPARAM(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
 
     if (chosen_scheme=="common") {
         ans <- bpiterate(.dual_grid_iterate(chosen_grids$x, chosen_grids$y), FUN=.both_mult,
@@ -622,7 +622,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
     MULT(block)
 }
 
-.super_BLOCK_self <- function(x, MULT, transposed=FALSE, BPPARAM=bpparam())
+.super_BLOCK_self <- function(x, MULT, transposed=FALSE, BPPARAM=getAutoBPPARAM())
 # Controller function that split jobs for a multiplication function "MULT".
 # This accommodates crossprod and tcrossprod for single arguments.
 {
@@ -630,9 +630,9 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
     chosen_scheme <- scheme_out$choice
     chosen_grids <- scheme_out$grid
 
-    old <- bpparam()
-    on.exit(register(old))
-    register(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
+    old <- getAutoBPPARAM()
+    on.exit(setAutoBPPARAM(old))
+    setAutoBPPARAM(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
 
     if (chosen_scheme=="single") {
         out <- bpiterate(.single_grid_iterate(chosen_grids), FUN=.left_mult,
