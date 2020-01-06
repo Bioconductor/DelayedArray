@@ -71,26 +71,28 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
     ans
 }
 
-.BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
+.compute_ugroup <- function(group, expected_group_len, reorder=TRUE)
 {
-    if (is.factor(group))
-        group <- as.character(group)
-    else if (!is.vector(group))
+    if (!(is.vector(group) || is.factor(group)))
         stop(wmsg("'group' must be a vector or factor"))
-    if (length(group) != nrow(x))
+    if (length(group) != expected_group_len)
         stop(wmsg("incorrect length for 'group'"))
     if (!isTRUEorFALSE(reorder))
         stop(wmsg("'reorder' must be TRUE or FALSE"))
-    if (!isTRUEorFALSE(na.rm))
-        stop(wmsg("'na.rm' must be TRUE or FALSE"))
-
     ## Taken from base::rowsum.default().
     ugroup <- unique(group)
     if (anyNA(ugroup))
         warning(wmsg("missing values for 'group'"))
     if (reorder)
         ugroup <- sort(ugroup, na.last=TRUE, method="quick")
+    as.character(ugroup)
+}
 
+.BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
+{
+    ugroup <- .compute_ugroup(group, nrow(x), reorder)
+    if (!isTRUEorFALSE(na.rm))
+        stop(wmsg("'na.rm' must be TRUE or FALSE"))
     grid <- normarg_grid(grid, x)
 
     ## Outer loop on the grid columns. Parallelized.
@@ -109,24 +111,9 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
 }
 .BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
-    if (is.factor(group))
-        group <- as.character(group)
-    else if (!is.vector(group))
-        stop(wmsg("'group' must be a vector or factor"))
-    if (length(group) != ncol(x))
-        stop(wmsg("incorrect length for 'group'"))
-    if (!isTRUEorFALSE(reorder))
-        stop(wmsg("'reorder' must be TRUE or FALSE"))
+    ugroup <- .compute_ugroup(group, ncol(x), reorder)
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
-
-    ## Taken from base::rowsum.default().
-    ugroup <- unique(group)
-    if (anyNA(ugroup))
-        warning(wmsg("missing values for 'group'"))
-    if (reorder)
-        ugroup <- sort(ugroup, na.last=TRUE, method="quick")
-
     grid <- normarg_grid(grid, x)
 
     ## Outer loop on the grid rows. Parallelized.
