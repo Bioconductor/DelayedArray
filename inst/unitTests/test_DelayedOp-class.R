@@ -684,6 +684,10 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(.INHERIT_FROM_SEED, NULL), x@dimnames)
     checkIdentical(FALSE, is_noop(x))
+    x2 <- new_DelayedDimnames(.TEST_MATRIX2a, list(NULL))
+    checkIdentical(x, x2)
+    x3 <- new_DelayedDimnames(.TEST_MATRIX2a, list(NULL, NULL))
+    checkIdentical(x, x3)
 
     x <- new_DelayedDimnames(.TEST_MATRIX2a, list(letters[1:5], NULL))
     checkTrue(is(x, "DelayedDimnames"))
@@ -692,10 +696,10 @@ test_DelayedDimnames_constructor <- function(silent=FALSE)
     checkIdentical(.TEST_MATRIX2a, seed(x))
     checkIdentical(list(letters[1:5], NULL), x@dimnames)
     checkIdentical(FALSE, is_noop(x))
+    x2 <- new_DelayedDimnames(.TEST_MATRIX2a, list(letters[1:5]))
+    checkIdentical(x, x2)
 
     checkException(new_DelayedDimnames(.TEST_MATRIX2a, letters),
-                   silent=silent)
-    checkException(new_DelayedDimnames(.TEST_MATRIX2a, list(NULL)),
                    silent=silent)
     checkException(new_DelayedDimnames(.TEST_MATRIX2a, list(NULL, NULL, NULL)),
                    silent=silent)

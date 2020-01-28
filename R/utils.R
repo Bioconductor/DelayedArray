@@ -92,9 +92,13 @@ normarg_dimnames <- function(dimnames, dim)
         return(vector("list", length=ndim))
     if (!is.list(dimnames))
         stop(wmsg("the supplied 'dimnames' must be NULL or a list"))
-    if (length(dimnames) != ndim)
+    if (length(dimnames) < ndim) {
+        ## Append NULLs to the list.
+        length(dimnames) <- ndim
+    } else if (length(dimnames) > ndim) {
         stop(wmsg("the supplied 'dimnames' must have one list element ",
                   "per dimension"))
+    }
     lapply(setNames(seq_len(ndim), names(dimnames)),
         function(along) {
             dn <- dimnames[[along]]
