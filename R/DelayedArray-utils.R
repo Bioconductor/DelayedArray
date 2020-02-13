@@ -47,25 +47,32 @@ setMethod("bindROWS", "DelayedArray",
 
 ### Return TRUE if 'length(e)' is 1 or equal to 'nrow(x)', FALSE if it's a
 ### divisor of 'nrow(x)', and an error otherwise.
-.check_Ops_vector_arg_length <-
-    function(e, x_nrow,
-             e_what="left object",
-             x_what="first dimension of right object",
-             x_what2=x_what)
+.check_Ops_vector_arg_length <- function(e, x_nrow,
+    e_what="the left operand",
+    x_what="the first dimension of the right operand",
+    x_what2=x_what)
 {
     e_len <- length(e)
     if (e_len == x_nrow || e_len == 1L)
         return(TRUE)
+    if (is(e, "DelayedArray")) {
+        e_what <- paste0("the length of ", e_what)
+    } else {
+        e_what <- paste0("when ", e_what, " is not a DelayedArray ",
+                         "object (or derivative), its length")
+    }
     if (e_len > x_nrow)
-        stop(wmsg(e_what, " is longer than ", x_what))
+        stop(wmsg(e_what, " (", e_len, ") cannot be greater ",
+                        "than ", x_what, " (", x_nrow, ")"))
     if (e_len == 0L || x_nrow %% e_len != 0L)
-        stop(wmsg("length of ", e_what, " is not a divisor of ", x_what2))
+        stop(wmsg(e_what, " (", e_len, ") must be a divisor ",
+                          "of ", x_what2, " (", x_nrow, ")"))
     FALSE
 }
 
 .normarg_Ops_vector_arg <- function(e, x_nrow,
-                                    e_what="left object",
-                                    x_what="first dimension of right object")
+    e_what="the left operand",
+    x_what="the first dimension of the right operand")
 {
     ok <- .check_Ops_vector_arg_length(e, x_nrow, e_what=e_what, x_what=x_what)
     if (!is.vector(e))
@@ -84,8 +91,8 @@ setMethod("bindROWS", "DelayedArray",
 {
     stopifnot(is(e1, "DelayedArray"))
     e2 <- .normarg_Ops_vector_arg(e2, nrow(e1),
-                                  e_what="right object",
-                                  x_what="first dimension of left object")
+                   e_what="the right operand",
+                   x_what="the first dimension of the left operand")
     if (length(e2) == 1L) {
         stash_DelayedUnaryIsoOpStack(e1,
             function(a) match.fun(.Generic)(a, e2))
@@ -100,8 +107,8 @@ setMethod("bindROWS", "DelayedArray",
 {
     stopifnot(is(e2, "DelayedArray"))
     e1 <- .normarg_Ops_vector_arg(e1, nrow(e2),
-                                  e_what="left object",
-                                  x_what="first dimension of right object")
+                   e_what="the left operand",
+                   x_what="the first dimension of the right operand")
     if (length(e1) == 1L) {
         stash_DelayedUnaryIsoOpStack(e2,
             function(a) match.fun(.Generic)(e1, a))
