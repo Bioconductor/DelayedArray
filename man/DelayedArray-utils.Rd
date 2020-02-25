@@ -33,6 +33,8 @@
 \alias{is.nan,DelayedArray-method}
 \alias{!,DelayedArray-method}
 
+\alias{type<-,DelayedArray,ANY-method}
+
 \alias{lengths,DelayedArray-method}
 
 \alias{nchar,DelayedArray-method}
@@ -83,6 +85,7 @@
     \item \code{sweep}
     \item \code{!}
     \item \code{is.na}, \code{is.finite}, \code{is.infinite}, \code{is.nan}
+    \item \code{type<-}
     \item \code{lengths}
     \item \code{nchar}, \code{tolower}, \code{toupper},
           \code{grepl}, \code{sub}, \code{gsub}
@@ -214,6 +217,9 @@ stopifnot(identical(rbind(DF$V, DF$V), DF2$V))
 M1 >= 0.5 & M1 < 0.75          # delayed
 log(M1)                        # delayed
 pmax2(M2, 0)                   # delayed
+
+type(M2) <- "integer"          # delayed
+M2
 
 ## table() is block-processed:
 a4 <- array(sample(50L, 2000000L, replace=TRUE), c(200, 4, 2500))

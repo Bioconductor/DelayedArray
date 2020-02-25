@@ -349,7 +349,9 @@ setMethod("sweep", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Various unary operators + the "Math" and "Math2" groups
+### Various "unary" and "isometric" array transformations that can be
+### implemented as delayed operations (this includes the "Math" and "Math2"
+### groups)
 ###
 ### All these operations return a DelayedArray object of the same dimensions
 ### as 'x'.
@@ -364,6 +366,12 @@ for (.Generic in .UNARY_OPS) {
             stash_DelayedUnaryIsoOpStack(x, function(a) match.fun(.Generic)(a))
     )
 }
+
+setMethod("type<-", c("DelayedArray", "ANY"),
+    function(x, value)
+        stash_DelayedUnaryIsoOpStack(x,
+            function(a) `storage.mode<-`(a, value=value))
+)
 
 setMethod("lengths", "DelayedArray",
     function(x, use.names=TRUE)

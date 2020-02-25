@@ -212,15 +212,26 @@ stopifnot(identical(x, as(M, "DataFrame")))
 ## D. CONSTRUCTING A LARGE RleArray OBJECT
 ## ---------------------------------------------------------------------
 
-## The RleArray() constructor does not accept a long Rle object at the
-## moment:
+## The RleArray() constructor does not accept a "long" Rle object (i.e.
+## an object of length > .Machine$integer.max) at the moment:
 \dontrun{
   RleArray(Rle(5, 3e9), dim=c(3, 1e9))  # error!
 }
 
 ## The workaround is to supply a list of Rle objects instead:
-data <- lapply(1:500, function(j) Rle(runif(99), 1e6 + 99:1))
-dim <- c(6750, 73337, 100)
+
+toy_Rle <- function() {
+  run_lens <- c(sample(4), sample(rep(c(1:19, 40) * 3, 6e4)), sample(4))
+  run_vals <- sample(700, length(run_lens), replace=TRUE) / 5
+  Rle(run_vals, run_lens)
+}
+data <- lapply(1:100, function(j) toy_Rle())  # takes about 20 sec.
+
+## Cumulative length of all the Rle objects is > .Machine$integer.max:
+sum(lengths(data))  # 4.14e+09
+
+## Feed 'data' to the RleArray() constructor:
+dim <- c(14395, 400, 719)
 A <- RleArray(data, dim)
 A
 
@@ -231,6 +242,76 @@ A
 M <- RleArray(data)
 M
 stopifnot(identical(as(data, "RleList"), as(M, "RleList")))
+
+## ---------------------------------------------------------------------
+## E. SWITCH THE TYPE OF AN RleArray OBJECT FROM "double" TO "integer"
+## ---------------------------------------------------------------------
+
+## An RleArray object is an in-memory object so it can be useful to
+## reduce its memory footprint. For an object of type "double" this can
+## be done by changing its type to "integer" (integers are half the size
+## of doubles in memory). Of course this only makes sense if this results
+## in a loss of precision that is acceptable.
+## On an ordinary array (or matrix) 'a', this is simply a matter of
+## doing 'storage.mode(a) <- "integer"'. However, with a DelayedArray
+## object, things are a little bit different. Let's do this on a subset
+## of the RleMatrix object 'M' created in the previous section.
+
+M1 <- as(M[1:1e6, ], "RleMatrix")
+
+## First of all, it's important to be aware that object.size() (from
+## package utils) is NOT reliable on RleArray objects! This is because
+## the data in an RleArray object is stored in an environment and
+## object.size() stubbornly refuses to take the content of an environment
+## into account when computing its size:
+object.size(list2env(list(aa=1:10)))   # 56 bytes
+object.size(list2env(list(aa=1:1e6)))  # always 56 bytes!
+
+## So we'll use object_size() instead (from package pryr):
+library(pryr)
+object_size(list2env(list(aa=1:10)))   # 264 B
+object_size(list2env(list(aa=1:1e6)))  # 4 MB
+object_size(list2env(list(aa=as.double(1:1e6))))  # 8 MB
+
+object_size(M1)  # 34.7 MB
+
+type(M1) <- "integer"  # Delayed!
+M1                     # Note the class: it's no longer RleMatrix!
+                       # (That's because the object now carries delayed
+                       # operations.)
+
+## Because changing the type is a delayed operation, the memory footprint
+## of the object has not changed yet (remember that the original data in
+## a DelayedArray object is stored in its "seed" and its seed is never
+## modified **in-place**, that is, no operation on the object will ever
+## modify its seed):
+object_size(M1)  # Still the same (well, a very tiny more, because the
+                 # object is now carrying one more delayed operation,
+                 # the `type<-` operation)
+
+## To effectively reduce the memory footprint of the object, a new object
+## needs to be created. This is achieved simply by **realizing** M1 as a
+## (new) RleArray object. Note that this realization will use block
+## processing:
+
+DelayedArray:::set_verbose_block_processing(TRUE)  # See block processing
+                                                   # in action.
+M2 <- as(M1, "RleArray")
+DelayedArray:::set_verbose_block_processing(FALSE)
+
+M2
+object_size(M2)  # 14.4 MB (Less than half the original size! This is
+                 # because RleArray objects use some internal tricks to
+                 # reduce memory footprint even more when the data in
+                 # their seed is of type "integer".)
+
+## Finally note that the 2-step approach described here (i.e.
+## type(A) <- "integer" + realization) is generic and works on any
+## kind of DelayedArray object or derivative. In particular, after doing
+## 'type(A) <- "integer"', 'A' can be realized as anything as long as the
+## realization backend is supported (e.g. could be 'as(A, "HDF5Array")'
+## or 'as(A, "TENxMatrix")') and realization will always use block
+## processing so the array data will never be fully loaded in memory.
 }
 \keyword{classes}
 \keyword{methods}

@@ -44,6 +44,10 @@ setClass("RleRealizationSink",
 
 setMethod("type", "RleRealizationSink", function(x) x@type)
 
+#setMethod("chunkdim", "RleRealizationSink",
+#    function(x) dim(x@chunk_grid[[1L]])
+#)
+
 ### We support long ChunkedRleArraySeed objects but the chunks cannot be long.
 ### Note that supporting long chunks would require (at least) that:
 ###   1) we support long ArrayViewport objects,
