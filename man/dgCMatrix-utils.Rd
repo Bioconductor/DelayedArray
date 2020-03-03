@@ -78,7 +78,7 @@ m <- randomSparseMatrix(1e5, 800)  # dense representation
 m0 <- as(m, "dgCMatrix")           # sparse representation
 group <- sample(20, nrow(m), replace=TRUE)
 
-## 'rowsum(m0)' is about 5x faster than 'rowsum(m0)':
+## 'rowsum(m0)' is about 5x faster than 'rowsum(m)':
 rs <- rowsum(m, group)
 rs0 <- rowsum(m0, group)
 
