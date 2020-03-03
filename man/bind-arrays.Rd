@@ -41,7 +41,7 @@ acbind(...)
           \pkg{base} package for the corresponding operations on matrix-like
           objects.
 
-    \item The \pkg{abind} package on CRAN.
+    \item The \pkg{abind} package from CRAN.
   }
 }
 

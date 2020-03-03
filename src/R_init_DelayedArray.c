@@ -15,6 +15,9 @@ static const R_CallMethodDef callMethods[] = {
 /* abind.c */
 	CALLMETHOD_DEF(C_abind, 3),
 
+/* dgCMatrix_utils.c */
+	CALLMETHOD_DEF(C_dgCMatrix_rowsum, 4),
+
 	{NULL, NULL, 0}
 };
 

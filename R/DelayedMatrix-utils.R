@@ -8,28 +8,38 @@
 ### rowsum() / colsum()
 ###
 
-colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
-{
-    t(rowsum(t(x), group, reorder=reorder, na.rm=na.rm, ...))
-}
-
-.compute_rowsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
+.compute_rowsum_for_block <- function(x, grid, i, j, x_is_sparse,
+                                      group, na.rm=FALSE)
 {
     viewport <- grid[[i, j]]
-    block <- read_block(x, viewport)
+    if (x_is_sparse) {
+        block <- read_sparse_block(x, viewport)
+        ## Go from SparseArraySeed to dgCMatrix.
+        block <- as(block, "dgCMatrix")
+    } else {
+        block <- read_block(x, viewport)
+    }
     group2 <- extractROWS(group, ranges(viewport)[1L])
     rowsum(block, group2, reorder=FALSE, na.rm=na.rm)
 }
-.compute_colsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
+.compute_colsum_for_block <- function(x, grid, i, j, x_is_sparse,
+                                      group, na.rm=FALSE)
 {
     viewport <- grid[[i, j]]
-    block <- read_block(x, viewport)
+    if (x_is_sparse) {
+        block <- read_sparse_block(x, viewport)
+        ## Go from SparseArraySeed to dgCMatrix.
+        block <- as(block, "dgCMatrix")
+    } else {
+        block <- read_block(x, viewport)
+    }
     group2 <- extractROWS(group, ranges(viewport)[2L])
     colsum(block, group2, reorder=FALSE, na.rm=na.rm)
 }
 
-.compute_rowsum_for_grid_col <- function(x, grid, j, group, ugroup,
-                                         na.rm=FALSE, verbose=FALSE)
+.compute_rowsum_for_grid_col <- function(x, grid, j, x_is_sparse,
+                                         group, ugroup, na.rm=FALSE,
+                                         verbose=FALSE)
 {
     grid_nrow <- nrow(grid)
     grid_ncol <- ncol(grid)
@@ -40,7 +50,7 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
             message("Processing block [[", i, "/", grid_nrow, ", ",
                                            j, "/", grid_ncol, "]] ... ",
                     appendLF=FALSE)
-        block_ans <- .compute_rowsum_for_block(x, grid, i, j,
+        block_ans <- .compute_rowsum_for_block(x, grid, i, j, x_is_sparse,
                                                group, na.rm=na.rm)
         m <- match(rownames(block_ans), ugroup)
         ans[m, ] <- ans[m, ] + block_ans
@@ -49,8 +59,9 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
     }
     ans
 }
-.compute_colsum_for_grid_row <- function(x, grid, i, group, ugroup,
-                                         na.rm=FALSE, verbose=FALSE)
+.compute_colsum_for_grid_row <- function(x, grid, i, x_is_sparse,
+                                         group, ugroup, na.rm=FALSE,
+                                         verbose=FALSE)
 {
     grid_nrow <- nrow(grid)
     grid_ncol <- ncol(grid)
@@ -61,7 +72,7 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
             message("Processing block [[", i, "/", grid_nrow, ", ",
                                            j, "/", grid_ncol, "]] ... ",
                     appendLF=FALSE)
-        block_ans <- .compute_colsum_for_block(x, grid, i, j,
+        block_ans <- .compute_colsum_for_block(x, grid, i, j, x_is_sparse,
                                                group, na.rm=na.rm)
         m <- match(colnames(block_ans), ugroup)
         ans[ , m] <- ans[ , m] + block_ans
@@ -71,68 +82,50 @@ colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
     ans
 }
 
-.compute_ugroup <- function(group, expected_group_len, reorder=TRUE)
-{
-    if (!(is.vector(group) || is.factor(group)))
-        stop(wmsg("'group' must be a vector or factor"))
-    if (length(group) != expected_group_len)
-        stop(wmsg("incorrect length for 'group'"))
-    if (!isTRUEorFALSE(reorder))
-        stop(wmsg("'reorder' must be TRUE or FALSE"))
-    ## Taken from base::rowsum.default().
-    ugroup <- unique(group)
-    if (anyNA(ugroup))
-        warning(wmsg("missing values for 'group'"))
-    if (reorder)
-        ugroup <- sort(ugroup, na.last=TRUE, method="quick")
-    as.character(ugroup)
-}
-
 .BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
-    ugroup <- .compute_ugroup(group, nrow(x), reorder)
+    ugroup <- as.character(compute_ugroup(group, nrow(x), reorder))
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
     grid <- normarg_grid(grid, x)
+    x_is_sparse <- is_sparse(x)
 
     ## Outer loop on the grid columns. Parallelized.
     block_results <- bplapply(seq_len(ncol(grid)),
         function(j) {
-            .compute_rowsum_for_grid_col(x, grid, j, group, ugroup,
-                                         na.rm=na.rm,
+            .compute_rowsum_for_grid_col(x, grid, j, x_is_sparse,
+                                         group, ugroup, na.rm=na.rm,
                                          verbose=get_verbose_block_processing())
         },
         BPPARAM=getAutoBPPARAM()
     )
 
     ans <- do.call(cbind, block_results)
-    dimnames(ans) <- list(as.character(ugroup), colnames(x))
+    dimnames(ans) <- list(ugroup, colnames(x))
     ans
 }
 .BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
-    ugroup <- .compute_ugroup(group, ncol(x), reorder)
+    ugroup <- as.character(compute_ugroup(group, ncol(x), reorder))
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
     grid <- normarg_grid(grid, x)
+    x_is_sparse <- is_sparse(x)
 
     ## Outer loop on the grid rows. Parallelized.
     block_results <- bplapply(seq_len(nrow(grid)),
         function(i) {
-            .compute_colsum_for_grid_row(x, grid, i, group, ugroup,
-                                         na.rm=na.rm,
+            .compute_colsum_for_grid_row(x, grid, i, x_is_sparse,
+                                         group, ugroup, na.rm=na.rm,
                                          verbose=get_verbose_block_processing())
         },
         BPPARAM=getAutoBPPARAM()
     )
 
     ans <- do.call(rbind, block_results)
-    dimnames(ans) <- list(rownames(x), as.character(ugroup))
+    dimnames(ans) <- list(rownames(x), ugroup)
     ans
 }
-
-setGeneric("rowsum", signature="x")
-setGeneric("colsum", signature="x")
 
 ### S3/S4 combo for rowsum.DelayedMatrix
 rowsum.DelayedMatrix <- function(x, group, reorder=TRUE, ...)

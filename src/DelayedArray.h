@@ -13,3 +13,7 @@ SEXP C_decompress_atomic_vector(SEXP x);
 
 SEXP C_abind(SEXP objects, SEXP nblock, SEXP ans_dim);
 
+/* dgCMatrix_utils.c */
+
+SEXP C_dgCMatrix_rowsum(SEXP x, SEXP group, SEXP ngroup, SEXP na_rm);
+

@@ -96,6 +96,7 @@ S3method(mean, DelayedArray)
 
 S3method(range, DelayedArray)
 
+S3method(rowsum, dgCMatrix)
 S3method(rowsum, DelayedMatrix)
 
 S3method(split, DelayedArray)
@@ -150,6 +151,7 @@ export(
 
     range.DelayedArray,
 
+    rowsum.dgCMatrix,
     rowsum.DelayedMatrix,
 
     split.DelayedArray,
@@ -285,6 +287,9 @@ export(
 ###
 
 export(
+    ## dgCMatrix-utils.R:
+    rowsum, colsum,
+
     ## bind-arrays.R:
     arbind, acbind,
 
@@ -331,15 +336,13 @@ export(
     ## DelayedArray-utils.R:
     pmax2, pmin2, apply,
 
-    ## DelayedMatrix-utils.R:
-    rowsum, colsum,
-
     ## DelayedMatrix-stats.R:
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 
 ### Exactly the same list as above.
 exportMethods(
+    rowsum, colsum,
     arbind, acbind,
     extract_array,
     refdim, maxlength, aperm, downsample,
@@ -355,7 +358,6 @@ exportMethods(
     close,
     realize,
     pmax2, pmin2, apply,
-    rowsum, colsum,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 
