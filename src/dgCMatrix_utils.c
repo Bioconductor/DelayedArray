@@ -36,7 +36,7 @@ static void compute_rowsum(const double *x, const int *row, int x_len,
 			   int narm)
 {
 	int i, g;
-	double x_i;
+	double x_elt;
 
 	for (i = 0; i < out_len; i++)
 		out[i] = 0.0;
@@ -45,10 +45,10 @@ static void compute_rowsum(const double *x, const int *row, int x_len,
 		if (g == NA_INTEGER)
 			g = out_len;
 		g--;  // from 1-base to 0-base
-		x_i = x[i];
-		if (narm && (R_IsNA(x_i) || R_IsNaN(x_i)))
+		x_elt = x[i];
+		if (narm && (R_IsNA(x_elt) || R_IsNaN(x_elt)))
 			continue;
-		out[g] += x_i;
+		out[g] += x_elt;
 	}
 	return;
 }
