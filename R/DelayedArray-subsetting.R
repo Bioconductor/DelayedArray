@@ -174,7 +174,10 @@ setAs("DelayedArray", "SparseArraySeed", .from_DelayedArray_to_SparseArraySeed)
 
 .from_DelayedMatrix_to_dgCMatrix <- function(from)
 {
-    as(as(from, "SparseArraySeed"), "dgCMatrix")
+    ## 'as(from, "SparseArraySeed")' doesn't propagate the dimnames at the
+    ## moment (the SparseArraySeed container cannot currently store them) so
+    ## we need to propagate them explicitly.
+    set_dimnames(as(as(from, "SparseArraySeed"), "dgCMatrix"), dimnames(from))
 }
 setAs("DelayedMatrix", "dgCMatrix", .from_DelayedMatrix_to_dgCMatrix)
 setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
