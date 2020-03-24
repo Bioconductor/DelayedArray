@@ -70,7 +70,7 @@ setClass("ChunkedRleArraySeed",
 ## to make ChunkedRleArraySeed support a RegularArrayGrid of chunks.
 #setClass("ChunkedRleArraySeed", contains="RleRealizationSink")
 
-#setMethod("parallelSlotNames", "ChunkedRleArraySeed",
+#setMethod("vertical_slot_names", "ChunkedRleArraySeed",
 #    function(x) c("chunk_grid", "chunk_runs_along_last_dim", "chunks")
 #)
 
