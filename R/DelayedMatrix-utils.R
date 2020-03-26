@@ -91,7 +91,7 @@
     x_is_sparse <- is_sparse(x)
 
     ## Outer loop on the grid columns. Parallelized.
-    block_results <- bplapply(seq_len(ncol(grid)),
+    block_results <- bplapply2(seq_len(ncol(grid)),
         function(j) {
             .compute_rowsum_for_grid_col(x, grid, j, x_is_sparse,
                                          group, ugroup, na.rm=na.rm,
@@ -113,7 +113,7 @@
     x_is_sparse <- is_sparse(x)
 
     ## Outer loop on the grid rows. Parallelized.
-    block_results <- bplapply(seq_len(nrow(grid)),
+    block_results <- bplapply2(seq_len(nrow(grid)),
         function(i) {
             .compute_colsum_for_grid_row(x, grid, i, x_is_sparse,
                                          group, ugroup, na.rm=na.rm,
@@ -526,17 +526,27 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 # Controller function that split jobs for a multiplication function "MULT".
 # This accommodates %*%, crossprod and tcrossprod for two arguments.
 {
-    scheme_out <- .dispatch_mult(x, y, bpnworkers(BPPARAM), transposed.x=transposed.x, transposed.y=transposed.y)
+    if (!requireNamespace("BiocParallel", quietly=TRUE))
+        stop(wmsg("Couldn't load the BiocParallel package. Please ",
+                  "install the BiocParallel package and try again."))
+    if (is.null(BPPARAM))
+        BPPARAM <- BiocParallel::SerialParam()
+    nworkers <- BiocParallel::bpnworkers(BPPARAM)
+    scheme_out <- .dispatch_mult(x, y, nworkers, transposed.x=transposed.x, transposed.y=transposed.y)
     chosen_scheme <- scheme_out$choice
     chosen_grids <- scheme_out$grid
 
     old <- getAutoBPPARAM()
     on.exit(setAutoBPPARAM(old))
-    setAutoBPPARAM(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
+    ## Avoid re-parallelizing in further calls to 'MULT'.
+    setAutoBPPARAM(BiocParallel::SerialParam())
 
     if (chosen_scheme=="common") {
-        ans <- bpiterate(.dual_grid_iterate(chosen_grids$x, chosen_grids$y), FUN=.both_mult,
-            x=x, y=y, MULT=MULT, BPPARAM=BPPARAM, REDUCE=function(x, y) x + y)
+        ITER <- .dual_grid_iterate(chosen_grids$x, chosen_grids$y)
+        ans <- BiocParallel::bpiterate(ITER,
+                                       FUN=.both_mult, x=x, y=y, MULT=MULT,
+                                       BPPARAM=BPPARAM,
+                                       REDUCE=function(x, y) x + y)
 
     } else {
         # Switch to iteration over the other argument if the chosen one is
@@ -550,12 +560,16 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         }
 
         if (chosen_scheme=="x") {
-            out <- bpiterate(.single_grid_iterate(chosen_grids$x), FUN=.left_mult,
-                x=x, y=y, MULT=MULT, BPPARAM=BPPARAM)
+            ITER <- .single_grid_iterate(chosen_grids$x)
+            out <- BiocParallel::bpiterate(ITER,
+                                           FUN=.left_mult, x=x, y=y, MULT=MULT,
+                                           BPPARAM=BPPARAM)
             ans <- do.call(rbind, out)
         } else if (chosen_scheme=="y") {
-           out <- bpiterate(.single_grid_iterate(chosen_grids$y), FUN=.right_mult,
-                x=x, y=y, MULT=MULT, BPPARAM=BPPARAM)
+           ITER <- .single_grid_iterate(chosen_grids$y)
+           out <- BiocParallel::bpiterate(ITER,
+                                          FUN=.right_mult, x=x, y=y, MULT=MULT,
+                                          BPPARAM=BPPARAM)
            ans <- do.call(cbind, out)
         }
     }
@@ -606,22 +620,34 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .sup
 # Controller function that split jobs for a multiplication function "MULT".
 # This accommodates crossprod and tcrossprod for single arguments.
 {
-    scheme_out <- .dispatch_self(x, bpnworkers(BPPARAM), transposed=transposed)
+    if (!requireNamespace("BiocParallel", quietly=TRUE))
+        stop(wmsg("Couldn't load the BiocParallel package. Please ",
+                  "install the BiocParallel package and try again."))
+    if (is.null(BPPARAM))
+        BPPARAM <- BiocParallel::SerialParam()
+    nworkers <- BiocParallel::bpnworkers(BPPARAM)
+    scheme_out <- .dispatch_self(x, nworkers, transposed=transposed)
     chosen_scheme <- scheme_out$choice
     chosen_grids <- scheme_out$grid
 
     old <- getAutoBPPARAM()
     on.exit(setAutoBPPARAM(old))
-    setAutoBPPARAM(SerialParam()) # avoid re-parallelizing in further calls to 'MULT'.
+    ## Avoid re-parallelizing in further calls to 'MULT'.
+    setAutoBPPARAM(BiocParallel::SerialParam())
 
     if (chosen_scheme=="single") {
-        out <- bpiterate(.single_grid_iterate(chosen_grids), FUN=.left_mult,
-            x=x, y=x, MULT=MULT, BPPARAM=SerialParam())
+        ITER <- .single_grid_iterate(chosen_grids)
+        out <- BiocParallel::bpiterate(ITER,
+                                       FUN=.left_mult, x=x, y=x, MULT=MULT,
+                                       BPPARAM=BiocParallel::SerialParam())
         ans <- do.call(rbind, out)
 
     } else if (chosen_scheme=="both") {
-        ans <- bpiterate(.single_grid_iterate(chosen_grids), FUN=.solo_mult,
-            x=x, MULT=MULT, BPPARAM=BPPARAM, REDUCE=function(x, y) x+y)
+        ITER <- .single_grid_iterate(chosen_grids)
+        ans <- BiocParallel::bpiterate(ITER,
+                                       FUN=.solo_mult, x=x, MULT=MULT,
+                                       BPPARAM=BPPARAM,
+                                       REDUCE=function(x, y) x+y)
 
     }
 

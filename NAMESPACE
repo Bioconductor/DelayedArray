@@ -14,7 +14,6 @@ import(matrixStats)
 import(BiocGenerics)
 import(S4Vectors)
 import(IRanges)
-import(BiocParallel)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes

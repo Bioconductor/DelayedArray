@@ -19,6 +19,24 @@ seq2 <- function(to, by)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### bplapply2()
+###
+### A simple wrapper to BiocParallel::bplapply() that falls back to lapply()
+### if 'BPPARAM' is NULL.
+###
+
+bplapply2 <- function(X, FUN, ..., BPPARAM=NULL)
+{
+    if (is.null(BPPARAM))
+        return(lapply(X, FUN, ...))
+    if (!requireNamespace("BiocParallel", quietly=TRUE))
+        stop(wmsg("Couldn't load the BiocParallel package. Please ",
+                  "install the BiocParallel package and try again."))
+    BiocParallel::bplapply(X, FUN, ..., BPPARAM=BPPARAM)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Greatest common divisor and least common multiple of 2 integers
 ###
 ### Currently not used.
@@ -471,25 +489,5 @@ user_option_is_set <- function(name)
     stopifnot(isSingleString(name))
     name <- paste0("DelayedArray.", name)
     name %in% names(.Options)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### bplapply2()
-###
-### A simple wrapper to BiocParallel::bplapply() that propagates
-### base::.Options to the workers.
-### Should probably go in BiocParallel, or even better, replace bplapply().
-###
-
-bplapply2 <- function(X, FUN, ..., BPREDO=list(), BPPARAM=bpparam())
-{
-    FUN2 <- function(x, opts)
-    {
-        force(opts)
-        base::options(opts)
-        FUN(x, ...)
-    }
-    bplapply(X, FUN2, opts=base::.Options, BPREDO=BPREDO, BPPARAM=BPPARAM)
 }
 

@@ -39,25 +39,21 @@ getAutoGridMaker <- function() get_user_option("auto.grid.maker")
 ### set/getAutoBPPARAM()
 ###
 
-### By default (i.e. when no argument is specified), we set the automatic
-### BPPARAM to SerialParam() on Windows and to MulticoreParam() on other
-### platforms.
-### The reason we use SerialParam() instead of SnowParam() on Windows is
-### that the latter introduces **a lot** of overhead in the context of block
-### processing. See https://github.com/Bioconductor/BiocParallel/issues/78
-### To the point that disabling parallel evaluation (by using SerialParam())
-### is still much faster than parallel evaluation with SnowParam().
+### By default (i.e. when no argument is specified), no BiocParallel backend
+### is set and evaluation is sequential.
+### Beware that SnowParam() on Windows is quite inefficient for block
+### processing (it introduces **a lot** of overhead) so it's better to stick
+### to sequential evaluation on this platform.
+### See https://github.com/Bioconductor/BiocParallel/issues/78
 setAutoBPPARAM <- function(BPPARAM=NULL)
 {
-    if (is.null(BPPARAM)) {
-        if (.Platform$OS.type == "windows") {
-            BPPARAM <- BiocParallel::SerialParam()
-        } else {
-            BPPARAM <- BiocParallel::MulticoreParam()
-        }
-    } else {
+    if (!is.null(BPPARAM)) {
+        if (!requireNamespace("BiocParallel", quietly=TRUE))
+            stop(wmsg("Couldn't load the BiocParallel package. Please ",
+                      "install the BiocParallel package and try again."))
         if (!is(BPPARAM, "BiocParallelParam"))
-            stop(wmsg("'BPPARAM' must be a BiocParallelParam object"))
+            stop(wmsg("'BPPARAM' must be a BiocParallelParam ",
+                      "object from the BiocParallel package"))
     }
     set_user_option("auto.BPPARAM", BPPARAM)
 }
@@ -118,7 +114,7 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
     FUN <- match.fun(FUN)
     grid <- normarg_grid(grid, x)
     nblock <- length(grid)
-    bplapply(seq_len(nblock),
+    bplapply2(seq_len(nblock),
         function(b) {
             if (get_verbose_block_processing())
                 message("Processing block ", b, "/", nblock, " ... ",
