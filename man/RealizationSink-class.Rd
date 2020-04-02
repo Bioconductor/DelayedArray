@@ -118,9 +118,9 @@ dim(sink)
 chunkdim(sink)
 
 grid <- blockGrid(sink, block.length=600)
-for (b in seq_along(grid)) {
-    viewport <- grid[[b]]
-    block <- 101 * b + runif(length(viewport))
+for (bid in seq_along(grid)) {
+    viewport <- grid[[bid]]
+    block <- 101 * bid + runif(length(viewport))
     dim(block) <- dim(viewport)
     write_block(sink, viewport, block)
 }
@@ -161,7 +161,7 @@ G <- as(matrix(runif(250000), ncol=1000), "HDF5Array")  # 250 rows
 ## (R and G), we can't use blockApply() or blockReduce() so we'll use
 ## a "for" loop.
 
-## Before we can write the "for" loop, we need 4 things:
+## Before we get to the "for" loop, we need 4 things:
 
 ## 1) Two grids of blocks, one on R and one on G. The blocks in the
 ##    2 grids must contain the same number of columns. We arbitrarily
@@ -200,14 +200,14 @@ U_grid <- colGrid(U_sink, ncol=150)
 stopifnot(length(U_grid) == length(R_grid))
 stopifnot(length(U_grid) == length(G_grid))
 
-## Now we can procede. We write a loop where we walk on R and G at
+## Now we can procede. We use a "for" loop where we walk on R and G at
 ## the same time, block by block, apply pFUN(), and write the output
 ## of pFUN() to U_sink:
-for (b in seq_along(U_grid)) {
-    R_block <- read_block(R, R_grid[[b]])
-    G_block <- read_block(G, G_grid[[b]])
+for (bid in seq_along(U_grid)) {
+    R_block <- read_block(R, R_grid[[bid]])
+    G_block <- read_block(G, G_grid[[bid]])
     U_block <- pFUN(R_block, G_block)
-    write_block(U_sink, U_grid[[b]], U_block)
+    write_block(U_sink, U_grid[[bid]], U_block)
 }
 
 close(U_sink)

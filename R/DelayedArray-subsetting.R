@@ -16,9 +16,9 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
     ## Return a numeric matrix like one returned by base::arrayInd(), that
     ## is, a matrix where each row is an n-uplet representing an array index.
     FUN <- function(block) {
-        b <- currentBlockId(block)
+        bid <- currentBlockId(block)
         m <- base::which(block)
-        mapToRef(rep.int(b, length(m)), m, effectiveGrid(block), linear=TRUE)
+        mapToRef(rep.int(bid, length(m)), m, effectiveGrid(block), linear=TRUE)
     }
     block_results <- blockApply(x, FUN, grid=grid)
     aind <- do.call(rbind, block_results)
@@ -60,18 +60,18 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
     minor_by_block <- split(majmin$minor, majmin$major)
     res <- lapply(seq_along(minor_by_block),
         function(k) {
-            b <- as.integer(names(minor_by_block)[[k]])
+            bid <- as.integer(names(minor_by_block)[[k]])
             m <- minor_by_block[[k]]
             if (get_verbose_block_processing())
-                message("Visiting block ", b, "/", nblock, " ... ",
+                message("Visiting block ", bid, "/", nblock, " ... ",
                         appendLF=FALSE)
             ## We don't need to load the entire block if there is only 1
             ## value to extract from it.
             if (length(m) == 1L) {
-                i2 <- linearInd(mapToRef(b, m, grid, linear=TRUE), x_dim)
+                i2 <- linearInd(mapToRef(bid, m, grid, linear=TRUE), x_dim)
                 block_ans <- extract_array_element(x, i2)
             } else {
-                block <- read_block(x, grid[[b]])
+                block <- read_block(x, grid[[bid]])
                 block_ans <- block[m]
             }
             if (get_verbose_block_processing())

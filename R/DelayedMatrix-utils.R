@@ -159,14 +159,14 @@ setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
     ans_spacings <- c(ans_dim[[1L]], ncol(y_grid[[1L]]))
     ans_grid <- RegularArrayGrid(ans_dim, ans_spacings)  # parallel to 'y_grid'
     nblock <- length(y_grid)  # same as 'length(ans_grid)'
-    for (b in seq_len(nblock)) {
+    for (bid in seq_len(nblock)) {
         if (get_verbose_block_processing())
-            message("Processing block ", b, "/", nblock, " ... ",
+            message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
-        y_viewport <- y_grid[[b]]
+        y_viewport <- y_grid[[bid]]
         block <- read_block(y, y_viewport)
         block_ans <- x %*% block
-        write_block(sink, ans_grid[[b]], block_ans)
+        write_block(sink, ans_grid[[bid]], block_ans)
         if (get_verbose_block_processing())
             message("OK")
     }
@@ -483,14 +483,14 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
 .single_grid_iterate <- function(grid) {
     force(grid)
-    b <- 0L
+    bid <- 0L
 
     # Do NOT put read_block in here, as this will waste time realizing from file in the single worker.
     # TODO: subset in-memory matrices to avoid serializing them in their entirety to the workers.
     function () {
-        if (b==length(grid)) return(NULL)
-        b <<- b + 1L
-        grid[[b]]
+        if (bid == length(grid)) return(NULL)
+        bid <<- bid + 1L
+        grid[[bid]]
     }
 }
 
@@ -507,12 +507,12 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 .dual_grid_iterate <- function(grid.x, grid.y) {
     force(grid.x)
     force(grid.y)
-    b <- 0L
+    bid <- 0L
 
     function () {
-        if (b==length(grid.x)) return(NULL)
-        b <<- b + 1L
-        list(x=grid.x[[b]], y=grid.y[[b]])
+        if (bid == length(grid.x)) return(NULL)
+        bid <<- bid + 1L
+        list(x=grid.x[[bid]], y=grid.y[[bid]])
     }
 }
 

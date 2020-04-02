@@ -5,6 +5,7 @@
 ### Performs the reverse transformation of arrayInd().
 ###
 
+
 .normarg_dim2 <- function(dim)
 {
     if (!is.integer(dim) || S4Vectors:::anyMissingOrOutside(dim, 0L))

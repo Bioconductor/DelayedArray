@@ -79,10 +79,10 @@ read_block(m0, grid0[[1L, 3L]])
 
 ## Walk on the grid, colum by column:
 m1 <- m0
-for (b in seq_along(grid0)) {
-    viewport <- grid0[[b]]
+for (bid in seq_along(grid0)) {
+    viewport <- grid0[[bid]]
     block <- read_block(m1, viewport)
-    block <- b * 1000L + block
+    block <- bid * 1000L + block
     m1 <- write_block(m1, viewport, block)
 }
 m1

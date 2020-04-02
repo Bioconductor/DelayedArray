@@ -115,14 +115,14 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
     grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     bplapply2(seq_len(nblock),
-        function(b) {
+        function(bid) {
             if (get_verbose_block_processing())
-                message("Processing block ", b, "/", nblock, " ... ",
+                message("Processing block ", bid, "/", nblock, " ... ",
                         appendLF=FALSE)
-            viewport <- grid[[b]]
+            viewport <- grid[[bid]]
             block <- read_block(x, viewport)
             attr(block, "from_grid") <- grid
-            attr(block, "block_id") <- b
+            attr(block, "block_id") <- bid
             block_ans <- FUN(block, ...)
             if (get_verbose_block_processing())
                 message("OK")
@@ -140,14 +140,14 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
         BREAKIF <- match.fun(BREAKIF)
     grid <- normarg_grid(grid, x)
     nblock <- length(grid)
-    for (b in seq_len(nblock)) {
+    for (bid in seq_len(nblock)) {
         if (get_verbose_block_processing())
-            message("Processing block ", b, "/", nblock, " ... ",
+            message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
-        viewport <- grid[[b]]
+        viewport <- grid[[bid]]
         block <- read_block(x, viewport)
         attr(block, "from_grid") <- grid
-        attr(block, "block_id") <- b
+        attr(block, "block_id") <- bid
         init <- FUN(block, init)
         if (get_verbose_block_processing())
             message("OK")
@@ -207,11 +207,11 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
                          block.shape="first-dim-grows-first")
     nblock <- length(grid)
     lapply(seq_len(nblock),
-        function(b) {
+        function(bid) {
             if (get_verbose_block_processing())
-                message("Processing block ", b, "/", nblock, " ... ",
+                message("Processing block ", bid, "/", nblock, " ... ",
                         appendLF=FALSE)
-            viewport <- grid[[b]]
+            viewport <- grid[[bid]]
             block <- read_block(x, viewport)
             block_ans <- APPLY(block, ...)
             if (!is.null(sink)) {
