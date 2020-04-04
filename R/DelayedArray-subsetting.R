@@ -21,10 +21,10 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
         mapToRef(rep.int(bid, length(m)), m, effectiveGrid(block), linear=TRUE)
     }
     block_results <- blockApply(x, FUN, grid=grid)
-    aind <- do.call(rbind, block_results)
-    aind_as_list <- lapply(ncol(aind):1, function(j) aind[ , j])
-    oo <- do.call(order, aind_as_list)
-    ans <- aind[oo, , drop=FALSE]
+    Mindex <- do.call(rbind, block_results)
+    Mindex_as_list <- lapply(ncol(Mindex):1, function(j) Mindex[ , j])
+    oo <- do.call(order, Mindex_as_list)
+    ans <- Mindex[oo, , drop=FALSE]
     if (!arr.ind)
         ans <- Mindex2Lindex(ans, dim(x))
     ans
@@ -167,8 +167,8 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
     idx <- BLOCK_which(from != 0L)
     nzdata <- from[idx]  # block-processed
     from_dim <- dim(from)
-    aind <- Lindex2Mindex(idx, from_dim)
-    SparseArraySeed(from_dim, aind, nzdata, check=FALSE)
+    nzindex <- Lindex2Mindex(idx, from_dim)
+    SparseArraySeed(from_dim, nzindex, nzdata, check=FALSE)
 }
 setAs("DelayedArray", "SparseArraySeed", .from_DelayedArray_to_SparseArraySeed)
 

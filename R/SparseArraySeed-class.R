@@ -6,18 +6,15 @@
 setClass("SparseArraySeed",
     contains="Array",
     representation(
-        dim="integer",   # This gives us dim() for free!
-        aind="matrix",   # An **integer** matrix like one returned by
-                         # base::arrayInd(), that is, with 'length(dim)'
-                         # columns and where each row is an n-uplet
-                         # representing an "array index".
-        nzdata="vector"  # A vector of length 'nrow(aind)' containing the
-                         # nonzero data.
+        dim="integer",     # This gives us dim() for free!
+        nzindex="matrix",  # M-index of the nonzero data.
+        nzdata="vector"    # A vector of length 'nrow(nzindex)' containing
+                           # the nonzero data.
     )
 )
 
 ### API:
-### - Getters: dim(), length(), aind(), nzdata(), sparsity()
+### - Getters: dim(), length(), nzindex(), nzdata(), sparsity()
 ### - dense2sparse(), sparse2dense()
 ### - Based on sparse2dense(): extract_array(), as.array(), as.matrix()
 ### - Based on dense2sparse(): coercion to SparseArraySeed
@@ -28,20 +25,20 @@ setClass("SparseArraySeed",
 ### Validity
 ###
 
-.validate_aind_slot <- function(x)
+.validate_nzindex_slot <- function(x)
 {
-    x_aind <- x@aind
-    if (!(is.matrix(x_aind) && typeof(x_aind) == "integer"))
-        return("'aind' slot must be an integer matrix")
+    x_nzindex <- x@nzindex
+    if (!(is.matrix(x_nzindex) && typeof(x_nzindex) == "integer"))
+        return("'nzindex' slot must be an integer matrix")
     x_dim <- x@dim
-    if (ncol(x_aind) != length(x_dim))
-        return(paste0("'aind' slot must be a matrix with ",
+    if (ncol(x_nzindex) != length(x_dim))
+        return(paste0("'nzindex' slot must be a matrix with ",
                       "one column per dimension"))
     for (along in seq_along(x_dim)) {
-        not_ok <- S4Vectors:::anyMissingOrOutside(x_aind[ , along],
+        not_ok <- S4Vectors:::anyMissingOrOutside(x_nzindex[ , along],
                                                   1L, x_dim[[along]])
         if (not_ok)
-            return(paste0("'aind' slot must contain valid indices, ",
+            return(paste0("'nzindex' slot must contain valid indices, ",
                           "that is, indices that are not NA and are ",
                           ">= 1 and <= their corresponding dimension"))
     }
@@ -51,9 +48,9 @@ setClass("SparseArraySeed",
 .validate_nzdata_slot <- function(x)
 {
     x_nzdata <- x@nzdata
-    if (!(is.vector(x_nzdata) && length(x_nzdata) == nrow(x@aind)))
+    if (!(is.vector(x_nzdata) && length(x_nzdata) == nrow(x@nzindex)))
         return(paste0("'nzdata' slot must be a vector of length ",
-                      "the number of rows in the 'aind' slot"))
+                      "the number of rows in the 'nzindex' slot"))
     TRUE
 }
 
@@ -62,7 +59,7 @@ setClass("SparseArraySeed",
     msg <- validate_dim_slot(x, "dim")
     if (!isTRUE(msg))
         return(msg)
-    msg <- .validate_aind_slot(x)
+    msg <- .validate_nzindex_slot(x)
     if (!isTRUE(msg))
         return(msg)
     msg <- .validate_nzdata_slot(x)
@@ -78,8 +75,8 @@ setValidity2("SparseArraySeed", .validate_SparseArraySeed)
 ### Getters
 ###
 
-setGeneric("aind", function(x) standardGeneric("aind"))
-setMethod("aind", "SparseArraySeed", function(x) x@aind)
+setGeneric("nzindex", function(x) standardGeneric("nzindex"))
+setMethod("nzindex", "SparseArraySeed", function(x) x@nzindex)
 
 setGeneric("nzdata", function(x) standardGeneric("nzdata"))
 setMethod("nzdata", "SparseArraySeed", function(x) x@nzdata)
@@ -97,7 +94,7 @@ setMethod("sparsity", "SparseArraySeed",
 .normarg_nzdata <- function(nzdata, length.out)
 {
     if (is.null(nzdata))
-        stop(wmsg("'nzdata' cannot be NULL when 'aind' is not NULL"))
+        stop(wmsg("'nzdata' cannot be NULL when 'nzindex' is not NULL"))
     if (!is.vector(nzdata))
         stop(wmsg("'nzdata' must be a vector"))
     ## Same logic as S4Vectors:::V_recycle().
@@ -105,35 +102,36 @@ setMethod("sparsity", "SparseArraySeed",
     if (nzdata_len == length.out)
         return(nzdata)
     if (nzdata_len > length.out && nzdata_len != 1L)
-        stop(wmsg("'length(nzdata)' is greater than 'nrow(aind)'"))
+        stop(wmsg("'length(nzdata)' is greater than 'nrow(nzindex)'"))
     if (nzdata_len == 0L)
-        stop(wmsg("'length(nzdata)' is 0 but 'nrow(aind)' is not"))
+        stop(wmsg("'length(nzdata)' is 0 but 'nrow(nzindex)' is not"))
     if (length.out %% nzdata_len != 0L)
-        warning(wmsg("'nrow(aind)' is not a multiple of 'length(nzdata)'"))
+        warning(wmsg("'nrow(nzindex)' is not a multiple of 'length(nzdata)'"))
     rep(nzdata, length.out=length.out)
 }
 
-SparseArraySeed <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
+SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
 {
     if (!is.numeric(dim))
         stop(wmsg("'dim' must be an integer vector"))
     if (!is.integer(dim))
         dim <- as.integer(dim)
-    if (is.null(aind)) {
+    if (is.null(nzindex)) {
         if (!is.null(nzdata))
-            stop(wmsg("'nzdata' must be NULL when 'aind' is NULL"))
-        aind <- matrix(integer(0), ncol=length(dim))
+            stop(wmsg("'nzdata' must be NULL when 'nzindex' is NULL"))
+        nzindex <- Lindex2Mindex(integer(0), dim)
         nzdata <- integer(0)
     } else {
-        if (!is.matrix(aind))
-            stop(wmsg("'aind' must be a matrix"))
-        if (storage.mode(aind) == "double")
-            storage.mode(aind) <- "integer"
-        if (!is.null(dimnames(aind)))
-            dimnames(aind) <- NULL
-        nzdata <- .normarg_nzdata(nzdata, nrow(aind))
+        if (!is.matrix(nzindex))
+            stop(wmsg("'nzindex' must be a matrix"))
+        if (storage.mode(nzindex) == "double")
+            storage.mode(nzindex) <- "integer"
+        if (!is.null(dimnames(nzindex)))
+            dimnames(nzindex) <- NULL
+        nzdata <- .normarg_nzdata(nzdata, nrow(nzindex))
     }
-    new2("SparseArraySeed", dim=dim, aind=aind, nzdata=nzdata, check=check)
+    new2("SparseArraySeed", dim=dim, nzindex=nzindex, nzdata=nzdata,
+                            check=check)
 }
 
 
@@ -141,19 +139,16 @@ SparseArraySeed <- function(dim, aind=NULL, nzdata=NULL, check=TRUE)
 ### dense2sparse() and sparse2dense()
 ###
 
-### 'x' must be an array-like object that supports 1D-style subsetting
-### by a matrix like one returned by base::arrayInd(), that is, by a
-### matrix where each row is an n-uplet representing an array index.
-### Note that DelayedArray objects don't support this kind of subsetting
-### yet so dense2sparse() doesn't work on them.
+### 'x' must be an array-like object that supports subsetting by an M-index
+### subscript.
 ### Return a SparseArraySeed object.
 dense2sparse <- function(x)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must be an array-like object"))
-    aind <- which(x != 0L, arr.ind=TRUE)
-    SparseArraySeed(x_dim, aind, x[aind], check=FALSE)
+    nzindex <- which(x != 0L, arr.ind=TRUE)
+    SparseArraySeed(x_dim, nzindex, x[nzindex], check=FALSE)
 }
 
 ### 'sas' must be a SparseArraySeed object.
@@ -163,7 +158,7 @@ sparse2dense <- function(sas)
     if (!is(sas, "SparseArraySeed"))
         stop(wmsg("'sas' must be a SparseArraySeed object"))
     ans <- array(0L, dim=dim(sas))
-    ans[aind(sas)] <- nzdata(sas)
+    ans[nzindex(sas)] <- nzdata(sas)
     ans
 }
 
@@ -241,17 +236,17 @@ setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
 {
     stopifnot(is(x, "SparseArraySeed"))
     ans_dim <- get_Nindex_lengths(index, dim(x))
-    x_aind <- x@aind
+    x_nzindex <- x@nzindex
     for (along in seq_along(ans_dim)) {
         i <- index[[along]]
         if (is.null(i))
             next
-        x_aind[ , along] <- match(x_aind[ , along], i)
+        x_nzindex[ , along] <- match(x_nzindex[ , along], i)
     }
-    keep_idx <- which(!rowAnyNAs(x_aind))
-    ans_aind <- x_aind[keep_idx, , drop=FALSE]
+    keep_idx <- which(!rowAnyNAs(x_nzindex))
+    ans_nzindex <- x_nzindex[keep_idx, , drop=FALSE]
     ans_nzdata <- x@nzdata[keep_idx]
-    SparseArraySeed(ans_dim, ans_aind, ans_nzdata, check=FALSE)
+    SparseArraySeed(ans_dim, ans_nzindex, ans_nzdata, check=FALSE)
 }
 setMethod("extract_sparse_array", "SparseArraySeed",
     .extract_sparse_array_from_SparseArraySeed
@@ -337,8 +332,8 @@ setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
 {
     i <- from@i + 1L
     j <- rep.int(seq_len(ncol(from)), diff(from@p))
-    aind <- cbind(i, j, deparse.level=0L)
-    SparseArraySeed(dim(from), aind, from@x, check=FALSE)
+    nzindex <- cbind(i, j, deparse.level=0L)
+    SparseArraySeed(dim(from), nzindex, from@x, check=FALSE)
 }
 setAs("dgCMatrix", "SparseArraySeed", .from_dgCMatrix_to_SparseArraySeed)
 
@@ -348,8 +343,8 @@ setAs("dgCMatrix", "SparseArraySeed", .from_dgCMatrix_to_SparseArraySeed)
     if (length(from_dim) != 2L)
         stop(wmsg("the ", class(from), " object to coerce to dgCMatrix ",
                   "must have exactly 2 dimensions"))
-    i <- from@aind[ , 1L]
-    j <- from@aind[ , 2L]
+    i <- from@nzindex[ , 1L]
+    j <- from@nzindex[ , 2L]
     x <- from@nzdata
     Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
 }
@@ -373,10 +368,10 @@ setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_dgCMatrix)
         stop(wmsg(msg))
     ans_dim <- a_dim[perm]
     ans_dim[is.na(perm)] <- 1L
-    ans_aind <- a@aind[ , perm, drop=FALSE]
-    ans_aind[ , is.na(perm)] <- 1L
+    ans_nzindex <- a@nzindex[ , perm, drop=FALSE]
+    ans_nzindex[ , is.na(perm)] <- 1L
     BiocGenerics:::replaceSlots(a, dim=ans_dim,
-                                   aind=ans_aind,
+                                   nzindex=ans_nzindex,
                                    check=FALSE)
 }
 

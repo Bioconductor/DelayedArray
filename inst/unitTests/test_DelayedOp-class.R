@@ -11,21 +11,24 @@ new_DelayedNaryIsoOp <- DelayedArray:::new_DelayedNaryIsoOp
 .TEST_MATRIX2a <- matrix(c(5:-2, rep.int(c(0L, 99L), 11)), ncol=6,
                          dimnames=list(NULL, LETTERS[1:6]))
 
-.TEST_SAS2b <- SparseArraySeed(dim=.TEST_DIM2,
-                               aind=arrayInd(c(2:3, 12:22, 30), .TEST_DIM2),
-                               nzdata=rep(TRUE, 14))
+.TEST_SAS2b <- SparseArraySeed(
+    dim=.TEST_DIM2,
+    nzindex=Lindex2Mindex(c(2:3, 12:22, 30), .TEST_DIM2),
+    nzdata=rep(TRUE, 14))
 
 .TEST_ARRAY2b <- sparse2dense(.TEST_SAS2b)
 
-.TEST_SAS2c <- SparseArraySeed(dim=.TEST_DIM2,
-                               aind=arrayInd(c(8:16, 21), .TEST_DIM2),
-                               nzdata=rep(TRUE, 10))
+.TEST_SAS2c <- SparseArraySeed(
+    dim=.TEST_DIM2,
+    nzindex=Lindex2Mindex(c(8:16, 21), .TEST_DIM2),
+    nzdata=rep(TRUE, 10))
 
 .TEST_ARRAY2c <- sparse2dense(.TEST_SAS2c)
 
-.TEST_SAS3 <- SparseArraySeed(dim=c(40, 100, 1),
-                              aind=arrayInd(1:50, c(10, 5, 1)),
-                              nzdata=1:50)
+.TEST_SAS3 <- SparseArraySeed(
+    dim=c(40, 100, 1),
+    nzindex=Lindex2Mindex(1:50, c(10, 5, 1)),
+    nzdata=1:50)
 
 .TEST_ARRAY3 <- sparse2dense(.TEST_SAS3)
 
@@ -45,14 +48,16 @@ set.seed(99L)
                                      NULL,
                                      c("b1", "b2")))
 
-.TEST_SAS4c <- SparseArraySeed(dim=.TEST_DIM4,
-                               aind=arrayInd(51:130, .TEST_DIM4),
-                               nzdata=51:130)
+.TEST_SAS4c <- SparseArraySeed(
+    dim=.TEST_DIM4,
+    nzindex=Lindex2Mindex(51:130, .TEST_DIM4),
+    nzdata=51:130)
 .TEST_ARRAY4c <- sparse2dense(.TEST_SAS4c)
 
-.TEST_SAS4d <- SparseArraySeed(dim=.TEST_DIM4,
-                               aind=arrayInd(11:110, .TEST_DIM4),
-                               nzdata=runif(100, max=150))
+.TEST_SAS4d <- SparseArraySeed(
+    dim=.TEST_DIM4,
+    nzindex=Lindex2Mindex(11:110, .TEST_DIM4),
+    nzdata=runif(100, max=150))
 .TEST_ARRAY4d <- sparse2dense(.TEST_SAS4d)
 
 .basic_checks_on_DelayedOp_with_DIM2 <- function(a, x)

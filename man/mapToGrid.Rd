@@ -17,25 +17,23 @@
 }
 
 \usage{
-mapToGrid(aind, grid, linear=FALSE)
+mapToGrid(Mindex, grid, linear=FALSE)
 
 mapToRef(major, minor, grid, linear=FALSE)
 }
 
 \arguments{
-  \item{aind}{
-    Typically a numeric matrix like one returned by
-    \code{base::\link[base]{arrayInd}}, that is, a matrix where
-    each row is an n-uplet representing an \emph{array index}.
-    Each array index must describe a position relative to the
-    reference array of \code{grid}.
+  \item{Mindex}{
+    An \emph{M-index} containing \emph{absolute} positions, that is,
+    positions with respect to the underlying array (i.e. to the reference
+    array of \code{grid}).
 
-    For convenience, \code{aind} can also be specified as a vector with
-    one element per dimension in \code{grid}, in which case it will be
-    treated like a 1-row matrix.
+    For convenience, \code{Mindex} can also be specified as an integer vector
+    with one element per dimension in the underlying array, in which case it
+    will be treated like a 1-row matrix.
 
     Note that no bounds checking is performed, that is, values in the j-th
-    column of \code{aind} can be < 1 or > \code{refdim(grid)[j]}. What
+    column of \code{Mindex} can be < 1 or > \code{refdim(grid)[j]}. What
     those values will be mapped to is undefined.
   }
   \item{grid}{
@@ -61,9 +59,8 @@ mapToRef(major, minor, grid, linear=FALSE)
     \item For \code{mapToGrid()}: A list with 2 components, \code{major}
           and \code{minor}.
 
-          Each row in input matrix \code{aind} is an n-uplet that contains
-          the coordinates of a position relative to the reference array of
-          \code{grid}.
+          Each row in input matrix \code{Mindex} is an n-uplet that contains
+          the coordinates of an \emph{absolute} position.
 
           By default (i.e. when \code{linear} is \code{FALSE}), the 2
           components of the returned list are integer matrices of the same
@@ -106,29 +103,29 @@ mapToRef(major, minor, grid, linear=FALSE)
 grid2 <- ArbitraryArrayGrid(list(c(2L, 7:10, 13L, 15L), c(5:6, 6L, 9L)))
 
 ## Create a set of reference array positions:
-aind <- rbind(c( 2, 5),  # bottom right corner of 1st grid element
-              c( 3, 1),  # top left corner of 2nd grid element
-              c(14, 9),  # top right corner of last grid element
-              c(15, 7),  # bottom left corner of last grid element
-              c(15, 9))  # bottom right corner of last grid element
+Mindex <- rbind(c( 2, 5),  # bottom right corner of 1st grid element
+                c( 3, 1),  # top left corner of 2nd grid element
+                c(14, 9),  # top right corner of last grid element
+                c(15, 7),  # bottom left corner of last grid element
+                c(15, 9))  # bottom right corner of last grid element
 
 ## Map them to grid positions:
-majmin <- mapToGrid(aind, grid2)
+majmin <- mapToGrid(Mindex, grid2)
 majmin
 
 ## Reverse mapping:
-aind2 <- mapToRef(majmin$major, majmin$minor, grid2)
-stopifnot(all.equal(aind2, aind))
+Mindex2 <- mapToRef(majmin$major, majmin$minor, grid2)
+stopifnot(all.equal(Mindex2, Mindex))
 
-majmin <- mapToGrid(aind, grid2, linear=TRUE)
+majmin <- mapToGrid(Mindex, grid2, linear=TRUE)
 majmin
-aind2 <- mapToRef(majmin$major, majmin$minor, grid2, linear=TRUE)
-stopifnot(all.equal(aind2, aind))
+Mindex2 <- mapToRef(majmin$major, majmin$minor, grid2, linear=TRUE)
+stopifnot(all.equal(Mindex2, Mindex))
 
 ## Map all the valid positions:
 all_positions <- seq_len(prod(refdim(grid2)))
-aind <- arrayInd(all_positions, refdim(grid2))
-majmin <- data.frame(mapToGrid(aind, grid2, linear=TRUE))
+Mindex <- arrayInd(all_positions, refdim(grid2))
+majmin <- data.frame(mapToGrid(Mindex, grid2, linear=TRUE))
 majmin
 
 ## Sanity checks:
@@ -136,20 +133,20 @@ min_by_maj <- split(majmin$minor,
                     factor(majmin$major, levels=seq_along(grid2)))
 stopifnot(identical(lengths(min_by_maj, use.names=FALSE), lengths(grid2)))
 stopifnot(all(mapply(isSequence, min_by_maj, lengths(min_by_maj))))
-aind2 <- mapToRef(majmin$major, majmin$minor, grid2, linear=TRUE)
-stopifnot(identical(aind2, aind))
+Mindex2 <- mapToRef(majmin$major, majmin$minor, grid2, linear=TRUE)
+stopifnot(identical(Mindex2, Mindex))
 
 ## More mapping:
 grid4 <- RegularArrayGrid(c(50, 20), spacings=c(15L, 9L))
-aind <- rbind(c( 1,  1),
-              c( 2,  1),
-              c( 3,  1),
-              c(16,  1),
-              c(16,  2),
-              c(16, 10),
-              c(27, 18))
+Mindex <- rbind(c( 1,  1),
+                c( 2,  1),
+                c( 3,  1),
+                c(16,  1),
+                c(16,  2),
+                c(16, 10),
+                c(27, 18))
 
-mapToGrid(aind, grid4)
-mapToGrid(aind, grid4, linear=TRUE)
+mapToGrid(Mindex, grid4)
+mapToGrid(Mindex, grid4, linear=TRUE)
 }
 \keyword{internal}

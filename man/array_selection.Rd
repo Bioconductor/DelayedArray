@@ -49,6 +49,7 @@ Mindex2Lindex(Mindex, dim, use.names=FALSE, as.integer=FALSE)
   }
   \item{Mindex}{
     An \emph{M-index}. See Details section below.
+
     For convenience, \code{Mindex} can also be specified as an integer vector
     with one element per dimension in the underlying array, in which case it
     will be treated like a 1-row matrix.

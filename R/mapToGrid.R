@@ -3,10 +3,8 @@
 ### -------------------------------------------------------------------------
 
 
-### 'aind' must be a numeric vector or matrix (a vector is treated
-### like a 1-row matrix).
 setGeneric("mapToGrid", signature="grid",
-    function(aind, grid, linear=FALSE) standardGeneric("mapToGrid")
+    function(Mindex, grid, linear=FALSE) standardGeneric("mapToGrid")
 )
 
 setGeneric("mapToRef", signature="grid",
@@ -14,25 +12,25 @@ setGeneric("mapToRef", signature="grid",
 )
 
 ### Return an integer matrix with 1 column per dimension.
-.normarg_aind <- function(aind, ndim, what="'aind'")
+.normarg_Mindex <- function(Mindex, ndim, what="'Mindex'")
 {
-    if (!is.numeric(aind))
+    if (!is.numeric(Mindex))
         stop(wmsg(what, " must be a numeric vector or matrix"))
-    if (is.matrix(aind)) {
-        if (ncol(aind) != ndim)
+    if (is.matrix(Mindex)) {
+        if (ncol(Mindex) != ndim)
             stop(wmsg(what, " must have one column (or element ",
                       "if a vector) per dimension"))
     } else {
-        if (is.array(aind))
+        if (is.array(Mindex))
             stop(wmsg(what, " must be a numeric vector or matrix"))
-        if (length(aind) != ndim)
+        if (length(Mindex) != ndim)
             stop(wmsg(what, " must have one element (or column ",
                       "if a matrix) per dimension"))
-        aind <- matrix(aind, ncol=ndim)
+        Mindex <- matrix(Mindex, nrow=1)
     }
-    if (storage.mode(aind) != "integer")
-        storage.mode(aind) <- "integer"
-    aind
+    if (storage.mode(Mindex) != "integer")
+        storage.mode(Mindex) <- "integer"
+    Mindex
 }
 
 ### Return a numeric vector.
@@ -61,15 +59,15 @@ setGeneric("mapToRef", signature="grid",
 }
 
 setMethod("mapToGrid", "ArbitraryArrayGrid",
-    function(aind, grid, linear=FALSE)
+    function(Mindex, grid, linear=FALSE)
     {
         if (!isTRUEorFALSE(linear))
             stop("'linear' must be TRUE or FALSE")
         ndim <- length(grid@tickmarks)
-        aind <- .normarg_aind(aind, ndim)
+        Mindex <- .normarg_Mindex(Mindex, ndim)
         major <- lapply(seq_len(ndim),
             function(along) {
-                1L + findInterval(aind[ , along], grid@tickmarks[[along]] + 1L)
+              1L + findInterval(Mindex[ , along], grid@tickmarks[[along]] + 1L)
             }
         )
         minor <- lapply(seq_len(ndim),
@@ -77,9 +75,9 @@ setMethod("mapToGrid", "ArbitraryArrayGrid",
                 tm <- grid@tickmarks[[along]]
                 tm_len <- length(tm)
                 if (tm_len == 0L)
-                    return(rep.int(NA_integer_, nrow(aind)))
+                    return(rep.int(NA_integer_, nrow(Mindex)))
                 offset <- c(0L, tm[-tm_len])
-                aind[ , along] - offset[major[[along]]]
+                Mindex[ , along] - offset[major[[along]]]
             }
         )
         major <- do.call(cbind, major)
@@ -102,8 +100,8 @@ setMethod("mapToGrid", "ArbitraryArrayGrid",
         major <- Lindex2Mindex(major, dim(grid))
     } else {
         ndim <- length(refdim(grid))
-        major <- .normarg_aind(major, ndim, what="'major'")
-        minor <- .normarg_aind(minor, ndim, what="'minor'")
+        major <- .normarg_Mindex(major, ndim, what="'major'")
+        minor <- .normarg_Mindex(minor, ndim, what="'minor'")
         if (nrow(major) != nrow(minor))
             stop(wmsg("'major' and 'minor' must have the same number of rows"))
     }
@@ -128,16 +126,16 @@ setMethod("mapToRef", "ArbitraryArrayGrid",
 )
 
 setMethod("mapToGrid", "RegularArrayGrid",
-    function(aind, grid, linear=FALSE)
+    function(Mindex, grid, linear=FALSE)
     {
         if (!isTRUEorFALSE(linear))
             stop("'linear' must be TRUE or FALSE")
         ndim <- length(grid@spacings)
-        aind <- .normarg_aind(aind, ndim)
-        d <- rep(grid@spacings, each=nrow(aind))
-        aind0 <- aind - 1L  # 0-based indices
-        major <- 1L + aind0 %/% d
-        minor <- 1L + aind0 %% d
+        Mindex <- .normarg_Mindex(Mindex, ndim)
+        d <- rep(grid@spacings, each=nrow(Mindex))
+        Mindex0 <- Mindex - 1L  # 0-based indices
+        major <- 1L + Mindex0 %/% d
+        minor <- 1L + Mindex0 %% d
         .major_minor_as_list(major, minor, grid, linear=linear)
     }
 )

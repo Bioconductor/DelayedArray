@@ -1,15 +1,15 @@
 
 test_SparseArraySeed_getters <- function()
 {
-    aind1 <- aind2 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
-                            c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
-    nzdata <- seq_len(nrow(aind1)) / 10
-    sas <- SparseArraySeed(5:3, aind1, nzdata)
+    nzindex1 <- nzindex2 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
+                                  c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
+    nzdata <- seq_len(nrow(nzindex1)) / 10
+    sas <- SparseArraySeed(5:3, nzindex1, nzdata)
 
     checkIdentical(dim(sas), 5:3)
     checkIdentical(length(sas), 60L)
-    storage.mode(aind2) <- "integer"
-    checkIdentical(aind(sas), aind2)
+    storage.mode(nzindex2) <- "integer"
+    checkIdentical(nzindex(sas), nzindex2)
     checkIdentical(nzdata(sas), nzdata)
 }
 

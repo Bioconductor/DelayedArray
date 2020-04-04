@@ -92,15 +92,15 @@ setMethod("read_sparse_block", "ANY",
 ### with hundreds of thousands of nonzero elements).
 .read_sparse_block_from_SparseArraySeed <- function(x, viewport)
 {
-    taind <- t(x@aind)
-    keep_idx <- which(colAlls(taind >= start(viewport) &
-                              taind <= end(viewport)))
-    taind <- taind[ , keep_idx, drop=FALSE]
+    tnzindex <- t(x@nzindex)
+    keep_idx <- which(colAlls(tnzindex >= start(viewport) &
+                              tnzindex <= end(viewport)))
+    tnzindex <- tnzindex[ , keep_idx, drop=FALSE]
     offsets <- start(viewport) - 1L
-    x0_aind <- t(taind - offsets)
+    x0_nzindex <- t(tnzindex - offsets)
     x0_nzdata <- x@nzdata[keep_idx]
     BiocGenerics:::replaceSlots(x, dim=dim(viewport),
-                                   aind=x0_aind,
+                                   nzindex=x0_nzindex,
                                    nzdata=x0_nzdata,
                                    check=FALSE)
 }

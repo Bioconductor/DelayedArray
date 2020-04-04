@@ -5,8 +5,8 @@
 \alias{SparseArraySeed-class}
 \alias{SparseArraySeed}
 
-\alias{aind}
-\alias{aind,SparseArraySeed-method}
+\alias{nzindex}
+\alias{nzindex,SparseArraySeed-method}
 \alias{nzdata}
 \alias{nzdata,SparseArraySeed-method}
 \alias{sparsity}
@@ -49,10 +49,10 @@
 
 \usage{
 ## Constructor function:
-SparseArraySeed(dim, aind=NULL, nzdata=NULL, check=TRUE)
+SparseArraySeed(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
 
 ## Getters (in addition to dim() and length()):
-aind(x)
+nzindex(x)
 nzdata(x)
 sparsity(x)
 
@@ -66,7 +66,7 @@ sparse2dense(sas)
     The dimensions (specified as an integer vector) of the
     SparseArraySeed object to create.
   }
-  \item{aind}{
+  \item{nzindex}{
     A matrix containing the array indices of the nonzero data.
 
     This must be an integer matrix like one returned by
@@ -74,13 +74,13 @@ sparse2dense(sas)
     columns and where each row is an n-uplet representing an \emph{array index}.
   }
   \item{nzdata}{
-    A vector of length \code{nrow(aind)} containing the nonzero data.
+    A vector of length \code{nrow(nzindex)} containing the nonzero data.
   }
   \item{check}{
     Should the object be validated upon construction?
   }
   \item{x}{
-    A SparseArraySeed object for the \code{aind}, \code{nzdata}, and
+    A SparseArraySeed object for the \code{nzindex}, \code{nzdata}, and
     \code{sparsity} getters.
 
     An array-like object for \code{dense2sparse}.
@@ -94,7 +94,7 @@ sparse2dense(sas)
   \itemize{
     \item For \code{SparseArraySeed()}: A SparseArraySeed instance.
 
-    \item For \code{aind()}: The matrix containing the array indices of the
+    \item For \code{nzindex()}: The matrix containing the array indices of the
           nonzero data.
 
     \item For \code{nzdata()}: The vector of nonzero data.
@@ -130,14 +130,14 @@ sparse2dense(sas)
 ## ---------------------------------------------------------------------
 ## EXAMPLE 1
 ## ---------------------------------------------------------------------
-aind1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
-               c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
-nzdata1 <- 11.11 * seq_len(nrow(aind1))
-sas1 <- SparseArraySeed(5:3, aind1, nzdata1)
+nzindex1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
+                  c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
+nzdata1 <- 11.11 * seq_len(nrow(nzindex1))
+sas1 <- SparseArraySeed(5:3, nzindex1, nzdata1)
 
 dim(sas1)        # the dimensions of the implicit array
 length(sas1)     # the length of the implicit array
-aind(sas1)
+nzindex(sas1)
 nzdata(sas1)
 sparsity(sas1)
 
@@ -154,7 +154,7 @@ m2 <- matrix(c(5:-2, rep.int(c(0L, 99L), 11)), ncol=6)
 sas2 <- dense2sparse(m2)
 dim(sas2)
 length(sas2)
-aind(sas2)
+nzindex(sas2)
 nzdata(sas2)
 sparsity(sas2)
 
@@ -190,10 +190,10 @@ A1 <- DelayedArray(sas1)
 A1
 
 ## A big very sparse DelayedMatrix object:
-aind3 <- cbind(sample(25000, 600000, replace=TRUE),
-               sample(195000, 600000, replace=TRUE))
+nzindex3 <- cbind(sample(25000, 600000, replace=TRUE),
+                  sample(195000, 600000, replace=TRUE))
 nzdata3 <- runif(600000)
-sas3 <- SparseArraySeed(c(25000, 195000), aind3, nzdata3)
+sas3 <- SparseArraySeed(c(25000, 195000), nzindex3, nzdata3)
 sparsity(sas3)
 
 M3 <- DelayedArray(sas3)

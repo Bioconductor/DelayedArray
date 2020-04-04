@@ -44,10 +44,10 @@ Collate: utils.R
 	showtree.R
 	simplify.R
 	DelayedArray-class.R
+	DelayedArray-subsetting.R
 	chunkGrid.R
 	RealizationSink-class.R
 	realize.R
-	DelayedArray-subsetting.R
 	DelayedArray-utils.R
 	DelayedMatrix-utils.R
 	DelayedArray-stats.R
