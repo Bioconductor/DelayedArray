@@ -113,8 +113,8 @@ sparse2dense(sas)
   \itemize{
     \item The \code{\link{read_sparse_block}} function.
 
-    \item \link{block_processing} for more information about block processing
-          of an array-like object.
+    \item \code{\link{blockApply}} for more information about block processing
+          of array-like objects.
 
     \item \code{\link{extract_array}}.
 

@@ -42,8 +42,8 @@ write_block(x, viewport, block)
     \item \code{\link{blockGrid}} to define grids to use in the context
           of block processing of array-like objects.
 
-    \item \link{block_processing} for more information about block processing
-          of an array-like object.
+    \item \code{\link{blockApply}} for more information about block processing
+          of array-like objects.
 
     \item \link{DelayedArray} objects.
 

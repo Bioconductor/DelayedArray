@@ -1,5 +1,6 @@
-\name{block_processing}
+\name{blockApply}
 
+\alias{block processing}
 \alias{block_processing}
 
 \alias{blockApply}

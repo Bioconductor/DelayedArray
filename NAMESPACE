@@ -255,6 +255,12 @@ export(
     setAutoBlockShape, getAutoBlockShape,
     blockGrid, rowGrid, colGrid, multGrids,
 
+    ## blockApply.R:
+    setAutoGridMaker, getAutoGridMaker,
+    setAutoBPPARAM, getAutoBPPARAM,
+    blockApply, blockReduce,
+    effectiveGrid, currentBlockId, currentViewport,
+
     ## showtree.R:
     showtree, seedApply, modify_seeds,
 
@@ -264,17 +270,13 @@ export(
     ## DelayedArray-class.R:
     new_DelayedArray,
 
-    ## block_processing.R:
-    setAutoGridMaker, getAutoGridMaker,
-    setAutoBPPARAM, getAutoBPPARAM,
-    blockApply, blockReduce,
-    effectiveGrid, currentBlockId, currentViewport,
-    BLOCK_write_to_sink,
-
     ## RealizationSink-class.R:
     supportedRealizationBackends,
     getRealizationBackend, setRealizationBackend,
     RealizationSink,
+
+    ## realize.R:
+    BLOCK_write_to_sink,
 
     ## RleArray-class.R:
     RleArray

@@ -39,12 +39,12 @@ Collate: utils.R
 	mapToGrid.R
 	makeCappedVolumeBox.R
 	blockGrid.R
+	blockApply.R
 	DelayedOp-class.R
 	showtree.R
 	simplify.R
 	DelayedArray-class.R
 	chunkGrid.R
-	block_processing.R
 	RealizationSink-class.R
 	realize.R
 	DelayedArray-subsetting.R

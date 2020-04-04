@@ -157,6 +157,9 @@ setAutoBlockShape(shape=c("hypercube",
 
 \seealso{
   \itemize{
+    \item \code{\link{blockApply}} and family to actually process an
+          array-like object block by block.
+
     \item \code{\link{blockApply}} and family to process an array-like
           object block by block.
 
