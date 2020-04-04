@@ -236,8 +236,8 @@ exportMethods(
 ###
 
 export(
-    ## linearInd.R:
-    linearInd,
+    ## array_selection.R:
+    Lindex2Mindex, Mindex2Lindex, linearInd,
 
     ## ArrayGrid-class.R:
     ArrayViewport, makeNindexFromArrayViewport,

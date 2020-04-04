@@ -26,9 +26,10 @@
 \title{Simplify a tree of delayed operations}
 
 \description{
-  NOTE: The tools documented in this man page are primarily intended for
-  developers. End users of \link{DelayedArray} objects will typically not
-  need them.
+  NOTE: The tools documented in this man page are primarily intended
+  for developers or advanced users curious about the internals of the
+  \pkg{DelayedArray} package. End users typically don't need them for
+  their regular use of \link{DelayedArray} objects.
 
   In a \link{DelayedArray} object, the delayed operations are stored as a
   tree of \link{DelayedOp} objects. See \code{?\link{DelayedOp}} for more

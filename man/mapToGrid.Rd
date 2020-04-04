@@ -26,7 +26,7 @@ mapToRef(major, minor, grid, linear=FALSE)
   \item{aind}{
     Typically a numeric matrix like one returned by
     \code{base::\link[base]{arrayInd}}, that is, a matrix where
-    each row is an n-uplet representing an array index.
+    each row is an n-uplet representing an \emph{array index}.
     Each array index must describe a position relative to the
     reference array of \code{grid}.
 
@@ -93,9 +93,9 @@ mapToRef(major, minor, grid, linear=FALSE)
   \itemize{
     \item \link{ArrayGrid} objects.
 
-    \item \code{\link{linearInd}} in this package (\pkg{DelayedArray})
-          and \code{\link[base]{arrayInd}} in the \pkg{base} package
-          for converting between array indices and linear indices.
+    \item \code{\link{Lindex2Mindex}} and \code{\link{Mindex2Lindex}} in
+          this package (\pkg{DelayedArray}) for converting back and forth
+          between \emph{linear indices} and \emph{array indices}.
 
     \item \link[base]{array} objects in base R.
   }

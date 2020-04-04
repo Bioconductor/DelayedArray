@@ -36,7 +36,7 @@ setClass("ArrayViewport",
         return(paste0("object represents a viewport that is not ",
                       "within the bounds of the reference array"))
 
-    ## A viewport cannot be longer than 2^31-1.
+    ## A viewport cannot be longer than 2^31 - 1.
     x_dim <- width(x_ranges)
     if (prod(x_dim) > .Machine$integer.max)
         return("a viewport cannot be longer than .Machine$integer.max")

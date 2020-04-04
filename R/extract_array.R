@@ -176,7 +176,7 @@ extract_empty_array <- function(x)
 extract_array_element <- function(x, i)
 {
     i <- normalizeDoubleBracketSubscript(i, x)
-    index <- as.list(arrayInd(i, dim(x)))
+    index <- as.list(Lindex2Mindex(i, dim(x)))
     a <- extract_array(x, index)
     ## Don't use as.vector() to drop the "dim" attribute from an ordinary
     ## array because as.vector() is broken (and won't be fixed) on an array

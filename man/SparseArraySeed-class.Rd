@@ -71,7 +71,7 @@ sparse2dense(sas)
 
     This must be an integer matrix like one returned by
     \code{base::\link[base]{arrayInd}}, that is, with \code{length(dim)}
-    columns and where each row is an n-uplet representing an array index.
+    columns and where each row is an n-uplet representing an \emph{array index}.
   }
   \item{nzdata}{
     A vector of length \code{nrow(aind)} containing the nonzero data.

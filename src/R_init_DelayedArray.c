@@ -12,6 +12,10 @@ static const R_CallMethodDef callMethods[] = {
 	CALLMETHOD_DEF(C_compress_atomic_vector, 1),
 	CALLMETHOD_DEF(C_decompress_atomic_vector, 1),
 
+/* array_selection.c */
+	CALLMETHOD_DEF(C_Lindex2Mindex, 3),
+	CALLMETHOD_DEF(C_Mindex2Lindex, 4),
+
 /* abind.c */
 	CALLMETHOD_DEF(C_abind, 3),
 

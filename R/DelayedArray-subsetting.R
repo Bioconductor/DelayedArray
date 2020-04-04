@@ -26,7 +26,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
     oo <- do.call(order, aind_as_list)
     ans <- aind[oo, , drop=FALSE]
     if (!arr.ind)
-        ans <- linearInd(ans, dim(x))
+        ans <- Mindex2Lindex(ans, dim(x))
     ans
 }
 
@@ -56,7 +56,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
     grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     x_dim <- dim(x)
-    majmin <- mapToGrid(arrayInd(i, x_dim), grid, linear=TRUE)
+    majmin <- mapToGrid(Lindex2Mindex(i, x_dim), grid, linear=TRUE)
     minor_by_block <- split(majmin$minor, majmin$major)
     res <- lapply(seq_along(minor_by_block),
         function(k) {
@@ -68,7 +68,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
             ## We don't need to load the entire block if there is only 1
             ## value to extract from it.
             if (length(m) == 1L) {
-                i2 <- linearInd(mapToRef(bid, m, grid, linear=TRUE), x_dim)
+                i2 <- Mindex2Lindex(mapToRef(bid, m, grid, linear=TRUE), x_dim)
                 block_ans <- extract_array_element(x, i2)
             } else {
                 block <- read_block(x, grid[[bid]])
@@ -167,7 +167,7 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
     idx <- BLOCK_which(from != 0L)
     nzdata <- from[idx]  # block-processed
     from_dim <- dim(from)
-    aind <- arrayInd(idx, from_dim)
+    aind <- Lindex2Mindex(idx, from_dim)
     SparseArraySeed(from_dim, aind, nzdata, check=FALSE)
 }
 setAs("DelayedArray", "SparseArraySeed", .from_DelayedArray_to_SparseArraySeed)
