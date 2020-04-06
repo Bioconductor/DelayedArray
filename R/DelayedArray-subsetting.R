@@ -69,9 +69,9 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
     if (ans_len == 1L)
         return(.extract_array_element(x, Mindex))
 
-    ## We don't want to use blockApply() here because it would walk on the
-    ## entire grid of blocks, which is not necessary. We only need to walk
-    ## on the blocks touched by the L-index.
+    ## We don't want to use blockApply() here because it would visit all the
+    ## blocks in the grid, which is not necessary. We only need to visit the
+    ## blocks touched by the L-index.
     grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     majmin <- mapToGrid(Mindex, grid, linear=TRUE)
@@ -282,32 +282,49 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercion to sparse matrix
 ###
-### Based on BLOCK_which().
-###
 
-### Needed only because dense2sparse() doesn't work yet on DelayedArray
-### objects. See dense2sparse() in the SparseArraySeed-class.R file.
-### TODO: This can be removed once dense2sparse() works on DelayedArray
-### objects which will automatically happen when DelayedArray objects
-### support 1D-style subsetting by a matrix like one returned by
-### base::arrayInd(), that is, by a matrix where each row is an n-uplet
-### representing an array index.
-.from_DelayedArray_to_SparseArraySeed <- function(from)
+### Calling dense2sparse() on a DelayedArray object works and triggers block
+### processing twice:
+###   - A 1st time when which() is called: this visits all the blocks.
+###   - A 2nd time for 'x[nzindex]': this visits only the blocks with
+###     nonzero values.
+### See dense2sparse() implementation in R/SparseArraySeed-class.R
+### .BLOCK_dense2sparse() is semantically equivalent to dense2sparse() but
+### it does a single pass (all blocks are visited only once) so is more
+### efficient (2x faster in average).
+.BLOCK_dense2sparse <- function(x, grid=NULL)
 {
-    idx <- BLOCK_which(from != 0L)
-    nzdata <- from[idx]  # block-processed
-    from_dim <- dim(from)
-    nzindex <- Lindex2Mindex(idx, from_dim)
-    SparseArraySeed(from_dim, nzindex, nzdata, check=FALSE)
+    FUN <- function(block, arr.ind) {
+        bid <- currentBlockId(block)
+        minor <- base::which(block != 0L)
+        major <- rep.int(bid, length(minor))
+        grid <- effectiveGrid(block)
+        nzindex <- mapToRef(major, minor, grid, linear=TRUE)
+        nzdata <- block[minor]
+        list(nzindex, nzdata)
+    }
+    block_results <- blockApply(x, FUN, grid=grid)
+    nzindex_list <- lapply(block_results, `[[`, 1L)
+    nzdata_list <- lapply(block_results, `[[`, 2L)
+    nzindex <- do.call(rbind, nzindex_list)
+    nzdata <- unlist(nzdata_list, recursive=FALSE)
+    SparseArraySeed(dim(x), nzindex, nzdata, check=FALSE)
 }
-setAs("DelayedArray", "SparseArraySeed", .from_DelayedArray_to_SparseArraySeed)
+
+setAs("DelayedArray", "SparseArraySeed",
+    function(from) .BLOCK_dense2sparse(from)
+)
 
 .from_DelayedMatrix_to_dgCMatrix <- function(from)
 {
-    ## 'as(from, "SparseArraySeed")' doesn't propagate the dimnames at the
-    ## moment (the SparseArraySeed container cannot currently store them) so
-    ## we need to propagate them explicitly.
-    set_dimnames(as(as(from, "SparseArraySeed"), "dgCMatrix"), dimnames(from))
+    ans <- as(.BLOCK_dense2sparse(from), "dgCMatrix")
+    ## The above does NOT propagate the dimnames at the moment (the
+    ## intermediate SparseArraySeed container cannot currently store them)
+    ## so we propagate them explicitly.
+    from_dimnames <- dimnames(from)
+    if (!is.null(from_dimnames))
+        dimnames(ans) <- from_dimnames
+    ans
 }
 setAs("DelayedMatrix", "dgCMatrix", .from_DelayedMatrix_to_dgCMatrix)
 setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
