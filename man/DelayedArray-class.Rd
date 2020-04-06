@@ -64,8 +64,8 @@
   Wrapping an array-like object (typically an on-disk object) in a
   DelayedArray object allows one to perform common array operations on it
   without loading the object in memory. In order to reduce memory usage and
-  optimize performance, operations on the object are either delayed or
-  executed using a block processing mechanism.
+  optimize performance, operations on the object are either \emph{delayed}
+  or executed using a block processing mechanism.
 }
 
 \usage{
@@ -122,40 +122,45 @@ type(x)
   A DelayedArray object can be subsetted with \code{[} like an ordinary array,
   but with the following differences:
   \itemize{
-    \item \emph{Multi-dimensional single bracket subsetting} (i.e. subsetting
+    \item \emph{N-dimensional single bracket subsetting} (i.e. subsetting
           of the form \code{x[i_1, i_2, ..., i_n]} with one (possibly missing)
           subscript per dimension) returns a DelayedArray object where the
-          subsetting is actually delayed. So it's a very light operation.
-          One notable exception to this is when \code{drop=TRUE} and the
-          result has only one dimension, in which case it is returned as an
-          ordinary vector (atomic or list).
+          subsetting is actually \emph{delayed}. So it's a very light
+          operation. One notable exception is when \code{drop=TRUE} and the
+          result has only one dimension, in which case it is \emph{realized}
+          as an ordinary vector (atomic or list).
           Note that NAs in the subscripts are not supported.
 
-    \item \emph{Linear single bracket subsetting} (a.k.a. 1D-style subsetting,
-          that is, subsetting of the form \code{x[i]}) only works if the
-          subscript \code{i} is a numeric vector at the moment. Furthermore,
-          \code{i} cannot contain NAs and all the indices in it must be >= 1
-          and <= \code{length(x)} for now. It returns an atomic vector of the
-          same length as \code{i}. This is NOT a delayed operation (block
-          processing is triggered).
+    \item \emph{1D-style single bracket subsetting} (i.e. subsetting of the
+          form \code{x[i]}) only works if the subscript \code{i} is a numeric
+          or logical vector, or a logical array-like object with the same
+          dimensions as \code{x}, or a numeric matrix with one column per
+          dimension in \code{x}. When \code{i} is a numeric vector, all the
+          indices in it must be >= 1 and <= \code{length(x)}. NAs in the
+          subscripts are not supported.
+          This is NOT a delayed operation (block processing is triggered)
+          i.e. the result is \emph{realized} as an ordinary vector (atomic
+          or list). One exception is when \code{x} has only one dimension
+          and \code{drop} is set to \code{FALSE}, in which case the subsetting
+          is \emph{delayed}.
   }
 
-  Subsetting with \code{[[} is supported but only the \emph{linear} form
-  of it at the moment i.e. the \code{x[[i]]} form where \code{i} is a
-  \emph{single} numeric value >= 1 and <= \code{length(x)}. It is equivalent
-  to \code{x[i][[1]]}.
+  Subsetting with \code{[[} is supported but only the 1D-style form of it
+  at the moment, that is, subsetting of the form \code{x[[i]]} where \code{i}
+  is a \emph{single} numeric value >= 1 and <= \code{length(x)}. It is
+  equivalent to \code{x[i][[1]]}.
 
   Subassignment to a DelayedArray object with \code{[<-} is also supported
   like with an ordinary array, but with the following restrictions:
   \itemize{
-    \item \emph{Multi-dimensional subassignment} (i.e. subassignment of the
+    \item \emph{N-dimensional subassignment} (i.e. subassignment of the
           form \code{x[i_1, i_2, ..., i_n] <- value} with one (possibly
           missing) subscript per dimension) only accepts a replacement
           value (a.k.a. right value) that is an array-like object (e.g.
           ordinary array, dgCMatrix object, DelayedArray object, etc...)
           or an ordinary vector (atomic or list) of length 1.
 
-    \item \emph{Linear subassignment} (a.k.a. 1D-style subassignment, that
+    \item \emph{1D-style subassignment} (a.k.a. 1D-style subassignment, that
           is, subassignment of the form \code{x[i] <- value}) only works if
           the subscript \code{i} is a logical DelayedArray object of the same
           dimensions as \code{x} and if the replacement value is an ordinary
@@ -166,8 +171,8 @@ type(x)
           list), is only supported if the length of the vector is a divisor
           of \code{nrow(x)}.
   }
-  These 3 forms of subassignment are implemented as delayed operations so
-  are very light.
+  These 3 forms of subassignment are implemented as \emph{delayed} operations
+  so are very light.
 
   Single value replacement (\code{x[[...]] <- value}) is not supported yet.
 }
@@ -218,12 +223,12 @@ A
 stopifnot(identical(a, seed(A)))
 type(A)
 
-## Multi-dimensional single bracket subsetting:
+## N-dimensional single bracket subsetting:
 m <- a[11:20 , 5, -3]  # an ordinary matrix
 M <- A[11:20 , 5, -3]  # a DelayedMatrix object
 stopifnot(identical(m, as.array(M)))
 
-## Linear single bracket subsetting:
+## 1D-style single bracket subsetting:
 A[11:20]
 A[A <= 1e-5]
 stopifnot(identical(a[a <= 1e-5], A[A <= 1e-5]))

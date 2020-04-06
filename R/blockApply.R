@@ -115,18 +115,22 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
     grid <- normarg_grid(grid, x)
     nblock <- length(grid)
     bplapply2(seq_len(nblock),
+        ## TODO: Not a pure function (because it refers to 'nblock', 'grid',
+        ## and 'x') so will probably fail with parallelization backends that
+        ## don't use a fork (e.g. SnowParam on Windows). Test and confirm this.
+        ## FIXME: The fix is to add arguments to the function so that the
+        ## objects can be passed to it.
         function(bid) {
-            if (get_verbose_block_processing())
+            if (get_verbose_block_processing()) {
                 message("Processing block ", bid, "/", nblock, " ... ",
                         appendLF=FALSE)
+                on.exit(message("OK"))
+            }
             viewport <- grid[[bid]]
             block <- read_block(x, viewport)
             attr(block, "from_grid") <- grid
             attr(block, "block_id") <- bid
-            block_ans <- FUN(block, ...)
-            if (get_verbose_block_processing())
-                message("OK")
-            block_ans
+            FUN(block, ...)
         },
         BPPARAM=BPPARAM
     )

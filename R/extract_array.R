@@ -160,7 +160,7 @@ setMethod("extract_array", "DataFrame",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### 3 convenience wrappers around extract_array()
+### 2 convenience wrappers around extract_array()
 ###
 
 ### Perform extract_array(x, list(integer(0), ..., integer(0))).
@@ -169,21 +169,6 @@ extract_empty_array <- function(x)
 {
     index <- rep.int(list(integer(0)), length(dim(x)))
     extract_array(x, index)
-}
-
-### For extracting a **single** array element.
-### 'x' is **trusted** to be an array-like object.
-extract_array_element <- function(x, i)
-{
-    i <- normalizeDoubleBracketSubscript(i, x)
-    index <- as.list(Lindex2Mindex(i, dim(x)))
-    a <- extract_array(x, index)
-    ## Don't use as.vector() to drop the "dim" attribute from an ordinary
-    ## array because as.vector() is broken (and won't be fixed) on an array
-    ## of type "list". See:
-    ##   https://stat.ethz.ch/pipermail/r-devel/2018-September/076892.html
-    dim(a) <- NULL  # this also drops the "dimnames" attribute if present
-    a
 }
 
 ### An enhanced version of extract_array() that accepts an Nindex (see
