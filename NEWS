@@ -1,3 +1,22 @@
+CHANGES IN VERSION 0.14.0
+-------------------------
+
+NEW FEATURES
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o No more parallel evaluation by default, that is, getAutoBPPARAM() now
+      returns NULL on a fresh session instead of one of the parallelization
+      backends defined in BiocParallel. It is now the responsibility of the
+      user to set the parallelization backend (with setAutoBPPARAM()) if they
+      wish things like matrix multiplication, rowsum() or rowSums() use
+      parallel evaluation again.
+      Also BiocParallel has been moved from Depends to Suggests.
+
+BUG FIXES
+
+
+
 CHANGES IN VERSION 0.12.0
 -------------------------
 
