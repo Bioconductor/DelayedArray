@@ -225,26 +225,26 @@ toy_Rle <- function() {
   run_vals <- sample(700, length(run_lens), replace=TRUE) / 5
   Rle(run_vals, run_lens)
 }
-data <- lapply(1:100, function(j) toy_Rle())  # takes about 20 sec.
+rle_list <- lapply(1:80, function(j) toy_Rle())  # takes about 20 sec.
 
 ## Cumulative length of all the Rle objects is > .Machine$integer.max:
-sum(lengths(data))  # 4.14e+09
+sum(lengths(rle_list))  # 3.31e+09
 
-## Feed 'data' to the RleArray() constructor:
-dim <- c(14395, 400, 719)
-A <- RleArray(data, dim)
+## Feed 'rle_list' to the RleArray() constructor:
+dim <- c(14395, 320, 719)
+A <- RleArray(rle_list, dim)
 A
 
-## Because all the Rle objects in 'data' have the same length, we can
-## call RleArray() on it without specifying the 'dim' argument. This
+## Because all the Rle objects in 'rle_list' have the same length, we
+## can call RleArray() on it without specifying the 'dim' argument. This
 ## returns an RleMatrix object where each column corresponds to an Rle
-## object in 'data':
-M <- RleArray(data)
+## object in 'rle_list':
+M <- RleArray(rle_list)
 M
-stopifnot(identical(as(data, "RleList"), as(M, "RleList")))
+stopifnot(identical(as(rle_list, "RleList"), as(M, "RleList")))
 
 ## ---------------------------------------------------------------------
-## E. SWITCH THE TYPE OF AN RleArray OBJECT FROM "double" TO "integer"
+## E. CHANGING THE TYPE OF AN RleArray OBJECT FROM "double" TO "integer"
 ## ---------------------------------------------------------------------
 
 ## An RleArray object is an in-memory object so it can be useful to
@@ -257,7 +257,8 @@ stopifnot(identical(as(data, "RleList"), as(M, "RleList")))
 ## object, things are a little bit different. Let's do this on a subset
 ## of the RleMatrix object 'M' created in the previous section.
 
-M1 <- as(M[1:1e6, ], "RleMatrix")
+M1 <- as(M[1:6e5, ], "RleMatrix")
+rm(M)
 
 ## First of all, it's important to be aware that object.size() (from
 ## package utils) is NOT reliable on RleArray objects! This is because
@@ -273,7 +274,7 @@ object_size(list2env(list(aa=1:10)))   # 264 B
 object_size(list2env(list(aa=1:1e6)))  # 4 MB
 object_size(list2env(list(aa=as.double(1:1e6))))  # 8 MB
 
-object_size(M1)  # 34.7 MB
+object_size(M1)  # 16.7 MB
 
 type(M1) <- "integer"  # Delayed!
 M1                     # Note the class: it's no longer RleMatrix!
@@ -296,22 +297,28 @@ object_size(M1)  # Still the same (well, a very tiny more, because the
 
 DelayedArray:::set_verbose_block_processing(TRUE)  # See block processing
                                                    # in action.
+getAutoBlockSize()      # Automatic block size (100 Mb by default).
+setAutoBlockSize(20e6)  # Set automatic block size to 20 Mb.
+
 M2 <- as(M1, "RleArray")
 DelayedArray:::set_verbose_block_processing(FALSE)
+setAutoBlockSize()      # Reset automatic block size to factory settings.
+
 
 M2
-object_size(M2)  # 14.4 MB (Less than half the original size! This is
+object_size(M2)  # 6.91 MB (Less than half the original size! This is
                  # because RleArray objects use some internal tricks to
                  # reduce memory footprint even more when the data in
                  # their seed is of type "integer".)
 
 ## Finally note that the 2-step approach described here (i.e.
-## type(A) <- "integer" + realization) is generic and works on any
-## kind of DelayedArray object or derivative. In particular, after doing
-## 'type(A) <- "integer"', 'A' can be realized as anything as long as the
-## realization backend is supported (e.g. could be 'as(A, "HDF5Array")'
-## or 'as(A, "TENxMatrix")') and realization will always use block
-## processing so the array data will never be fully loaded in memory.
+## type(A) <- "integer" followed by realization) is generic and works
+## on any kind of DelayedArray object or derivative. In particular,
+## after doing 'type(A) <- "integer"', 'A' can be realized as anything
+## as long as the realization backend is supported (e.g. could be
+## 'as(A, "HDF5Array")' or 'as(A, "TENxMatrix")') and realization will
+## always use block processing so the array data will never be fully
+## loaded in memory.
 }
 \keyword{classes}
 \keyword{methods}

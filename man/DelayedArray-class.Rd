@@ -400,7 +400,7 @@ DelayedArray:::set_verbose_block_processing(FALSE)
 row_normalized_p2 <- as(row_normalized_P, "sparseMatrix")
 stopifnot(all.equal(row_normalized_p1, row_normalized_p2))
 
-setAutoBlockSize()
+setAutoBlockSize()  # reset automatic block size to factory settings
 }
 }
 \keyword{classes}
