@@ -65,8 +65,11 @@
 ### underlying type inherits from character or list when 'x' is a matrix).
 .format2 <- function(x, justify, quote=TRUE, max.width=22L)
 {
-    if (is.character(x) && length(x) != 0L && quote)
+    if (is.character(x) && length(x) != 0L && quote) {
+        na_idx <- which(is.na(x))
         x <- paste0("\"", x, "\"")
+        x[na_idx] <- "NA"
+    }
     ans <- format(x, justify=justify)
     if ((is.character(x) || is.list(x)) && length(x) != 0L) {
         truncate_me <- nchar(ans) > max.width
