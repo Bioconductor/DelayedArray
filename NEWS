@@ -3,6 +3,12 @@ CHANGES IN VERSION 0.14.0
 
 NEW FEATURES
 
+    o Support 'type(x) <- new_type' to change the type of a DelayedArray
+      object.
+
+    o 1D-style single bracket subsetting of DelayedArray objects now supports
+      subsetting by a numeric matrix with one column per dimension.
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o No more parallel evaluation by default, that is, getAutoBPPARAM() now
@@ -13,8 +19,32 @@ SIGNIFICANT USER-VISIBLE CHANGES
       parallel evaluation again.
       Also BiocParallel has been moved from Depends to Suggests.
 
+    o Replace arrayInd2() and linearInd() with Lindex2Mindex() and
+      Mindex2Lindex(). The new functions are implemented in C for better
+      performances and they properly handle L-index values greater than
+      INT_MAX (2^31 - 1) in the input and output.
+
+    o 2x speedup to coercion from DelayedArray to SparseArraySeed or dgCMatrix.
+
+DEPRECATED AND DEFUNCT
+
+    o arrayInd2() and linearInd() are now deprecated in favor of
+      Lindex2Mindex() and Mindex2Lindex().
+
 BUG FIXES
 
+    o Fix handling of linear indices >= 2^31 in 1D-style single bracket
+      subsetting of DelayedArray objects.
+
+    o rowsum() & colsum() methods for DelayedArray objects now respect factor
+      level ordering (issue #59).
+
+    o Coercion from DelayedMatrix to dgCMatrix now propagates the dimnames.
+
+    o No more quotes around the NA values of a DelayedArray of type "character".
+
+    o Better error message when Ops methods for DelayedArray objects reject
+      their operands.
 
 
 CHANGES IN VERSION 0.12.0
