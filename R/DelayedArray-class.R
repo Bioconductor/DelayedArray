@@ -6,17 +6,18 @@
 ### The "root" node of the tree of DelayedOp objects. Represents a no-op.
 setClass("DelayedArray", contains="DelayedUnaryIsoOp")
 
-### Extending DataTable gives us a few things for free (head(), tail(),
-### etc...). Note that even though DelayedMatrix already extends Array (via
-### DelayedArray, DelayedUnaryOp, and DelayedOp) we need to make DelayedMatrix
-### a *direct* child of Array and to place Array *before* DataTable in the
-### 'contains' field below. This ensures that method dispatch will pick the
-### method for Array in case a generic has methods defined for Array and
-### DataTable (e.g. as.data.frame()). Furthermore, for some obscure reason,
-### it seems that we also need to place all the classes that are in the
-### inheritance path between DelayedArray and Array in the 'contains' field
-### otherwise we get the following error when trying to instantiate a
-### DelayedMatrix object with new("DelayedMatrix"):
+### Extending RectangularData gives us a few things for free (e.g. validity
+### method for RectangularData objects, head(), tail(), etc...). Note
+### that even though DelayedMatrix already extends Array (via DelayedArray,
+### DelayedUnaryOp, and DelayedOp) we need to make DelayedMatrix a *direct*
+### child of Array and to place Array *before* RectangularData in
+### the 'contains' field below. This ensures that method dispatch will pick
+### the method for Array in case a generic has methods defined for Array and
+### RectangularData. Furthermore, for some obscure reason, it seems that we
+### also need to place all the classes that are in the inheritance path
+### between DelayedArray and Array in the 'contains' field otherwise we get
+### the following error when trying to instantiate a DelayedMatrix object
+### with new("DelayedMatrix"):
 ###
 ###     Error: C stack usage  7971652 is too close to the limit
 ###
@@ -24,7 +25,7 @@ setClass("DelayedMatrix",
     contains=c("DelayedArray",
                "DelayedUnaryIsoOp", "DelayedUnaryOp", "DelayedOp",
                "Array",
-               "DataTable"),
+               "RectangularData"),
     prototype=prototype(
         seed=new("matrix")
     )
@@ -127,17 +128,6 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 }
 
 setValidity2("DelayedArray", .validate_DelayedArray)
-
-### TODO: Move this to S4Vectors and make it the validity method for DataTable
-### object.
-.validate_DelayedMatrix <- function(x)
-{
-    if (length(dim(x)) != 2L)
-        return("'x' must have exactly 2 dimensions")
-    TRUE
-}
-
-setValidity2("DelayedMatrix", .validate_DelayedMatrix)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
