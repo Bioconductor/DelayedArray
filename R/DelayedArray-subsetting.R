@@ -315,9 +315,9 @@ setAs("DelayedArray", "SparseArraySeed",
     function(from) .BLOCK_dense2sparse(from)
 )
 
-.from_DelayedMatrix_to_dgCMatrix <- function(from)
+.from_DelayedMatrix_to_sparseMatrix <- function(from)
 {
-    ans <- as(.BLOCK_dense2sparse(from), "dgCMatrix")
+    ans <- as(.BLOCK_dense2sparse(from), "sparseMatrix")
     ## The above does NOT propagate the dimnames at the moment (the
     ## intermediate SparseArraySeed container cannot currently store them)
     ## so we propagate them explicitly.
@@ -326,8 +326,7 @@ setAs("DelayedArray", "SparseArraySeed",
         dimnames(ans) <- from_dimnames
     ans
 }
-setAs("DelayedMatrix", "dgCMatrix", .from_DelayedMatrix_to_dgCMatrix)
-setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_dgCMatrix)
+setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_sparseMatrix)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

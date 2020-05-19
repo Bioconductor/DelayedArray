@@ -14,8 +14,8 @@
     viewport <- grid[[i, j]]
     if (x_is_sparse) {
         block <- read_sparse_block(x, viewport)
-        ## Go from SparseArraySeed to dgCMatrix.
-        block <- as(block, "dgCMatrix")
+        ## Go from SparseArraySeed to sparseMatrix (dgCMatrix or lgCMatrix).
+        block <- as(block, "sparseMatrix")
     } else {
         block <- read_block(x, viewport)
     }
@@ -28,8 +28,8 @@
     viewport <- grid[[i, j]]
     if (x_is_sparse) {
         block <- read_sparse_block(x, viewport)
-        ## Go from SparseArraySeed to dgCMatrix.
-        block <- as(block, "dgCMatrix")
+        ## Go from SparseArraySeed to sparseMatrix (dgCMatrix or lgCMatrix).
+        block <- as(block, "sparseMatrix")
     } else {
         block <- read_block(x, viewport)
     }

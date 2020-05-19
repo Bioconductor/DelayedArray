@@ -22,20 +22,21 @@
 \alias{extract_sparse_array,SparseArraySeed-method}
 \alias{extract_array,SparseArraySeed-method}
 
-\alias{is_sparse,dgCMatrix-method}
-\alias{extract_sparse_array,dgCMatrix-method}
-
 \alias{as.array.SparseArraySeed}
 \alias{as.array,SparseArraySeed-method}
-
 \alias{as.matrix.SparseArraySeed}
 \alias{as.matrix,SparseArraySeed-method}
 
 \alias{coerce,ANY,SparseArraySeed-method}
 
-\alias{coerce,dgCMatrix,SparseArraySeed-method}
-\alias{coerce,SparseArraySeed,dgCMatrix-method}
 \alias{coerce,SparseArraySeed,sparseMatrix-method}
+\alias{coerce,dgCMatrix,SparseArraySeed-method}
+\alias{coerce,lgCMatrix,SparseArraySeed-method}
+
+\alias{is_sparse,dgCMatrix-method}
+\alias{is_sparse,lgCMatrix-method}
+\alias{extract_sparse_array,dgCMatrix-method}
+\alias{extract_sparse_array,lgCMatrix-method}
 
 \alias{aperm.SparseArraySeed}
 \alias{aperm,SparseArraySeed-method}
@@ -139,6 +140,7 @@ dim(sas1)        # the dimensions of the implicit array
 length(sas1)     # the length of the implicit array
 nzindex(sas1)
 nzdata(sas1)
+type(sas1)
 sparsity(sas1)
 
 sparse2dense(sas1)
@@ -152,10 +154,12 @@ as.matrix(sas1)  # error!
 ## ---------------------------------------------------------------------
 m2 <- matrix(c(5:-2, rep.int(c(0L, 99L), 11)), ncol=6)
 sas2 <- dense2sparse(m2)
+class(sas2)
 dim(sas2)
 length(sas2)
 nzindex(sas2)
 nzdata(sas2)
+type(sas2)
 sparsity(sas2)
 
 stopifnot(identical(sparse2dense(sas2), m2))
@@ -165,16 +169,30 @@ as.matrix(sas2)  # same as sparse2dense(sas2)
 t(sas2)
 stopifnot(identical(as.matrix(t(sas2)), t(as.matrix(sas2))))
 
-## Go back and forth between SparseArraySeed and dgCMatrix objects:
+## ---------------------------------------------------------------------
+## COERCION FROM/TO dgCMatrix OR lgCMatrix OBJECTS
+## ---------------------------------------------------------------------
+## dgCMatrix and lgCMatrix objects are defined in the Matrix package.
+
 M2 <- as(sas2, "dgCMatrix")
 stopifnot(identical(M2, as(m2, "dgCMatrix")))
 
 sas2b <- as(M2, "SparseArraySeed")
-## 'sas2b' is the same as 'sas2' except that
-## 'nzdata(sas2b)' is of type numeric instead of integer:
-all.equal(sas2b, sas2)
-typeof(nzdata(sas2b))  # numeric
+## 'sas2b' is the same as 'sas2' except that 'nzdata(sas2b)' has
+## type "double" instead of "integer":
+stopifnot(all.equal(sas2b, sas2))
+typeof(nzdata(sas2b))  # double
 typeof(nzdata(sas2))   # integer
+
+m3 <- m2 == 99  # logical matrix
+sas3 <- dense2sparse(m3)
+class(sas3)
+type(sas3)
+M3 <- as(sas3, "lgCMatrix")
+stopifnot(identical(M3, as(m3, "lgCMatrix")))
+
+sas3b <- as(M3, "SparseArraySeed")
+stopifnot(identical(sas3, sas3b))
 
 ## ---------------------------------------------------------------------
 ## SEED CONTRACT
@@ -190,15 +208,15 @@ A1 <- DelayedArray(sas1)
 A1
 
 ## A big very sparse DelayedMatrix object:
-nzindex3 <- cbind(sample(25000, 600000, replace=TRUE),
+nzindex4 <- cbind(sample(25000, 600000, replace=TRUE),
                   sample(195000, 600000, replace=TRUE))
-nzdata3 <- runif(600000)
-sas3 <- SparseArraySeed(c(25000, 195000), nzindex3, nzdata3)
-sparsity(sas3)
+nzdata4 <- runif(600000)
+sas4 <- SparseArraySeed(c(25000, 195000), nzindex4, nzdata4)
+sparsity(sas4)
 
-M3 <- DelayedArray(sas3)
-M3
-colSums(M3[ , 1:20])
+M4 <- DelayedArray(sas4)
+M4
+colSums(M4[ , 1:20])
 }
 \keyword{classes}
 \keyword{methods}

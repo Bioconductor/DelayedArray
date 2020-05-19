@@ -12,6 +12,9 @@
 \alias{t.Array}
 \alias{t,Array-method}
 
+\alias{coerce,Array,dgCMatrix-method}
+\alias{coerce,Array,lgCMatrix-method}
+
 \alias{showAsCell,Array-method}
 
 \title{Array objects}

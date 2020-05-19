@@ -8,17 +8,18 @@ setClass("SparseArraySeed",
     representation(
         dim="integer",     # This gives us dim() for free!
         nzindex="matrix",  # M-index of the nonzero data.
-        nzdata="vector"    # A vector of length 'nrow(nzindex)' containing
-                           # the nonzero data.
+        nzdata="vector"    # A vector (atomic or list) of length
+                           # 'nrow(nzindex)' containing the nonzero data.
     )
 )
 
 ### API:
-### - Getters: dim(), length(), nzindex(), nzdata(), sparsity()
-### - dense2sparse(), sparse2dense()
-### - Based on sparse2dense(): extract_array(), as.array(), as.matrix()
-### - Based on dense2sparse(): coercion to SparseArraySeed
-### - Back and forth coercion between SparseArraySeed and dgCMatrix
+### - Getters: dim(), length(), nzindex(), nzdata(), sparsity().
+### - dense2sparse(), sparse2dense().
+### - Based on sparse2dense(): extract_array(), as.array(), as.matrix().
+### - Based on dense2sparse(): coercion to SparseArraySeed.
+### - Back and forth coercion between SparseArraySeed and dgCMatrix or
+###   lgCMatrix objects from the Matrix package.
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -139,15 +140,17 @@ SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
 ### dense2sparse() and sparse2dense()
 ###
 
-### 'x' must be an array-like object that supports subsetting by an M-index
-### subscript.
+### 'x' must be an array-like object that supports 'type()' and subsetting
+### by an M-index subscript.
 ### Return a SparseArraySeed object.
 dense2sparse <- function(x)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must be an array-like object"))
-    nzindex <- which(x != 0L, arr.ind=TRUE)
+    ## Make sure to use 'type()', not 'typeof()'.
+    zero <- vector(type(x), length=1L)
+    nzindex <- which(x != zero, arr.ind=TRUE)  # M-index
     SparseArraySeed(x_dim, nzindex, x[nzindex], check=FALSE)
 }
 
@@ -157,8 +160,10 @@ sparse2dense <- function(sas)
 {
     if (!is(sas, "SparseArraySeed"))
         stop(wmsg("'sas' must be a SparseArraySeed object"))
-    ans <- array(0L, dim=dim(sas))
-    ans[nzindex(sas)] <- nzdata(sas)
+    sas_nzdata <- nzdata(sas)
+    zero <- vector(typeof(sas_nzdata), length=1L)
+    ans <- array(zero, dim=dim(sas))
+    ans[nzindex(sas)] <- sas_nzdata
     ans
 }
 
@@ -285,23 +290,6 @@ setMethod("extract_array", "SparseArraySeed",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### is_sparse() and extract_sparse_array() methods for dgCMatrix objects
-###
-
-setMethod("is_sparse", "dgCMatrix", function(x) TRUE)
-
-.extract_sparse_array_from_dgCMatrix <- function(x, index)
-{
-    stopifnot(is(x, "dgCMatrix"))
-    x <- as(x, "SparseArraySeed")
-    .extract_sparse_array_from_SparseArraySeed(x, index)
-}
-setMethod("extract_sparse_array", "dgCMatrix",
-    .extract_sparse_array_from_dgCMatrix
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercion to/from SparseArraySeed
 ###
 
@@ -309,6 +297,7 @@ setMethod("extract_sparse_array", "dgCMatrix",
 as.array.SparseArraySeed <- function(x, ...) sparse2dense(x)
 setMethod("as.array", "SparseArraySeed", as.array.SparseArraySeed)
 
+### S3/S4 combo for as.matrix.SparseArraySeed
 .from_SparseArraySeed_to_matrix <- function(x)
 {
     x_dim <- dim(x)
@@ -316,40 +305,69 @@ setMethod("as.array", "SparseArraySeed", as.array.SparseArraySeed)
         stop(wmsg("'x' must have exactly 2 dimensions"))
     sparse2dense(x)
 }
-
-### S3/S4 combo for as.matrix.SparseArraySeed
 as.matrix.SparseArraySeed <-
     function(x, ...) .from_SparseArraySeed_to_matrix(x, ...)
 setMethod("as.matrix", "SparseArraySeed", .from_SparseArraySeed_to_matrix)
 
-### Doesn't work on DelayedArray objects at the moment. See dense2sparse()
-### above.
 setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
 
-### Going back and forth between SparseArraySeed and dgCMatrix:
+### Going back and forth between SparseArraySeed and dgCMatrix or lgCMatrix
+### objects from the Matrix package:
 
-.from_dgCMatrix_to_SparseArraySeed <- function(from)
+.from_SparseArraySeed_to_sparseMatrix <- function(from)
+{
+    from_dim <- dim(from)
+    if (length(from_dim) != 2L)
+        stop(wmsg("the ", class(from), " object to coerce to dgCMatrix ",
+                  "or lgCMatrix must have exactly 2 dimensions"))
+    i <- from@nzindex[ , 1L]
+    j <- from@nzindex[ , 2L]
+    x <- from@nzdata
+    ## Matrix::sparseMatrix() only supports numeric or logical input data at
+    ## the moment. If 'is.numeric(x)' is TRUE, it returns a dgCMatrix object.
+    ## If 'is.logical(x)' is TRUE, it returns a lgCMatrix object. Any other
+    ## type of input triggers an error.
+    Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
+}
+setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_sparseMatrix)
+
+.from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed <- function(from)
 {
     i <- from@i + 1L
     j <- rep.int(seq_len(ncol(from)), diff(from@p))
     nzindex <- cbind(i, j, deparse.level=0L)
     SparseArraySeed(dim(from), nzindex, from@x, check=FALSE)
 }
-setAs("dgCMatrix", "SparseArraySeed", .from_dgCMatrix_to_SparseArraySeed)
+setAs("dgCMatrix", "SparseArraySeed",
+    .from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed
+)
+setAs("lgCMatrix", "SparseArraySeed",
+    .from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed
+)
 
-.from_SparseArraySeed_to_dgCMatrix <- function(from)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_sparse() and extract_sparse_array() methods for dgCMatrix and
+### lgCMatrix objects from the Matrix package
+###
+### TODO: Support more sparseMatrix derivatives (e.g. dgTMatrix, dgRMatrix)
+### as the need arises.
+###
+
+setMethod("is_sparse", "dgCMatrix", function(x) TRUE)
+setMethod("is_sparse", "lgCMatrix", function(x) TRUE)
+
+.extract_sparse_array_from_sparseMatrix <- function(x, index)
 {
-    from_dim <- dim(from)
-    if (length(from_dim) != 2L)
-        stop(wmsg("the ", class(from), " object to coerce to dgCMatrix ",
-                  "must have exactly 2 dimensions"))
-    i <- from@nzindex[ , 1L]
-    j <- from@nzindex[ , 2L]
-    x <- from@nzdata
-    Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
+    x <- as(x, "SparseArraySeed")
+    .extract_sparse_array_from_SparseArraySeed(x, index)
 }
-setAs("SparseArraySeed", "dgCMatrix", .from_SparseArraySeed_to_dgCMatrix)
-setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_dgCMatrix)
+setMethod("extract_sparse_array", "dgCMatrix",
+    .extract_sparse_array_from_sparseMatrix
+)
+setMethod("extract_sparse_array", "lgCMatrix",
+    .extract_sparse_array_from_sparseMatrix
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

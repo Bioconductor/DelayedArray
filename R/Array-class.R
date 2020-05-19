@@ -80,3 +80,12 @@ t.Array <- function(x)
 }
 setMethod("t", "Array", t.Array)
 
+### Any Array derivative will be coercible to dgCMatrix or lgCMatrix as long
+### as there is a method for coercing it to sparseMatrix.
+setAs("Array", "dgCMatrix",
+    function(from) as(as(from, "sparseMatrix"), "dgCMatrix")
+)
+setAs("Array", "lgCMatrix",
+    function(from) as(as(from, "sparseMatrix"), "lgCMatrix")
+)
+
