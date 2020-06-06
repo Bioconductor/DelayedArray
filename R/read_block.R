@@ -129,4 +129,3 @@ setMethod("write_sparse_block", "ANY",
         write_block(x, viewport, block)
     }
 )
-

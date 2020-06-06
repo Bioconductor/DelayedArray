@@ -81,11 +81,11 @@
 
 check_returned_array <- function(ans, expected_dim, .Generic, x_class)
 {
-    if (!is.array(ans))
+    if (is(ans, "DelayedArray"))
         stop(wmsg("The \"", .Generic, "\" method for ", x_class, " ",
-                  "objects didn't return an ordinary array. ",
-                  .Generic, "() should always return an ordinary ",
-                  "array. ", .contact_author_msg(x_class)))
+                  "objects returned a DelayedArray. ",
+                  .Generic, "() should always return a native",
+                  "representation. ", .contact_author_msg(x_class)))
     if (!identical(dim(ans), expected_dim))
         stop(wmsg("The \"", .Generic, "\" method for ", x_class, " ",
                   "objects returned an array with incorrect ",
@@ -115,7 +115,10 @@ setMethod("extract_array", "ANY",
     function(x, index)
     {
         slice <- subset_by_Nindex(x, index)
-        as.array(slice)
+        if (is(slice, "DelayedArray")) {
+            as.array(slice)
+        }
+        slice
     }
 )
 
@@ -223,7 +226,7 @@ setMethod("type", "ANY",
             stop(wmsg("type() only supports array-like objects ",
                       "and ordinary vectors. See ?type in the ",
                       "DelayedArray package."))
-        type(extract_empty_array(x))
+        type(as.array(extract_empty_array(x)))
     }
 )
 

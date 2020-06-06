@@ -54,4 +54,5 @@ Collate: utils.R
 	DelayedMatrix-stats.R
 	RleArraySeed-class.R
 	RleArray-class.R
+	DelayedMatrix-mult.R
 	zzz.R
