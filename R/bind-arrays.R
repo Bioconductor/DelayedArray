@@ -93,6 +93,16 @@ combine_dimnames_along <- function(objects, dims, along)
     if (all(objects_lens == 0L))
         return(set_dim(x0, ans_dim))
 
+    # Using native rbind and cbind for matrix-like objects, assuming that
+    # combining of the same class is always possible.
+    if (length(ans_dim)==2L && length(unique(lapply(objects, class)))==1L) { 
+        if (nblock==1 && sum(vapply(objects, ncol, 0L))==ans_dim[2]) {
+            return(do.call(cbind, objects))
+        } else {
+            return(do.call(rbind, objects))
+        }
+    }
+
     idx <- which(vapply(objects,
         function(object) { typeof(object) != typeof(x0) },
         logical(1),
