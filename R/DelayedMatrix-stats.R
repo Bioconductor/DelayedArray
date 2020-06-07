@@ -34,7 +34,13 @@
         stop("'na.rm' must be TRUE or FALSE")
     .get_ans_type(x, must.be.numeric=TRUE)  # only to check input type (we
                                             # ignore returned ans type)
-    block_results <- blockApply(x, GENERIC, na.rm=na.rm, grid=grid)
+
+    # TODO: either make robust to parallelization,
+    # or put it in the contract that the output of
+    # extract_array must support the specified GENERIC.
+    coerced_GENERIC <- function(x, ...) GENERIC(as.array(x), ...)
+
+    block_results <- blockApply(x, coerced_GENERIC, na.rm=na.rm, grid=grid)
     GENERIC(matrix(unlist(block_results, use.names=FALSE), nrow=nrow(x)))
 }
 
@@ -66,7 +72,13 @@
         stop("'na.rm' must be TRUE or FALSE")
     .get_ans_type(x, must.be.numeric=TRUE)  # only to check input type (we
                                             # ignore returned ans type)
-    block_results <- blockApply(x, rowRanges, na.rm=na.rm, grid=grid)
+
+    # TODO: either make robust to parallelization,
+    # or put it in the contract that the output of
+    # extract_array must support rowRanges.
+    coerced_rowRanges <- function(x, ...) rowRanges(as.array(x), ...)
+
+    block_results <- blockApply(x, coerced_rowRanges, na.rm=na.rm, grid=grid)
     combined_results <- do.call(rbind, block_results)
     row_mins <- rowMins(matrix(combined_results[ , 1L], nrow=nrow(x)))
     row_maxs <- rowMaxs(matrix(combined_results[ , 2L], nrow=nrow(x)))

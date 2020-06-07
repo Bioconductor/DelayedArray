@@ -93,3 +93,21 @@ test_native_mult <- function() {
     checkIdentical(as.matrix(crossprod(X)), as.matrix(crossprod(Dx)))
     checkIdentical(as.matrix(tcrossprod(X)), as.matrix(tcrossprod(Dx)))
 }
+
+test_native_stats <- function() {
+    X <- Matrix::rsparsematrix(1000, 100, 0.1)
+    Dx <- DelayedArray(X)
+
+    checkEquals(rowSums(X), rowSums(Dx))
+    checkEquals(rowMeans(X), rowMeans(Dx))
+    checkEquals(colSums(X), colSums(Dx))
+    checkEquals(colMeans(X), colMeans(Dx))
+
+    checkEquals(rowMaxs(as.matrix(X)), rowMaxs(Dx))
+    checkEquals(rowMins(as.matrix(X)), rowMins(Dx))
+    checkEquals(rowRanges(as.matrix(X)), rowRanges(Dx))
+
+    checkEquals(colMaxs(as.matrix(X)), colMaxs(Dx))
+    checkEquals(colMins(as.matrix(X)), colMins(Dx))
+    checkEquals(colRanges(as.matrix(X)), colRanges(Dx))
+}
