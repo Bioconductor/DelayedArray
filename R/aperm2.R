@@ -53,6 +53,17 @@ validate_perm <- function(perm, a_dim)
 ### NOT exported for now (but maybe it should).
 aperm2 <- function(a, perm)
 {
+    if (length(dim(a))==2L) {
+        # Where possible, using t() to handle non-ordinary arrays. This dilutes
+        # the contract as this function no longer returns an array but instead
+        # can give a matrix-like object.
+        if (identical(as.integer(perm), 1:2)) {
+            return(a)
+        } else if (identical(as.integer(perm), 2:1)) {
+            return(t(a))
+        }
+    }
+
     if (!is.array(a))
         stop(wmsg("'a' must be an array"))
     a_dim <- dim(a)
