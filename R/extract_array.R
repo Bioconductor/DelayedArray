@@ -259,7 +259,7 @@ setMethod("type", "ANY",
     if (!isTRUEorFALSE(drop))
         stop("'drop' must be TRUE or FALSE")
     index <- vector("list", length=length(dim(x)))
-    ans <- extract_array(x, index)
+    ans <- as.array(extract_array(x, index))
     ans <- set_dimnames(ans, dimnames(x))
     if (drop)
         ans <- .reduce_array_dimensions(ans)

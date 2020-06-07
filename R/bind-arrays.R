@@ -101,6 +101,8 @@ combine_dimnames_along <- function(objects, dims, along)
         } else {
             return(do.call(rbind, objects))
         }
+    } else {
+        objects <- lapply(objects, as.array)
     }
 
     idx <- which(vapply(objects,
