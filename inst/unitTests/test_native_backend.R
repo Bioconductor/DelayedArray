@@ -79,19 +79,19 @@ test_native_mult <- function() {
     Dx <- DelayedArray(X)
 
     mat <- matrix(runif(500), ncol=5)
-    checkIdentical(as.matrix(X %*% mat), as.matrix(Dx %*% mat))
+    checkIdentical(unname(as.matrix(X %*% mat)), as.matrix(Dx %*% mat))
 
     mat2 <- matrix(runif(5000), nrow=5)
-    checkIdentical(as.matrix(mat2 %*% X), as.matrix(mat2 %*% Dx))
+    checkIdentical(unname(as.matrix(mat2 %*% X)), as.matrix(mat2 %*% Dx))
 
-    checkIdentical(as.matrix(crossprod(X, t(mat2))), as.matrix(crossprod(Dx, t(mat2))))
-    checkIdentical(as.matrix(crossprod(t(mat2), X)), as.matrix(crossprod(t(mat2), Dx)))
+    checkIdentical(unname(as.matrix(crossprod(X, t(mat2)))), as.matrix(crossprod(Dx, t(mat2))))
+    checkIdentical(unname(as.matrix(crossprod(t(mat2), X))), as.matrix(crossprod(t(mat2), Dx)))
 
-    checkIdentical(as.matrix(tcrossprod(X, t(mat))), as.matrix(tcrossprod(Dx, t(mat))))
-    checkIdentical(as.matrix(tcrossprod(t(mat), X)), as.matrix(tcrossprod(t(mat), Dx)))
+    checkIdentical(unname(as.matrix(tcrossprod(X, t(mat)))), as.matrix(tcrossprod(Dx, t(mat))))
+    checkIdentical(unname(as.matrix(tcrossprod(t(mat), X))), as.matrix(tcrossprod(t(mat), Dx)))
 
-    checkIdentical(as.matrix(crossprod(X)), as.matrix(crossprod(Dx)))
-    checkIdentical(as.matrix(tcrossprod(X)), as.matrix(tcrossprod(Dx)))
+    checkIdentical(unname(as.matrix(crossprod(X))), as.matrix(crossprod(Dx)))
+    checkIdentical(unname(as.matrix(tcrossprod(X))), as.matrix(tcrossprod(Dx)))
 }
 
 test_native_stats <- function() {
