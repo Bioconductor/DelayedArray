@@ -167,7 +167,7 @@ setMethod("write_block", "RleRealizationSink",
     function(x, viewport, block)
     {
         ## 'viewport' is ignored!
-        append_Rle_to_sink(Rle(block), x)
+        append_Rle_to_sink(Rle(as.array(block)), x)
     }
 )
 

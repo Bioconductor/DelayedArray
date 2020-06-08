@@ -25,7 +25,6 @@ setGeneric("write_block", signature="x",
     {
         stopifnot(is(viewport, "ArrayViewport"),
                   identical(refdim(viewport), dim(x)),
-                  is.array(block),
                   identical(dim(block), dim(viewport)))
         standardGeneric("write_block")
     }

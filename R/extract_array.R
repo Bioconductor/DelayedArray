@@ -84,8 +84,8 @@ check_returned_array <- function(ans, expected_dim, .Generic, x_class)
     if (is(ans, "DelayedArray"))
         stop(wmsg("The \"", .Generic, "\" method for ", x_class, " ",
                   "objects returned a DelayedArray. ",
-                  .Generic, "() should always return a native",
-                  "representation. ", .contact_author_msg(x_class)))
+                  .Generic, "() should never return a DelayedArray",
+                  "instance. ", .contact_author_msg(x_class)))
     if (!identical(dim(ans), expected_dim))
         stop(wmsg("The \"", .Generic, "\" method for ", x_class, " ",
                   "objects returned an array with incorrect ",
