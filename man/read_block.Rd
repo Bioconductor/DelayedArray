@@ -2,15 +2,14 @@
 
 \alias{read_block}
 \alias{read_block,ANY-method}
-\alias{write_block}
-\alias{write_block,ANY-method}
 
 \alias{is_sparse}
 \alias{read_sparse_block}
 \alias{read_sparse_block,ANY-method}
 \alias{read_sparse_block,SparseArraySeed-method}
-\alias{write_sparse_block}
-\alias{write_sparse_block,ANY-method}
+
+\alias{write_block}
+\alias{write_block,ANY-method}
 
 \title{Read/write blocks of array data}
 

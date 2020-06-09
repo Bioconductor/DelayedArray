@@ -5,7 +5,7 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### read_block() and write_block()
+### read_block()
 ###
 
 ### Must return an ordinay array and propagate the dimnames.
@@ -16,18 +16,6 @@ setGeneric("read_block", signature="x",
                   identical(refdim(viewport), dim(x)))
         ans <- standardGeneric("read_block")
         check_returned_array(ans, dim(viewport), "read_block", class(x))
-    }
-)
-
-### Must return 'x' (possibly modified if it's an in-memory object).
-setGeneric("write_block", signature="x",
-    function(x, viewport, block)
-    {
-        stopifnot(is(viewport, "ArrayViewport"),
-                  identical(refdim(viewport), dim(x)),
-                  is.array(block),
-                  identical(dim(block), dim(viewport)))
-        standardGeneric("write_block")
     }
 )
 
@@ -44,17 +32,9 @@ setMethod("read_block", "ANY",
     }
 )
 
-setMethod("write_block", "ANY",
-    function(x, viewport, block)
-    {
-        Nindex <- makeNindexFromArrayViewport(viewport)
-        replace_by_Nindex(x, Nindex, block)
-    }
-)
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### read_sparse_block() and write_sparse_block()
+### read_sparse_block()
 ###
 
 ### Like extract_sparse_array(), which it is based on, read_sparse_block()
@@ -88,7 +68,7 @@ setMethod("read_sparse_block", "ANY",
 
 ### The default "read_sparse_block" method above would work just fine on a
 ### SparseArraySeed object but we overwrite it with a method that is slightly
-### more efficient (can be 2x to 3x faster on big SparseArraySeed objects
+### more efficient (can be 2x to 3x faster on a big SparseArraySeed object
 ### with hundreds of thousands of nonzero elements).
 .read_sparse_block_from_SparseArraySeed <- function(x, viewport)
 {
@@ -109,24 +89,36 @@ setMethod("read_sparse_block", "SparseArraySeed",
     .read_sparse_block_from_SparseArraySeed
 )
 
-### 'sparse_block' must be a SparseArraySeed object.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### write_block()
+###
+
+### 'x' is typically expected to be a RealizationSink derivative but
+### write_block() should also work on an ordinary array or other
+### in-memory array- or matrix-like object like a sparseMatrix derivative
+### from the Matrix package.
+### Dispatch on first argument 'x' only for now for simplicity but we
+### could change this to also dispatch on the third argument ('block')
+### when the need arises.
 ### Must return 'x' (possibly modified if it's an in-memory object).
-setGeneric("write_sparse_block", signature="x",
-    function(x, viewport, sparse_block)
+setGeneric("write_block", signature="x",
+    function(x, viewport, block)
     {
         stopifnot(is(viewport, "ArrayViewport"),
                   identical(refdim(viewport), dim(x)),
-                  is(sparse_block, "SparseArraySeed"),
-                  identical(dim(sparse_block), dim(viewport)))
-        standardGeneric("write_sparse_block")
+                  identical(dim(block), dim(viewport)))
+        standardGeneric("write_block")
     }
 )
 
-setMethod("write_sparse_block", "ANY",
-    function(x, viewport, sparse_block)
+setMethod("write_block", "ANY",
+    function(x, viewport, block)
     {
-        block <- sparse2dense(sparse_block)
-        write_block(x, viewport, block)
+        if (is(block, "SparseArraySeed"))
+            block <- sparse2dense(block)
+        Nindex <- makeNindexFromArrayViewport(viewport)
+        replace_by_Nindex(x, Nindex, block)
     }
 )
 

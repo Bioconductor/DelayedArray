@@ -8,7 +8,7 @@
 ###   1) A constructor function that takes argument 'dim', 'dimnames', and
 ###      'type'.
 ###   2) A "dim", "dimnames", and "type" method.
-###   3) A "write_block" method + optionally a "write_sparse_block" method.
+###   3) A "write_block" method.
 ###   4) A "close" method (optional).
 ###   5) Coercion to DelayedArray.
 ###

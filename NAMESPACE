@@ -304,8 +304,7 @@ export(
     nzindex, nzdata, sparsity, is_sparse, extract_sparse_array,
 
     ## read_block.R:
-    read_block, write_block,
-    read_sparse_block, write_sparse_block,
+    read_block, read_sparse_block, write_block,
 
     ## mapToGrid.R:
     mapToGrid, mapToRef,
