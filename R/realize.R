@@ -26,25 +26,15 @@ BLOCK_write_to_sink <- function(x, sink)
     grid <- blockGrid(sink, block.shape="first-dim-grows-first")
     nblock <- length(grid)
     x_is_sparse <- is_sparse(x)
+    what <- if (x_is_sparse) "sparse block" else "block"
     for (bid in seq_len(nblock)) {
         viewport <- grid[[bid]]
-        if (x_is_sparse) {
-            if (get_verbose_block_processing())
-                message("Realizing sparse block ", bid, "/", nblock, " ... ",
-                        appendLF=FALSE)
-            block <- read_sparse_block(x, viewport)
-            if (get_verbose_block_processing())
-                message("OK, writing it ... ",
-                        appendLF=FALSE)
-        } else {
-            if (get_verbose_block_processing())
-                message("Realizing block ", bid, "/", nblock, " ... ",
-                        appendLF=FALSE)
-            block <- read_block(x, viewport)
-            if (get_verbose_block_processing())
-                message("OK, writing it ... ",
-                        appendLF=FALSE)
-        }
+        if (get_verbose_block_processing())
+            message("Realizing ", what, " ", bid, "/", nblock, " ... ",
+                    appendLF=FALSE)
+        block <- read_block(x, viewport, as.sparse=x_is_sparse)
+        if (get_verbose_block_processing())
+            message("OK, writing it ... ", appendLF=FALSE)
         write_block(sink, viewport, block)
         if (get_verbose_block_processing())
             message("OK")

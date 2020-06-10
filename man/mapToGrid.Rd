@@ -45,8 +45,9 @@ mapToRef(major, minor, grid, linear=FALSE)
 
     By default (i.e. when \code{linear} is \code{FALSE}), the major and minor
     indices returned by \code{mapToGrid} (or taken by \code{mapToRef}) are
-    \emph{array indices} (i.e. n-uplets). When \code{linear} is set to
-    \code{TRUE}, they are returned (or taken) as \emph{linear indices}.
+    both \emph{M-indices} (a.k.a. \emph{matrix indices}). When \code{linear}
+    is set to \code{TRUE}, they are both returned (or taken) as
+    \emph{L-indices} (a.k.a. \emph{linear indices}).
   }
   \item{major, minor}{
     The \code{major} and \code{minor} components as returned by
@@ -92,7 +93,7 @@ mapToRef(major, minor, grid, linear=FALSE)
 
     \item \code{\link{Lindex2Mindex}} and \code{\link{Mindex2Lindex}} in
           this package (\pkg{DelayedArray}) for converting back and forth
-          between \emph{linear indices} and \emph{array indices}.
+          between \emph{linear indices} and \emph{matrix indices}.
 
     \item \link[base]{array} objects in base R.
   }

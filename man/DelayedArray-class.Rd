@@ -353,7 +353,6 @@ A
 ## F. WRAP A SPARSE MATRIX IN A DelayedArray OBJECT
 ## ---------------------------------------------------------------------
 \dontrun{
-library(Matrix)
 M <- 75000L
 N <- 1800L
 p <- sparseMatrix(sample(M, 9000000, replace=TRUE),

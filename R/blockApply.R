@@ -109,7 +109,8 @@ normarg_grid <- function(grid, x)
 ### setting the nb of tasks to the nb of blocks (i.e. with
 ### BPPARAM=MulticoreParam(tasks=length(grid))). However, in practice, that
 ### seems to be slower than using tasks=0 (the default). Investigate this!
-blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
+blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
+                                    BPPARAM=getAutoBPPARAM())
 {
     FUN <- match.fun(FUN)
     grid <- normarg_grid(grid, x)
@@ -127,7 +128,7 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
                 on.exit(message("OK"))
             }
             viewport <- grid[[bid]]
-            block <- read_block(x, viewport)
+            block <- read_block(x, viewport, as.sparse=as.sparse)
             attr(block, "from_grid") <- grid
             attr(block, "block_id") <- bid
             FUN(block, ...)
@@ -137,7 +138,7 @@ blockApply <- function(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
 }
 
 ### A Reduce-like function. Not parallelized yet.
-blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
+blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
 {
     FUN <- match.fun(FUN)
     if (!is.null(BREAKIF))
@@ -149,7 +150,7 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL)
             message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
         viewport <- grid[[bid]]
-        block <- read_block(x, viewport)
+        block <- read_block(x, viewport, as.sparse=as.sparse)
         attr(block, "from_grid") <- grid
         attr(block, "block_id") <- bid
         init <- FUN(block, init)

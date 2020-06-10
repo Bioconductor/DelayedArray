@@ -22,8 +22,8 @@
 }
 
 \usage{
-blockApply(x, FUN, ..., grid=NULL, BPPARAM=getAutoBPPARAM())
-blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL)
+blockApply(x, FUN, ..., grid=NULL, as.sparse=FALSE, BPPARAM=getAutoBPPARAM())
+blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
 
 effectiveGrid(block)
 currentBlockId(block)
@@ -47,6 +47,10 @@ setAutoBPPARAM(BPPARAM=NULL)
   }
   \item{grid}{
     Coming soon...
+  }
+  \item{as.sparse}{
+    Passed to the internal calls to \code{read_block}.
+    See \code{?\link{read_block}} for the details.
   }
   \item{BPPARAM}{
     Coming soon...

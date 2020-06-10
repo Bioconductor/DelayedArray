@@ -8,19 +8,42 @@
 ### read_block()
 ###
 
-### Must return an ordinay array and propagate the dimnames.
+### Reads a block of data from array-like object 'x'. The block is returned
+### either as an ordinay array or a SparseArraySeed object.
+### Is expected to propagate the dimnames (mmh.. why is that a requirement?
+### can't remember, maybe this could be relaxed).
+### 'as.sparse' can be TRUE, FALSE, or NA. If FALSE, the block is returned
+### as an ordinary (dense) array. If TRUE, it's returned as a SparseArraySeed
+### object. Using NA is equivalent to using 'as.sparse=is_sparse(x)' and is
+### the most efficient way to read a block. Maybe it should be made the
+### default (right now the default is FALSE for backward compatibility with
+### existing code).
+### IMPORTANT: Methods should ignore the 'as.sparse' argument! (i.e. have
+### it in their argument but not do anything about it).
 setGeneric("read_block", signature="x",
-    function(x, viewport)
+    function(x, viewport, as.sparse=FALSE)
     {
         stopifnot(is(viewport, "ArrayViewport"),
-                  identical(refdim(viewport), dim(x)))
-        ans <- standardGeneric("read_block")
-        check_returned_array(ans, dim(viewport), "read_block", class(x))
+                  identical(refdim(viewport), dim(x)),
+                  is.logical(as.sparse),
+                  length(as.sparse) == 1L)
+        if (is_sparse(x)) {
+            ans <- read_sparse_block(x, viewport)
+            if (isFALSE(as.sparse))
+                ans <- sparse2dense(ans)
+        } else {
+            ans <- standardGeneric("read_block")
+            check_returned_array(ans, dim(viewport), "read_block", class(x))
+            if (isTRUE(as.sparse))
+                ans <- dense2sparse(ans)
+        }
+        ans
     }
 )
 
 ### Work on any object 'x' that supports extract_array() e.g. an ordinary
-### array or a DelayedArray, HDF5ArraySeed, or DelayedOp object, etc...
+### array, a sparseMatrix derivative from the Matrix package, a DelayedArray
+### object, an HDF5ArraySeed object, a DelayedOp object, etc...
 ### Propagate the dimnames.
 setMethod("read_block", "ANY",
     function(x, viewport)

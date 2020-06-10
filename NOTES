@@ -19,7 +19,7 @@
 ## on-disk container like HDF5Matrix should greatly simplify this: the goal is
 ## to make it possible for the end user to manipulate the big
 ## SummarizedExperiment object as a whole and have the split/process/combine
-## mechanism automatically and transparently happen behind the scene .
+## mechanism automatically and transparently handled behind the scene .
 
 ## Comparison of assay data containers
 ## ===================================

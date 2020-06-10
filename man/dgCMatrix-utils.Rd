@@ -58,30 +58,19 @@
     \item \code{base::\link[base]{rowsum}} in the \pkg{base} package for
           the default \code{rowsum} method.
 
-    \item The \pkg{Matrix} package (from CRAN) where dgCMatrix objects are
-          defined and implemented.
+    \item \linkS4class{dgCMatrix} objects in the \pkg{Matrix} package.
   }
 }
 
 \examples{
-library(Matrix)
-
-randomSparseMatrix <- function(nrow, ncol, sparsity=0.85)
-{
-    m_len <- nrow * ncol
-    m_data <- runif(m_len) * 50
-    zidx <- sample(m_len, as.integer(m_len * sparsity))
-    m_data[zidx] <- 0
-    matrix(m_data, nrow=nrow, ncol=ncol)
-}
-m <- randomSparseMatrix(1e5, 800)  # dense representation
-m0 <- as(m, "dgCMatrix")           # sparse representation
+m0 <- rsparsematrix(1e5, 800, density=0.15)  # sparse representation
+m <- as.matrix(m0)                           # dense representation
 group <- sample(20, nrow(m), replace=TRUE)
 
-## 'rowsum(m0)' is about 5x faster than 'rowsum(m)':
-rs <- rowsum(m, group)
+## 'rowsum(m0)' is about 4x faster than 'rowsum(m)':
 rs0 <- rowsum(m0, group)
+rs <- rowsum(m, group)
 
-stopifnot(identical(rs, rs0))
+stopifnot(identical(rs0, rs))
 }
 \keyword{methods}
