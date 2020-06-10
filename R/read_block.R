@@ -10,16 +10,16 @@
 
 ### Reads a block of data from array-like object 'x'. The block is returned
 ### either as an ordinay array or a SparseArraySeed object.
-### Is expected to propagate the dimnames (mmh.. why is that a requirement?
-### can't remember, maybe this could be relaxed).
+### Must propagate the dimnames.
 ### 'as.sparse' can be TRUE, FALSE, or NA. If FALSE, the block is returned
 ### as an ordinary (dense) array. If TRUE, it's returned as a SparseArraySeed
 ### object. Using NA is equivalent to using 'as.sparse=is_sparse(x)' and is
 ### the most efficient way to read a block. Maybe it should be made the
 ### default (right now the default is FALSE for backward compatibility with
-### existing code).
+### existing code). But read_sparse_block() first needs to be fixed i.e. it
+### needs to propagate the dimnames. See below.
 ### IMPORTANT: Methods should ignore the 'as.sparse' argument! (i.e. have
-### it in their argument but not do anything about it).
+### it in their argument list but not do anything about it).
 setGeneric("read_block", signature="x",
     function(x, viewport, as.sparse=FALSE)
     {
@@ -29,8 +29,16 @@ setGeneric("read_block", signature="x",
                   length(as.sparse) == 1L)
         if (is_sparse(x)) {
             ans <- read_sparse_block(x, viewport)
-            if (isFALSE(as.sparse))
+            if (isFALSE(as.sparse)) {
                 ans <- sparse2dense(ans)
+                ## Temporary fix until read_sparse_block() propagates the
+                ## dimnames.
+                ## TODO: Remove once read_sparse_block() propagates the
+                ## dimnames.
+                Nindex <- makeNindexFromArrayViewport(viewport)
+                ans_dimnames <- subset_dimnames_by_Nindex(dimnames(x), Nindex)
+                ans <- set_dimnames(ans, ans_dimnames)
+            }
         } else {
             ans <- standardGeneric("read_block")
             check_returned_array(ans, dim(viewport), "read_block", class(x))
@@ -64,7 +72,11 @@ setMethod("read_block", "ANY",
 ### should be called only on an array-like object 'x' for which 'is_sparse(x)'
 ### is TRUE. For the sake of efficiency, this is NOT checked and is the
 ### responsibility of the user. See SparseArraySeed-class.R
-### Must return a SparseArraySeed object.
+### Must return a SparseArraySeed object with the dimnames on 'x' propagated
+### to it.
+### FIXME: Right now the dimnames on 'x' are not propagated (that's because
+### SparseArraySeed don't support dimnames so that would need to be addressed
+### first).
 setGeneric("read_sparse_block", signature="x",
     function(x, viewport)
     {
