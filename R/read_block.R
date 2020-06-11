@@ -10,14 +10,15 @@
 
 ### Reads a block of data from array-like object 'x'. The block is returned
 ### either as an ordinay array or a SparseArraySeed object.
-### Must propagate the dimnames.
+### Must propagate the dimnames. Note that this is taken care of by the
+### generic function below so individual methods should not try to propagate
+### the dimnames.
 ### 'as.sparse' can be TRUE, FALSE, or NA. If FALSE, the block is returned
 ### as an ordinary (dense) array. If TRUE, it's returned as a SparseArraySeed
 ### object. Using NA is equivalent to using 'as.sparse=is_sparse(x)' and is
 ### the most efficient way to read a block. Maybe it should be made the
 ### default (right now the default is FALSE for backward compatibility with
-### existing code). But read_sparse_block() first needs to be fixed i.e. it
-### needs to propagate the dimnames. See below.
+### existing code).
 ### IMPORTANT: Methods should ignore the 'as.sparse' argument! (i.e. have
 ### it in their argument list but not do anything about it).
 setGeneric("read_block", signature="x",
@@ -28,20 +29,19 @@ setGeneric("read_block", signature="x",
                   is.logical(as.sparse),
                   length(as.sparse) == 1L)
         if (is_sparse(x)) {
+            ## read_sparse_block() is already taking care of propagating
+            ## the dimnames.
             ans <- read_sparse_block(x, viewport)
-            if (isFALSE(as.sparse)) {
+            if (isFALSE(as.sparse))
                 ans <- sparse2dense(ans)
-                ## Temporary fix until read_sparse_block() propagates the
-                ## dimnames.
-                ## TODO: Remove once read_sparse_block() propagates the
-                ## dimnames.
-                Nindex <- makeNindexFromArrayViewport(viewport)
-                ans_dimnames <- subset_dimnames_by_Nindex(dimnames(x), Nindex)
-                ans <- set_dimnames(ans, ans_dimnames)
-            }
         } else {
             ans <- standardGeneric("read_block")
             check_returned_array(ans, dim(viewport), "read_block", class(x))
+            ## Individual read_block() methods should not try to propagate
+            ## the dimnames. We do that for them now.
+            Nindex <- makeNindexFromArrayViewport(viewport)
+            ans_dimnames <- subset_dimnames_by_Nindex(dimnames(x), Nindex)
+            ans <- set_dimnames(ans, ans_dimnames)
             if (isTRUE(as.sparse))
                 ans <- dense2sparse(ans)
         }
@@ -52,14 +52,11 @@ setGeneric("read_block", signature="x",
 ### Work on any object 'x' that supports extract_array() e.g. an ordinary
 ### array, a sparseMatrix derivative from the Matrix package, a DelayedArray
 ### object, an HDF5ArraySeed object, a DelayedOp object, etc...
-### Propagate the dimnames.
 setMethod("read_block", "ANY",
     function(x, viewport)
     {
-        ## We use extract_array_by_Nindex() instead of extract_array() to
-        ## propagate the dimnames.
-        Nindex <- makeNindexFromArrayViewport(viewport)
-        extract_array_by_Nindex(x, Nindex)
+        Nindex <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
+        extract_array(x, Nindex)
     }
 )
 
@@ -73,10 +70,8 @@ setMethod("read_block", "ANY",
 ### is TRUE. For the sake of efficiency, this is NOT checked and is the
 ### responsibility of the user. See SparseArraySeed-class.R
 ### Must return a SparseArraySeed object with the dimnames on 'x' propagated
-### to it.
-### FIXME: Right now the dimnames on 'x' are not propagated (that's because
-### SparseArraySeed don't support dimnames so that would need to be addressed
-### first).
+### to it. Note that this is taken care of by the generic function below so
+### individual methods should not try to propagate the dimnames.
 setGeneric("read_sparse_block", signature="x",
     function(x, viewport)
     {
@@ -89,7 +84,9 @@ setGeneric("read_sparse_block", signature="x",
         ## detailed error message.
         stopifnot(is(ans, "SparseArraySeed"),
                   identical(dim(ans), dim(viewport)))
-        ans
+        Nindex <- makeNindexFromArrayViewport(viewport)
+        ans_dimnames <- subset_dimnames_by_Nindex(dimnames(x), Nindex)
+        set_dimnames(ans, ans_dimnames)
     }
 )
 

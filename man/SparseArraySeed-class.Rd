@@ -9,6 +9,8 @@
 \alias{nzindex,SparseArraySeed-method}
 \alias{nzdata}
 \alias{nzdata,SparseArraySeed-method}
+\alias{dimnames,SparseArraySeed-method}
+\alias{dimnames<-,SparseArraySeed,ANY-method}
 \alias{sparsity}
 \alias{sparsity,SparseArraySeed-method}
 
@@ -50,9 +52,9 @@
 
 \usage{
 ## Constructor function:
-SparseArraySeed(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
+SparseArraySeed(dim, nzindex=NULL, nzdata=NULL, dimnames=NULL, check=TRUE)
 
-## Getters (in addition to dim() and length()):
+## Getters (in addition to dim(), length(), and dimnames()):
 nzindex(x)
 nzdata(x)
 sparsity(x)
@@ -76,6 +78,11 @@ sparse2dense(sas)
   }
   \item{nzdata}{
     A vector of length \code{nrow(nzindex)} containing the nonzero data.
+  }
+  \item{dimnames}{
+    The \emph{dimnames} of the object to be created. Must be \code{NULL} or
+    a list of length the number of dimensions. Each list element must be
+    either \code{NULL} or a character vector along the corresponding dimension.
   }
   \item{check}{
     Should the object be validated upon construction?

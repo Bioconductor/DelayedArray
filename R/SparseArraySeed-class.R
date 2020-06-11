@@ -8,13 +8,22 @@ setClass("SparseArraySeed",
     representation(
         dim="integer",     # This gives us dim() for free!
         nzindex="matrix",  # M-index of the nonzero data.
-        nzdata="vector"    # A vector (atomic or list) of length
+        nzdata="vector",   # A vector (atomic or list) of length
                            # 'nrow(nzindex)' containing the nonzero data.
+        dimnames="list"    # List with one list element per dimension. Each
+                           # list element must be NULL or a character vector.
+    ),
+    prototype(
+        dim=0L,
+        nzindex=matrix(integer(0), ncol=1L),
+        dimnames=list(NULL)
     )
 )
 
 ### API:
-### - Getters: dim(), length(), nzindex(), nzdata(), sparsity().
+### - Getters/setters: dim(), length(), nzindex(), nzdata(),
+###                    dimnames(), dimnames<-()
+### - sparsity().
 ### - dense2sparse(), sparse2dense().
 ### - Based on sparse2dense(): extract_array(), as.array(), as.matrix().
 ### - Based on dense2sparse(): coercion to SparseArraySeed.
@@ -66,6 +75,9 @@ setClass("SparseArraySeed",
     msg <- .validate_nzdata_slot(x)
     if (!isTRUE(msg))
         return(msg)
+    msg <- validate_dimnames_slot(x, x@dim)
+    if (!isTRUE(msg))
+        return(msg)
     TRUE
 }
 
@@ -73,7 +85,7 @@ setValidity2("SparseArraySeed", .validate_SparseArraySeed)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Getters
+### Getters/setters
 ###
 
 setGeneric("nzindex", function(x) standardGeneric("nzindex"))
@@ -82,7 +94,25 @@ setMethod("nzindex", "SparseArraySeed", function(x) x@nzindex)
 setGeneric("nzdata", function(x) standardGeneric("nzdata"))
 setMethod("nzdata", "SparseArraySeed", function(x) x@nzdata)
 
+setMethod("dimnames", "SparseArraySeed",
+    function(x) simplify_NULL_dimnames(x@dimnames)
+)
+
+setReplaceMethod("dimnames", "SparseArraySeed",
+    function(x, value)
+    {
+        x@dimnames <- normarg_dimnames(value, dim(x))
+        x
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### sparsity()
+###
+
 setGeneric("sparsity", function(x) standardGeneric("sparsity"))
+
 setMethod("sparsity", "SparseArraySeed",
     function(x) { 1 - length(nzdata(x)) / length(x) }
 )
@@ -111,7 +141,8 @@ setMethod("sparsity", "SparseArraySeed",
     rep(nzdata, length.out=length.out)
 }
 
-SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
+SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, dimnames=NULL,
+                            check=TRUE)
 {
     if (!is.numeric(dim))
         stop(wmsg("'dim' must be an integer vector"))
@@ -120,8 +151,8 @@ SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
     if (is.null(nzindex)) {
         if (!is.null(nzdata))
             stop(wmsg("'nzdata' must be NULL when 'nzindex' is NULL"))
-        nzindex <- Lindex2Mindex(integer(0), dim)
-        nzdata <- integer(0)
+        nzindex <- matrix(integer(0), ncol=length(dim))
+        nzdata <- logical(0)  # vector()
     } else {
         if (!is.matrix(nzindex))
             stop(wmsg("'nzindex' must be a matrix"))
@@ -131,7 +162,9 @@ SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, check=TRUE)
             dimnames(nzindex) <- NULL
         nzdata <- .normarg_nzdata(nzdata, nrow(nzindex))
     }
+    dimnames <- normarg_dimnames(dimnames, dim)
     new2("SparseArraySeed", dim=dim, nzindex=nzindex, nzdata=nzdata,
+                            dimnames=dimnames,
                             check=check)
 }
 
@@ -148,10 +181,10 @@ dense2sparse <- function(x)
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must be an array-like object"))
-    ## Make sure to use 'type()', not 'typeof()'.
+    ## Make sure to use 'type()' and not 'typeof()'.
     zero <- vector(type(x), length=1L)
     nzindex <- which(x != zero, arr.ind=TRUE)  # M-index
-    SparseArraySeed(x_dim, nzindex, x[nzindex], check=FALSE)
+    SparseArraySeed(x_dim, nzindex, x[nzindex], dimnames(x), check=FALSE)
 }
 
 ### 'sas' must be a SparseArraySeed object.
@@ -164,7 +197,7 @@ sparse2dense <- function(sas)
     zero <- vector(typeof(sas_nzdata), length=1L)
     ans <- array(zero, dim=dim(sas))
     ans[nzindex(sas)] <- sas_nzdata
-    ans
+    set_dimnames(ans, dimnames(sas))
 }
 
 
@@ -172,11 +205,13 @@ sparse2dense <- function(sas)
 ### The is_sparse() and extract_sparse_array() generics
 ###
 
-### is_sparse() detects **structural** sparsity which is a qualitative
+### is_sparse() detects **structural** sparsity which is a global qualitative
 ### property of array-like object 'x' rather than a quantitative one.
 ### In other words it doesn't look at the data in 'x' to decide whether 'x'
 ### should be considered sparse or not. Said otherwise, it is NOT about
 ### quantitative sparsity measured by sparsity().
+### IMPORTANT: Seeds for which is_sparse() returns TRUE **must** support
+### extract_sparse_array().
 setGeneric("is_sparse", function(x) standardGeneric("is_sparse"))
 
 ### By default, nothing is considered sparse.
@@ -336,7 +371,7 @@ setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_sparseMatrix)
     i <- from@i + 1L
     j <- rep.int(seq_len(ncol(from)), diff(from@p))
     nzindex <- cbind(i, j, deparse.level=0L)
-    SparseArraySeed(dim(from), nzindex, from@x, check=FALSE)
+    SparseArraySeed(dim(from), nzindex, from@x, dimnames(from), check=FALSE)
 }
 setAs("dgCMatrix", "SparseArraySeed",
     .from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed
@@ -384,12 +419,14 @@ setMethod("extract_sparse_array", "lgCMatrix",
     msg <- validate_perm(perm, a_dim)
     if (!isTRUE(msg))
         stop(wmsg(msg))
-    ans_dim <- a_dim[perm]
-    ans_dim[is.na(perm)] <- 1L
-    ans_nzindex <- a@nzindex[ , perm, drop=FALSE]
-    ans_nzindex[ , is.na(perm)] <- 1L
-    BiocGenerics:::replaceSlots(a, dim=ans_dim,
-                                   nzindex=ans_nzindex,
+    new_dim <- a_dim[perm]
+    new_dim[is.na(perm)] <- 1L
+    new_nzindex <- a@nzindex[ , perm, drop=FALSE]
+    new_nzindex[ , is.na(perm)] <- 1L
+    new_dimnames <- a@dimnames[perm]
+    BiocGenerics:::replaceSlots(a, dim=new_dim,
+                                   nzindex=new_nzindex,
+                                   dimnames=new_dimnames,
                                    check=FALSE)
 }
 

@@ -33,7 +33,7 @@
 \alias{aperm,DelayedArray-method}
 
 \alias{dim<-,DelayedArray-method}
-\alias{dimnames<-,DelayedArray-method}
+\alias{dimnames<-,DelayedArray,ANY-method}
 \alias{names,DelayedArray-method}
 \alias{names<-,DelayedArray-method}
 
