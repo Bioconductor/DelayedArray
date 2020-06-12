@@ -8,7 +8,7 @@ importFrom(stats, setNames,
                   dpois, ppois, qpois,
                   dlogis, plogis, qlogis)
 importFrom(stats4, summary)
-importClassFrom(Matrix, dgCMatrix)
+importClassFrom(Matrix, dgCMatrix, lgCMatrix)
 importFrom(Matrix, sparseMatrix, crossprod, tcrossprod)
 import(matrixStats)
 import(BiocGenerics)
@@ -288,7 +288,7 @@ export(
 ###
 
 export(
-    ## dgCMatrix-utils.R:
+    ## dgCMatrix-stats.R:
     rowsum, colsum,
 
     ## bind-arrays.R:

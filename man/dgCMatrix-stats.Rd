@@ -1,6 +1,6 @@
-\name{dgCMatrix-utils}
+\name{dgCMatrix-stats}
 
-\alias{dgCMatrix-utils}
+\alias{dgCMatrix-stats}
 
 \alias{rowsum,ANY-method}
 \alias{colsum,ANY-method}

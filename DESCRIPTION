@@ -24,7 +24,7 @@ Suggests: BiocParallel, HDF5Array, genefilter, SummarizedExperiment,
 License: Artistic-2.0
 VignetteBuilder: knitr
 Collate: utils.R
-	dgCMatrix-utils.R
+	dgCMatrix-stats.R
 	compress_atomic_vector.R
 	Nindex-utils.R
 	array_selection.R
