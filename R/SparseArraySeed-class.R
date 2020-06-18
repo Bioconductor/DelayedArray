@@ -366,18 +366,21 @@ setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
 }
 setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_sparseMatrix)
 
-.from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed <- function(from)
+.make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix <-
+    function(from, use.dimnames=TRUE)
 {
     i <- from@i + 1L
     j <- rep.int(seq_len(ncol(from)), diff(from@p))
-    nzindex <- cbind(i, j, deparse.level=0L)
-    SparseArraySeed(dim(from), nzindex, from@x, dimnames(from), check=FALSE)
+    ans_nzindex <- cbind(i, j, deparse.level=0L)
+    ans_dimnames <- if (use.dimnames) dimnames(from) else NULL
+    SparseArraySeed(dim(from), ans_nzindex, from@x, ans_dimnames, check=FALSE)
 }
+
 setAs("dgCMatrix", "SparseArraySeed",
-    .from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed
+    function(from) .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(from)
 )
 setAs("lgCMatrix", "SparseArraySeed",
-    .from_dgCMatrix_or_lgCMatrix_to_SparseArraySeed
+    function(from) .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(from)
 )
 
 
@@ -394,8 +397,8 @@ setMethod("is_sparse", "lgCMatrix", function(x) TRUE)
 
 .extract_sparse_array_from_sparseMatrix <- function(x, index)
 {
-    x <- as(x, "SparseArraySeed")
-    .extract_sparse_array_from_SparseArraySeed(x, index)
+    sm <- subset_by_Nindex(x, index)  # a dgCMatrix or lgCMatrix object
+    .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(sm, use.dimnames=FALSE)
 }
 setMethod("extract_sparse_array", "dgCMatrix",
     .extract_sparse_array_from_sparseMatrix

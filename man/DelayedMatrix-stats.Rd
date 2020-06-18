@@ -12,15 +12,15 @@
 \alias{colMeans}
 \alias{colMeans,DelayedMatrix-method}
 
-\alias{rowMaxs}
-\alias{rowMaxs,DelayedMatrix-method}
-\alias{colMaxs}
-\alias{colMaxs,DelayedMatrix-method}
-
 \alias{rowMins}
 \alias{rowMins,DelayedMatrix-method}
 \alias{colMins}
 \alias{colMins,DelayedMatrix-method}
+
+\alias{rowMaxs}
+\alias{rowMaxs,DelayedMatrix-method}
+\alias{colMaxs}
+\alias{colMaxs,DelayedMatrix-method}
 
 \alias{rowRanges}
 \alias{rowRanges,DelayedMatrix-method}
@@ -44,11 +44,11 @@
 \S4method{rowMeans}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{colMeans}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 
-\S4method{rowMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
-\S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
-
 \S4method{rowMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
 \S4method{colMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
+
+\S4method{rowMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
+\S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
 
 \S4method{rowRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
 \S4method{colRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
@@ -107,11 +107,11 @@ colSums(M12)
 rowMeans(M12)
 colMeans(M12)
 
-rmaxs <- rowMaxs(M12)
-cmaxs <- colMaxs(M12)
-
 rmins <- rowMins(M12)
 cmins <- colMins(M12)
+
+rmaxs <- rowMaxs(M12)
+cmaxs <- colMaxs(M12)
 
 rranges <- rowRanges(M12)
 cranges <- colRanges(M12)
@@ -122,10 +122,10 @@ stopifnot(identical(rowSums(M12), rowSums(m12)))
 stopifnot(identical(colSums(M12), colSums(m12)))
 stopifnot(identical(rowMeans(M12), rowMeans(m12)))
 stopifnot(identical(colMeans(M12), colMeans(m12)))
-stopifnot(identical(rmaxs, rowMaxs(m12)))
-stopifnot(identical(cmaxs, colMaxs(m12)))
 stopifnot(identical(rmins, rowMins(m12)))
 stopifnot(identical(cmins, colMins(m12)))
+stopifnot(identical(rmaxs, rowMaxs(m12)))
+stopifnot(identical(cmaxs, colMaxs(m12)))
 stopifnot(identical(rranges, cbind(rmins, rmaxs, deparse.level=0)))
 stopifnot(identical(cranges, cbind(cmins, cmaxs, deparse.level=0)))
 }
