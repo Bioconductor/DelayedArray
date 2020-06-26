@@ -76,7 +76,7 @@ write_block(x, viewport, block)
     \item \link[Matrix]{dgCMatrix-class} and \link[Matrix]{lgCMatrix-class}
           objects in the \pkg{Matrix} package.
 
-    \item \code{\link{blockGrid}} to define grids to use in the context
+    \item \code{\link{AutoGrid}} to define grids to use in the context
           of block processing of array-like objects.
 
     \item \code{\link{blockApply}} for more information about block
@@ -166,8 +166,8 @@ stopifnot(identical(a3, a))
 ## the array-like object to process. Then the blocks are processed
 ## separately in a loop. Here we define a grid made of very small blocks
 ## on 'm1'. Please note that real-world block processing use grids made
-## of much bigger blocks that are obtained with blockGrid().
-## See ?blockGrid for more information.
+## of much bigger blocks that are obtained with defaultAutoGrid().
+## See ?defaultAutoGrid for more information.
 
 grid1 <- RegularArrayGrid(dim(m1), spacings=c(3L, 2L))
 grid1

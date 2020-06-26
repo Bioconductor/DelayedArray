@@ -16,14 +16,14 @@ BLOCK_write_to_sink <- function(x, sink)
     stopifnot(identical(dim(x), dim(sink)))
     ## 'x' and 'sink' might both have their physical chunks but we must
     ## choose a grid that is compatible with the physical chunks of 'sink'.
-    ## Calling 'blockGrid()' on 'sink' will produce such grid.
+    ## Calling 'defaultAutoGrid()' on 'sink' will produce such grid.
     ## Note that it might be beneficial to use a grid that is also compatible
     ## with the physical chunks of 'x' so we might want to come up with a
-    ## dedicated utility for that e.g. 'blockGrid2(sink, x)'.
+    ## dedicated utility for that e.g. 'defaultAutoGrid2(sink, x)'.
     ## Also by using block.shape="first-dim-grows-first" in the call below
     ## we'll get a grid that guarentees linear writing to the sink in case
     ## 'chunkdim(sink)' is NULL.
-    grid <- blockGrid(sink, block.shape="first-dim-grows-first")
+    grid <- defaultAutoGrid(sink, block.shape="first-dim-grows-first")
     nblock <- length(grid)
     x_is_sparse <- is_sparse(x)
     what <- if (x_is_sparse) "sparse block" else "block"

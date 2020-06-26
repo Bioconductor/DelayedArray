@@ -141,7 +141,7 @@ setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
     sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
 
-    y_grid <- colGrid(y)
+    y_grid <- colAutoGrid(y)
     ans_spacings <- c(ans_dim[[1L]], ncol(y_grid[[1L]]))
     ans_grid <- RegularArrayGrid(ans_dim, ans_spacings)  # parallel to 'y_grid'
     nblock <- length(y_grid)  # same as 'length(ans_grid)'
@@ -279,19 +279,19 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     ideal_size_by_row <- max(1, ceiling(nrow(x)/nworkers) * as.double(ncol(x)) * element_size)
     if (old > ideal_size_by_row) {
         suppressMessages(setAutoBlockSize(ideal_size_by_row)) # TODO: avoid setting the block size just to compute this?
-        row_grid <- rowGrid(x)
+        row_grid <- rowAutoGrid(x)
         suppressMessages(setAutoBlockSize(old))
     } else {
-        row_grid <- rowGrid(x)
+        row_grid <- rowAutoGrid(x)
     }
 
     ideal_size_by_col <- max(1, ceiling(ncol(x)/nworkers) * as.double(nrow(x)) * 8)
     if (old > ideal_size_by_col) {
         suppressMessages(setAutoBlockSize(ideal_size_by_col))
-        col_grid <- colGrid(x)
+        col_grid <- colAutoGrid(x)
         suppressMessages(setAutoBlockSize(old))
     } else {
-        col_grid <- colGrid(x)
+        col_grid <- colAutoGrid(x)
     }
 
     list(row=row_grid, col=col_grid)

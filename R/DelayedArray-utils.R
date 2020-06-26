@@ -542,11 +542,11 @@ setMethod("unique", "DelayedArray", .BLOCK_unique)
 ###   a <- array(sample(100L, 20000L, replace=TRUE), c(20, 4, 250))
 ###   A <- DelayedArray(a)
 ###   table(A)  # ok
-###   table(A, grid=blockGrid(A, 500))
+###   table(A, grid=defaultAutoGrid(A, 500))
 ###   # Error in .BLOCK_unique(x, incomparables = incomparables, ...) : 
 ###   #   unused argument (nmax = nmax)
 ### A workaround is to call .BLOCK_table():
-###   DelayedArray:::.BLOCK_table(A, grid=blockGrid(A, 500))  # ok
+###   DelayedArray:::.BLOCK_table(A, grid=defaultAutoGrid(A, 500))  # ok
 .table_DelayedArray <- function(...) .BLOCK_table(...)
 setMethod("table", "DelayedArray", .table_DelayedArray)
 

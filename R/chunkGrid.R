@@ -16,7 +16,7 @@ setClassUnion("integer_OR_NULL", c("integer", "NULL"))
 ### chunkdim(x) must return NULL or an integer vector compatible with dim(x).
 ###
 
-### Performs the same checks as .normarg_z_chunkdim() (see blockGrid.R).
+### Performs the same checks as .normarg_z_chunkdim() (see AutoGrid.R).
 .check_chunkdim <- function(chunkdim, x_dim)
 {
     ## The relationship between 'chunkdim' and 'x_dim' must be the same

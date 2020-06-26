@@ -23,7 +23,7 @@
   boxes with the specified constraints.
 
   These are low-level utilities used internally to support
-  \code{\link{blockGrid}} and family.
+  \code{\link{defaultAutoGrid}} and family.
 }
 
 \usage{
@@ -95,7 +95,7 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
 
 \seealso{
   \itemize{
-    \item \code{\link{blockGrid}} to define grids to use in the context
+    \item \code{\link{AutoGrid}} to define grids to use in the context
           of block processing of array-like objects.
 
     \item \link{ArrayGrid} objects.

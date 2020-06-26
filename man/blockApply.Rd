@@ -10,8 +10,6 @@
 \alias{currentBlockId}
 \alias{currentViewport}
 
-\alias{getAutoGridMaker}
-\alias{setAutoGridMaker}
 \alias{getAutoBPPARAM}
 \alias{setAutoBPPARAM}
 
@@ -29,8 +27,6 @@ effectiveGrid(block)
 currentBlockId(block)
 currentViewport(block)
 
-getAutoGridMaker()
-setAutoGridMaker(GRIDMAKER="blockGrid")
 getAutoBPPARAM()
 setAutoBPPARAM(BPPARAM=NULL)
 }
@@ -64,24 +60,6 @@ setAutoBPPARAM(BPPARAM=NULL)
   \item{block}{
     Coming soon...
   }
-  \item{GRIDMAKER}{
-    The function to use as automatic grid maker, that is, the function that
-    will be used by \code{blockApply()} and \code{blockReduce()} to make a
-    grid when no grid is supplied via their \code{grid} argument.
-    The function will be called on array-like object \code{x} and must
-    return an \link{ArrayGrid} object, say \code{grid}, that is compatible
-    with \code{x} i.e. such that \code{refdim(grid)} is identical to
-    \code{dim(x)}.
-
-    \code{GRIDMAKER} can be specified as a function or as a single string
-    naming a function. It can be a user-defined function or a pre-defined
-    grid maker like \code{\link{blockGrid}}, \code{\link{rowGrid}}, or
-    \code{\link{colGrid}}.
-
-    The automatic grid maker is set to \code{\link{blockGrid}} at package
-    startup and can be reset anytime to this value by calling
-    \code{setAutoGridMaker()} with no argument.
-  }
 }
 
 \details{
@@ -90,7 +68,7 @@ setAutoBPPARAM(BPPARAM=NULL)
 
 \seealso{
   \itemize{
-    \item \code{\link{blockGrid}} to define grids to use in the context
+    \item \code{\link{AutoGrid}} to define grids to use in the context
           of block processing of array-like objects.
 
     \item \code{\link[BiocParallel]{MulticoreParam}},
@@ -119,18 +97,5 @@ setAutoBPPARAM(BPPARAM=NULL)
 ## ---------------------------------------------------------------------
 
 ## Coming soon...
-
-## ---------------------------------------------------------------------
-## CONTROL THE DEFAULT GRID MAKER
-## ---------------------------------------------------------------------
-getAutoGridMaker()
-setAutoGridMaker(function(x) colGrid(x, ncol=5))
-getAutoGridMaker()
-
-m <- matrix(runif(600), ncol=12)
-blockApply(m, currentViewport)
-
-## Reset automatic grid maker to factory settings:
-setAutoGridMaker()
 }
 \keyword{methods}

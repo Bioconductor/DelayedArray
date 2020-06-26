@@ -1,149 +1,10 @@
 ### =========================================================================
-### blockGrid() and family
+### Automatic grids
 ### -------------------------------------------------------------------------
-###
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### set/getAutoBlockSize()
-###
-### The automatic block size must be specified in bytes.
-###
-
-### We set the automatic block size to 100 Mb by default.
-set_auto.block.size <- function(size=1e8)
-{
-    set_user_option("auto.block.size", size)
-}
-
-setAutoBlockSize <- function(size=1e8)
-{
-    if (!isSingleNumber(size) || size < 1)
-        stop(wmsg("the block size must be a single number >= 1"))
-    prev_size <- get_user_option("auto.block.size")
-    set_auto.block.size(size)
-    message("automatic block size set to ", size, " bytes ",
-            "(was ", prev_size, ")")
-    invisible(size)
-}
-
-getAutoBlockSize <- function()
-{
-    size <- get_user_option("auto.block.size")
-    if (!isSingleNumber(size) || size < 1)
-        stop(wmsg("DelayedArray user-controlled global option ",
-                  "auto.block.size should be a single number >= 1. ",
-                  "Fix it with setAutoBlockSize()."))
-    size
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### getAutoBlockLength()
-###
-
-### The elements of a character vector or a list have a variable size.
-### For a character vector: the minimum size of an element is 8 bytes which
-### is the overhead of a CHARSXP object. This doesn't account for the string
-### data itself.
-### For a list: the minimum size of a list element is 8 bytes and is obtained
-### when the element is a NULL. However, assuming that a list will typically
-### contain more non-NULL than NULL elements and that the non-NULL elements
-### will typically be atomic vectors, the average element size is more likely
-### to be >= the overhead of an atomic vector which is 56 bytes.
-get_type_size <- function(type)
-{
-    ### Atomic type sizes in bytes.
-    TYPE_SIZES <- c(
-        logical=4L,
-        integer=4L,
-        numeric=8L,
-        double=8L,
-        complex=16L,
-        character=8L,  # overhead of a CHARSXP object
-        raw=1L,
-        list=56L       # overhead of an atomic vector
-    )
-    if (missing(type))
-        return(TYPE_SIZES)
-    if (is.factor(type)) {
-        type <- as.character(type)
-    } else if (!is.character(type)) {
-        stop(wmsg("'type' must be a character vector or factor"))
-    }
-    if (any(type %in% ""))
-        stop(wmsg("'type' cannot contain empty strings"))
-    idx <- which(!(type %in% c(names(TYPE_SIZES), NA_character_)))
-    if (length(idx) != 0L) {
-        unsupported_types <- unique(type[idx])
-        in1string <- paste0(unsupported_types, collapse=", ")
-        stop(wmsg("unsupported type(s): ",  in1string))
-    }
-    TYPE_SIZES[type]
-}
-
-getAutoBlockLength <- function(type)
-{
-    if (missing(type))
-        stop(wmsg("Please specify the type of the array data. ",
-                  "See ?getAutoBlockLength"))
-    if (!isSingleString(type))
-        stop(wmsg("'type' must be a single string"))
-    type_size <- get_type_size(type)
-    block_size <- getAutoBlockSize()
-    ans <- block_size / type_size
-    if (ans > .Machine$integer.max)
-        stop(wmsg("Automatic block length is too big. Blocks of ",
-                  "length > .Machine$integer.max are not supported yet. ",
-                  "Please reduce the automatic block length by reducing ",
-                  "the automatic block size with setAutoBlockSize()."))
-    max(as.integer(ans), 1L)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### set/getAutoBlockShape()
-###
-
-.SUPPORTED_SHAPES <- c("hypercube",
-                       "scale",
-                       "first-dim-grows-first",
-                       "last-dim-grows-first")
-
-### We set the automatic block shape to "hypercube" by default.
-set_auto.block.shape <- function(shape="hypercube")
-{
-    set_user_option("auto.block.shape", shape)
-}
-
-setAutoBlockShape <- function(shape=c("hypercube",
-                                      "scale",
-                                      "first-dim-grows-first",
-                                      "last-dim-grows-first"))
-{
-    shape <- match.arg(shape)
-    prev_shape <- get_user_option("auto.block.shape")
-    set_auto.block.shape(shape)
-    message("automatic block shape set to \"", shape, "\" ",
-             "(was \"", prev_shape, "\")")
-    invisible(shape)
-}
-
-getAutoBlockShape <- function()
-{
-    shape <- get_user_option("auto.block.shape")
-    if (!(isSingleString(shape) && shape %in% .SUPPORTED_SHAPES)) {
-        in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
-        stop(wmsg("DelayedArray user-controlled global option ",
-                  "auto.block.shape should be one of: ", in1string, ". ",
-                  "Fix it with setAutoBlockShape()."))
-    }
-    shape
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### blockGrid()
+### defaultAutoGrid()
 ###
 
 ### Guaranteed to return an integer >= 1.
@@ -177,8 +38,11 @@ getAutoBlockShape <- function()
 {
     if (is.null(block.shape))
         return(getAutoBlockShape())
-    if (!(isSingleString(block.shape) && block.shape %in% .SUPPORTED_SHAPES)) {
-        in1string <- paste(paste0("\"", .SUPPORTED_SHAPES, "\""), collapse=", ")
+    if (!(isSingleString(block.shape) &&
+          block.shape %in% SUPPORTED_BLOCK_SHAPES))
+    {
+        in1string <- paste(paste0("\"", SUPPORTED_BLOCK_SHAPES, "\""),
+                           collapse=", ")
         stop(wmsg("'block.shape' must be one of ", in1string, ", or NULL"))
     }
     block.shape
@@ -217,7 +81,8 @@ getAutoBlockShape <- function()
 ### Note that the returned grid is regular (i.e. RegularArrayGrid object)
 ### unless the chunk grid is not regular (i.e. is an ArbitraryArrayGrid
 ### object).
-blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
+defaultAutoGrid <-
+    function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 {
     x_dim <- dim(x)
     if (is.null(x_dim))
@@ -228,9 +93,15 @@ blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
     .block_grid(x_dim, block_len, chunk_grid, block_shape)
 }
 
+blockGrid <- function(...)
+{
+    .Deprecated("defaultAutoGrid")
+    defaultAutoGrid(...)
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### rowGrid() and colGrid()
+### rowAutoGrid() and colAutoGrid()
 ###
 
 .get_auto_nrow <- function(x_dim, block.length, x_type)
@@ -249,7 +120,7 @@ blockGrid <- function(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 
 ### Return a RegularArrayGrid object describing a grid on matrix-like
 ### object 'x' where the grid elements are blocks made of full rows of 'x'.
-rowGrid <- function(x, nrow=NULL, block.length=NULL)
+rowAutoGrid <- function(x, nrow=NULL, block.length=NULL)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -276,9 +147,15 @@ rowGrid <- function(x, nrow=NULL, block.length=NULL)
     RegularArrayGrid(x_dim, spacings)
 }
 
+rowGrid <- function(...)
+{
+    .Deprecated("rowAutoGrid")
+    rowAutoGrid(...)
+}
+
 ### Return a RegularArrayGrid object describing a grid on matrix-like
 ### object 'x' where the grid elements are blocks made of full columns of 'x'.
-colGrid <- function(x, ncol=NULL, block.length=NULL)
+colAutoGrid <- function(x, ncol=NULL, block.length=NULL)
 {
     x_dim <- dim(x)
     if (length(x_dim) != 2L)
@@ -305,9 +182,15 @@ colGrid <- function(x, ncol=NULL, block.length=NULL)
     RegularArrayGrid(x_dim, spacings)
 }
 
+colGrid <- function(...)
+{
+    .Deprecated("colAutoGrid")
+    colAutoGrid(...)
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### multGrids()
+### defaultMultAutoGrids()
 ###
 
 ### Performs the same checks as .check_chunkdim() (see chunkGrid.R).
@@ -347,9 +230,9 @@ colGrid <- function(x, ncol=NULL, block.length=NULL)
 ### -----------
 ### 'x' and 'y' being matrix-like objects that can be multiplied (i.e.
 ### ncol(x) == nrow(y)), and 'z' being their product (i.e. z = x %*% y),
-### multGrids() tries to solve the problem of finding 3 grids (on 'x', 'y',
-### and 'z', respectively) that can be used for "block matrix multiplication"
-### of 'x' by 'y'.
+### defaultMultAutoGrids() tries to solve the problem of finding 3 grids
+### (on 'x', 'y', and 'z', respectively) that can be used for "block matrix
+### multiplication" of 'x' by 'y'.
 ### The grid triplet ('x_grid', 'y_grid', 'z_grid') must satisfy:
 ###   - get_spacings_along(x_grid, 1L)' and 'get_spacings_along(z_grid, 1L)'
 ###   - get_spacings_along(y_grid, 2L)' and 'get_spacings_along(z_grid, 2L)'
@@ -364,16 +247,16 @@ colGrid <- function(x, ncol=NULL, block.length=NULL)
 ### Between these 2 extremes, which would both lead to bad performance in
 ### general, is a wide range solutions that cover the entire spectrum of
 ### coarseness. Here is a notable solution with intermediate coarseness:
-###   - x_grid <- rowGrid(x, nrow=1)  # blocks on 'x' are single rows
-###   - y_grid <- colGrid(y, ncol=1)  # blocks on 'y' are single columns
+###   - x_grid <- rowAutoGrid(x, nrow=1)  # blocks on 'x' are single rows
+###   - y_grid <- colAutoGrid(y, ncol=1)  # blocks on 'y' are single columns
 ###   - z_grid <- RegularArrayGrid(dim(z), c(1, 1))
 ###
-### We could also let rowGrid() and colGrid() automatically choose the
-### maximum number of rows and columns to put in a block based on the
+### We could also let rowAutoGrid() and colAutoGrid() automatically choose
+### the maximum number of rows and columns to put in a block based on the
 ### "automatic block size" (see ?getAutoBlockSize) by not specifying the
 ### 'nrow' or 'ncol' arguments:
-###  - x_grid <- rowGrid(x)
-###  - y_grid <- colGrid(y)
+###  - x_grid <- rowAutoGrid(x)
+###  - y_grid <- colAutoGrid(y)
 ###  - z_grid <- RegularArrayGrid(dim(z), c(a, c))
 ###    where 'a' is 'nrow(x_grid[[1L]])' and 'c' is 'ncol(y_grid[[1L]])'
 ###
@@ -481,8 +364,9 @@ colGrid <- function(x, ncol=NULL, block.length=NULL)
 }
 
 ### Return list(x_grid, y_grid, z_grid).
-multGrids <- function(x, y, block.length=NULL,
-                      x.chunkdim=NULL, y.chunkdim=NULL, z.chunkdim=NULL)
+defaultMultAutoGrids <-
+    function(x, y, block.length=NULL,
+             x.chunkdim=NULL, y.chunkdim=NULL, z.chunkdim=NULL)
 {
     x_dim <- dim(x)
     y_dim <- dim(y)
@@ -530,5 +414,55 @@ multGrids <- function(x, y, block.length=NULL,
     y_grid <- RegularArrayGrid(y_dim, abc[-1L])
     z_grid <- RegularArrayGrid(z_dim, abc[-2L])
     list(x_grid, y_grid, z_grid)
+}
+
+multGrids <- function(...)
+{
+    .Deprecated("defaultMultAutoGrids")
+    defaultMultAutoGrids(...)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### set/getAutoGridMaker()
+###
+
+### We set the automatic grid maker to defaultAutoGrid() by default.
+setAutoGridMaker <- function(GRIDMAKER="defaultAutoGrid")
+{
+    match.fun(GRIDMAKER)  # sanity check
+    set_user_option("auto.grid.maker", GRIDMAKER)
+}
+
+getAutoGridMaker <- function() get_user_option("auto.grid.maker")
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### normarg_grid()
+###
+
+normarg_grid <- function(grid, x)
+{
+    if (is.null(grid)) {
+        etc <- c("Please use setAutoGridMaker() ",
+                 "to set a valid automatic grid maker.")
+        GRIDMAKER <- match.fun(getAutoGridMaker())
+        grid <- try(GRIDMAKER(x), silent=TRUE)
+        if (is(grid, "try-error"))
+            stop(wmsg("The current automatic grid maker returned an ",
+                      "error when called on 'x'. ", etc))
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("The current automatic grid maker didn't return an ",
+                      "ArrayGrid object. ", etc))
+        if (!identical(refdim(grid), dim(x)))
+            stop(wmsg("The current automatic grid maker returned a grid ",
+                      "that is incompatible with 'x'. ", etc))
+    } else {
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
+        if (!identical(refdim(grid), dim(x)))
+            stop(wmsg("'grid' is incompatible with 'x'"))
+    }
+    grid
 }
 

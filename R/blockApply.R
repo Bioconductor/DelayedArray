@@ -22,20 +22,6 @@ set_verbose_block_processing <- function(verbose)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### set/getAutoGridMaker()
-###
-
-### We set the automatic grid maker to blockGrid() by default.
-setAutoGridMaker <- function(GRIDMAKER="blockGrid")
-{
-    match.fun(GRIDMAKER)  # sanity check
-    set_user_option("auto.grid.maker", GRIDMAKER)
-}
-
-getAutoGridMaker <- function() get_user_option("auto.grid.maker")
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### set/getAutoBPPARAM()
 ###
 
@@ -67,42 +53,17 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 ### 2 utility functions to process array-like objects by block.
 ###
 
-normarg_grid <- function(grid, x)
-{
-    if (is.null(grid)) {
-        etc <- c("Please use setAutoGridMaker() ",
-                 "to set a valid automatic grid maker.")
-        GRIDMAKER <- match.fun(getAutoGridMaker())
-        grid <- try(GRIDMAKER(x), silent=TRUE)
-        if (is(grid, "try-error"))
-            stop(wmsg("The current automatic grid maker returned an ",
-                      "error when called on 'x'. ", etc))
-        if (!is(grid, "ArrayGrid"))
-            stop(wmsg("The current automatic grid maker didn't return an ",
-                      "ArrayGrid object. ", etc))
-        if (!identical(refdim(grid), dim(x)))
-            stop(wmsg("The current automatic grid maker returned a grid ",
-                      "that is incompatible with 'x'. ", etc))
-    } else {
-        if (!is(grid, "ArrayGrid"))
-            stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
-        if (!identical(refdim(grid), dim(x)))
-            stop(wmsg("'grid' is incompatible with 'x'"))
-    }
-    grid
-}
-
 ### 'x' must be an array-like object.
 ### 'FUN' is the callback function to be applied to each block of array-like
 ### object 'x'. It must take at least 1 argument which is the current array
 ### block as an ordinary array or matrix.
 ### 'grid' must be an ArrayGrid object describing the block partitioning
-### of 'x'. If not supplied, the grid returned by 'blockGrid(x)' is used.
-### The effective grid (i.e. 'grid' or 'blockGrid(x)'), current block number,
-### and current viewport (i.e. the ArrayViewport object describing the position
-### of the current block w.r.t. the effective grid), can be obtained from
-### within 'FUN' with 'effectiveGrid(block)', 'currentBlockId(block)', and
-### 'currentViewport(block)', respectively.
+### of 'x'. If not supplied, the grid returned by 'defaultAutoGrid(x)' is
+### used. The effective grid (i.e. 'grid' or 'defaultAutoGrid(x)'), current
+### block number, and current viewport (i.e. the ArrayViewport object
+### describing the position of the current block w.r.t. the effective grid),
+### can be obtained from within 'FUN' with 'effectiveGrid(block)',
+### 'currentBlockId(block)', and 'currentViewport(block)', respectively.
 ### 'BPPARAM' is passed to bplapply(). In theory, the best performance should
 ### be obtained when bplapply() uses a post office queue model. According to
 ### https://support.bioconductor.org/p/96856/#96888, this can be achieved by
@@ -205,11 +166,11 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
         chunk_grid <- NULL
     } else {
         ## Using chunks of length 1 (i.e. max resolution chunk grid) is just
-        ## a trick to make sure that blockGrid() returns linear blocks.
+        ## a trick to make sure that defaultAutoGrid() returns linear blocks.
         chunk_grid <- RegularArrayGrid(x_dim, rep.int(1L, length(x_dim)))
     }
-    grid <- blockGrid(x, block_maxlen, chunk_grid,
-                         block.shape="first-dim-grows-first")
+    grid <- defaultAutoGrid(x, block_maxlen, chunk_grid,
+                               block.shape="first-dim-grows-first")
     nblock <- length(grid)
     lapply(seq_len(nblock),
         function(bid) {

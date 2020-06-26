@@ -78,7 +78,7 @@ RealizationSink(dim, dimnames=NULL, type="double")
   \itemize{
     \item \code{\link{write_block}}.
 
-    \item \code{\link{blockGrid}} to define grids to use in the context
+    \item \code{\link{AutoGrid}} to define grids to use in the context
           of block processing of array-like objects.
 
     \item \link{DelayedArray} objects.
@@ -117,7 +117,7 @@ sink <- RealizationSink(c(120L, 50L))
 dim(sink)
 chunkdim(sink)
 
-grid <- blockGrid(sink, block.length=600)
+grid <- defaultAutoGrid(sink, block.length=600)
 for (bid in seq_along(grid)) {
     viewport <- grid[[bid]]
     block <- 101 * bid + runif(length(viewport))
@@ -133,7 +133,7 @@ A
 
 ## ---------------------------------------------------------------------
 ## C. AN ADVANCED EXAMPLE OF USER-IMPLEMENTED BLOCK PROCESSING USING
-##    colGrid() AND A REALIZATION SINK
+##    colAutoGrid() AND A REALIZATION SINK
 ## ---------------------------------------------------------------------
 ## Say we have 2 matrices with the same number of columns. Each column
 ## represents a biological sample:
@@ -166,8 +166,8 @@ G <- as(matrix(runif(250000), ncol=1000), "HDF5Array")  # 250 rows
 ## 1) Two grids of blocks, one on R and one on G. The blocks in the
 ##    2 grids must contain the same number of columns. We arbitrarily
 ##    choose to use blocks of 150 columns:
-R_grid <- colGrid(R, ncol=150)
-G_grid <- colGrid(G, ncol=150)
+R_grid <- colAutoGrid(R, ncol=150)
+G_grid <- colAutoGrid(G, ncol=150)
 
 ## 2) The function pFUN(). It will take 2 blocks as input, 1 from R
 ##    and 1 from G, apply FUN() to all the samples in the blocks,
@@ -194,7 +194,7 @@ U_sink <- RealizationSink(c(200L, 1000L))
 ## 4) Finally, we create a grid on U_sink with blocks that contain the
 ##    same number of columns as the corresponding blocks in R and G:
 
-U_grid <- colGrid(U_sink, ncol=150)
+U_grid <- colAutoGrid(U_sink, ncol=150)
 
 ## Note that the 3 grids should have the same number of blocks:
 stopifnot(length(U_grid) == length(R_grid))

@@ -249,14 +249,19 @@ export(
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
 
-    ## blockGrid.R:
+    ## AutoBlock-global-settings.R:
     setAutoBlockSize, getAutoBlockSize,
     get_type_size, getAutoBlockLength,
     setAutoBlockShape, getAutoBlockShape,
-    blockGrid, rowGrid, colGrid, multGrids,
+
+    ## AutoGrid.R:
+    defaultAutoGrid, blockGrid,
+    rowAutoGrid, rowGrid,
+    colAutoGrid, colGrid,
+    defaultMultAutoGrids, multGrids,
+    setAutoGridMaker, getAutoGridMaker,
 
     ## blockApply.R:
-    setAutoGridMaker, getAutoGridMaker,
     setAutoBPPARAM, getAutoBPPARAM,
     blockApply, blockReduce,
     effectiveGrid, currentBlockId, currentViewport,
