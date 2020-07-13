@@ -15,7 +15,7 @@
     if (is(x, "DelayedOp")) {
         ans <- summary(x)
     } else {
-        ans <- sprintf("[seed] %s object", class(x))
+        ans <- sprintf("[seed] %s object", classNameForDisplay(x))
     }
     if (show.node.dim) {
         dim_in1string <- paste0(dim(x), collapse="x")
@@ -190,8 +190,9 @@ setGeneric("seed<-", signature="x",
 
 .normalize_seed_replacement_value <- function(value, x_seed)
 {
-    if (!is(value, class(x_seed)))
-        stop(wmsg("supplied seed must be a ", class(x_seed), " object"))
+    x_seed_class <- class(x_seed)[[1L]]
+    if (!is(value, x_seed_class))
+        stop(wmsg("supplied seed must be a ", x_seed_class, " object"))
     if (!identical(dim(value), dim(x_seed)))
         stop(wmsg("supplied seed must have the same dimensions ",
                   "as current seed"))
