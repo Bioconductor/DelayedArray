@@ -62,11 +62,11 @@ test_dgCMatrix_stats <- function()
 
     ## colsum()
     cgroup <- sample(5, ncol(m0), replace=TRUE)  # define groups of cols
-    checkIdentical(colsum(m, cgroup), colsum(m0, cgroup))
-    checkIdentical(colsum(m, cgroup, reorder=FALSE),
-                   colsum(m0, cgroup, reorder=FALSE))
-    checkIdentical(colsum(m, cgroup, na.rm=TRUE),
-                   colsum(m0, cgroup, na.rm=TRUE))
+    checkEquals(colsum(m, cgroup), colsum(m0, cgroup))
+    checkEquals(colsum(m, cgroup, reorder=FALSE),
+                colsum(m0, cgroup, reorder=FALSE))
+    checkEquals(colsum(m, cgroup, na.rm=TRUE),
+                colsum(m0, cgroup, na.rm=TRUE))
 
     do_other_tests(m, m0)
 }
