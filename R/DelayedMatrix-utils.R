@@ -3,6 +3,12 @@
 ### -------------------------------------------------------------------------
 ###
 
+read_submatrix <- function(...) {
+    block <- read_block(..., as.sparse=NA)
+    if (is(block, "SparseArraySeed"))
+        block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+    block 
+}
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### rowsum() / colsum()
@@ -11,18 +17,14 @@
 .compute_rowsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
 {
     viewport <- grid[[i, j]]
-    block <- read_block(x, viewport, as.sparse=NA)
-    if (is(block, "SparseArraySeed"))
-        block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+    block <- read_submatrix(x, viewport)
     group2 <- extractROWS(group, ranges(viewport)[1L])
     rowsum(block, group2, reorder=FALSE, na.rm=na.rm)
 }
 .compute_colsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
 {
     viewport <- grid[[i, j]]
-    block <- read_block(x, viewport, as.sparse=NA)
-    if (is(block, "SparseArraySeed"))
-        block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+    block <- read_submatrix(x, viewport)
     group2 <- extractROWS(group, ranges(viewport)[2L])
     colsum(block, group2, reorder=FALSE, na.rm=na.rm)
 }
@@ -150,7 +152,7 @@ setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
             message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
         y_viewport <- y_grid[[bid]]
-        block <- read_block(y, y_viewport)
+        block <- read_submatrix(y, y_viewport)
         block_ans <- x %*% block
         write_block(sink, ans_grid[[bid]], block_ans)
         if (get_verbose_block_processing())
@@ -481,12 +483,12 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 }
 
 .left_mult <- function(viewport, x, y, MULT) {
-    block <- read_block(x, viewport) # this, and all other calls, had better yield a non-DA, otherwise MULT will recurse endlessly.
+    block <- read_submatrix(x, viewport) # this, and all other calls, had better yield a non-DA, otherwise MULT will recurse endlessly.
     MULT(block, y)
 }
 
 .right_mult <- function(viewport, x, y, MULT) {
-    block <- read_block(y, viewport)
+    block <- read_submatrix(y, viewport)
     MULT(x, block)
 }
 
@@ -503,8 +505,8 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 }
 
 .both_mult <- function(viewports, x, y, MULT) {
-    block_x <- read_block(x, viewports$x)
-    block_y <- read_block(y, viewports$y)
+    block_x <- read_submatrix(x, viewports$x)
+    block_y <- read_submatrix(y, viewports$y)
     MULT(block_x, block_y)
 }
 
