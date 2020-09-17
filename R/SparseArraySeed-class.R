@@ -149,10 +149,13 @@ SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, dimnames=NULL,
     if (!is.integer(dim))
         dim <- as.integer(dim)
     if (is.null(nzindex)) {
-        if (!is.null(nzdata))
-            stop(wmsg("'nzdata' must be NULL when 'nzindex' is NULL"))
+        if (is.null(nzdata)) {
+            nzdata <- logical(0)  # vector()
+        } else if (!(is.vector(nzdata) && length(nzdata) == 0L)) {
+            stop(wmsg("'nzdata' must be NULL or a vector of length 0 ",
+                      "when 'nzindex' is NULL"))
+        }
         nzindex <- matrix(integer(0), ncol=length(dim))
-        nzdata <- logical(0)  # vector()
     } else {
         if (!is.matrix(nzindex))
             stop(wmsg("'nzindex' must be a matrix"))
