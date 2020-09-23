@@ -232,7 +232,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 # If the block size is too large, it is reduced to obtain the desired
 # number of blocks in order for parallelization to be effective.
 {
-    old <- getAutoBlockSize()
+    old <- getAutoBlockLength(type(x))
 
     ideal_size_by_row <- max(1, ceiling(nrow(x)/nworkers) * ncol(x))
     if (old > ideal_size_by_row) {
