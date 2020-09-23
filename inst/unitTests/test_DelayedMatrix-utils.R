@@ -88,16 +88,107 @@ test_DelayedMatrix_mult <- function()
     m[6, 3] <- -Inf
     M <- realize(m)
 
+    # These two need to be smaller than 'M' to test both schemes.
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
-    Rm <- rbind(Lm + 7.05, 0.1 * Lm)
+    Rm <- rbind(Lm + 7.05, 0.1 * Lm)[,1:5]
 
     on.exit(setAutoBlockSize())
     for (block_size in block_sizes2) {
         setAutoBlockSize(block_size)
+
         P <- Lm %*% M
         checkEquals(Lm %*% m, as.matrix(P))
         P <- M %*% Rm
         checkEquals(m %*% Rm, as.matrix(P))
+
+        P <- crossprod(t(Lm), M)
+        checkEquals(crossprod(t(Lm), m), as.matrix(P))
+        P <- tcrossprod(M, t(Rm))
+        checkEquals(tcrossprod(m, t(Rm)), as.matrix(P))
+    }
+
+    # Handles sparse inputs.
+    s <- Matrix::rsparsematrix(nrow(m2), ncol(m2), density=0.2)
+    S <- DelayedArray(s)
+
+    for (block_size in block_sizes2) {
+        setAutoBlockSize(block_size)
+
+        P <- Lm %*% S 
+        checkEquals(unname(as.matrix(Lm %*% s)), as.matrix(P))
+        P <- S %*% Rm
+        checkEquals(unname(as.matrix(s %*% Rm)), as.matrix(P))
+
+        P <- crossprod(t(Lm), S)
+        checkEquals(unname(as.matrix(crossprod(t(Lm), s))), as.matrix(P))
+        P <- tcrossprod(S, t(Rm))
+        checkEquals(unname(as.matrix(tcrossprod(s, t(Rm)))), as.matrix(P))
+    }
+
+    # Handles two DelayedMatrices being multiplied togehter.
+    y1 <- matrix(runif(100), ncol=5)
+    y2 <- matrix(runif(100), nrow=5)
+    Y1 <- DelayedArray(y1)
+    Y2 <- DelayedArray(y2)
+    ref <- y1 %*% y2
+
+    for (block_size in block_sizes2) {
+        setAutoBlockSize(block_size)
+        out <- Y1 %*% Y2
+        checkEquals(ref, as.matrix(out))
+        out <- crossprod(t(Y1), Y2)
+        checkEquals(ref, as.matrix(out))
+        out <- tcrossprod(Y1, t(Y2))
+        checkEquals(ref, as.matrix(out))
+    }
+
+    # Throws errors correctly.
+    checkException(Lm[,1,drop=FALSE] %*% m, msg="non-conformable")
+}
+
+test_DelayedMatrix_crossprod_self <- function()
+{
+    M <- DelayedArray(m2)
+
+    # Checking self-product in a core-agnostic way. 
+    on.exit(setAutoBlockSize())
+    for (block_size in block_sizes2) {
+        setAutoBlockSize(block_size)
+        checkEquals(as.matrix(crossprod(M)), crossprod(m2))
+        checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
+    }
+
+    # Checking self-product in a non-core-agnostic way. 
+    DelayedArray:::setAutoMultParallelAgnostic(FALSE)
+    on.exit(DelayedArray:::setAutoMultParallelAgnostic())
+    for (block_size in block_sizes2) {
+        setAutoBlockSize(block_size)
+        checkEquals(as.matrix(crossprod(M)), crossprod(m2))
+        checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
     }
 }
 
+test_DelayedMatrix_mult_parallel <- function()
+{
+    setAutoBPPARAM(BiocParallel::SnowParam(2))
+    on.exit(setAutoBPPARAM())
+    setAutoBlockSize(10000)
+    on.exit(setAutoBlockSize(), add=TRUE)
+
+    M <- DelayedArray(m2)
+    Lm <- matrix(runif(20), ncol=10)
+    Rm <- matrix(runif(12), nrow=6)
+
+    P <- Lm %*% M
+    checkEquals(Lm %*% m2, as.matrix(P))
+    P <- M %*% Rm
+    checkEquals(m2 %*% Rm, as.matrix(P))
+
+    checkEquals(as.matrix(crossprod(M)), crossprod(m2))
+    checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
+
+    DelayedArray:::setAutoMultParallelAgnostic(FALSE)
+    on.exit(DelayedArray:::setAutoMultParallelAgnostic(), add=TRUE)
+    checkEquals(as.matrix(crossprod(M)), crossprod(m2))
+    checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
+}
