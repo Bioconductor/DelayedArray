@@ -1,5 +1,5 @@
-#setRealizationBackend("RleArray")
-#setRealizationBackend("HDF5Array")
+#setAutoRealizationBackend("RleArray")
+#setAutoRealizationBackend("HDF5Array")
 
 a1 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))  # integer array
 a2 <- a1 + runif(150) - 0.5                              # numeric array

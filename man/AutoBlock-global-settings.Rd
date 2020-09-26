@@ -127,8 +127,8 @@ setAutoBlockShape(shape=c("hypercube",
 
 \seealso{
   \itemize{
-    \item \code{\link{AutoGrid}} to define grids to use in the context
-          of block processing of array-like objects.
+    \item \code{\link{defaultAutoGrid}} and family to define grids to use
+          in the context of block processing of array-like objects.
 
     \item \code{\link{blockApply}} and family to actually process an
           array-like object block by block.

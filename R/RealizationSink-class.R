@@ -81,13 +81,15 @@ setAs("arrayRealizationSink", "DelayedArray",
 
 .realization_backend_envir <- new.env(parent=emptyenv())
 
+getAutoRealizationBackend <- function()
+{
+    get_user_option("auto.realization.backend")
+}
+
 getRealizationBackend <- function()
 {
-    BACKEND <- try(get("BACKEND", envir=.realization_backend_envir),
-                   silent=TRUE)
-    if (is(BACKEND, "try-error"))
-        return(NULL)
-    BACKEND
+    .Deprecated("getAutoRealizationBackend")
+    getAutoRealizationBackend()
 }
 
 .SUPPORTED_REALIZATION_BACKENDS <- data.frame(
@@ -100,7 +102,7 @@ getRealizationBackend <- function()
 supportedRealizationBackends <- function()
 {
     ans <- .SUPPORTED_REALIZATION_BACKENDS[ , c("BACKEND", "package")]
-    backend <- getRealizationBackend()
+    backend <- getAutoRealizationBackend()
     Lcol <- ifelse(ans[ , "BACKEND"] %in% backend, "->", "")
     Rcol <- ifelse(ans[ , "BACKEND"] %in% backend, "<-", "")
     cbind(data.frame(` `=Lcol, check.names=FALSE),
@@ -147,7 +149,7 @@ load_BACKEND_package <- function(BACKEND)
     REALIZATION_SINK_CONSTRUCTOR
 }
 
-setRealizationBackend <- function(BACKEND=NULL)
+setAutoRealizationBackend <- function(BACKEND=NULL)
 {
     if (is.null(BACKEND)) {
         remove(list=ls(envir=.realization_backend_envir),
@@ -156,11 +158,16 @@ setRealizationBackend <- function(BACKEND=NULL)
     }
     load_BACKEND_package(BACKEND)
     REALIZATION_SINK_CONSTRUCTOR <- .get_REALIZATION_SINK_CONSTRUCTOR(BACKEND)
-    assign("BACKEND", BACKEND,
-           envir=.realization_backend_envir)
+    set_user_option("auto.realization.backend", BACKEND)
     assign("REALIZATION_SINK_CONSTRUCTOR", REALIZATION_SINK_CONSTRUCTOR,
            envir=.realization_backend_envir)
     return(invisible(NULL))
+}
+
+setRealizationBackend <- function(...)
+{
+    .Deprecated("setAutoRealizationBackend")
+    setAutoRealizationBackend(...)
 }
 
 
@@ -168,21 +175,28 @@ setRealizationBackend <- function(BACKEND=NULL)
 ### Backend-agnostic RealizationSink constructor
 ###
 
-.get_realization_sink_constructor <- function()
+.get_auto_realization_sink_constructor <- function()
 {
-    if (is.null(getRealizationBackend()))
+    if (is.null(getAutoRealizationBackend()))
         return(arrayRealizationSink)
     REALIZATION_SINK_CONSTRUCTOR <- try(get("REALIZATION_SINK_CONSTRUCTOR",
                                             envir=.realization_backend_envir),
                                         silent=TRUE)
     if (is(REALIZATION_SINK_CONSTRUCTOR, "try-error"))
         stop(wmsg("This operation requires a \"realization backend\". ",
-                  "Please see '?setRealizationBackend' for how to set one."))
+                  "Please see '?setAutoRealizationBackend' for how ",
+                  "to set one."))
     REALIZATION_SINK_CONSTRUCTOR
 }
 
-RealizationSink <- function(dim, dimnames=NULL, type="double")
+AutoRealizationSink <- function(dim, dimnames=NULL, type="double")
 {
-    .get_realization_sink_constructor()(dim, dimnames, type)
+    .get_auto_realization_sink_constructor()(dim, dimnames, type)
+}
+
+RealizationSink <- function(...)
+{
+    .Deprecated("AutoRealizationSink")
+    AutoRealizationSink(...)
 }
 

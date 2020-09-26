@@ -55,8 +55,8 @@
     \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
           summarization.
 
-    \item \code{\link{setRealizationBackend}} for how to set a
-          \emph{realization backend}.
+    \item \code{\link{setAutoRealizationBackend}} for how to set a
+          \emph{automatic realization backend}.
 
     \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
           package for writing an array-like object to an HDF5 file and other
@@ -127,9 +127,10 @@ h5ls(toy_h5)
 M1 <- HDF5Array(toy_h5, "M1")
 
 ## Matrix multiplication is not delayed: the output matrix is realized
-## block by block. The current "realization backend" controls where
-## realization happens e.g. in memory if set to NULL or in an HDF5 file
-## if set to "HDF5Array". See '?realize' for more information about
+## block by block. The current "automatic realization backend" controls
+## where realization happens e.g. in memory as an ordinary matrix if not
+## (i.e. set to NULL) or in an HDF5 file if set to "HDF5Array".
+## See '?setAutoRealizationBackend' for more information about
 ## "realization backends".
 ## The output matrix is returned as a DelayedMatrix object with no delayed
 ## operations on it. The exact class of the object depends on the backend
@@ -138,12 +139,12 @@ M1 <- HDF5Array(toy_h5, "M1")
 m <- matrix(runif(50000), ncol=nrow(M1))
 
 ## Set backend to NULL for in-memory realization:
-setRealizationBackend()
+setAutoRealizationBackend()
 P1 <- m \%*\% M1
 P1
 
 ## Set backend to HDF5Array for realization in HDF5 file:
-setRealizationBackend("HDF5Array")
+setAutoRealizationBackend("HDF5Array")
 
 ## With the HDF5Array backend, the output matrix will be written to an
 ## automatic location on disk:

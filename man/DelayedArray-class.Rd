@@ -300,15 +300,16 @@ seed(B3)
 path(B3)
 
 ## For convenience, realize() can be used instead of explicit coercion.
-## The current "realization backend" controls where realization
-## happens e.g. in memory if set to NULL or in an HDF5 file if set
-## to "HDF5Array":
+## The current "automatic realization backend" controls where
+## realization happens e.g. in memory if set to NULL or in an HDF5
+## file if set to "HDF5Array":
 D <- cbind(B3, exp(B3))
 D
-setRealizationBackend("HDF5Array")
+setAutoRealizationBackend("HDF5Array")
 D <- realize(D)
 D
-## See '?realize' for more information about "realization backends".
+## See '?setAutoRealizationBackend' for more information about
+## "realization backends".
 
 ## ---------------------------------------------------------------------
 ## E. MODIFY THE PATH OF A DelayedArray OBJECT

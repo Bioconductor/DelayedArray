@@ -277,8 +277,9 @@ export(
 
     ## RealizationSink-class.R:
     supportedRealizationBackends,
+    getAutoRealizationBackend, setAutoRealizationBackend,
     getRealizationBackend, setRealizationBackend,
-    RealizationSink,
+    AutoRealizationSink, RealizationSink,
 
     ## realize.R:
     BLOCK_write_to_sink,

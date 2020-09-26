@@ -14,7 +14,7 @@
 \usage{
 realize(x, ...)
 
-\S4method{realize}{ANY}(x, BACKEND=getRealizationBackend())
+\S4method{realize}{ANY}(x, BACKEND=getAutoRealizationBackend())
 }
 
 \arguments{
@@ -26,8 +26,8 @@ realize(x, ...)
   }
   \item{BACKEND}{
     A single string specifying the name of the \emph{realization backend}.
-    Use the current realization backend by default i.e. the backend
-    returned by \code{\link{getRealizationBackend}()}.
+    Use the current \emph{automatic realization backend} by default i.e.
+    the backend returned by \code{\link{getAutoRealizationBackend}()}.
   }
 }
 
@@ -41,9 +41,9 @@ realize(x, ...)
 
 \seealso{
   \itemize{
-    \item \code{\link{getRealizationBackend}} and
-          \code{\link{setRealizationBackend}} for getting and setting
-          the current \emph{realization backend}.
+    \item \code{\link{getAutoRealizationBackend}} and
+          \code{\link{setAutoRealizationBackend}} for getting and setting
+          the current \emph{automatic realization backend}.
 
     \item \link{DelayedArray} objects.
 
@@ -64,15 +64,15 @@ M2 <- HDF5Array(toy_h5, "M2")
 M3 <- rbind(log(M1), t(M2))
 
 supportedRealizationBackends()
-getRealizationBackend()  # backend is set to NULL
+getAutoRealizationBackend()  # backend is set to NULL
 realize(M3)  # realization as ordinary array
 
-setRealizationBackend("RleArray")
-getRealizationBackend()  # backend is set to "RleArray"
+setAutoRealizationBackend("RleArray")
+getAutoRealizationBackend()  # backend is set to "RleArray"
 realize(M3)  # realization as RleArray object
 
-setRealizationBackend("HDF5Array")
-getRealizationBackend()  # backend is set to "HDF5Array"
+setAutoRealizationBackend("HDF5Array")
+getAutoRealizationBackend()  # backend is set to "HDF5Array"
 realize(M3)  # realization in HDF5 file
 }
 

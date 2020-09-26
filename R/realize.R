@@ -50,7 +50,7 @@ BLOCK_write_to_sink <- function(x, sink)
 setGeneric("realize", function(x, ...) standardGeneric("realize"))
 
 setMethod("realize", "ANY",
-    function(x, BACKEND=getRealizationBackend())
+    function(x, BACKEND=getAutoRealizationBackend())
     {
         x <- DelayedArray(x)
         if (is.null(BACKEND))

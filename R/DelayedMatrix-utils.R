@@ -142,7 +142,7 @@ setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
     ans_dim <- c(nrow(x), ncol(y))
     ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
     ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
-    sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
+    sink <- AutoRealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
 
     y_grid <- colAutoGrid(y)
@@ -211,7 +211,7 @@ setMethod("%*%", c("DelayedMatrix", "ANY"),
     ans_dim <- c(nrow(x), ncol(y))
     ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
     ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
-    sink <- RealizationSink(ans_dim, ans_dimnames, ans_type)
+    sink <- AutoRealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
 }
 

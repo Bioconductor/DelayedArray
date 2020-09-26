@@ -76,8 +76,8 @@ write_block(x, viewport, block)
     \item \link[Matrix]{dgCMatrix-class} and \link[Matrix]{lgCMatrix-class}
           objects in the \pkg{Matrix} package.
 
-    \item \code{\link{AutoGrid}} to define grids to use in the context
-          of block processing of array-like objects.
+    \item \code{\link{defaultAutoGrid}} and family to define grids to use
+          in the context of block processing of array-like objects.
 
     \item \code{\link{blockApply}} for more information about block
           processing of array-like objects.

@@ -1,5 +1,5 @@
-#setRealizationBackend("RleArray")
-#setRealizationBackend("HDF5Array")
+#setAutoRealizationBackend("RleArray")
+#setAutoRealizationBackend("HDF5Array")
 
 ### We do "linear blocks" (i.e. block.shape="first-dim-grows-first") only,
 ### because they are the easiest to unsplit.

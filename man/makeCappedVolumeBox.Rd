@@ -95,8 +95,8 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
 
 \seealso{
   \itemize{
-    \item \code{\link{AutoGrid}} to define grids to use in the context
-          of block processing of array-like objects.
+    \item \code{\link{defaultAutoGrid}} and family to define grids to use
+          in the context of block processing of array-like objects.
 
     \item \link{ArrayGrid} objects.
   }

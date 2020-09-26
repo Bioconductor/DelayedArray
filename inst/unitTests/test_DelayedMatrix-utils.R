@@ -1,5 +1,5 @@
-#setRealizationBackend("RleArray")
-#setRealizationBackend("HDF5Array")
+#setAutoRealizationBackend("RleArray")
+#setAutoRealizationBackend("HDF5Array")
 
 Arith_members <- c("+", "-", "*", "/", "^", "%%", "%/%")
 Compare_members <- c("==", "!=", "<=", ">=", "<", ">")

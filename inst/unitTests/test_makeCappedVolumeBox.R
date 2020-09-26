@@ -1,5 +1,5 @@
-#setRealizationBackend("RleArray")
-#setRealizationBackend("HDF5Array")
+#setAutoRealizationBackend("RleArray")
+#setAutoRealizationBackend("HDF5Array")
 
 test_make_capped_volume_hypercube_box <- function()
 {

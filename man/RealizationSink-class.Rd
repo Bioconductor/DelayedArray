@@ -13,34 +13,37 @@
 \alias{coerce,arrayRealizationSink,DelayedArray-method}
 
 \alias{supportedRealizationBackends}
+\alias{getAutoRealizationBackend}
+\alias{setAutoRealizationBackend}
 \alias{getRealizationBackend}
 \alias{setRealizationBackend}
 
+\alias{AutoRealizationSink}
 \alias{RealizationSink}
 
 \title{RealizationSink objects}
 
 \description{
-  Get or set the \emph{realization backend} for the current session with
-  \code{getRealizationBackend} or \code{setRealizationBackend}.
+  Get or set the \emph{automatic realization backend} for the current session
+  with \code{getAutoRealizationBackend} or \code{setAutoRealizationBackend}.
 
   Advanced users: Create a RealizationSink object with the backend-agnostic
-  \code{RealizationSink()} constructor. Use this object to write an
+  \code{AutoRealizationSink()} constructor. Use this object to write an
   array-like object block by block to disk (or to memory).
 }
 
 \usage{
 supportedRealizationBackends()
-getRealizationBackend()
-setRealizationBackend(BACKEND=NULL)
+getAutoRealizationBackend()
+setAutoRealizationBackend(BACKEND=NULL)
 
-RealizationSink(dim, dimnames=NULL, type="double")
+AutoRealizationSink(dim, dimnames=NULL, type="double")
 }
 
 \arguments{
    \item{BACKEND}{
      \code{NULL} (the default), or a single string specifying the name of
-     a \emph{realization backend}.
+     a \emph{automatic realization backend}.
    }
    \item{dim}{
      The dimensions (specified as an integer vector) of the RealizationSink
@@ -57,29 +60,29 @@ RealizationSink(dim, dimnames=NULL, type="double")
 }
 
 \details{
-  The \emph{realization backend} controls where/how realization happens e.g.
-  as an ordinary array if set to \code{NULL}, as an \link{RleArray} object
-  if set to \code{"RleArray"}, or as an \link[HDF5Array]{HDF5Array} object
-  if set to \code{"HDF5Array"}.
+  The \emph{automatic realization backend} controls where/how realization
+  happens e.g. as an ordinary array if not set (i.e. set to \code{NULL}),
+  as an \link{RleArray} object if set to \code{"RleArray"}, or as an
+  \link[HDF5Array]{HDF5Array} object if set to \code{"HDF5Array"}.
 }
 
 \value{
   \code{supportedRealizationBackends}: A data frame with 1 row per
-  supported \emph{realization backend}.
+  supported \emph{automatic realization backend}.
 
-  \code{getRealizationBackend}: \code{NULL} or a single string specifying
-  the name of the \emph{realization backend} currently in use.
+  \code{getAutoRealizationBackend}: \code{NULL} or a single string specifying
+  the name of the \emph{automatic realization backend} currently in use.
 
   \code{RealizationSink}: A RealizationSink object for the current
-  \emph{realization backend}.
+  \emph{automatic realization backend}.
 }
 
 \seealso{
   \itemize{
     \item \code{\link{write_block}}.
 
-    \item \code{\link{AutoGrid}} to define grids to use in the context
-          of block processing of array-like objects.
+    \item \code{\link{defaultAutoGrid}} and family to define grids to use
+          in the context of block processing of array-like objects.
 
     \item \link{DelayedArray} objects.
 
@@ -100,20 +103,20 @@ RealizationSink(dim, dimnames=NULL, type="double")
 ## A. supportedRealizationBackends() AND FAMILY
 ## ---------------------------------------------------------------------
 supportedRealizationBackends()
-getRealizationBackend()  # backend is set to NULL
+getAutoRealizationBackend()  # no backend set yet
 
-setRealizationBackend("HDF5Array")
+setAutoRealizationBackend("HDF5Array")
+getAutoRealizationBackend()  # backend is set to "HDF5Array"
 supportedRealizationBackends()
-getRealizationBackend()  # backend is set to "HDF5Array"
 
 ## ---------------------------------------------------------------------
-## B. A SIMPLE (AND VERY ARTIFICIAL) RealizationSink() EXAMPLE
+## B. A SIMPLE (AND VERY ARTIFICIAL) AutoRealizationSink() EXAMPLE
 ## ---------------------------------------------------------------------
 getHDF5DumpChunkLength()
 setHDF5DumpChunkLength(500L)
 getHDF5DumpChunkShape()
 
-sink <- RealizationSink(c(120L, 50L))
+sink <- AutoRealizationSink(c(120L, 50L))
 dim(sink)
 chunkdim(sink)
 
@@ -185,11 +188,11 @@ pFUN <- function(r, g) {
 ##    by pFUN() as we go. Note that instead of creating a realization
 ##    sink by calling a backend-specific sink constructor (e.g.
 ##    HDF5Array:::HDF5RealizationSink), we use the backend-agnostic
-##    constructor RealizationSink() and set the current realization
+##    constructor AutoRealizationSink() and set the current realization
 ##    backend to HDF5:
 
-setRealizationBackend("HDF5Array")
-U_sink <- RealizationSink(c(200L, 1000L))
+setAutoRealizationBackend("HDF5Array")
+U_sink <- AutoRealizationSink(c(200L, 1000L))
 
 ## 4) Finally, we create a grid on U_sink with blocks that contain the
 ##    same number of columns as the corresponding blocks in R and G:

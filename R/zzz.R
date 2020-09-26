@@ -28,7 +28,7 @@
 
 .test <- function()
 {
-    setRealizationBackend("RleArray")
+    setAutoRealizationBackend("RleArray")
     BiocGenerics:::testPackage("DelayedArray")
 }
 
