@@ -293,7 +293,8 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
             block <- as(t(block), "sparseMatrix")  # to dgCMatrix or lgCMatrix
             block_rowmins <- colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
-            block_rowmins <- matrixStats::rowMins(block, na.rm=na.rm)
+            ## Dispatch on matrixStats::rowMins().
+            block_rowmins <- MatrixGenerics::rowMins(block, na.rm=na.rm)
         }
         if (is.null(init))
             return(block_rowmins)
@@ -326,7 +327,8 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
             block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
             block_colmins <- colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
-            block_colmins <- matrixStats::colMins(block, na.rm=na.rm)
+            ## Dispatch on matrixStats::colMins().
+            block_colmins <- MatrixGenerics::colMins(block, na.rm=na.rm)
         }
         if (is.null(init))
             return(block_colmins)
@@ -348,13 +350,9 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
                   "does not support arguments 'rows' and 'cols'"))
 }
 
-setGeneric("rowMins", signature="x")
-setGeneric("colMins", signature="x")
-
-### matrixStats::rowMins() has the 'rows', 'cols', and 'dim.' arguments.
+### MatrixGenerics::rowMins() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.rowMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x))
+.rowMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "rowMins")
     #.BLOCK_row_summary("rowMins", x, na.rm=na.rm)
@@ -362,10 +360,9 @@ setGeneric("colMins", signature="x")
 }
 setMethod("rowMins", "DelayedMatrix", .rowMins_DelayedMatrix)
 
-### matrixStats::colMins() has the 'rows', 'cols', and 'dim.' arguments.
+### MatrixGenerics::colMins() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.colMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x))
+.colMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "colMins")
     #.BLOCK_row_summary("rowMins", t(x), na.rm=na.rm)
@@ -402,7 +399,8 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
             block <- as(t(block), "sparseMatrix")  # to dgCMatrix or lgCMatrix
             block_rowmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
-            block_rowmaxs <- matrixStats::rowMaxs(block, na.rm=na.rm)
+            ## Dispatch on matrixStats::rowMaxs().
+            block_rowmaxs <- MatrixGenerics::rowMaxs(block, na.rm=na.rm)
         }
         if (is.null(init))
             return(block_rowmaxs)
@@ -435,7 +433,8 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
             block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
             block_colmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
-            block_colmaxs <- matrixStats::colMaxs(block, na.rm=na.rm)
+            ## Dispatch on matrixStats::colMaxs().
+            block_colmaxs <- MatrixGenerics::colMaxs(block, na.rm=na.rm)
         }
         if (is.null(init))
             return(block_colmaxs)
@@ -450,13 +449,9 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
     unlist(col_summaries, recursive=FALSE, use.names=FALSE)
 }
 
-setGeneric("rowMaxs", signature="x")
-setGeneric("colMaxs", signature="x")
-
-### matrixStats::rowMaxs() has the 'rows', 'cols', and 'dim.' arguments.
+### MatrixGenerics::rowMaxs() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.rowMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x))
+.rowMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "rowMaxs")
     #.BLOCK_row_summary("rowMaxs", x, na.rm=na.rm)
@@ -464,10 +459,9 @@ setGeneric("colMaxs", signature="x")
 }
 setMethod("rowMaxs", "DelayedMatrix", .rowMaxs_DelayedMatrix)
 
-### matrixStats::colMaxs() has the 'rows', 'cols', and 'dim.' arguments.
+### MatrixGenerics::colMaxs() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.colMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                   na.rm=FALSE, dim.=dim(x))
+.colMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "colMaxs")
     #.BLOCK_row_summary("rowMaxs", t(x), na.rm=na.rm)
@@ -491,7 +485,7 @@ setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
         stop("'na.rm' must be TRUE or FALSE")
     .get_ans_type(x, must.be.numeric=TRUE)  # only to check input type (we
                                             # ignore returned ans type)
-    block_results <- blockApply(x, rowRanges, na.rm=na.rm,
+    block_results <- blockApply(x, MatrixGenerics::rowRanges, na.rm=na.rm,
                                 grid=grid, as.sparse=FALSE)
     combined_results <- do.call(rbind, block_results)
     row_mins <- rowMins(matrix(combined_results[ , 1L], nrow=nrow(x)))
@@ -505,27 +499,18 @@ setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
     ans
 }
 
-.rowRanges.useAsDefault <- function(x, ...) matrixStats::rowRanges(x, ...)
-setGeneric("rowRanges", signature="x",
-    function(x, ...) standardGeneric("rowRanges"),
-    useAsDefault=.rowRanges.useAsDefault
-)
-setGeneric("colRanges", signature="x")
-
-### matrixStats::rowRanges() has the 'rows', 'cols', and 'dim.' arguments.
+### MatrixGenerics::rowRanges() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.rowRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                     na.rm=FALSE, dim.=dim(x))
+.rowRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "rowRanges")
     .BLOCK_rowRanges(x, na.rm=na.rm)
 }
 setMethod("rowRanges", "DelayedMatrix", .rowRanges_DelayedMatrix)
 
-### matrixStats::colRanges() has the 'rows', 'cols', and 'dim.' arguments.
+### MatrixGenerics::colRanges() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.colRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL,
-                                     na.rm=FALSE, dim.=dim(x))
+.colRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "colRanges")
     .BLOCK_rowRanges(t(x), na.rm=na.rm)

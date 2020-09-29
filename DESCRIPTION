@@ -4,19 +4,20 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	a DelayedArray object allows one to perform common array operations
 	on it without loading the object in memory. In order to reduce memory
 	usage and optimize performance, operations on the object are either
-	delayed or executed using a block processing mechanism. Note that this
-	also works on in-memory array-like objects like DataFrame objects
-	(typically with Rle columns), Matrix objects, and ordinary arrays and
+	delayed or executed using a block processing mechanism. Note that
+	this also works on in-memory array-like objects like DataFrame objects
+	(typically with Rle columns), Matrix objects, ordinary arrays and,
 	data frames.
-Version: 0.15.11
+Version: 0.15.12
 Encoding: UTF-8
 Author: Hervé Pagès <hpages@fredhutch.org>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
 	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
-Depends: R (>= 3.4), methods, stats4, Matrix, matrixStats,
-	BiocGenerics (>= 0.31.5), S4Vectors (>= 0.27.2), IRanges (>= 2.17.3)
+Depends: R (>= 3.4), methods, stats4, Matrix,
+	BiocGenerics (>= 0.31.5), MatrixGenerics (>= 1.1.3),
+	S4Vectors (>= 0.27.2), IRanges (>= 2.17.3)
 Imports: stats
 LinkingTo: S4Vectors
 Suggests: BiocParallel, HDF5Array, genefilter, SummarizedExperiment,

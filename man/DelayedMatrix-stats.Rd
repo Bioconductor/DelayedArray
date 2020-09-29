@@ -44,14 +44,14 @@
 \S4method{rowMeans}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{colMeans}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 
-\S4method{rowMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
-\S4method{colMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
+\S4method{rowMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 
-\S4method{rowMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
-\S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
+\S4method{rowMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 
-\S4method{rowRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
-\S4method{colRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, dim.=dim(x))
+\S4method{rowRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 }
 
 \arguments{
@@ -62,8 +62,8 @@
     Should missing values (including \code{NaN}) be omitted from the
     calculations?
   }
-  \item{dims, rows, cols, dim.}{
-    These arguments are not supported and should not be used.
+  \item{dims, rows, cols}{
+    These arguments are not supported. Don't use them.
   }
 }
 

@@ -10,8 +10,8 @@ importFrom(stats, setNames,
 importFrom(stats4, summary)
 importClassFrom(Matrix, dgCMatrix, lgCMatrix)
 importFrom(Matrix, sparseMatrix, crossprod, tcrossprod)
-import(matrixStats)
 import(BiocGenerics)
+import(MatrixGenerics)
 import(S4Vectors)
 import(IRanges)
 
@@ -198,7 +198,6 @@ exportMethods(
     max, min, range, sum, prod, any, all,   # "Summary" group generic
     mean,
     round, signif,
-    rowSums, colSums, rowMeans, colMeans,
     nchar, tolower, toupper,
     sub, gsub,
 
@@ -225,6 +224,12 @@ exportMethods(
     table,
     type, "type<-",
     updateObject,
+    rowSums, colSums, rowMeans, colMeans,
+
+    ## Methods for generics defined in the MatrixGenerics package:
+    rowMins, colMins,
+    rowMaxs, colMaxs,
+    rowRanges, colRanges,
 
     ## Methods for generics defined in the S4Vectors package:
     showAsCell, isEmpty,
