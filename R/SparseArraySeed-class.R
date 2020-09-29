@@ -360,12 +360,7 @@ setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
                   "or lgCMatrix must have exactly 2 dimensions"))
     i <- from@nzindex[ , 1L]
     j <- from@nzindex[ , 2L]
-    x <- from@nzdata
-    ## Matrix::sparseMatrix() only supports numeric or logical input data at
-    ## the moment. If 'is.numeric(x)' is TRUE, it returns a dgCMatrix object.
-    ## If 'is.logical(x)' is TRUE, it returns a lgCMatrix object. Any other
-    ## type of input triggers an error.
-    Matrix::sparseMatrix(i, j, x=x, dims=from_dim, dimnames=dimnames(from))
+    sparseMatrix2(from_dim, i, j, from@nzdata, dimnames=dimnames(from))
 }
 setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_sparseMatrix)
 

@@ -1,19 +1,18 @@
-\name{dgCMatrix-stats}
+\name{sparseMatrix-utils}
 
-\alias{dgCMatrix-stats}
+\alias{sparseMatrix-utils}
 
 \alias{rowsum,ANY-method}
 \alias{colsum,ANY-method}
 \alias{rowsum.dgCMatrix}
 \alias{rowsum,dgCMatrix-method}
 
-\title{Some utilities to operate on dgCMatrix objects}
+\title{sparseMatrix utilities}
 
 \description{
-   NOTE: These utilities are currently implemented in the \pkg{DelayedArray}
-   package but they should really go somewhere else at some point (e.g.
-   to the \pkg{MatrixGenerics} and \pkg{sparseMatrixStats} packages after
-   they make it into Bioconductor).
+   Some utilities to operate natively on sparseMatrix objects (e.g. dgCMatrix
+   and lgCMatrix objects) from the \pkg{Matrix} package. Mostly for internal
+   use by the \pkg{DelayedArray} package.
 }
 
 \usage{

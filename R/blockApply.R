@@ -55,8 +55,10 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 
 ### 'x' must be an array-like object.
 ### 'FUN' is the callback function to be applied to each block of array-like
-### object 'x'. It must take at least 1 argument which is the current array
-### block as an ordinary array or matrix.
+### object 'x'. It must take at least 1 argument which is the current block
+### of 'x'. All the blocks are expected to be loaded as ordinary arrays if
+### 'as.sparse=FALSE' or as SparseArraySeed objects if 'as.sparse=TRUE'.
+### If 'as.sparse=NA', this will be determined by 'is_sparse(x)'.
 ### 'grid' must be an ArrayGrid object describing the block partitioning
 ### of 'x'. If not supplied, the grid returned by 'defaultAutoGrid(x)' is
 ### used. The effective grid (i.e. 'grid' or 'defaultAutoGrid(x)'), current
@@ -128,8 +130,8 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
 
 effectiveGrid <- function(block)
 {
-    if (!is.array(block))
-        stop("'block' must be an ordinary array")
+    if (!(is.array(block) || is(block, "SparseArraySeed")))
+        stop("'block' must be an ordinary array or SparseArraySeed object")
     if (!("from_grid" %in% names(attributes(block))))
         stop(wmsg("'block' has no \"from_grid\" attribute. ",
                   "Was effectiveGrid() called in a blockApply() loop?"))
@@ -138,8 +140,8 @@ effectiveGrid <- function(block)
 
 currentBlockId <- function(block)
 {
-    if (!is.array(block))
-        stop("'block' must be an ordinary array")
+    if (!(is.array(block) || is(block, "SparseArraySeed")))
+        stop("'block' must be an ordinary array or SparseArraySeed object")
     if (!("block_id" %in% names(attributes(block))))
         stop(wmsg("'block' has no \"block_id\" attribute. ",
                   "Was currentBlockId() called in a blockApply() loop?"))

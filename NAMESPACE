@@ -91,8 +91,10 @@ S3method(as.raw, Array)
 
 S3method(as.vector, Array)
 
+S3method(mean, SparseArraySeed)
 S3method(mean, DelayedArray)
 
+S3method(range, SparseArraySeed)
 S3method(range, DelayedArray)
 
 S3method(rowsum, dgCMatrix)
@@ -146,8 +148,10 @@ export(
 
     as.vector.Array,
 
+    mean.SparseArraySeed,
     mean.DelayedArray,
 
+    range.SparseArraySeed,
     range.DelayedArray,
 
     rowsum.dgCMatrix,
@@ -294,7 +298,7 @@ export(
 ###
 
 export(
-    ## dgCMatrix-stats.R:
+    ## sparseMatrix-utils.R:
     rowsum, colsum,
 
     ## bind-arrays.R:

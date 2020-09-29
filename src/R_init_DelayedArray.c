@@ -19,7 +19,7 @@ static const R_CallMethodDef callMethods[] = {
 /* abind.c */
 	CALLMETHOD_DEF(C_abind, 3),
 
-/* dgCMatrix_stats.c */
+/* sparseMatrix_utils.c */
 	CALLMETHOD_DEF(C_rowsum_dgCMatrix, 4),
 	CALLMETHOD_DEF(C_colMins_dgCMatrix, 2),
 	CALLMETHOD_DEF(C_colMaxs_dgCMatrix, 2),

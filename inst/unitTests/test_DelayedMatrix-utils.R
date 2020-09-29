@@ -92,9 +92,9 @@ test_DelayedMatrix_mult <- function()
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
     Rm <- rbind(Lm + 7.05, 0.1 * Lm)[,1:5]
 
-    on.exit(setAutoBlockSize())
+    on.exit(suppressMessages(setAutoBlockSize()))
     for (block_size in block_sizes2) {
-        setAutoBlockSize(block_size)
+        suppressMessages(setAutoBlockSize(block_size))
 
         P <- Lm %*% M
         checkEquals(Lm %*% m, as.matrix(P))
@@ -112,7 +112,7 @@ test_DelayedMatrix_mult <- function()
     S <- DelayedArray(s)
 
     for (block_size in block_sizes2) {
-        setAutoBlockSize(block_size)
+        suppressMessages(setAutoBlockSize(block_size))
 
         P <- Lm %*% S 
         checkEquals(unname(as.matrix(Lm %*% s)), as.matrix(P))
@@ -133,7 +133,7 @@ test_DelayedMatrix_mult <- function()
     ref <- y1 %*% y2
 
     for (block_size in block_sizes2) {
-        setAutoBlockSize(block_size)
+        suppressMessages(setAutoBlockSize(block_size))
         out <- Y1 %*% Y2
         checkEquals(ref, as.matrix(out))
         out <- crossprod(t(Y1), Y2)
@@ -151,9 +151,9 @@ test_DelayedMatrix_crossprod_self <- function()
     M <- DelayedArray(m2)
 
     # Checking self-product in a core-agnostic way. 
-    on.exit(setAutoBlockSize())
+    on.exit(suppressMessages(setAutoBlockSize()))
     for (block_size in block_sizes2) {
-        setAutoBlockSize(block_size)
+        suppressMessages(setAutoBlockSize(block_size))
         checkEquals(as.matrix(crossprod(M)), crossprod(m2))
         checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
     }
@@ -162,7 +162,7 @@ test_DelayedMatrix_crossprod_self <- function()
     DelayedArray:::setAutoMultParallelAgnostic(FALSE)
     on.exit(DelayedArray:::setAutoMultParallelAgnostic())
     for (block_size in block_sizes2) {
-        setAutoBlockSize(block_size)
+        suppressMessages(setAutoBlockSize(block_size))
         checkEquals(as.matrix(crossprod(M)), crossprod(m2))
         checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
     }
@@ -172,8 +172,8 @@ test_DelayedMatrix_mult_parallel <- function()
 {
     setAutoBPPARAM(BiocParallel::SnowParam(2))
     on.exit(setAutoBPPARAM())
-    setAutoBlockSize(10000)
-    on.exit(setAutoBlockSize(), add=TRUE)
+    suppressMessages(setAutoBlockSize(10000))
+    on.exit(suppressMessages(setAutoBlockSize()), add=TRUE)
 
     M <- DelayedArray(m2)
     Lm <- matrix(runif(20), ncol=10)

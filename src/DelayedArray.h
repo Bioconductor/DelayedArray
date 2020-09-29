@@ -18,7 +18,7 @@ SEXP C_Mindex2Lindex(SEXP Mindex, SEXP dim, SEXP use_names, SEXP as_integer);
 
 SEXP C_abind(SEXP objects, SEXP nblock, SEXP ans_dim);
 
-/* dgCMatrix_stats.c */
+/* sparseMatrix_utils.c */
 
 SEXP C_rowsum_dgCMatrix(SEXP x, SEXP group, SEXP ngroup, SEXP na_rm);
 SEXP C_colMins_dgCMatrix(SEXP x, SEXP na_rm);

@@ -119,6 +119,9 @@ sparse2dense(sas)
 
 \seealso{
   \itemize{
+    \item \link{SparseArraySeed-utils} for native operations on
+          SparseArraySeed objects.
+
     \item The \code{\link{read_block}} function.
 
     \item \code{\link{blockApply}} for more information about block processing
@@ -138,10 +141,10 @@ sparse2dense(sas)
 ## ---------------------------------------------------------------------
 ## EXAMPLE 1
 ## ---------------------------------------------------------------------
-nzindex1 <- rbind(c(2,4,3), c(2,1,3), c(5,4,3), c(5,3,3),
-                  c(5,4,1), c(5,1,1), c(5,4,2), c(5,4,1))
+dim1 <- 5:3
+nzindex1 <- Lindex2Mindex(sample(60, 8), 5:3)
 nzdata1 <- 11.11 * seq_len(nrow(nzindex1))
-sas1 <- SparseArraySeed(5:3, nzindex1, nzdata1)
+sas1 <- SparseArraySeed(dim1, nzindex1, nzdata1)
 
 dim(sas1)        # the dimensions of the implicit array
 length(sas1)     # the length of the implicit array

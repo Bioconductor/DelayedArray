@@ -16,13 +16,14 @@
 ### 'x' is **trusted** to be a logical array-like object.
 ### Return an L-index (if 'arr.ind=FALSE') or M-index (if 'arr.ind=TRUE').
 ### Used in unit tests!
-BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
+BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL, as.sparse=NA)
 {
     if (!isTRUEorFALSE(arr.ind))
         stop("'arr.ind' must be TRUE or FALSE")
     FUN <- function(block, arr.ind) {
         bid <- currentBlockId(block)
-        minor <- base::which(block)
+        ## Dispatch on which() method for array or SparseArraySeed.
+        minor <- which(block)
         major <- rep.int(bid, length(minor))
         grid <- effectiveGrid(block)
         Mindex <- mapToRef(major, minor, grid, linear=TRUE)
@@ -30,7 +31,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL)
             return(Mindex)
         Mindex2Lindex(Mindex, refdim(grid))
     }
-    block_results <- blockApply(x, FUN, arr.ind, grid=grid)
+    block_results <- blockApply(x, FUN, arr.ind, grid=grid, as.sparse=as.sparse)
     if (arr.ind) {
         Mindex <- do.call(rbind, block_results)
         oo <- .Mindex_order(Mindex)

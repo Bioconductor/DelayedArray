@@ -8,7 +8,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, and ordinary arrays and
 	data frames.
-Version: 0.15.10
+Version: 0.15.11
 Encoding: UTF-8
 Author: Hervé Pagès <hpages@fredhutch.org>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
@@ -24,7 +24,7 @@ Suggests: BiocParallel, HDF5Array, genefilter, SummarizedExperiment,
 License: Artistic-2.0
 VignetteBuilder: knitr
 Collate: utils.R
-	dgCMatrix-stats.R
+	sparseMatrix-utils.R
 	compress_atomic_vector.R
 	Nindex-utils.R
 	array_selection.R
@@ -35,6 +35,7 @@ Collate: utils.R
 	ArrayGrid-class.R
 	show-utils.R
 	SparseArraySeed-class.R
+	SparseArraySeed-utils.R
 	read_block.R
 	mapToGrid.R
 	makeCappedVolumeBox.R

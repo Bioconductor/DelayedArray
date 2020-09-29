@@ -5,8 +5,10 @@
 
 ### Virtual class with no slots. Intended to be extended by implementations
 ### of DelayedArray backends. Concrete subclasses must implement:
-###   1) A constructor function that takes argument 'dim', 'dimnames', and
-###      'type'.
+###   1) A constructor function where the first 3 arguments are 'dim',
+###      'dimnames', and 'type', in that order. Optionally it can have
+###      the 'as.sparse' argument, in which case this **must** be the 4th
+###      argument. It can have any additional argument.
 ###   2) A "dim", "dimnames", and "type" method.
 ###   3) A "write_block" method.
 ###   4) A "close" method (optional).
@@ -95,7 +97,9 @@ getRealizationBackend <- function()
 .SUPPORTED_REALIZATION_BACKENDS <- data.frame(
     BACKEND=c("RleArray", "HDF5Array", "TENxMatrix"),
     package=c("DelayedArray", "HDF5Array", "HDF5Array"),
-    realization_sink_class=c("RleRealizationSink", "HDF5RealizationSink", "TENxRealizationSink"),
+    realization_sink_class=c("RleRealizationSink",
+                             "HDF5RealizationSink",
+                             "TENxRealizationSink"),
     stringsAsFactors=FALSE
 )
 
@@ -120,7 +124,7 @@ load_BACKEND_package <- function(BACKEND)
     if (is.na(m))
         stop(wmsg("\"", BACKEND, "\" is not a supported backend. Please ",
                   "use supportedRealizationBackends() to get the list of ",
-                  "supported \"realization backends\"."))
+                  "\"realization backends\" that are currently supported."))
     package <- backends[ , "package"][[m]]
     class_package <- attr(BACKEND, "package")
     if (is.null(class_package)) {
@@ -134,6 +138,23 @@ load_BACKEND_package <- function(BACKEND)
     stopifnot(getClass(BACKEND)@package == package)
 }
 
+.check_realization_sink_constructor <- function(realization_sink_constructor)
+{
+    stopifnot(is.function(realization_sink_constructor))
+    ok <- identical(head(formalArgs(realization_sink_constructor), n=3L),
+                    c("dim", "dimnames", "type"))
+    if (!ok)
+        stop(wmsg("the first 3 arguments of a RealizationSink constructor ",
+                  "function must be 'dim', 'dimnames', and 'type', in ",
+                  "that order"))
+    ## Either 'realization_sink_constructor' has the 'as.sparse' argument,
+    ## in which case it **must** be in 4th position, or it does not have it.
+    m <- match("as.sparse", formalArgs(realization_sink_constructor))
+    if (!(m %in% c(4L, NA_integer_)))
+        stop(wmsg("RealizationSink constructor functions with an 'as.sparse' ",
+                  "argument must have it in 4th position"))
+}
+
 .get_realization_sink_constructor <- function(BACKEND)
 {
     backends <- .SUPPORTED_REALIZATION_BACKENDS
@@ -143,9 +164,7 @@ load_BACKEND_package <- function(BACKEND)
     realization_sink_constructor <- get(realization_sink_class,
                                         envir=.getNamespace(package),
                                         inherits=FALSE)
-    stopifnot(is.function(realization_sink_constructor))
-    stopifnot(identical(head(formalArgs(realization_sink_constructor), n=3L),
-                        c("dim", "dimnames", "type")))
+    .check_realization_sink_constructor(realization_sink_constructor)
     realization_sink_constructor
 }
 
@@ -192,9 +211,15 @@ setRealizationBackend <- function(...)
     auto_realization_sink_constructor
 }
 
-AutoRealizationSink <- function(dim, dimnames=NULL, type="double")
+AutoRealizationSink <- function(dim, dimnames=NULL, type="double",
+                                as.sparse=FALSE)
 {
-    .get_auto_realization_sink_constructor()(dim, dimnames, type)
+    realization_sink_constructor <- .get_auto_realization_sink_constructor()
+    args <- list(dim, dimnames, type)
+    formal_args <- formalArgs(realization_sink_constructor)
+    if (length(formal_args) >= 4L && formal_args[[4L]] == "as.sparse")
+        args <- c(args, list(as.sparse=as.sparse))
+    do.call(realization_sink_constructor, args)
 }
 
 RealizationSink <- function(...)

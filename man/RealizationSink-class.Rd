@@ -37,7 +37,7 @@ supportedRealizationBackends()
 getAutoRealizationBackend()
 setAutoRealizationBackend(BACKEND=NULL)
 
-AutoRealizationSink(dim, dimnames=NULL, type="double")
+AutoRealizationSink(dim, dimnames=NULL, type="double", as.sparse=FALSE)
 }
 
 \arguments{
@@ -56,6 +56,11 @@ AutoRealizationSink(dim, dimnames=NULL, type="double")
    \item{type}{
      The type of the data that will be written to the RealizationSink
      object to create.
+   }
+   \item{as.sparse}{
+     Whether the data should be written as sparse or not to the
+     RealizationSink object to create. Not all \emph{realization
+     backends} support this.
    }
 }
 

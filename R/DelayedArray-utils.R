@@ -349,18 +349,24 @@ setMethod("sweep", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Various "unary" and "isometric" array transformations that can be
-### implemented as delayed operations (this includes the "Math" and "Math2"
-### groups)
+### Various "unary isometric" array transformations
 ###
-### All these operations return a DelayedArray object of the same dimensions
-### as 'x'.
+### A "unary isometric" array transformation is a transformation that returns
+### an array-like object with the same dimensions as the input and where each
+### element is the result of applying a function to the corresponding element
+### in the input.
+###
+### These transformations can be implemented as delayed operations.
+###
+### All the "unary isometric" array transformations implemented in this
+### section return a DelayedArray object of the same dimensions as the
+### input DelayedArray object.
 ###
 
-.UNARY_OPS <- c("is.na", "is.finite", "is.infinite", "is.nan", "!",
-                "tolower", "toupper")
+.UNARY_ISO_OPS <- c("is.na", "is.finite", "is.infinite", "is.nan", "!",
+                    "tolower", "toupper")
 
-for (.Generic in .UNARY_OPS) {
+for (.Generic in .UNARY_ISO_OPS) {
     setMethod(.Generic, "DelayedArray",
         function(x)
             stash_DelayedUnaryIsoOpStack(x, function(a) match.fun(.Generic)(a))
@@ -411,7 +417,7 @@ setMethod("signif", "DelayedArray",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### grepl(), sub(), gsub()
+### More "unary isometric" array transformations: grepl(), sub(), gsub()
 ###
 
 setMethod("grepl", c(x="DelayedArray"),
@@ -447,12 +453,15 @@ setMethod("gsub", c(x="DelayedArray"),
 ###
 
 ### Used in unit tests!
-.BLOCK_anyNA <- function(x, recursive=FALSE, grid=NULL)
+.BLOCK_anyNA <- function(x, recursive=FALSE, grid=NULL, as.sparse=NA)
 {
-    FUN <- function(block, init) {anyNA(block) || init}
+    FUN <- function(block, init) {
+        ## Dispatch on anyNA() method for array or SparseArraySeed.
+        anyNA(block) || init
+    }
     init <- FALSE
     BREAKIF <- identity
-    blockReduce(FUN, x, init, BREAKIF, grid=grid)
+    blockReduce(FUN, x, init, BREAKIF, grid=grid, as.sparse=as.sparse)
 }
 
 .anyNA_DelayedArray <- function(x, recursive=FALSE) .BLOCK_anyNA(x, recursive)
@@ -554,8 +563,18 @@ setMethod("table", "DelayedArray", .table_DelayedArray)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "Summary" group generic
 ###
-### Members: max, min, range, sum, prod, any, all
+### Members: max(), min(), range(), sum(), prod(), any(), all()
 ###
+### Gotcha with how base::prod() handles NAs/NaNs:
+###   > prod(c(NA, NaN))  # consistent with sum()
+###   [1] NA
+###   > prod(c(NaN, NA))  # consistent with sum()
+###   [1] NA
+### but:
+###   > prod(NA, NaN)     # consistent with sum()
+###   [1] NA
+###   > prod(NaN, NA)     # INCONSISTENT with sum()!
+###   [1] NaN
 
 .collect_objects <- function(...)
 {
@@ -570,40 +589,60 @@ setMethod("table", "DelayedArray", .table_DelayedArray)
 ### An IMPORTANT RESTRICTION is that the specified grid must be compatible
 ### with all the objects in '...', which means that the objects in '...'
 ### must be conformable!
-.BLOCK_Summary <- function(.Generic, x, ..., na.rm=FALSE, grid=NULL)
+.BLOCK_Summary <- function(.Generic, x, ..., na.rm=FALSE,
+                           grid=NULL, as.sparse=NA)
 {
     GENERIC <- match.fun(.Generic)
     objects <- .collect_objects(x, ...)
 
     FUN <- function(block, init) {
-        ## We get a warning if 'block' is empty (which should happen only
-        ## when 'x' itself is empty, in which case blockReduce() uses a
-        ## single block that has the dimensions of 'x') or if 'na.rm' is TRUE
-        ## and 'block' contains only NA's or NaN's.
-        ## We use tryCatch() to catch these warnings.
-        reduced_block <- tryCatch(GENERIC(block, na.rm=na.rm),
-                                  warning=identity)
-        if (is(reduced_block, "warning") && is.null(init))
-            return(NULL)
+        ## We get a warning with max(), min(), and range() if 'block'
+        ## is empty (which should happen only when 'x' itself is empty,
+        ## in which case blockReduce() uses a single block that has the
+        ## dimensions of 'x'), or if 'na.rm' is TRUE and 'block' contains
+        ## only NA's or NaN's. How we handle this warning depends on
+        ## whether 'init' is NULL (i.e. we've seen no data yet) or not:
+        ##   - if 'init' is NULL: we use tryCatch() to catch the warning
+        ##   - otherwise: we just suppress (and ignore) the warning
+        if (is.null(init)) {
+            ## Dispatch on "Summary" group method for array or SparseArraySeed.
+            reduced_block <- tryCatch(GENERIC(block, na.rm=na.rm),
+                                      warning=identity)
+            if (is(reduced_block, "warning"))
+                return(NULL)
+        } else {
+            ## Dispatch on "Summary" group method for array or SparseArraySeed.
+            reduced_block <- suppressWarnings(GENERIC(block, na.rm=na.rm))
+        }
         GENERIC(reduced_block, init)
     }
     init <- NULL
     BREAKIF <- function(init) {
         if (is.null(init))
             return(FALSE)
-        switch(.Generic,
-            max=         is.na(init) || (na.rm && init ==  Inf),
-            min=         is.na(init) || (na.rm && init == -Inf),
-            range=       is.na(init[[1L]]) ||
-                             (na.rm && all(init == c(-Inf, Inf))),
-            sum=, prod=  is.na(init),
-            any=         identical(init, TRUE),
-            all=         identical(init, FALSE),
-            FALSE)  # fallback (actually not needed)
+        if (na.rm) {
+            switch(.Generic,
+                max=             init ==  Inf,
+                min=             init == -Inf,
+                range=           all(init == c(-Inf, Inf)),
+                sum=, prod=      is.nan(init),
+                any=             init,
+                all=             !init,
+                FALSE)  # fallback (actually not needed)
+        } else {
+            switch(.Generic,
+                max=, min=, sum= is.na(init) && !is.nan(init),
+                range=           is.na(init[[1L]]) && !is.nan(init[[1L]]),
+                prod=            is.na(init),  # NA or NaN
+                any=             identical(init, TRUE),  # 'init' could be NA
+                all=             identical(init, FALSE), # 'init' could be NA
+                FALSE)  # fallback (actually not needed)
+        }
     }
 
     for (x in objects)
-        init <- blockReduce(FUN, x, init, BREAKIF, grid)
+        init <- blockReduce(FUN, x, init, BREAKIF,
+                            grid=grid, as.sparse=as.sparse)
     if (is.null(init))
         init <- GENERIC()
     init
@@ -619,27 +658,44 @@ setMethod("Summary", "DelayedArray", .Summary_DelayedArray)
 ### An IMPORTANT RESTRICTION is that the specified grid must be compatible
 ### with all the objects in '...', which means that the objects in '...'
 ### must be conformable!
-.BLOCK_range <- function(..., na.rm=FALSE, finite=FALSE, grid=NULL)
+.BLOCK_range <- function(..., na.rm=FALSE, finite=FALSE,
+                              grid=NULL, as.sparse=NA)
 {
     objects <- .collect_objects(...)
 
     FUN <- function(block, init) {
-        ## See .BLOCK_Summary() above for why we use tryCatch().
-        reduced_block <- tryCatch(range(block, na.rm=na.rm, finite=finite),
-                                  warning=identity)
-        if (is(reduced_block, "warning") && is.null(init))
-            return(NULL)
+        ## We get a warning if 'block' is empty (which should happen only
+        ## when 'x' itself is empty, in which case blockReduce() uses a
+        ## single block that has the dimensions of 'x'), or if 'na.rm'
+        ## is TRUE and 'block' contains only NA's or NaN's.
+        ## We handle this warning like in .BLOCK_Summary() above.
+        if (is.null(init)) {
+            ## Dispatch on range() method for array or SparseArraySeed.
+            reduced_block <- tryCatch(range(block, na.rm=na.rm, finite=finite),
+                                      warning=identity)
+            if (is(reduced_block, "warning"))
+                return(NULL)
+        } else {
+            ## Dispatch on range() method for array or SparseArraySeed.
+            reduced_block <- suppressWarnings(range(block, na.rm=na.rm,
+                                                           finite=finite))
+        }
         range(reduced_block, init)
     }
     init <- NULL
     BREAKIF <- function(init) {
         if (is.null(init))
             return(FALSE)
-        is.na(init[[1L]]) || (na.rm && all(init == c(-Inf, Inf)))
+        if (na.rm) {
+            all(init == c(-Inf, Inf))
+        } else {
+            is.na(init[[1L]]) && !is.nan(init[[1L]])
+        }
     }
 
     for (object in objects)
-        init <- blockReduce(FUN, object, init, BREAKIF, grid)
+        init <- blockReduce(FUN, object, init, BREAKIF,
+                            grid=grid, as.sparse=as.sparse)
     if (is.null(init))
         init <- range()
     init
@@ -660,26 +716,32 @@ setMethod("range", "DelayedArray",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### mean()
 ###
+### Gotcha with how base::mean() handles NAs/NaNs:
+###   > mean(c(NA, NaN))  # consistent with sum()
+###   [1] NA
+###   > mean(c(NaN, NA))  # INCONSISTENT with sum()!
+###   [1] NaN
 
 ### Same arguments as base::mean.default().
-.BLOCK_mean <- function(x, trim=0, na.rm=FALSE, grid=NULL)
+.BLOCK_mean <- function(x, trim=0, na.rm=FALSE, grid=NULL, as.sparse=NA)
 {
     if (!identical(trim, 0))
-        stop("\"mean\" method for DelayedArray objects ",
-             "does not support the 'trim' argument yet")
+        stop(wmsg("mean() method for DelayedArray objects ",
+                  "does not support the 'trim' argument yet"))
 
     FUN <- function(block, init) {
-        tmp <- as.vector(block, mode="numeric")
-        block_sum <- sum(tmp, na.rm=na.rm)
-        block_nval <- length(tmp)
+        ## Dispatch on sum() method for array or SparseArraySeed.
+        block_sum <- sum(block, na.rm=na.rm)
+        block_nval <- length(block)
         if (na.rm)
-            block_nval <- block_nval - sum(is.na(tmp))
+            ## Dispatch on is.na() method for array or SparseArraySeed.
+            block_nval <- block_nval - sum(is.na(block))
         c(block_sum, block_nval) + init
     }
     init <- numeric(2)  # sum and nval
-    BREAKIF <- function(init) is.na(init[[1L]])
+    BREAKIF <- function(init) is.na(init[[1L]])  # NA or NaN
 
-    ans <- blockReduce(FUN, x, init, BREAKIF, grid=grid)
+    ans <- blockReduce(FUN, x, init, BREAKIF, grid=grid, as.sparse=as.sparse)
     ans[[1L]] / ans[[2L]]
 }
 
