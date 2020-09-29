@@ -311,7 +311,8 @@ export(
     refdim, maxlength, aperm, downsample,
 
     ## SparseArraySeed-class.R:
-    nzindex, nzdata, sparsity, is_sparse, extract_sparse_array,
+    nzindex, nzdata, sparsity,
+    is_sparse, "is_sparse<-", extract_sparse_array,
 
     ## read_block.R:
     read_block, read_sparse_block, write_block,

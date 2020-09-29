@@ -17,6 +17,7 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
+\alias{is_sparse<-}
 \alias{is_sparse,ANY-method}
 \alias{extract_sparse_array}
 

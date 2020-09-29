@@ -217,6 +217,10 @@ sparse2dense <- function(sas)
 ### extract_sparse_array().
 setGeneric("is_sparse", function(x) standardGeneric("is_sparse"))
 
+setGeneric("is_sparse<-", signature="x",
+    function(x, value) standardGeneric("is_sparse<-")
+)
+
 ### By default, nothing is considered sparse.
 setMethod("is_sparse", "ANY", function(x) FALSE)
 
