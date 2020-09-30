@@ -13,14 +13,16 @@
 \alias{getAutoBPPARAM}
 \alias{setAutoBPPARAM}
 
-\title{Block processing of an array-like object}
+\title{Convenient block processing of an array-like object}
 
 \description{
-  A set of utilities for processing an array-like object block by block.
+  Conveniently walk on the blocks of an array-like object and process them.
 }
 
 \usage{
-blockApply(x, FUN, ..., grid=NULL, as.sparse=FALSE, BPPARAM=getAutoBPPARAM())
+blockApply(x, FUN, ..., grid=NULL, as.sparse=FALSE,
+              BPPARAM=getAutoBPPARAM())
+
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
 
 effectiveGrid(envir=parent.frame(2))
@@ -76,16 +78,18 @@ setAutoBPPARAM(BPPARAM=NULL)
 
 \details{
   \code{effectiveGrid()}, \code{currentBlockId()}, and \code{currentViewport()}
-  can only be called from within the callback functions passed to
-  \code{blockApply()} or \code{blockReduce()}, that is, from within
+  can only be called (with no arguments!) from within the callback functions
+  passed to \code{blockApply()} and \code{blockReduce()}, that is, from within
   functions \code{FUN} and \code{BREAKIF}.
-  They can be used to provide the grid context for the block being currently
-  processed. They return:
+  They return the grid context for the block being currently processed. More
+  precisely:
   \itemize{
-    \item The grid (\link{ArrayGrid} object) being effectively used for
-          \code{effectiveGrid()}.
-    \item The id (or rank) of the current block.
-    \item The viewport (\link{ArrayViewport} object) of the current block.
+    \item \code{effectiveGrid()} returns the grid (\link{ArrayGrid} object)
+          being effectively used.
+    \item \code{currentBlockId()} returns the id (a.k.a. rank) of the current
+          block.
+    \item \code{currentViewport()} returns the viewport (\link{ArrayViewport}
+          object) of the current block.
   }
 }
 
