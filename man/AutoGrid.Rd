@@ -14,12 +14,13 @@
 \title{Make automatic grids for block processing}
 
 \description{
-  \code{defaultAutoGrid()} is the default automatic grid maker. It creates
-  grids that are suitable for block processing of an array-like object.
+  \code{defaultAutoGrid()} is the default \emph{automatic grid maker}.
+  It creates a grid that is suitable for block processing of the array-like
+  object passed to it.
 
-  \code{rowAutoGrid()} and \code{colAutoGrid()} are additional automatic
-  grid makers, specific to the 2-dimensional case. They can be used to
-  define blocks of full rows or full columns.
+  \code{rowAutoGrid()} and \code{colAutoGrid()} are additional
+  \emph{automatic grid makers}, specific to the 2-dimensional case.
+  They can be used to define blocks of full rows or full columns.
 }
 
 \usage{
@@ -66,9 +67,10 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
     See examples below.
   }
   \item{GRIDMAKER}{
-    The function to use as automatic grid maker, that is, the function that
-    will be used by \code{blockApply()} and \code{blockReduce()} to make a
-    grid when no grid is supplied via their \code{grid} argument.
+    The function to use as \emph{automatic grid maker}, that is, the
+    function that will be used by \code{\link{blockApply}()} and
+    \code{\link{blockReduce}()} to make a grid when no grid is supplied
+    via their \code{grid} argument.
     The function will be called on array-like object \code{x} and must
     return an \link{ArrayGrid} object, say \code{grid}, that is compatible
     with \code{x} i.e. such that \code{refdim(grid)} is identical to
@@ -79,7 +81,7 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
     grid maker like \code{defaultAutoGrid}, \code{rowAutoGrid}, or
     \code{colAutoGrid}.
 
-    The automatic grid maker is set to \code{defaultAutoGrid} at
+    The \emph{automatic grid maker} is set to \code{defaultAutoGrid} at
     package startup and can be reset anytime to this value by calling
     \code{setAutoGridMaker()} with no argument.
   }
@@ -221,7 +223,7 @@ getAutoGridMaker()
 setAutoGridMaker(function(x) colAutoGrid(x, ncol=5))
 getAutoGridMaker()
 
-blockApply(m, currentViewport)
+blockApply(m, function(block) currentViewport())
 
 ## Reset automatic grid maker to factory settings:
 setAutoGridMaker()

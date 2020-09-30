@@ -90,10 +90,10 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
                         appendLF=FALSE)
                 on.exit(message("OK"))
             }
+            effective_grid <- grid
+            current_block_id <- bid
             viewport <- grid[[bid]]
             block <- read_block(x, viewport, as.sparse=as.sparse)
-            attr(block, "from_grid") <- grid
-            attr(block, "block_id") <- bid
             FUN(block, ...)
         },
         BPPARAM=BPPARAM
@@ -112,10 +112,10 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
         if (get_verbose_block_processing())
             message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
+        effective_grid <- grid
+        current_block_id <- bid
         viewport <- grid[[bid]]
         block <- read_block(x, viewport, as.sparse=as.sparse)
-        attr(block, "from_grid") <- grid
-        attr(block, "block_id") <- bid
         init <- FUN(block, init)
         if (get_verbose_block_processing())
             message("OK")
@@ -128,28 +128,50 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
     init
 }
 
-effectiveGrid <- function(block)
+.backward_compat <- function(envir, funname)
 {
-    if (!(is.array(block) || is(block, "SparseArraySeed")))
-        stop("'block' must be an ordinary array or SparseArraySeed object")
-    if (!("from_grid" %in% names(attributes(block))))
-        stop(wmsg("'block' has no \"from_grid\" attribute. ",
-                  "Was effectiveGrid() called in a blockApply() loop?"))
-    attr(block, "from_grid", exact=TRUE)
+    if (!(is.array(envir) || is(envir, "SparseArraySeed")))
+        return(envir)
+    msg <- c("starting with DelayedArray 0.15.12, passing 'block' ",
+             "to ", funname, "() is no longer needed and will raise ",
+             "an error in the near future")
+    .Deprecated(msg=c("  ", wmsg(msg)))
+    parent.frame(3)
 }
 
-currentBlockId <- function(block)
+.WRONG_CONTEXT_MSG <- c(
+    " can only be called from **within** the callback function ",
+    "of a blockApply() loop ('FUN' argument), or from the callback ",
+    "functions of a blockReduce() loop ('FUN' and 'BREAKIF' arguments)")
+
+effectiveGrid <- function(envir=parent.frame(2))
 {
-    if (!(is.array(block) || is(block, "SparseArraySeed")))
-        stop("'block' must be an ordinary array or SparseArraySeed object")
-    if (!("block_id" %in% names(attributes(block))))
-        stop(wmsg("'block' has no \"block_id\" attribute. ",
-                  "Was currentBlockId() called in a blockApply() loop?"))
-    attr(block, "block_id", exact=TRUE)
+    envir <- .backward_compat(envir, "effectiveGrid")
+    effective_grid <- try(get("effective_grid", envir=envir,
+                              inherits=FALSE), silent=TRUE)
+    if (inherits(effective_grid, "try-error"))
+        stop(wmsg("effectiveGrid()", .WRONG_CONTEXT_MSG))
+    effective_grid
 }
 
-currentViewport <- function(block)
-    effectiveGrid(block)[[currentBlockId(block)]]
+currentBlockId <- function(envir=parent.frame(2))
+{
+    envir <- .backward_compat(envir, "currentBlockId")
+    current_block_id <- try(get("current_block_id", envir=envir,
+                                inherits=FALSE), silent=TRUE)
+    if (inherits(current_block_id, "try-error"))
+        stop(wmsg("currentBlockId()", .WRONG_CONTEXT_MSG))
+    current_block_id
+}
+
+currentViewport <- function(envir=parent.frame(2))
+{
+    envir <- .backward_compat(envir, "currentViewport")
+    effective_grid <- try(effectiveGrid(envir), silent=TRUE)
+    if (inherits(effective_grid, "try-error"))
+        stop(wmsg("currentViewport()", .WRONG_CONTEXT_MSG))
+    effective_grid[[currentBlockId(envir)]]
+}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
