@@ -308,8 +308,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
     old <- getAutoBPPARAM()
     on.exit(setAutoBPPARAM(old))
-    ## Avoid re-parallelizing in further calls to 'MULT'.
-    setAutoBPPARAM(BiocParallel::SerialParam())
+    setAutoBPPARAM(NULL) # Avoid re-parallelizing in further calls to 'MULT'.
 
     if (chosen_scheme=="x") {
         out <- bplapply2(seq_len(length(x_grid)),
@@ -397,15 +396,14 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
 
     old <- getAutoBPPARAM()
     on.exit(setAutoBPPARAM(old))
-    ## Avoid re-parallelizing in further calls to 'MULT'.
-    setAutoBPPARAM(BiocParallel::SerialParam())
+    setAutoBPPARAM(NULL) # Avoid re-parallelizing in further calls to 'MULT'.
 
     if (getAutoMultParallelAgnostic()) {
         out <- bplapply2(seq_len(length(slow)),
                          FUN=.left_mult, 
                          x=x, y=x, grid=slow,
                          MULT=MULT,
-                         BPPARAM=BiocParallel::SerialParam())
+                         BPPARAM=BPPARAM)
         ans <- do.call(rbind, out)
 
     } else {
