@@ -1,5 +1,5 @@
 ### =========================================================================
-### Read/write blocks of array data
+### Read array blocks
 ### -------------------------------------------------------------------------
 ###
 
@@ -119,38 +119,5 @@ setMethod("read_sparse_block", "ANY",
 
 setMethod("read_sparse_block", "SparseArraySeed",
     .read_sparse_block_from_SparseArraySeed
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### write_block()
-###
-
-### 'x' is typically expected to be a RealizationSink derivative but
-### write_block() should also work on an ordinary array or other
-### in-memory array- or matrix-like object like a sparseMatrix derivative
-### from the Matrix package.
-### Dispatch on first argument 'x' only for now for simplicity but we
-### could change this to also dispatch on the third argument ('block')
-### when the need arises.
-### Must return 'x' (possibly modified if it's an in-memory object).
-setGeneric("write_block", signature="x",
-    function(x, viewport, block)
-    {
-        stopifnot(is(viewport, "ArrayViewport"),
-                  identical(refdim(viewport), dim(x)),
-                  identical(dim(block), dim(viewport)))
-        standardGeneric("write_block")
-    }
-)
-
-setMethod("write_block", "ANY",
-    function(x, viewport, block)
-    {
-        if (is(block, "SparseArraySeed"))
-            block <- sparse2dense(block)
-        Nindex <- makeNindexFromArrayViewport(viewport)
-        replace_by_Nindex(x, Nindex, block)
-    }
 )
 

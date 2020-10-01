@@ -8,30 +8,23 @@
 \alias{read_sparse_block,ANY-method}
 \alias{read_sparse_block,SparseArraySeed-method}
 
-\alias{write_block}
-\alias{write_block,ANY-method}
-
-\title{Read/write blocks of array data}
+\title{Read array blocks}
 
 \description{
-  2 utilities for reading/writing blocks from/to an array-like object.
-  Their primary purpose is to be used in the context of block processing
-  of array-like objects.
+  Use \code{read_block} to read a block from an array-like object.
+  The function is typically used in the context of block processing
+  of array-like objects (typically \link{DelayedArray} objects but
+  not necessarily).
 }
 
 \usage{
 read_block(x, viewport, as.sparse=FALSE)
-write_block(x, viewport, block)
 }
 
 \arguments{
   \item{x}{
-    An array-like object.
-
-    Note that even though \code{write_block()} works when \code{x} is an
-    ordinary array or matrix, \code{x} will always be a
-    \link{RealizationSink} derivative in the context of block
-    processing of \link{DelayedArray} objects.
+    An array-like object, typically a \link{DelayedArray} object
+    or derivative.
   }
   \item{viewport}{
     An \link{ArrayViewport} object compatible with \code{x}, that is,
@@ -41,9 +34,9 @@ write_block(x, viewport, block)
     Can be \code{FALSE}, \code{TRUE}, or \code{NA}.
 
     If \code{FALSE} (the default), the block is returned as an ordinary
-    (dense) array. If \code{TRUE}, it's returned as a \link{SparseArraySeed}
-    object. Using \code{as.sparse=NA} is equivalent to using
-    \code{as.sparse=is_sparse(x)} and is the most efficient way
+    array (a.k.a. dense array). If \code{TRUE}, it's returned as a
+    \link{SparseArraySeed} object. Using \code{as.sparse=NA} is equivalent
+    to using \code{as.sparse=is_sparse(x)} and is the most efficient way
     to read a block. (This might become the default in the future.)
 
     Note that when returned as a 2D \link{SparseArraySeed} object with
@@ -54,17 +47,13 @@ write_block(x, viewport, block)
     is \code{"double"} or \code{"integer"}, or a lgCMatrix
     object if it's \code{"logical"}.
   }
-  \item{block}{
-    An ordinary (dense) array or \link{SparseArraySeed} object of the
-    same dimensions as \code{viewport}.
-  }
 }
 
 \value{
-  An ordinary (dense) array or \link{SparseArraySeed} object of the
-  same dimensions as \code{viewport} for \code{read_block()}.
-
-  The modified array-like object \code{x} for \code{write_block()}.
+  The data from \code{x} that belongs to the block delimited by the
+  specified viewport. The data is returned as an ordinary (dense) array
+  or as a \link{SparseArraySeed} object. In both cases it has the same
+  dimensions as the \code{viewport}.
 }
 
 \seealso{
@@ -73,17 +62,16 @@ write_block(x, viewport, block)
 
     \item \link{SparseArraySeed} objects.
 
-    \item \link[Matrix]{dgCMatrix-class} and \link[Matrix]{lgCMatrix-class}
-          objects in the \pkg{Matrix} package.
-
-    \item \code{\link{defaultAutoGrid}} and family to define grids to use
-          in the context of block processing of array-like objects.
+    \item \code{\link{write_block}}.
 
     \item \code{\link{blockApply}} for more information about block
           processing of array-like objects.
 
-    \item Advanced users: \link{RealizationSink} objects for writing an
-          array-like object block by block to disk (or to memory).
+    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+          grids to use for block processing of array-like objects.
+
+    \item \link[Matrix]{dgCMatrix-class} and \link[Matrix]{lgCMatrix-class}
+          objects in the \pkg{Matrix} package.
 
     \item \link{DelayedArray} objects.
 
@@ -93,25 +81,41 @@ write_block(x, viewport, block)
 
 \examples{
 ## ---------------------------------------------------------------------
-## read_block() BASIC USAGE
+## TYPICAL USE
 ## ---------------------------------------------------------------------
+## read_block() is typically used in combination with write_block().
+## See '?write_block' for typical uses of the read_block/write_block
+## combo.
 
-## == Read a block from an ordinary matrix ==
-
+## ---------------------------------------------------------------------
+## VERY BASIC (BUT ALSO VERY ARTIFICIAL) EXAMPLE 1:
+## Read a block from an ordinary matrix
+## ---------------------------------------------------------------------
 m1 <- matrix(1:30, ncol=5)
 m1
+
+## Define the viewport on 'm1' to read the data from:
 block1_dim <- c(4, 3)
 viewport1 <- ArrayViewport(dim(m1), IRanges(c(3, 2), width=block1_dim))
 viewport1
 
-block1 <- read_block(m1, viewport1)
+## Read the block:
+block1 <- read_block(m1, viewport1)  # same as m1[3:6, 2:4, drop=FALSE]
 block1
 
-## == Read a block from a sparse matrix ==
+## Sanity checks:
+stopifnot(identical(dim(viewport1), dim(block1)))
+stopifnot(identical(m1[3:6, 2:4, drop=FALSE], block1))
 
+## ---------------------------------------------------------------------
+## VERY BASIC (BUT ALSO VERY ARTIFICIAL) EXAMPLE 2:
+## Read a block from a sparse matrix
+## ---------------------------------------------------------------------
 m2 <- rsparsematrix(12, 20, density=0.2,
                     rand.x=function(n) sample(25, n, replace=TRUE))
 m2
+
+## Define the viewport on 'm2' to read the data from:
 block2_dim <- c(2, 20)
 viewport2 <- ArrayViewport(dim(m2), IRanges(c(1, 1), width=block2_dim))
 viewport2
@@ -127,74 +131,34 @@ block2b <- read_block(m2, viewport2, as.sparse=NA)
 class(block2b)  # a SparseArraySeed object
 as(block2b, "sparseMatrix")
 
-read_block(m1, viewport1, as.sparse=NA)  # still a dense matrix
+## For comparison, using 'as.sparse=NA' on 'm1' still returns the
+## block as an ordinary matrix (a.k.a. dense matrix):
+read_block(m1, viewport1, as.sparse=NA)
 
-## == Read a block from a 3D array ==
+## Sanity checks:
+stopifnot(identical(dim(viewport2), dim(block2)))
+stopifnot(identical(dim(viewport2), dim(block2b)))
+stopifnot(identical(block2, as.array(block2b)))
 
+## ---------------------------------------------------------------------
+## VERY BASIC (BUT ALSO VERY ARTIFICIAL) EXAMPLE 3:
+## Read a block from a 3D array
+## ---------------------------------------------------------------------
 a3 <- array(1:60, 5:3)
-a3
+
+## Define the viewport on 'a3' to read the data from:
 block3_dim <- c(2, 4, 1)
 viewport3 <- ArrayViewport(dim(a3), IRanges(c(1, 1, 3), width=block3_dim))
 viewport3
-block3 <- read_block(a3, viewport3)
+
+## Read the block:
+block3 <- read_block(a3, viewport3)  # same as a3[1:2, 1:4, 3, drop=FALSE]
 block3
 
-## ---------------------------------------------------------------------
-## write_block() BASIC USAGE
-## ---------------------------------------------------------------------
+## Note that unlike [, read_block() never drops dimensions.
 
-write_block(m1, viewport1, block1 + 1000L)
-
-viewport1b <- ArrayViewport(dim(m1), IRanges(c(1, 3), width=block1_dim))
-write_block(m1, viewport1b, block1 + 1000L)
-
-write_block(a3, viewport3, block3 + 1000L)
-
-viewport3b <- ArrayViewport(dim(a3), IRanges(c(3, 1, 3), width=block3_dim))
-write_block(a3, viewport3b, block3 + 1000L)
-
-## No-ops:
-m <- write_block(m1, viewport1, block1)
-stopifnot(identical(m1, m))
-a <- write_block(a3, viewport3, block3)
-stopifnot(identical(a3, a))
-
-## ---------------------------------------------------------------------
-## WALKING ON A GRID OF BLOCKS
-## ---------------------------------------------------------------------
-## In the context of block processing, a grid of blocks is defined on
-## the array-like object to process. Then the blocks are processed
-## separately in a loop. Here we define a grid made of very small blocks
-## on 'm1'. Please note that real-world block processing use grids made
-## of much bigger blocks that are obtained with defaultAutoGrid().
-## See ?defaultAutoGrid for more information.
-
-grid1 <- RegularArrayGrid(dim(m1), spacings=c(3L, 2L))
-grid1
-length(grid1)  # number of blocks defined by the grid
-read_block(m1, grid1[[3L]])  # read 3rd block
-read_block(m1, grid1[[1L, 3L]])
-
-## Walk on the grid, colum by column:
-m1a <- m1
-for (bid in seq_along(grid1)) {
-    viewport <- grid1[[bid]]
-    block <- read_block(m1a, viewport)
-    block <- bid * 1000L + block
-    m1a <- write_block(m1a, viewport, block)
-}
-m1a
-
-## Walk on the grid, row by row:
-m1b <- m1
-for (i in seq_len(dim(grid1)[[1]])) {
-  for (j in seq_len(dim(grid1)[[2]])) {
-    viewport <- grid1[[i, j]]
-    block <- read_block(m1b, viewport)
-    block <- (i * 10L + j) * 1000L + block
-    m1b <- write_block(m1b, viewport, block)
-  }
-}
-m1b
+## Sanity checks:
+stopifnot(identical(dim(viewport3), dim(block3)))
+stopifnot(identical(a3[1:2, 1:4, 3, drop=FALSE], block3))
 }
 \keyword{methods}

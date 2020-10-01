@@ -50,7 +50,7 @@ exportClasses(
     ## chunkGrid.R:
     integer_OR_NULL,
 
-    ## RealizationSink-class.R:
+    ## write_block.R:
     RealizationSink, arrayRealizationSink,
 
     ## RleArray-class.R:
@@ -284,7 +284,7 @@ export(
     ## DelayedArray-class.R:
     new_DelayedArray,
 
-    ## RealizationSink-class.R:
+    ## write_block.R:
     supportedRealizationBackends,
     getAutoRealizationBackend, setAutoRealizationBackend,
     getRealizationBackend, setRealizationBackend,
@@ -320,7 +320,7 @@ export(
     is_sparse, "is_sparse<-", extract_sparse_array,
 
     ## read_block.R:
-    read_block, read_sparse_block, write_block,
+    read_block, read_sparse_block,
 
     ## mapToGrid.R:
     mapToGrid, mapToRef,
@@ -343,8 +343,8 @@ export(
     ## chunkGrid.R:
     chunkdim, chunkGrid,
 
-    ## RealizationSink-class.R:
-    close,
+    ## write_block.R:
+    close, write_block,
 
     ## realize.R:
     realize,
@@ -363,7 +363,7 @@ exportMethods(
     extract_array,
     refdim, maxlength, aperm, downsample,
     nzindex, nzdata, sparsity, is_sparse, extract_sparse_array,
-    read_block, write_block,
+    read_block, read_sparse_block,
     mapToGrid, mapToRef,
     isLinear,
     is_noop,
@@ -371,7 +371,7 @@ exportMethods(
     simplify, netSubsetAndAperm,
     matrixClass, DelayedArray,
     chunkdim, chunkGrid,
-    close,
+    close, write_block,
     realize,
     pmax2, pmin2, apply,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges

@@ -11,7 +11,8 @@
 \alias{getAutoGridMaker}
 \alias{setAutoGridMaker}
 
-\title{Make automatic grids for block processing}
+\title{Generate automatic grids to use for block processing
+       of array-like objects}
 
 \description{
   \code{defaultAutoGrid()} is the default \emph{automatic grid maker}.
@@ -138,8 +139,7 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
 
     \item \code{\link{chunkGrid}}.
 
-    \item Advanced users: \link{RealizationSink} objects for writing an
-          array-like object block by block to disk (or to memory).
+    \item \code{\link{read_block}} and \code{\link{write_block}}.
   }
 }
 
@@ -148,10 +148,9 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
 ## A VERSION OF sum() THAT USES BLOCK PROCESSING
 ## ---------------------------------------------------------------------
 
-block_sum <- function(a, grid)
-{
-    sums <- lapply(grid, function(viewport) sum(read_block(a, viewport)))
-    sum(unlist(sums))
+block_sum <- function(a, grid) {
+  sums <- lapply(grid, function(viewport) sum(read_block(a, viewport)))
+  sum(unlist(sums))
 }
 
 ## On an ordinary matrix:
@@ -213,7 +212,7 @@ rowAutoGrid(m, nrow=10)  # 5 blocks of 10 rows each
 rowAutoGrid(m, nrow=15)  # 3 blocks of 15 rows each plus 1 block of 5 rows
 colAutoGrid(m, ncol=5)   # 2 blocks of 5 cols each plus 1 block of 2 cols
 
-## See ?RealizationSink for an advanced example of user-implemented
+## See '?write_block' for an advanced example of user-implemented
 ## block processing using colAutoGrid() and a realization sink.
 
 ## ---------------------------------------------------------------------

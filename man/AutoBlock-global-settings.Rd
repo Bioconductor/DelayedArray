@@ -127,20 +127,14 @@ setAutoBlockShape(shape=c("hypercube",
 
 \seealso{
   \itemize{
-    \item \code{\link{defaultAutoGrid}} and family to define grids to use
-          in the context of block processing of array-like objects.
-
-    \item \code{\link{blockApply}} and family to actually process an
-          array-like object block by block.
+    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+          grids to use for block processing of array-like objects.
 
     \item \code{\link{blockApply}} and family to process an array-like
           object block by block.
 
     \item The \code{\link{makeCappedVolumeBox}} utility to make
           \emph{capped volume boxes}.
-
-    \item Advanced users: \link{RealizationSink} objects for writing an
-          array-like object block by block to disk (or to memory).
   }
 }
 

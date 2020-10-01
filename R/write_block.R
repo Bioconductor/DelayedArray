@@ -1,10 +1,46 @@
 ### =========================================================================
-### RealizationSink objects
+### Write array blocks
 ### -------------------------------------------------------------------------
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### write_block()
 ###
 
-### Virtual class with no slots. Intended to be extended by implementations
-### of DelayedArray backends. Concrete subclasses must implement:
+### 'x' is typically expected to be a concrete RealizationSink subclass
+### although write_block() should also work on an ordinary array or other
+### in-memory array- or matrix-like object like a sparseMatrix derivative
+### from the Matrix package.
+### Dispatch on first argument 'x' only for now for simplicity but we
+### could change this to also dispatch on the third argument ('block')
+### when the need arises.
+### Must return 'x' (possibly modified if it's an in-memory object).
+setGeneric("write_block", signature="x",
+    function(x, viewport, block)
+    {
+        stopifnot(is(viewport, "ArrayViewport"),
+                  identical(refdim(viewport), dim(x)),
+                  identical(dim(block), dim(viewport)))
+        standardGeneric("write_block")
+    }
+)
+
+setMethod("write_block", "ANY",
+    function(x, viewport, block)
+    {
+        if (is(block, "SparseArraySeed"))
+            block <- sparse2dense(block)
+        Nindex <- makeNindexFromArrayViewport(viewport)
+        replace_by_Nindex(x, Nindex, block)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### RealizationSink objects
+###
+### Virtual class with no slots. Intended to be extended to support specific
+### realization backends. Concrete subclasses must implement:
 ###   1) A constructor function where the first 3 arguments are 'dim',
 ###      'dimnames', and 'type', in that order. Optionally it can have
 ###      the 'as.sparse' argument, in which case this **must** be the 4th

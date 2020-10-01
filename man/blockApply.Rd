@@ -37,7 +37,8 @@ setAutoBPPARAM(BPPARAM=NULL)
 
 \arguments{
   \item{x}{
-    An array-like object.
+    An array-like object, typically a \link{DelayedArray} object
+    or derivative.
   }
   \item{FUN}{
     The function to be applied to each block of \code{x}. It must be able
@@ -121,12 +122,12 @@ setAutoBPPARAM(BPPARAM=NULL)
 
 \seealso{
   \itemize{
-    \item \code{\link{defaultAutoGrid}} and family to define grids to use
-          in the context of block processing of array-like objects.
+    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+          grids to use for block processing of array-like objects.
 
     \item \link{ArrayGrid} and \link{ArrayViewport} objects.
 
-    \item \code{\link{read_block}}.
+    \item \code{\link{read_block}} and \code{\link{write_block}}.
 
     \item \code{\link[BiocParallel]{MulticoreParam}},
           \code{\link[BiocParallel]{SnowParam}}, and
@@ -134,9 +135,6 @@ setAutoBPPARAM(BPPARAM=NULL)
           package.
 
     \item \link{DelayedArray} objects.
-
-    \item Advanced users: \link{RealizationSink} objects for writing
-          an array-like object block by block to disk (or to memory).
   }
 }
 
