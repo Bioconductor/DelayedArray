@@ -272,8 +272,8 @@ export(
 
     ## blockApply.R:
     setAutoBPPARAM, getAutoBPPARAM,
+    set_grid_context, effectiveGrid, currentBlockId, currentViewport,
     blockApply, blockReduce,
-    effectiveGrid, currentBlockId, currentViewport,
 
     ## showtree.R:
     showtree, seedApply, modify_seeds,

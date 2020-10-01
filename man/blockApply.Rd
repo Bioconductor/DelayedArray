@@ -3,15 +3,16 @@
 \alias{block processing}
 \alias{block_processing}
 
-\alias{blockApply}
-\alias{blockReduce}
+\alias{setAutoBPPARAM}
+\alias{getAutoBPPARAM}
 
+\alias{set_grid_context}
 \alias{effectiveGrid}
 \alias{currentBlockId}
 \alias{currentViewport}
 
-\alias{getAutoBPPARAM}
-\alias{setAutoBPPARAM}
+\alias{blockApply}
+\alias{blockReduce}
 
 \title{Convenient block processing of an array-like object}
 
@@ -54,7 +55,7 @@ setAutoBPPARAM(BPPARAM=NULL)
     be passed to \code{FUN} as ordinary arrays. If it's set to \code{TRUE},
     they will be passed as \link{SparseArraySeed} objects.
     If it's set to \code{NA}, then \code{is_sparse(x)} determines how they
-    will be passed.
+    will be passed to \code{FUN}.
   }
   \item{...}{
     Optional arguments to \code{FUN}.
@@ -99,11 +100,21 @@ setAutoBPPARAM(BPPARAM=NULL)
 
 \details{
   \code{effectiveGrid()}, \code{currentBlockId()}, and \code{currentViewport()}
-  can only be called (with no arguments!) from within the callback functions
-  passed to \code{blockApply()} and \code{blockReduce()}, that is, from within
-  functions \code{FUN} and \code{BREAKIF}.
-  They return the grid context for the block being currently processed.
-  See Value section below for the details.
+  return the "grid context" for the block being currently processed.
+  By "grid context" we mean:
+  \itemize{
+    \item The \emph{effective grid}, that is, the user-supplied grid
+          or \code{defaultAutoGrid(x)} if the user didn't supply any grid.
+    \item The \emph{current block id} (a.k.a. block rank).
+    \item The \emph{current viewport}, that is, the \link{ArrayViewport}
+          object describing the position of the current block w.r.t. the
+          effective grid.
+  }
+  Note that \code{effectiveGrid()}, \code{currentBlockId()}, and
+  \code{currentViewport()} must be called (with no arguments) from
+  **within** the callback functions passed to \code{blockApply()}
+  and \code{blockReduce()}, that is, from within functions \code{FUN}
+  and \code{BREAKIF}.
 }
 
 \value{

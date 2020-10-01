@@ -48,30 +48,78 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Walking on the blocks
-###
-### 2 utility functions to process array-like objects by block.
+### Set/get grid context for the current block of a blockApply() or
+### blockReduce() loop
 ###
 
-### 'x' must be an array-like object.
-### 'FUN' is the callback function to be applied to each block of array-like
-### object 'x'. It must take at least 1 argument which is the current block
-### of 'x'. All the blocks are expected to be loaded as ordinary arrays if
-### 'as.sparse=FALSE' or as SparseArraySeed objects if 'as.sparse=TRUE'.
-### If 'as.sparse=NA', this will be determined by 'is_sparse(x)'.
-### 'grid' must be an ArrayGrid object describing the block partitioning
-### of 'x'. If not supplied, the grid returned by 'defaultAutoGrid(x)' is
-### used. The effective grid (i.e. 'grid' or 'defaultAutoGrid(x)'), current
-### block number, and current viewport (i.e. the ArrayViewport object
-### describing the position of the current block w.r.t. the effective grid),
-### can be obtained from within 'FUN' with 'effectiveGrid(block)',
-### 'currentBlockId(block)', and 'currentViewport(block)', respectively.
-### 'BPPARAM' is passed to bplapply(). In theory, the best performance should
-### be obtained when bplapply() uses a post office queue model. According to
-### https://support.bioconductor.org/p/96856/#96888, this can be achieved by
-### setting the nb of tasks to the nb of blocks (i.e. with
+### Exported (used in beachmat).
+set_grid_context <- function(effective_grid, current_block_id,
+                             envir=parent.frame(1))
+{
+    assign(".effective_grid", effective_grid, envir=envir)
+    assign(".current_block_id", current_block_id, envir=envir)
+}
+
+.backward_compat <- function(envir, funname)
+{
+    if (!(is.array(envir) || is(envir, "SparseArraySeed")))
+        return(envir)
+    msg <- c("starting with DelayedArray 0.15.12, passing 'block' ",
+             "to ", funname, "() is no longer needed and will soon ",
+             "be considered an error")
+    .Deprecated(msg=c("  ", wmsg(msg)))
+    parent.frame(3)
+}
+
+.grid_context_not_found <- function(funname)
+    paste0("Grid context not found for the current block. ",
+           "Are we in a blockApply() or blockReduce() loop? ",
+           "Note that ", funname, "() can only be called from **within** ",
+           "the callback function of a blockApply() loop ('FUN' argument), ",
+           "or from the callback functions of a blockReduce() loop ('FUN' ",
+           "and 'BREAKIF' arguments).")
+
+effectiveGrid <- function(envir=parent.frame(2))
+{
+    envir <- .backward_compat(envir, "effectiveGrid")
+    effective_grid <- try(get(".effective_grid", envir=envir,
+                              inherits=FALSE), silent=TRUE)
+    if (inherits(effective_grid, "try-error"))
+        stop(wmsg(.grid_context_not_found("effectiveGrid")))
+    effective_grid
+}
+
+currentBlockId <- function(envir=parent.frame(2))
+{
+    envir <- .backward_compat(envir, "currentBlockId")
+    current_block_id <- try(get(".current_block_id", envir=envir,
+                                inherits=FALSE), silent=TRUE)
+    if (inherits(current_block_id, "try-error"))
+        stop(wmsg(.grid_context_not_found("currentBlockId")))
+    current_block_id
+}
+
+currentViewport <- function(envir=parent.frame(2))
+{
+    envir <- .backward_compat(envir, "currentViewport")
+    effective_grid <- try(effectiveGrid(envir), silent=TRUE)
+    if (inherits(effective_grid, "try-error"))
+        stop(wmsg("currentViewport()", .WRONG_CONTEXT_MSG))
+    effective_grid[[currentBlockId(envir)]]
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### blockApply()
+###
+### TODO: In theory, the best performance should be obtained when bplapply()
+### uses a post office queue model. According to
+### https://support.bioconductor.org/p/96856/#96888, this can be
+### achieved by setting the nb of tasks to the nb of blocks (i.e. with
 ### BPPARAM=MulticoreParam(tasks=length(grid))). However, in practice, that
 ### seems to be slower than using tasks=0 (the default). Investigate this!
+###
+
 blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
                                     BPPARAM=getAutoBPPARAM())
 {
@@ -90,10 +138,7 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
                         appendLF=FALSE)
                 on.exit(message("OK"))
             }
-            ## We define the 'effective_grid' and 'current_block_id' variables
-            ## only so that effectiveGrid() and currentBlockId() can find them.
-            effective_grid <- grid
-            current_block_id <- bid
+            set_grid_context(grid, bid)
             viewport <- grid[[bid]]
             block <- read_block(x, viewport, as.sparse=as.sparse)
             FUN(block, ...)
@@ -102,7 +147,13 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
     )
 }
 
-### A Reduce-like function. Not parallelized yet.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### blockReduce()
+###
+### A Reduce-like function.
+###
+
 blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
 {
     FUN <- match.fun(FUN)
@@ -114,10 +165,7 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
         if (get_verbose_block_processing())
             message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
-        ## We define the 'effective_grid' and 'current_block_id' variables
-        ## only so that effectiveGrid() and currentBlockId() can find them.
-        effective_grid <- grid
-        current_block_id <- bid
+        set_grid_context(grid, bid)
         viewport <- grid[[bid]]
         block <- read_block(x, viewport, as.sparse=as.sparse)
         init <- FUN(block, init)
@@ -130,51 +178,6 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
         }
     }
     init
-}
-
-.backward_compat <- function(envir, funname)
-{
-    if (!(is.array(envir) || is(envir, "SparseArraySeed")))
-        return(envir)
-    msg <- c("starting with DelayedArray 0.15.12, passing 'block' ",
-             "to ", funname, "() is no longer needed and will raise ",
-             "an error in the near future")
-    .Deprecated(msg=c("  ", wmsg(msg)))
-    parent.frame(3)
-}
-
-.WRONG_CONTEXT_MSG <- c(
-    " can only be called from **within** the callback function ",
-    "of a blockApply() loop ('FUN' argument), or from the callback ",
-    "functions of a blockReduce() loop ('FUN' and 'BREAKIF' arguments)")
-
-effectiveGrid <- function(envir=parent.frame(2))
-{
-    envir <- .backward_compat(envir, "effectiveGrid")
-    effective_grid <- try(get("effective_grid", envir=envir,
-                              inherits=FALSE), silent=TRUE)
-    if (inherits(effective_grid, "try-error"))
-        stop(wmsg("effectiveGrid()", .WRONG_CONTEXT_MSG))
-    effective_grid
-}
-
-currentBlockId <- function(envir=parent.frame(2))
-{
-    envir <- .backward_compat(envir, "currentBlockId")
-    current_block_id <- try(get("current_block_id", envir=envir,
-                                inherits=FALSE), silent=TRUE)
-    if (inherits(current_block_id, "try-error"))
-        stop(wmsg("currentBlockId()", .WRONG_CONTEXT_MSG))
-    current_block_id
-}
-
-currentViewport <- function(envir=parent.frame(2))
-{
-    envir <- .backward_compat(envir, "currentViewport")
-    effective_grid <- try(effectiveGrid(envir), silent=TRUE)
-    if (inherits(effective_grid, "try-error"))
-        stop(wmsg("currentViewport()", .WRONG_CONTEXT_MSG))
-    effective_grid[[currentBlockId(envir)]]
 }
 
 
