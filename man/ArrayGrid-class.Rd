@@ -106,8 +106,8 @@ downsample(x, ratio=1L)
   \itemize{
     \item \code{\link{read_block}}.
 
-    \item \code{\link{blockApply}} for more information about block processing
-          of array-like objects.
+    \item \code{\link{blockApply}} for convenient block processing of an
+          array-like object.
 
     \item \code{\link{mapToGrid}} for mapping reference array positions to
           grid positions and vice-versa.

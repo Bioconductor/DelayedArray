@@ -64,8 +64,8 @@ read_block(x, viewport, as.sparse=FALSE)
 
     \item \code{\link{write_block}}.
 
-    \item \code{\link{blockApply}} for more information about block
-          processing of array-like objects.
+    \item \code{\link{blockApply}} for convenient block processing of an
+          array-like object.
 
     \item \code{\link{defaultAutoGrid}} and family to generate automatic
           grids to use for block processing of array-like objects.

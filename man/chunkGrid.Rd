@@ -45,8 +45,8 @@ chunkdim(x)
 
 \seealso{
   \itemize{
-    \item \code{\link{blockApply}} for more information about block processing
-          of array-like objects.
+    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+          grids to use for block processing of array-like objects.
 
     \item \link{DelayedArray} objects.
 

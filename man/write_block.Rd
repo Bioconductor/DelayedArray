@@ -139,8 +139,8 @@ supportedRealizationBackends()
   depends on the specific class of the RealizationSink object. For
   example, if \code{sink} is an \link[HDF5Array]{HDF5RealizationSink}
   object from the \pkg{HDF5Array} package, then \code{as(sink, "DelayedArray")}
-  will return an \link{HDF5Array} instance (the \link{HDF5Array} class
-  is a \link{DelayedArray} subclass).
+  will return an \link[HDF5Array]{HDF5Array} instance (the
+  \link[HDF5Array]{HDF5Array} class is a \link{DelayedArray} subclass).
 
   *** The \emph{automatic realization backend} ***
 
@@ -195,19 +195,20 @@ supportedRealizationBackends()
 
     \item \code{\link{read_block}}.
 
-    \item \code{\link{blockApply}} for more information about block
-          processing of array-like objects.
+    \item \code{\link{blockApply}} for convenient block processing of an
+          array-like object.
 
     \item \code{\link{defaultAutoGrid}} and family to generate automatic
           grids to use for block processing of array-like objects.
 
-    \item \link{RleArray} objects.
-
-    \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
+    \item \link[HDF5Array]{HDF5RealizationSink} objects in the
+          \pkg{HDF5Array} package.
 
     \item \link[HDF5Array]{HDF5-dump-management} in the \pkg{HDF5Array}
           package to control the location and physical properties of
           automatically created HDF5 datasets.
+
+    \item \link{RleArray} objects.
 
     \item \link{DelayedArray} objects.
 
