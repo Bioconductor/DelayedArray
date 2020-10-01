@@ -104,7 +104,7 @@ currentViewport <- function(envir=parent.frame(2))
     envir <- .backward_compat(envir, "currentViewport")
     effective_grid <- try(effectiveGrid(envir), silent=TRUE)
     if (inherits(effective_grid, "try-error"))
-        stop(wmsg("currentViewport()", .WRONG_CONTEXT_MSG))
+        stop(wmsg(.grid_context_not_found("currentViewport")))
     effective_grid[[currentBlockId(envir)]]
 }
 
