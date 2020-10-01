@@ -11,6 +11,7 @@
 \alias{currentBlockId}
 \alias{currentViewport}
 
+\alias{viewportApply}
 \alias{blockApply}
 \alias{blockReduce}
 
@@ -23,6 +24,8 @@
 \usage{
 blockApply(x, FUN, ..., grid=NULL, as.sparse=FALSE,
               BPPARAM=getAutoBPPARAM())
+
+viewportApply(grid, FUN, ..., BPPARAM=getAutoBPPARAM())
 
 blockReduce(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
 
@@ -61,11 +64,14 @@ setAutoBPPARAM(BPPARAM=NULL)
     Optional arguments to \code{FUN}.
   }
   \item{grid}{
-    An \link{ArrayGrid} object compatible with the geometry of \code{x}.
-    It defines the blocks to walk on. If not specified, an automatic grid
-    is used. By default \code{\link{defaultAutoGrid}(x)} is called to
-    generate the automatic grid. The \emph{automatic grid maker} can be
-    changed with \code{\link{setAutoGridMaker}()}.
+    An \link{ArrayGrid} object that defines the blocks (or viewports) to
+    walk on.
+
+    For \code{blockApply()} and \code{blockReduce()} the supplied grid
+    must be compatible with the geometry of \code{x}. If not specified,
+    an automatic grid is used. By default \code{\link{defaultAutoGrid}(x)}
+    is called to generate the automatic grid. The \emph{automatic grid maker}
+    can be changed with \code{\link{setAutoGridMaker}()}.
     See \code{?\link{setAutoGridMaker}} for more information.
   }
   \item{as.sparse}{
@@ -111,14 +117,15 @@ setAutoBPPARAM(BPPARAM=NULL)
           effective grid.
   }
   Note that \code{effectiveGrid()}, \code{currentBlockId()}, and
-  \code{currentViewport()} must be called (with no arguments) from
-  **within** the callback functions passed to \code{blockApply()}
-  and \code{blockReduce()}, that is, from within functions \code{FUN}
-  and \code{BREAKIF}.
+  \code{currentViewport()} can only be called (with no arguments) from
+  **within** the callback functions passed to \code{blockApply()},
+  \code{viewportApply()}, and \code{blockReduce()}, that is, from within
+  functions \code{FUN} and \code{BREAKIF}.
 }
 
 \value{
-  For \code{blockApply()}, a list with one list element per block visited.
+  For \code{blockApply()} and \code{viewportApply()}, a list with one
+  list element per block/viewport visited.
 
   For \code{Reduce()}, the result of the last call to \code{FUN(block, init)}.
 

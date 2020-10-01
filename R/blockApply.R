@@ -48,8 +48,8 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Set/get grid context for the current block of a blockApply() or
-### blockReduce() loop
+### Set/get grid context for the current block of a blockApply(),
+### viewportApply(), or blockReduce() loop
 ###
 
 ### Exported (used in beachmat).
@@ -73,11 +73,11 @@ set_grid_context <- function(effective_grid, current_block_id,
 
 .grid_context_not_found <- function(funname)
     paste0("Grid context not found for the current block. ",
-           "Are we in a blockApply() or blockReduce() loop? ",
+           "Are we in a blockApply(), viewportApply(), or blockReduce() loop? ",
            "Note that ", funname, "() can only be called from **within** ",
-           "the callback function of a blockApply() loop ('FUN' argument), ",
-           "or from the callback functions of a blockReduce() loop ('FUN' ",
-           "and 'BREAKIF' arguments).")
+           "the callback function of a blockApply() or viewportApply() ",
+           "loop ('FUN' argument), or from the callback functions of a ",
+           "blockReduce() loop ('FUN' and 'BREAKIF' arguments).")
 
 effectiveGrid <- function(envir=parent.frame(2))
 {
@@ -110,7 +110,7 @@ currentViewport <- function(envir=parent.frame(2))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### blockApply()
+### viewportApply() and blockApply()
 ###
 ### TODO: In theory, the best performance should be obtained when bplapply()
 ### uses a post office queue model. According to
@@ -120,31 +120,36 @@ currentViewport <- function(envir=parent.frame(2))
 ### seems to be slower than using tasks=0 (the default). Investigate this!
 ###
 
+viewportApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM())
+{
+    if (!is(grid, "ArrayGrid"))
+        stop(wmsg("'grid' must be an ArrayGrid object"))
+    nblock <- length(grid)
+    FUN <- match.fun(FUN)
+    FUN0 <- function(bid, grid, nblock, FUN, ...) {
+        if (get_verbose_block_processing()) {
+            message("Processing block ", bid, "/", nblock, " ... ",
+                    appendLF=FALSE)
+            on.exit(message("OK"))
+        }
+        viewport <- grid[[bid]]
+        set_grid_context(grid, bid)
+        FUN(viewport, ...)
+    }
+    bplapply2(seq_len(nblock), FUN0, grid, nblock, FUN, ..., BPPARAM=BPPARAM)
+}
+
 blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
                                     BPPARAM=getAutoBPPARAM())
 {
-    FUN <- match.fun(FUN)
     grid <- normarg_grid(grid, x)
-    nblock <- length(grid)
-    bplapply2(seq_len(nblock),
-        ## TODO: Not a pure function (because it refers to 'nblock', 'grid',
-        ## and 'x') so will probably fail with parallelization backends that
-        ## don't use a fork (e.g. SnowParam on Windows). Test and confirm this.
-        ## FIXME: The fix is to add arguments to the function so that the
-        ## objects can be passed to it.
-        function(bid) {
-            if (get_verbose_block_processing()) {
-                message("Processing block ", bid, "/", nblock, " ... ",
-                        appendLF=FALSE)
-                on.exit(message("OK"))
-            }
-            set_grid_context(grid, bid)
-            viewport <- grid[[bid]]
-            block <- read_block(x, viewport, as.sparse=as.sparse)
-            FUN(block, ...)
-        },
-        BPPARAM=BPPARAM
-    )
+    FUN <- match.fun(FUN)
+    FUN0 <- function(viewport, x, as.sparse, FUN, ...) {
+        block <- read_block(x, viewport, as.sparse=as.sparse)
+        set_grid_context(effectiveGrid(), currentBlockId())
+        FUN(block, ...)
+    }
+    viewportApply(grid, FUN0, x, as.sparse, FUN, ..., BPPARAM=BPPARAM)
 }
 
 
@@ -165,9 +170,9 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
         if (get_verbose_block_processing())
             message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
-        set_grid_context(grid, bid)
         viewport <- grid[[bid]]
         block <- read_block(x, viewport, as.sparse=as.sparse)
+        set_grid_context(grid, bid)
         init <- FUN(block, init)
         if (get_verbose_block_processing())
             message("OK")
