@@ -90,6 +90,8 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
                         appendLF=FALSE)
                 on.exit(message("OK"))
             }
+            ## We define the 'effective_grid' and 'current_block_id' variables
+            ## only so that effectiveGrid() and currentBlockId() can find them.
             effective_grid <- grid
             current_block_id <- bid
             viewport <- grid[[bid]]
@@ -112,6 +114,8 @@ blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
         if (get_verbose_block_processing())
             message("Processing block ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
+        ## We define the 'effective_grid' and 'current_block_id' variables
+        ## only so that effectiveGrid() and currentBlockId() can find them.
         effective_grid <- grid
         current_block_id <- bid
         viewport <- grid[[bid]]
