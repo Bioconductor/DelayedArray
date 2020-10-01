@@ -71,13 +71,22 @@ set_grid_context <- function(effective_grid, current_block_id,
     parent.frame(3)
 }
 
-.grid_context_not_found <- function(funname)
-    paste0("Grid context not found for the current block. ",
-           "Are we in a blockApply(), viewportApply(), or blockReduce() loop? ",
-           "Note that ", funname, "() can only be called from **within** ",
+.grid_context_not_found <- c(
+    "Grid context not found for the current block. ",
+    "Are we in a blockApply(), viewportApply(), or blockReduce() loop?"
+)
+
+.explain_proper_use <- function(funname)
+    paste0("Note that ", funname, "() can only be called from **within** ",
            "the callback function of a blockApply() or viewportApply() ",
            "loop ('FUN' argument), or from the callback functions of a ",
            "blockReduce() loop ('FUN' and 'BREAKIF' arguments).")
+
+.suggest_set_grid_context <- c(
+    "If you need to be able to test/debug your callback function 'FUN' ",
+    "(or 'BREAKIF') as a standalone function, call set_grid_context() to ",
+    "set an arbitrary context **right before** calling the callback function."
+)
 
 effectiveGrid <- function(envir=parent.frame(2))
 {
@@ -85,7 +94,11 @@ effectiveGrid <- function(envir=parent.frame(2))
     effective_grid <- try(get(".effective_grid", envir=envir,
                               inherits=FALSE), silent=TRUE)
     if (inherits(effective_grid, "try-error"))
-        stop(wmsg(.grid_context_not_found("effectiveGrid")))
+        stop(wmsg(.grid_context_not_found),
+             "\n\n  ",
+             wmsg(.explain_proper_use("effectiveGrid")),
+             "\n\n  ",
+             wmsg(.suggest_set_grid_context))
     effective_grid
 }
 
@@ -95,7 +108,11 @@ currentBlockId <- function(envir=parent.frame(2))
     current_block_id <- try(get(".current_block_id", envir=envir,
                                 inherits=FALSE), silent=TRUE)
     if (inherits(current_block_id, "try-error"))
-        stop(wmsg(.grid_context_not_found("currentBlockId")))
+        stop(wmsg(.grid_context_not_found),
+             "\n\n  ",
+             wmsg(.explain_proper_use("currentBlockId")),
+             "\n\n  ",
+             wmsg(.suggest_set_grid_context))
     current_block_id
 }
 
@@ -104,7 +121,11 @@ currentViewport <- function(envir=parent.frame(2))
     envir <- .backward_compat(envir, "currentViewport")
     effective_grid <- try(effectiveGrid(envir), silent=TRUE)
     if (inherits(effective_grid, "try-error"))
-        stop(wmsg(.grid_context_not_found("currentViewport")))
+        stop(wmsg(.grid_context_not_found),
+             "\n\n  ",
+             wmsg(.explain_proper_use("currentViewport")),
+             "\n\n  ",
+             wmsg(.suggest_set_grid_context))
     effective_grid[[currentBlockId(envir)]]
 }
 

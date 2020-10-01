@@ -37,6 +37,9 @@ currentViewport(envir=parent.frame(2))
 ## Get/set automatic parallel back-end:
 getAutoBPPARAM()
 setAutoBPPARAM(BPPARAM=NULL)
+
+## For testing/debugging callback functions:
+set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
 }
 
 \arguments{
@@ -102,6 +105,9 @@ setAutoBPPARAM(BPPARAM=NULL)
   \item{envir}{
     Do not use (unless you know what you are doing).
   }
+  \item{effective_grid, current_block_id}{
+    See Details below.
+  }
 }
 
 \details{
@@ -121,6 +127,12 @@ setAutoBPPARAM(BPPARAM=NULL)
   **within** the callback functions passed to \code{blockApply()},
   \code{viewportApply()}, and \code{blockReduce()}, that is, from within
   functions \code{FUN} and \code{BREAKIF}.
+
+  If you need to be able to test/debug your callback function
+  as a standalone function, call
+  \preformatted{    set_grid_context(effective_grid, current_block_id)}
+  to set an arbitrary \emph{effective grid} and \emph{current block id}
+  **right before** calling the callback function.
 }
 
 \value{
