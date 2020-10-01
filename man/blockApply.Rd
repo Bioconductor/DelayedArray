@@ -199,7 +199,7 @@ blockReduce(FUN, m, init=FALSE, grid=m_grid)
 ## With early bailout:
 blockReduce(FUN, m, init=FALSE, BREAKIF=identity, grid=m_grid)
 
-## Note that this is how the anyNA() method for DelayedArray object is
+## Note that this is how the anyNA() method for DelayedArray objects is
 ## implemented.
 
 DelayedArray:::set_verbose_block_processing(FALSE)
