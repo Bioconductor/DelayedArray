@@ -84,8 +84,9 @@ set_grid_context <- function(effective_grid, current_block_id,
 
 .suggest_set_grid_context <- c(
     "If you need to be able to test/debug your callback function 'FUN' ",
-    "(or 'BREAKIF') as a standalone function, call set_grid_context() to ",
-    "set an arbitrary context **right before** calling the callback function."
+    "(or 'BREAKIF') as a standalone function, set an arbitrary grid context ",
+    "by calling set_grid_context() **right before** calling the callback ",
+    "function."
 )
 
 effectiveGrid <- function(envir=parent.frame(2))

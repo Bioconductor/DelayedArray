@@ -129,9 +129,9 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   functions \code{FUN} and \code{BREAKIF}.
 
   If you need to be able to test/debug your callback function
-  as a standalone function, call
+  as a standalone function, set an arbitrary \emph{effective grid}
+  and \emph{current block id} by calling
   \preformatted{    set_grid_context(effective_grid, current_block_id)}
-  to set an arbitrary \emph{effective grid} and \emph{current block id}
   **right before** calling the callback function.
 }
 
