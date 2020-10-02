@@ -56,30 +56,44 @@
 \title{ArrayGrid and ArrayViewport objects}
 
 \description{
-  ArrayGrid and ArrayViewport objects are used internally to support
-  block processing of array-like objects.
+  A \emph{grid} is a partitioning of an array-like object into blocks
+  (or viewports).
+
+  In the \pkg{DelayedArray} package, grids and viewports are formally
+  represented by ArrayGrid and ArrayViewport objects, respectively.
+
+  There are two variants of ArrayGrid objects:
+  \itemize{
+    \item RegularArrayGrid objects: for grids where all the blocks have
+          the same geometry (except maybe for the edge blocks).
+    \item ArbitraryArrayGrid objects: for grids where blocks don't
+          necessarily have the same geometry.
+  }
+
+  ArrayGrid and ArrayViewport objects are used extensively in the context
+  of block processing of array-like objects.
 }
 
 \usage{
 ## Constructor functions:
-ArbitraryArrayGrid(tickmarks)
 RegularArrayGrid(refdim, spacings=refdim)
+ArbitraryArrayGrid(tickmarks)
 
 downsample(x, ratio=1L)
 }
 
 \arguments{
-  \item{tickmarks}{
-    A list of integer vectors, one along each dimension of the reference
-    array, representing the tickmarks along that dimension. Each integer
-    vector must be sorted in ascending order. NAs or negative values are
-    not allowed.
-  }
   \item{refdim}{
     An integer vector containing the dimensions of the reference array.
   }
   \item{spacings}{
     An integer vector specifying the grid spacing along each dimension.
+  }
+  \item{tickmarks}{
+    A list of integer vectors, one along each dimension of the reference
+    array, representing the tickmarks along that dimension. Each integer
+    vector must be sorted in ascending order. NAs or negative values are
+    not allowed.
   }
   \item{x}{
     An ArrayGrid object.
@@ -91,15 +105,22 @@ downsample(x, ratio=1L)
   }
 }
 
+\details{
+  RegularArrayGrid and ArbitraryArrayGrid are concrete subclasses of
+  ArrayGrid, which itself is a virtual class.
+
+  Note that an ArrayGrid or ArrayViewport object doesn't store any array
+  data, only the geometry of the grid or viewport. This makes these objects
+  extremely light-weight, even for grids made of millions of blocks.
+}
+
 \value{
-  \itemize{
-    \item For \code{ArbitraryArrayGrid()}: An ArbitraryArrayGrid instance.
+  For \code{RegularArrayGrid()}, a RegularArrayGrid instance.
 
-    \item For \code{RegularArrayGrid()}: A RegularArrayGrid instance.
+  For \code{ArbitraryArrayGrid()}, an ArbitraryArrayGrid instance.
 
-    \item For \code{downsample()}: An ArrayGrid object on the same reference
-          array than \code{x}.
-  }
+  For \code{downsample()}, an ArrayGrid object on the same reference
+  array than \code{x}.
 }
 
 \seealso{

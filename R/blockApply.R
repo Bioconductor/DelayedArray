@@ -1,5 +1,5 @@
 ### =========================================================================
-### Block processing utilities
+### blockApply() and family
 ### -------------------------------------------------------------------------
 ###
 
@@ -110,14 +110,14 @@ set_grid_context <- function(effective_grid, current_block_id,
 
 .grid_context_not_found <- c(
     "Grid context not found for the current block. ",
-    "Are we in a blockApply(), viewportApply(), or blockReduce() loop?"
+    "Are we in a blockApply(), blockReduce(), viewportApply(), ",
+    "or viewportReduce() loop?"
 )
 
 .explain_proper_use <- function(funname)
     paste0("Note that ", funname, "() can only be called from **within** ",
-           "the callback function of a blockApply() or viewportApply() ",
-           "loop ('FUN' argument), or from the callback functions of a ",
-           "blockReduce() loop ('FUN' and 'BREAKIF' arguments).")
+           "the callback functions 'FUN' and/or 'BREAKIF' passed to ",
+           "blockApply() and family.")
 
 .suggest_set_grid_context <- c(
     "If you need to be able to test/debug your callback function 'FUN' ",

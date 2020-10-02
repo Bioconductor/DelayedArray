@@ -16,10 +16,11 @@
 \alias{viewportReduce}
 \alias{blockReduce}
 
-\title{Convenient block processing of an array-like object}
+\title{blockApply() and family}
 
 \description{
-  Conveniently walk on the blocks of an array-like object and process them.
+  A family of convenience functions to walk on the blocks of an
+  array-like object and process them.
 }
 
 \usage{
@@ -180,7 +181,8 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     \item \code{\link{defaultAutoGrid}} and family to generate automatic
           grids to use for block processing of array-like objects.
 
-    \item \link{ArrayGrid} and \link{ArrayViewport} objects.
+    \item \link{ArrayGrid} for the formal representation of grids and
+          viewports.
 
     \item \code{\link{read_block}} and \code{\link{write_block}}.
 

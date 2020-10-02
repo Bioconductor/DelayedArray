@@ -158,6 +158,48 @@ supportedRealizationBackends()
 
   Use \code{supportedRealizationBackends()} to get the list of realization
   backends that are currently supported.
+
+  *** Cross realization backend compatibility ***
+
+  Two important things to keep in mind for developers aiming at writing
+  code that is compatible across realization backends:
+  \itemize{
+    \item Realization backends don't necessarily support concurrent
+          writing.
+
+          More precisely: Even though it is safe to assume that any
+          \link{DelayedArray} object will support concurrent
+          \code{read_block()} calls, it is not so safe to assume that
+          any RealizationSink derivative will support concurrent calls
+          to \code{write_block()}. For example, at the moment,
+          \link[HDF5Array]{HDF5RealizationSink} objects do not
+          support concurrent writing.
+
+          This means that in order to remain compatible across realization
+          backends, code that contains calls to \code{write_block()} should
+          NOT be parallelized.
+
+    \item Some realization backends are "linear write only", that is,
+          they don't support \emph{random write access}, only
+          \emph{linear write access}.
+
+          Such backends will provide a relization sink where the blocks
+          of data must be written in linear order (i.e. by ascending rank).
+          Furthermore, the geometry of the blocks must also be
+          compatible with \emph{linear write access}, that is, they must
+          have a "first-dim-grows-first" shape. Concretely this means
+          that the grid used to walk on the relization sink must be
+          created with something like:
+          \preformatted{    colAutoGrid(sink)}
+          for a two-dimensional sink, or with something like:
+          \preformatted{    defaultAutoGrid(sink, block.shape="first-dim-grows-first")}
+          for a sink with an arbitrary number of dimensions.
+
+          See \code{?\link{defaultAutoGrid}} for more information.
+
+          For obvious reasons, "linear write only" realization
+          backends do not support concurrent writing.
+  }
 }
 
 \value{
@@ -172,19 +214,6 @@ supportedRealizationBackends()
 
   For \code{supportedRealizationBackends}, a data frame with 1 row
   per supported realization backend.
-}
-
-\note{
-  IMPORTANT NOTE ABOUT PARALLELIZATION: Even though it is safe to
-  assume that any \link{DelayedArray} object will support concurrent
-  \code{read_block()} calls, it is not so safe to assume that any
-  RealizationSink derivative will support concurrent calls to
-  \code{write_block()}. For example, at the moment
-  \link[HDF5Array]{HDF5RealizationSink} objects do NOT support
-  concurrent writing.
-
-  This means that in order to remain backend-agnostic, code that contains
-  calls to \code{write_block()} shoult NOT be parallelized.
 }
 
 \seealso{
@@ -225,21 +254,24 @@ supportedRealizationBackends()
 ## Create a realization sink. Note that instead of creating a
 ## realization sink by calling a backend-specific sink constructor
 ## (e.g. HDF5Array::HDF5RealizationSink), we set the "automatic
-## realization backend" to HDF5 and use the backend-agnostic
+## realization backend" to "HDF5Array" and use backend-agnostic
 ## constructor AutoRealizationSink():
 setAutoRealizationBackend("HDF5Array")
 sink <- AutoRealizationSink(c(35L, 50L, 8L))
 dim(sink)
 
 ## -- STEP 2 --
-## Define the grid of blocks to walk on. Here we define a grid made
-## of very small blocks on 'sink'. Please note that real-world block
-## processing typically uses grids made of much bigger blocks obtained
-## with defaultAutoGrid(). See ?defaultAutoGrid for more information.
+## Define the grid of viewports to walk on. Here we define a grid made
+## of very small viewports on 'sink'. Note that, for real-world use cases,
+## block processing will typically use grids made of much bigger
+## viewports, usually obtained with defaultAutoGrid() or family.
+## Also please note that this grid would not be compatible with "linear
+## write only" realization backends. See "Cross realization backend
+## compatibility" above in this man page for more information.
 sink_grid <- RegularArrayGrid(dim(sink), spacings=c(20, 20, 4))
 
 ## -- STEP 3 --
-## Walk on the grid, and, for each of block, write random data to it.
+## Walk on the grid, and, for each of viewport, write random data to it.
 for (bid in seq_along(sink_grid)) {
     viewport <- sink_grid[[bid]]
     block <- array(runif(length(viewport)), dim=dim(viewport))
@@ -258,12 +290,6 @@ sink <- viewportReduce(FUN, sink_grid, sink, verbose=TRUE)
 close(sink)
 A <- as(sink, "DelayedArray")
 A
-
-## Notes:
-## o The above code is backend-agnostic.
-## o In order to remain backend-agnostic the above code should not be
-##   parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above in
-##   this man page.
 
 setAutoRealizationBackend()  # unset automatic realization backend
 
@@ -303,15 +329,18 @@ dim(sink)
 ## Define two grids: one for 'sink' and one for 'a'. Since we're going
 ## to walk on the two grids simultaneously, read a block from 'a' and
 ## write it to 'sink', we need to make sure that we define grids that
-## are "aligned". More precisely they must have the same number of
-## blocks and the blocks in one must correspond to the blocks in the
-## other:
-sink_grid <- RegularArrayGrid(dim(sink), spacings=c(12, 10))
-a_grid <- RegularArrayGrid(dim(a), spacings=c(12, 10, dim(a)[[3]]))
+## are "aligned". More precisely the two grids must have the same number
+## of viewports and the viewports in one must correspond to the viewports
+## in the other one:
+sink_grid <- colAutoGrid(sink, ncol=10)
+a_spacings <- c(dim(sink_grid[[1L]]), dim(a)[[3]])
+a_grid <- RegularArrayGrid(dim(a), spacings=a_spacings)
+dims(sink_grid)  # dimensions of the individual viewports
+dims(a_grid)     # dimensions of the individual viewports
+
+## Here is how to check that the two grids are "aligned":
 stopifnot(identical(length(sink_grid), length(a_grid)))
-dims(sink_grid)  # dimensions of the individual blocks
-dims(a_grid)     # dimensions of the individual blocks
-stopifnot(identical(dims(sink_grid), dims(a_grid)[ , -3]))  # sanity check
+stopifnot(identical(dims(sink_grid), dims(a_grid)[ , -3]))
 
 ## -- STEP 3 --
 ## Walk on the two grids simultaneously:
@@ -347,12 +376,6 @@ M
 
 ## Sanity check:
 stopifnot(identical(collapse_3rd_dim(a), as.array(M)))
-
-## Notes:
-## o The above code is backend-agnostic.
-## o In order to remain backend-agnostic the above code should not be
-##   parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above in
-##   this man page.
 
 setAutoRealizationBackend()  # unset automatic realization backend
 
@@ -411,11 +434,11 @@ pFUN <- function(r, g) {
 setAutoRealizationBackend("HDF5Array")
 U_sink <- AutoRealizationSink(c(200L, 1000L))
 
-## 4. Finally, we create a grid on U_sink with blocks that contain the
-##    same number of columns as the corresponding blocks in R and G:
+## 4. Finally, we create a grid on U_sink with viewports that contain
+##    the same number of columns as the corresponding blocks in R and G:
 U_grid <- colAutoGrid(U_sink, ncol=150)
 
-## Note that the three grids should have the same number of blocks:
+## Note that the three grids should have the same number of viewports:
 stopifnot(length(U_grid) == length(R_grid))
 stopifnot(length(U_grid) == length(G_grid))
 
@@ -442,12 +465,6 @@ U_sink <- viewportReduce(FUN, U_grid, U_sink, verbose=TRUE)
 close(U_sink)
 U <- as(U_sink, "DelayedArray")
 U
-
-## Notes:
-## o The above code is backend-agnostic.
-## o In order to remain backend-agnostic the above code should not be
-##   parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above in
-##   this man page.
 
 setAutoRealizationBackend()  # unset automatic realization backend
 

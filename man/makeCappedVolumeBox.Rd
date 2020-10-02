@@ -98,7 +98,8 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
     \item \code{\link{defaultAutoGrid}} and family to generate automatic
           grids to use for block processing of array-like objects.
 
-    \item \link{ArrayGrid} objects.
+    \item \link{ArrayGrid} for the formal representation of grids and
+          viewports.
   }
 }
 

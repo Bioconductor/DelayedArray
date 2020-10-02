@@ -132,7 +132,8 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
     \item \code{\link{blockApply}} and family for convenient block
           processing of an array-like object.
 
-    \item \link{ArrayGrid} objects.
+    \item \link{ArrayGrid} for the formal representation of grids and
+          viewports.
 
     \item The \code{\link{makeCappedVolumeBox}} utility to make
           \emph{capped volume boxes}.

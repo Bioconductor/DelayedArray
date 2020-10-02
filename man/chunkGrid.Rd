@@ -50,7 +50,8 @@ chunkdim(x)
 
     \item \link{DelayedArray} objects.
 
-    \item \link{ArrayGrid} objects.
+    \item \link{ArrayGrid} for the formal representation of grids and
+          viewports.
   }
 }
 

@@ -89,7 +89,8 @@ mapToRef(major, minor, grid, linear=FALSE)
 
 \seealso{
   \itemize{
-    \item \link{ArrayGrid} objects.
+    \item \link{ArrayGrid} for the formal representation of grids and
+          viewports.
 
     \item \code{\link{Lindex2Mindex}} and \code{\link{Mindex2Lindex}} in
           this package (\pkg{DelayedArray}) for converting back and forth
