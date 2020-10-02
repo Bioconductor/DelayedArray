@@ -461,7 +461,7 @@ setMethod("gsub", c(x="DelayedArray"),
     }
     init <- FALSE
     BREAKIF <- identity
-    blockReduce(FUN, x, init, BREAKIF, grid=grid, as.sparse=as.sparse)
+    blockReduce(FUN, x, init, BREAKIF=BREAKIF, grid=grid, as.sparse=as.sparse)
 }
 
 .anyNA_DelayedArray <- function(x, recursive=FALSE) .BLOCK_anyNA(x, recursive)
@@ -641,7 +641,7 @@ setMethod("table", "DelayedArray", .table_DelayedArray)
     }
 
     for (x in objects)
-        init <- blockReduce(FUN, x, init, BREAKIF,
+        init <- blockReduce(FUN, x, init, BREAKIF=BREAKIF,
                             grid=grid, as.sparse=as.sparse)
     if (is.null(init))
         init <- GENERIC()
@@ -694,7 +694,7 @@ setMethod("Summary", "DelayedArray", .Summary_DelayedArray)
     }
 
     for (object in objects)
-        init <- blockReduce(FUN, object, init, BREAKIF,
+        init <- blockReduce(FUN, object, init, BREAKIF=BREAKIF,
                             grid=grid, as.sparse=as.sparse)
     if (is.null(init))
         init <- range()
@@ -741,7 +741,8 @@ setMethod("range", "DelayedArray",
     init <- numeric(2)  # sum and nval
     BREAKIF <- function(init) is.na(init[[1L]])  # NA or NaN
 
-    ans <- blockReduce(FUN, x, init, BREAKIF, grid=grid, as.sparse=as.sparse)
+    ans <- blockReduce(FUN, x, init, BREAKIF=BREAKIF,
+                       grid=grid, as.sparse=as.sparse)
     ans[[1L]] / ans[[2L]]
 }
 

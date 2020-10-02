@@ -20,6 +20,44 @@ set_verbose_block_processing <- function(verbose)
     old_verbose
 }
 
+normarg_verbose <- function(verbose)
+{
+    if (!(is.logical(verbose) && length(verbose) == 1L))
+        stop(wmsg("'verbose' must be FALSE, TRUE, or NA"))
+    if (is.na(verbose))
+        verbose <- get_verbose_block_processing()
+    verbose
+}
+
+.realize_what_as_what <- function(x_is_sparse, as.sparse)
+{
+    if (is.na(as.sparse) || as.sparse == x_is_sparse) {
+        what <- if (x_is_sparse) "sparse block" else "block"
+        as_what <- ""
+    } else {
+        if (x_is_sparse) {
+            what <- "sparse block"
+            as_what <- "dense block"
+        } else {
+            what <- "dense block"
+            as_what <- "sparse block"
+        }
+        as_what <- paste0(" as ", as_what)
+    }
+    list(what=what, as_what=as_what)
+}
+
+### For use in blockApply() and family.
+verbose_read_block <- function(x, viewport, x_is_sparse, as.sparse, bid, nblock)
+{
+    what_as_what <- .realize_what_as_what(x_is_sparse, as.sparse)
+    message("/ Reading and realizing ", what_as_what$what, " ",
+            bid, "/", nblock, what_as_what$as_what, " ... ", appendLF=FALSE)
+    block <- read_block(x, viewport, as.sparse=as.sparse)
+    message("OK")
+    block
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### set/getAutoBPPARAM()
@@ -52,7 +90,6 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 ### viewportApply(), or blockReduce() loop
 ###
 
-### Exported (used in beachmat).
 set_grid_context <- function(effective_grid, current_block_id,
                              envir=parent.frame(1))
 {
@@ -142,69 +179,148 @@ currentViewport <- function(envir=parent.frame(2))
 ### seems to be slower than using tasks=0 (the default). Investigate this!
 ###
 
-viewportApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM())
+viewportApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!is(grid, "ArrayGrid"))
         stop(wmsg("'grid' must be an ArrayGrid object"))
-    nblock <- length(grid)
     FUN <- match.fun(FUN)
-    FUN0 <- function(bid, grid, nblock, FUN, ...) {
-        if (get_verbose_block_processing()) {
-            message("Processing block ", bid, "/", nblock, " ... ",
+    verbose <- normarg_verbose(verbose)
+
+    FUN_WRAPPER <- function(bid, grid, verbose, FUN, ...)
+    {
+        if (verbose) {
+            nblock <- length(grid)
+            message("\\ Processing viewport ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
-            on.exit(message("OK"))
         }
         viewport <- grid[[bid]]
         set_grid_context(grid, bid)
-        FUN(viewport, ...)
+        ans <- FUN(viewport, ...)
+        if (verbose)
+            message("OK")
+        ans
     }
-    bplapply2(seq_len(nblock), FUN0, grid, nblock, FUN, ..., BPPARAM=BPPARAM)
+    bplapply2(seq_along(grid), FUN_WRAPPER, grid, verbose,
+                               FUN, ..., BPPARAM=BPPARAM)
 }
 
 blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
-                                    BPPARAM=getAutoBPPARAM())
+                                    BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
-    grid <- normarg_grid(grid, x)
     FUN <- match.fun(FUN)
-    FUN0 <- function(viewport, x, as.sparse, FUN, ...) {
-        block <- read_block(x, viewport, as.sparse=as.sparse)
-        set_grid_context(effectiveGrid(), currentBlockId())
-        FUN(block, ...)
+    grid <- normarg_grid(grid, x)
+    if (!(is.logical(as.sparse) && length(as.sparse) == 1L))
+        stop(wmsg("'as.sparse' must be FALSE, TRUE, or NA"))
+    verbose <- normarg_verbose(verbose)
+
+    FUN_WRAPPER <- function(viewport,
+                            FUN, x, as.sparse, verbose, verbose_read_block, ...)
+    {
+        effective_grid <- effectiveGrid()
+        current_block_id <- currentBlockId()
+        if (verbose) {
+            x_is_sparse <- is_sparse(x)
+            nblock <- length(effective_grid)
+            block <- verbose_read_block(x, viewport, x_is_sparse,
+                                        as.sparse, current_block_id, nblock)
+        } else {
+            block <- read_block(x, viewport, as.sparse=as.sparse)
+        }
+        set_grid_context(effective_grid, current_block_id)
+        if (verbose)
+            message("\\ Processing it ... ", appendLF=FALSE)
+        ans <- FUN(block, ...)
+        if (verbose)
+            message("OK")
+        ans
     }
-    viewportApply(grid, FUN0, x, as.sparse, FUN, ..., BPPARAM=BPPARAM)
+    viewportApply(grid, FUN_WRAPPER,
+                  FUN, x, as.sparse, verbose, verbose_read_block, ...,
+                  BPPARAM=BPPARAM, verbose=FALSE)
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### blockReduce()
+### viewportReduce() and blockReduce()
 ###
-### A Reduce-like function.
+### Two Reduce-like functions.
 ###
 
-blockReduce <- function(FUN, x, init, BREAKIF=NULL, grid=NULL, as.sparse=FALSE)
+viewportReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
 {
     FUN <- match.fun(FUN)
+    if (!is(grid, "ArrayGrid"))
+        stop(wmsg("'grid' must be an ArrayGrid object"))
     if (!is.null(BREAKIF))
         BREAKIF <- match.fun(BREAKIF)
-    grid <- normarg_grid(grid, x)
+    verbose <- normarg_verbose(verbose)
+
     nblock <- length(grid)
     for (bid in seq_len(nblock)) {
-        if (get_verbose_block_processing())
-            message("Processing block ", bid, "/", nblock, " ... ",
-                    appendLF=FALSE)
         viewport <- grid[[bid]]
-        block <- read_block(x, viewport, as.sparse=as.sparse)
         set_grid_context(grid, bid)
-        init <- FUN(block, init)
-        if (get_verbose_block_processing())
+        if (verbose)
+            message("\\ Processing viewport ", bid, "/", nblock, " ... ",
+                    appendLF=FALSE)
+        init <- FUN(viewport, init, ...)
+        if (verbose)
             message("OK")
         if (!is.null(BREAKIF) && BREAKIF(init)) {
-            if (get_verbose_block_processing())
+            if (verbose)
                 message("BREAK condition encountered")
             break
         }
     }
     init
+}
+
+blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
+                        grid=NULL, as.sparse=FALSE, verbose=NA)
+{
+    FUN <- match.fun(FUN)
+    if (!is.null(BREAKIF))
+        BREAKIF <- match.fun(BREAKIF)
+    grid <- normarg_grid(grid, x)
+    if (!(is.logical(as.sparse) && length(as.sparse) == 1L))
+        stop(wmsg("'as.sparse' must be FALSE, TRUE, or NA"))
+    verbose <- normarg_verbose(verbose)
+
+    FUN_WRAPPER <- function(viewport, init,
+                            FUN, x, as.sparse, verbose, verbose_read_block, ...)
+    {
+        effective_grid <- effectiveGrid()
+        current_block_id <- currentBlockId()
+        if (verbose) {
+            x_is_sparse <- is_sparse(x)
+            nblock <- length(effective_grid)
+            block <- verbose_read_block(x, viewport, x_is_sparse,
+                                        as.sparse, current_block_id, nblock)
+        } else {
+            block <- read_block(x, viewport, as.sparse=as.sparse)
+        }
+        set_grid_context(effective_grid, current_block_id)
+        if (verbose)
+            message("\\ Processing it ... ", appendLF=FALSE)
+        init <- FUN(block, init, ...)
+        if (verbose)
+            message("OK")
+        init
+    }
+    if (!is.null(BREAKIF) && verbose) {
+        BREAKIF_WRAPPER <- function(init)
+        {
+            ok <- BREAKIF(init)
+            if (ok)
+                message("BREAK condition encountered")
+            ok
+        }
+    } else {
+        BREAKIF_WRAPPER <- BREAKIF
+        
+    }
+    viewportReduce(FUN_WRAPPER, grid, init,
+                   FUN, x, as.sparse, verbose, verbose_read_block, ...,
+                   BREAKIF=BREAKIF_WRAPPER, verbose=FALSE)
 }
 
 
