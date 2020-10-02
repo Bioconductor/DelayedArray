@@ -45,9 +45,10 @@ setMethod("write_block", "ANY",
 ###      'dimnames', and 'type', in that order. Optionally it can have
 ###      the 'as.sparse' argument, in which case this **must** be the 4th
 ###      argument. It can have any additional argument.
-###   2) A "dim", "dimnames", and "type" method.
-###   3) A "write_block" method.
-###   4) A "close" method (optional).
+###   2) A dim(), dimnames(), and type() method.
+###   3) A write_block() method. It must return the modified array-like
+###      object 'x'.
+###   4) A close() method (optional).
 ###   5) Coercion to DelayedArray.
 ###
 ### Examples of RealizationSink concrete subclasses: arrayRealizationSink
