@@ -284,16 +284,18 @@ test_DelayedArray_Summary <- function()
     a1 <- as.array(.make_toy_sas1())   # integer 3D array
     a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeroes or NAs
     a2 <- .make_toy_a2()  # numeric 3D array
-    for (.Generic in c("max", "min", "range", "sum")) {
+    for (.Generic in c("max", "min", "range")) {
         do_tests(.Generic, a1, .BLOCK_SIZES1, checkIdentical)
         do_tests(.Generic, a1b, .BLOCK_SIZES1, checkIdentical)
         do_tests(.Generic, a1b - 0.5, .BLOCK_SIZES2, checkIdentical)
         do_tests(.Generic, a2, .BLOCK_SIZES2, checkIdentical)
     }
-    do_tests("prod", a1, .BLOCK_SIZES1, checkIdentical)
-    do_tests("prod", a1b, .BLOCK_SIZES1, checkEquals)
-    do_tests("prod", a1b - 0.5, .BLOCK_SIZES2, checkEquals)
-    do_tests("prod", a2, .BLOCK_SIZES2, checkEquals)
+    for (.Generic in c("sum", "prod")) {
+        do_tests(.Generic, a1, .BLOCK_SIZES1, checkIdentical)
+        do_tests(.Generic, a1b, .BLOCK_SIZES1, checkEquals)
+        do_tests(.Generic, a1b - 0.5, .BLOCK_SIZES2, checkEquals)
+        do_tests(.Generic, a2, .BLOCK_SIZES2, checkEquals)
+    }
 
     ## on a logical array
     a <- array(c(rep(NA, 62), rep(TRUE, 87), FALSE), c(5, 10, 3))
