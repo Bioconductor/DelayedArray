@@ -125,8 +125,8 @@ sparse2dense(sas)
 
     \item The \code{\link{read_block}} function.
 
-    \item \code{\link{blockApply}} for convenient block processing of an
-          array-like object.
+    \item \code{\link{blockApply}} and family for convenient block
+          processing of an array-like object.
 
     \item \code{\link{extract_array}}.
 

@@ -246,5 +246,12 @@ blockReduce(FUN, m, init=FALSE, BREAKIF=identity, grid=m_grid,
 
 ## Note that this is how the anyNA() method for DelayedArray objects is
 ## implemented.
+
+## ---------------------------------------------------------------------
+## viewportReduce()
+## ---------------------------------------------------------------------
+## The man page for write_block() contains several examples of how to
+## use viewportReduce() to write array blocks to a "realization sink".
+## See '?write_block'
 }
 \keyword{methods}

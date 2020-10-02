@@ -195,8 +195,8 @@ supportedRealizationBackends()
 
     \item \code{\link{read_block}}.
 
-    \item \code{\link{blockApply}} for convenient block processing of an
-          array-like object.
+    \item \code{\link{blockApply}} and family for convenient block
+          processing of an array-like object.
 
     \item \code{\link{defaultAutoGrid}} and family to generate automatic
           grids to use for block processing of array-like objects.
@@ -221,37 +221,51 @@ supportedRealizationBackends()
 ## USING THE "RealizationSink API": EXAMPLE 1
 ## ---------------------------------------------------------------------
 
-## 1. Create a realization sink (note that we choose to use an HDF5
-##    realization sink but other realization backends would work the
-##    same way):
-library(HDF5Array)
-sink <- HDF5RealizationSink(c(25L, 40L, 8L))
+## -- STEP 1 --
+## Create a realization sink. Note that instead of creating a
+## realization sink by calling a backend-specific sink constructor
+## (e.g. HDF5Array::HDF5RealizationSink), we set the "automatic
+## realization backend" to HDF5 and use the backend-agnostic
+## constructor AutoRealizationSink():
+setAutoRealizationBackend("HDF5Array")
+sink <- AutoRealizationSink(c(35L, 50L, 8L))
 dim(sink)
 
-## 2. Define the grid of blocks to walk on. Here we define a grid made
-##    of very small blocks on 'sink'. Please note that real-world block
-##    processing typically uses grids made of much bigger blocks obtained
-##    with defaultAutoGrid(). See ?defaultAutoGrid for more information.
-sink_grid <- RegularArrayGrid(dim(sink), spacings=c(12, 10, 2))
+## -- STEP 2 --
+## Define the grid of blocks to walk on. Here we define a grid made
+## of very small blocks on 'sink'. Please note that real-world block
+## processing typically uses grids made of much bigger blocks obtained
+## with defaultAutoGrid(). See ?defaultAutoGrid for more information.
+sink_grid <- RegularArrayGrid(dim(sink), spacings=c(20, 20, 4))
 
-## 3. Walk on the grid, and, for each of block, write random data to it:
+## -- STEP 3 --
+## Walk on the grid, and, for each of block, write random data to it.
 for (bid in seq_along(sink_grid)) {
     viewport <- sink_grid[[bid]]
     block <- array(runif(length(viewport)), dim=dim(viewport))
     sink <- write_block(sink, viewport, block)
 }
 
-## 4. Close the sink and turn it into a DelayedArray object:
+## -- An alternative to STEP 3 --
+FUN <- function(viewport, sink) {
+    block <- array(runif(length(viewport)), dim=dim(viewport))
+    write_block(sink, viewport, block)
+}
+sink <- viewportReduce(FUN, sink_grid, sink, verbose=TRUE)
+
+## -- STEP 4 --
+## Close the sink and turn it into a DelayedArray object:
 close(sink)
 A <- as(sink, "DelayedArray")
 A
 
-## Note that, except for step 1, the above code is backend-agnostic.
-## To also make step 1 backend-agnostic, replace the call to
-## HDF5RealizationSink() with a call to AutoRealizationSink().
-## Also note that in order to remain backend-agnostic the above code
-## should not be parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION"
-## above in this man page.
+## Notes:
+## o The above code is backend-agnostic.
+## o In order to remain backend-agnostic the above code should not be
+##   parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above in
+##   this man page.
+
+setAutoRealizationBackend()  # unset automatic realization backend
 
 ## ---------------------------------------------------------------------
 ## USING THE "RealizationSink API": EXAMPLE 2
@@ -279,16 +293,19 @@ stopifnot(identical(sum(a), sum(collapse_3rd_dim(a))))  # sanity check
 ## Now say that A is so big that even M wouldn't fit in memory. This is
 ## a situation where we'd want to compute M block by block:
 
-## 1. Create the 2D realization sink:
-sink <- HDF5RealizationSink(dim(a)[1:2])
+## -- STEP 1 --
+## Create the 2D realization sink:
+setAutoRealizationBackend("HDF5Array")
+sink <- AutoRealizationSink(dim(a)[1:2])
 dim(sink)
 
-## 2. Define two grids: one for 'sink' and one for 'a'. Since we're going
-##    to walk on the two grids simultaneously, read a block from 'a' and
-##    write it to 'sink', we need to make sure that we define grids that
-##    are "aligned". More precisely they must have the same number of
-##    blocks and the blocks in one must correspond to the blocks in the
-##    other:
+## -- STEP 2 --
+## Define two grids: one for 'sink' and one for 'a'. Since we're going
+## to walk on the two grids simultaneously, read a block from 'a' and
+## write it to 'sink', we need to make sure that we define grids that
+## are "aligned". More precisely they must have the same number of
+## blocks and the blocks in one must correspond to the blocks in the
+## other:
 sink_grid <- RegularArrayGrid(dim(sink), spacings=c(12, 10))
 a_grid <- RegularArrayGrid(dim(a), spacings=c(12, 10, dim(a)[[3]]))
 stopifnot(identical(length(sink_grid), length(a_grid)))
@@ -296,7 +313,8 @@ dims(sink_grid)  # dimensions of the individual blocks
 dims(a_grid)     # dimensions of the individual blocks
 stopifnot(identical(dims(sink_grid), dims(a_grid)[ , -3]))  # sanity check
 
-## 3. Walk on the two grids simultaneously:
+## -- STEP 3 --
+## Walk on the two grids simultaneously:
 for (bid in seq_along(sink_grid)) {
     ## Read block from 'a'.
     a_viewport <- a_grid[[bid]]
@@ -308,19 +326,35 @@ for (bid in seq_along(sink_grid)) {
     sink <- write_block(sink, sink_viewport, block)
 }
 
-## 4. Close the sink and turn it into a DelayedArray object:
+## -- An alternative to STEP 3 --
+FUN <- function(sink_viewport, sink) {
+    ## Read block from 'a'.
+    bid <- currentBlockId()
+    a_viewport <- a_grid[[bid]]
+    block <- read_block(a, a_viewport)
+    ## Collapse it.
+    block <- collapse_3rd_dim(block)
+    ## Write the collapsed block to 'sink'.
+    write_block(sink, sink_viewport, block)
+}
+sink <- viewportReduce(FUN, sink_grid, sink, verbose=TRUE)
+
+## -- STEP 4 --
+## Close the sink and turn it into a DelayedArray object:
 close(sink)
 M <- as(sink, "DelayedArray")
 M
 
-## Note that, except for step 1, the above code is backend-agnostic.
-## To also make step 1 backend-agnostic, replace the call to
-## HDF5RealizationSink() with a call to AutoRealizationSink().
-## Also note that in order to remain backend-agnostic the above code
-## should not be parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION"
-## above in this man page.
+## Sanity check:
+stopifnot(identical(collapse_3rd_dim(a), as.array(M)))
 
-stopifnot(identical(collapse_3rd_dim(a), as.array(M)))  # sanity check
+## Notes:
+## o The above code is backend-agnostic.
+## o In order to remain backend-agnostic the above code should not be
+##   parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above in
+##   this man page.
+
+setAutoRealizationBackend()  # unset automatic realization backend
 
 ## ---------------------------------------------------------------------
 ## USING THE "RealizationSink API": AN ADVANCED EXAMPLE
@@ -355,7 +389,7 @@ G <- as(matrix(runif(250000), ncol=1000), "HDF5Array")  # 250 rows
 ## Before we get to the "for" loop, we need 4 things:
 
 ## 1. Two grids of blocks, one on R and one on G. The blocks in the
-##    2 grids must contain the same number of columns. We arbitrarily
+##    two grids must contain the same number of columns. We arbitrarily
 ##    choose to use blocks of 150 columns:
 R_grid <- colAutoGrid(R, ncol=150)
 G_grid <- colAutoGrid(G, ncol=150)
@@ -373,43 +407,49 @@ pFUN <- function(r, g) {
 }
 
 ## 3. A RealizationSink object where to write the matrices returned
-##    by pFUN() as we go. Note that instead of creating a realization
-##    sink by calling a backend-specific sink constructor (e.g.
-##    HDF5Array::HDF5RealizationSink), we set the "automatic realization
-##    backend" to HDF5 and use the backend-agnostic constructor
-##    AutoRealizationSink():
-
+##    by pFUN() as we go:
 setAutoRealizationBackend("HDF5Array")
 U_sink <- AutoRealizationSink(c(200L, 1000L))
 
 ## 4. Finally, we create a grid on U_sink with blocks that contain the
 ##    same number of columns as the corresponding blocks in R and G:
-
 U_grid <- colAutoGrid(U_sink, ncol=150)
 
-## Note that the 3 grids should have the same number of blocks:
+## Note that the three grids should have the same number of blocks:
 stopifnot(length(U_grid) == length(R_grid))
 stopifnot(length(U_grid) == length(G_grid))
 
-## Now we can procede. We use a "for" loop where we walk on R and G at
-## the same time, block by block, apply pFUN(), and write the output
-## of pFUN() to U_sink:
+## 5. Now we can proceed. We use a "for" loop to walk on R and G
+##    simultaneously, block by block, apply pFUN(), and write the
+##    output of pFUN() to U_sink:
 for (bid in seq_along(U_grid)) {
     R_block <- read_block(R, R_grid[[bid]])
     G_block <- read_block(G, G_grid[[bid]])
     U_block <- pFUN(R_block, G_block)
-    sink <- write_block(U_sink, U_grid[[bid]], U_block)
+    U_sink <- write_block(U_sink, U_grid[[bid]], U_block)
 }
+
+## An alternative to the "for" loop is to use viewportReduce():
+FUN <- function(U_viewport, U_sink) {
+    bid <- currentBlockId()
+    R_block <- read_block(R, R_grid[[bid]])
+    G_block <- read_block(G, G_grid[[bid]])
+    U_block <- pFUN(R_block, G_block)
+    write_block(U_sink, U_viewport, U_block)
+}
+U_sink <- viewportReduce(FUN, U_grid, U_sink, verbose=TRUE)
 
 close(U_sink)
 U <- as(U_sink, "DelayedArray")
 U
 
-## Note that in order to remain backend-agnostic the above code should
-## not be parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above
-## in this man page.
+## Notes:
+## o The above code is backend-agnostic.
+## o In order to remain backend-agnostic the above code should not be
+##   parallelized. See "IMPORTANT NOTE ABOUT PARALLELIZATION" above in
+##   this man page.
 
-setAutoRealizationBackend()
+setAutoRealizationBackend()  # unset automatic realization backend
 
 ## ---------------------------------------------------------------------
 ## VERY BASIC (BUT ALSO VERY ARTIFICIAL) USAGE OF THE
@@ -496,8 +536,8 @@ m1b
 ## ---------------------------------------------------------------------
 
 getAutoRealizationBackend()  # no backend set yet
-supportedRealizationBackends()
 
+supportedRealizationBackends()
 setAutoRealizationBackend("HDF5Array")
 getAutoRealizationBackend()  # backend is set to "HDF5Array"
 supportedRealizationBackends()
@@ -522,5 +562,7 @@ for (bid in seq_along(grid)) {
 close(sink)
 A <- as(sink, "DelayedArray")
 A
+
+setAutoRealizationBackend()  # unset automatic realization backend
 }
 \keyword{utilities}

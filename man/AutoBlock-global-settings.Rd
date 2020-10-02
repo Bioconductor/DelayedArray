@@ -130,8 +130,8 @@ setAutoBlockShape(shape=c("hypercube",
     \item \code{\link{defaultAutoGrid}} and family to generate automatic
           grids to use for block processing of array-like objects.
 
-    \item \code{\link{blockApply}} for convenient block processing of an
-          array-like object.
+    \item \code{\link{blockApply}} and family for convenient block
+          processing of an array-like object.
 
     \item The \code{\link{makeCappedVolumeBox}} utility to make
           \emph{capped volume boxes}.

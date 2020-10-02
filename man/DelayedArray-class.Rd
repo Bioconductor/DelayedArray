@@ -184,8 +184,8 @@ type(x)
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
 
-    \item \code{\link{blockApply}} for convenient block processing of an
-          array-like object.
+    \item \code{\link{blockApply}} and family for convenient block
+          processing of an array-like object.
 
     \item \link{DelayedArray-utils} for common operations on
           DelayedArray objects.

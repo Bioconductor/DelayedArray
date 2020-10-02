@@ -129,8 +129,8 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
     \item \code{\link{setAutoBlockSize}} and \code{\link{setAutoBlockShape}}
           to control the geometry of automatic blocks.
 
-    \item \code{\link{blockApply}} for convenient block processing of an
-          array-like object.
+    \item \code{\link{blockApply}} and family for convenient block
+          processing of an array-like object.
 
     \item \link{ArrayGrid} objects.
 
