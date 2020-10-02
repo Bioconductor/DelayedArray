@@ -11,9 +11,11 @@
 ### HDF5Array::writeTENxMatrix().
 ###
 
-BLOCK_write_to_sink <- function(x, sink)
+BLOCK_write_to_sink <- function(sink, x, verbose=NA)
 {
     stopifnot(identical(dim(x), dim(sink)))
+    verbose <- normarg_verbose(verbose)
+
     ## 'x' and 'sink' might both have their physical chunks but we must
     ## choose a grid that is compatible with the physical chunks of 'sink'.
     ## Calling 'defaultAutoGrid()' on 'sink' will produce such grid.
@@ -24,22 +26,29 @@ BLOCK_write_to_sink <- function(x, sink)
     ## we'll get a grid that guarentees linear writing to the sink in case
     ## 'chunkdim(sink)' is NULL.
     grid <- defaultAutoGrid(sink, block.shape="first-dim-grows-first")
-    nblock <- length(grid)
-    x_is_sparse <- is_sparse(x)
-    what <- if (x_is_sparse) "sparse block" else "block"
-    for (bid in seq_len(nblock)) {
-        viewport <- grid[[bid]]
-        if (get_verbose_block_processing())
-            message("Realizing ", what, " ", bid, "/", nblock, " ... ",
-                    appendLF=FALSE)
-        block <- read_block(x, viewport, as.sparse=x_is_sparse)
-        if (get_verbose_block_processing())
-            message("OK, writing it ... ", appendLF=FALSE)
-        write_block(sink, viewport, block)
-        if (get_verbose_block_processing())
+
+    FUN <- function(viewport, sink, x, verbose, verbose_read_block)
+    {
+        effective_grid <- effectiveGrid()
+        current_block_id <- currentBlockId()
+        if (verbose) {
+            x_is_sparse <- is_sparse(x)
+            nblock <- length(effective_grid)
+            block <- verbose_read_block(x, viewport, x_is_sparse,
+                                        as.sparse=NA, current_block_id, nblock)
+        } else {
+            block <- read_block(x, viewport, as.sparse=NA)
+        }
+        if (verbose)
+            message("\\ Writing it ... ", appendLF=FALSE)
+        sink <- write_block(sink, viewport, block)
+        if (verbose)
             message("OK")
+        sink
     }
-    sink
+    viewportReduce(FUN, grid, sink,
+                   x, verbose, verbose_read_block,
+                   verbose=FALSE)
 }
 
 

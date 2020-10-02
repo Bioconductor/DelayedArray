@@ -106,7 +106,7 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     \pkg{BiocParallel} package for more information about parallel back-ends.
   }
   \item{verbose}{
-    Whether progress should be displayed or not.
+    Whether block processing progress should be displayed or not.
     If set to \code{NA} (the default), verbosity is controlled
     by \code{DelayedArray:::get_verbose_block_processing()}.
     Setting \code{verbose} to \code{TRUE} or \code{FALSE} overrides this.

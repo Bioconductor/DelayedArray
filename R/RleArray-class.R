@@ -181,7 +181,7 @@ setAs("RleRealizationSink", "DelayedArray", function(from) as(from, "RleArray"))
 .as_RleArray <- function(from)
 {
     sink <- RleRealizationSink(dim(from), dimnames(from), type(from))
-    BLOCK_write_to_sink(from, sink)
+    BLOCK_write_to_sink(sink, from)
     as(sink, "RleArray")
 }
 
