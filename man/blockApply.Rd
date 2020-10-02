@@ -215,8 +215,8 @@ a_grid
 blockApply(a, function(block) sum(log(block + 0.5)), grid=a_grid)
 
 ## See block processing in action:
-DelayedArray:::set_verbose_block_processing(TRUE)
-blockApply(m, function(block) sum(log(block + 0.5)), grid=m_grid)
+blockApply(m, function(block) sum(log(block + 0.5)), grid=m_grid,
+           verbose=TRUE)
 
 ## Use parallel evaluation:
 library(BiocParallel)
@@ -228,24 +228,23 @@ if (.Platform$OS.type != "windows") {
     BPPARAM <- SnowParam(4)
 }
 blockApply(m, function(block) sum(log(block + 0.5)), grid=m_grid,
-              BPPARAM=BPPARAM)
+           BPPARAM=BPPARAM, verbose=TRUE)
 ## Note that blocks can be visited in any order!
 
 ## ---------------------------------------------------------------------
 ## blockReduce()
 ## ---------------------------------------------------------------------
 FUN <- function(block, init) anyNA(block) || init
-blockReduce(FUN, m, init=FALSE, grid=m_grid)
+blockReduce(FUN, m, init=FALSE, grid=m_grid, verbose=TRUE)
 
 m[10, 1] <- NA
-blockReduce(FUN, m, init=FALSE, grid=m_grid)
+blockReduce(FUN, m, init=FALSE, grid=m_grid, verbose=TRUE)
 
 ## With early bailout:
-blockReduce(FUN, m, init=FALSE, BREAKIF=identity, grid=m_grid)
+blockReduce(FUN, m, init=FALSE, BREAKIF=identity, grid=m_grid,
+            verbose=TRUE)
 
 ## Note that this is how the anyNA() method for DelayedArray objects is
 ## implemented.
-
-DelayedArray:::set_verbose_block_processing(FALSE)
 }
 \keyword{methods}
