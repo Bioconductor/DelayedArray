@@ -7,31 +7,33 @@
 ### write_block()
 ###
 
-### 'x' is typically expected to be a concrete RealizationSink subclass
-### although write_block() should also work on an ordinary array or other
-### in-memory array- or matrix-like object like a sparseMatrix derivative
-### from the Matrix package.
-### Dispatch on first argument 'x' only for now for simplicity but we
-### could change this to also dispatch on the third argument ('block')
-### when the need arises.
-### Must return 'x' (possibly modified if it's an in-memory object).
-setGeneric("write_block", signature="x",
-    function(x, viewport, block)
+### 'sink' must be a **writable** array-like object, typically a
+### RealizationSink concrete subclass. We also make write_block() work
+### on ordinary arrays or other in-memory array-like objects (e.g.
+### sparseMatrix derivatives from the Matrix package) by defining
+### the default method below.
+### For now dispatch is only on the first argument ('sink') but we
+### could change this in the future to also dispatch on the third
+### argument ('block') when the need arises.
+### Must return 'sink' (possibly modified if it's an in-memory object).
+setGeneric("write_block", signature="sink",
+    function(sink, viewport, block)
     {
         stopifnot(is(viewport, "ArrayViewport"),
-                  identical(refdim(viewport), dim(x)),
+                  identical(refdim(viewport), dim(sink)),
                   identical(dim(block), dim(viewport)))
         standardGeneric("write_block")
     }
 )
 
+### Work on any array-like object that supports '[<-'.
 setMethod("write_block", "ANY",
-    function(x, viewport, block)
+    function(sink, viewport, block)
     {
         if (is(block, "SparseArraySeed"))
             block <- sparse2dense(block)
         Nindex <- makeNindexFromArrayViewport(viewport)
-        replace_by_Nindex(x, Nindex, block)
+        replace_by_Nindex(sink, Nindex, block)
     }
 )
 
@@ -40,14 +42,15 @@ setMethod("write_block", "ANY",
 ### RealizationSink objects
 ###
 ### Virtual class with no slots. Intended to be extended to support specific
-### realization backends. Concrete subclasses must implement:
+### realization backends. Concrete subclasses must implement the "sink
+### contract", that is:
 ###   1) A constructor function where the first 3 arguments are 'dim',
 ###      'dimnames', and 'type', in that order. Optionally it can have
 ###      the 'as.sparse' argument, in which case this **must** be the 4th
 ###      argument. It can have any additional argument.
 ###   2) A dim(), dimnames(), and type() method.
 ###   3) A write_block() method. It must return the modified array-like
-###      object 'x'.
+###      object 'sink'.
 ###   4) A close() method (optional).
 ###   5) Coercion to DelayedArray.
 ###
@@ -101,11 +104,11 @@ arrayRealizationSink <- function(dim, dimnames=NULL, type="double")
 }
 
 setMethod("write_block", "arrayRealizationSink",
-    function(x, viewport, block)
+    function(sink, viewport, block)
     {
-        result <- .get_arrayRealizationSink_result(x)
+        result <- .get_arrayRealizationSink_result(sink)
         result <- write_block(result, viewport, block)
-        .set_arrayRealizationSink_result(x, result)
+        .set_arrayRealizationSink_result(sink, result)
     }
 )
 

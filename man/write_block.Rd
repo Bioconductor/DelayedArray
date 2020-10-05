@@ -34,7 +34,7 @@
 }
 
 \usage{
-write_block(x, viewport, block)
+write_block(sink, viewport, block)
 
 ## Backend-agnostic RealizationSink constructor:
 AutoRealizationSink(dim, dimnames=NULL, type="double", as.sparse=FALSE)
@@ -46,16 +46,16 @@ supportedRealizationBackends()
 }
 
 \arguments{
-  \item{x}{
+  \item{sink}{
     A **writable** array-like object, typically a RealizationSink derivative.
     Some important notes:
     \itemize{
       \item \link{DelayedArray} objects are NEVER writable, even when they
             don't carry delayed operations (e.g. \link[HDF5Array]{HDF5Array}
             objects from the \pkg{HDF5Array} package), even when they don't
-            carry delayed operations AND have all their data in memory (e.g.
+            carry delayed operations and have all their data in memory (e.g.
             \link{RleArray} objects).
-      \item RealizationSink is a virtual class so \code{x} must be an
+      \item RealizationSink is a virtual class so \code{sink} must be an
             instance of a **concrete** RealizationSink subclass (e.g.
             an \link[HDF5Array]{HDF5RealizationSink} object from the
             \pkg{HDF5Array} package).
@@ -68,8 +68,8 @@ supportedRealizationBackends()
     package.
   }
   \item{viewport}{
-    An \link{ArrayViewport} object compatible with \code{x}, that is,
-    such that \code{refdim(viewport)} is identical to \code{dim(x)}.
+    An \link{ArrayViewport} object compatible with \code{sink}, that is,
+    such that \code{refdim(viewport)} is identical to \code{dim(sink)}.
   }
   \item{block}{
     An ordinary (dense) array or \link{SparseArraySeed} object of the
@@ -203,7 +203,7 @@ supportedRealizationBackends()
 }
 
 \value{
-  For \code{write_block()}, the modified array-like object \code{x}.
+  For \code{write_block()}, the modified array-like object \code{sink}.
 
   For \code{AutoRealizationSink()}, a RealizationSink object for the
   current \emph{automatic realization backend}.
