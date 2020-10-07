@@ -10,7 +10,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	data frames.
 Version: 0.15.16
 Encoding: UTF-8
-Author: Hervé Pagès <hpages@fredhutch.org>, with contributions from
+Author: Hervé Pagès <hpages.on.github@gmail.com>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
 	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
 Maintainer: Hervé Pagès <hpages@fredhutch.org>
