@@ -32,7 +32,7 @@
 \subtitle{A look at HDF5Array/RleArray/DelayedArray objects}
 
 \author{Herv\'e Pag\`es\\
-        \href{mailto:hpages@fredhutch.org}{hpages@fredhutch.org}}
+        \href{mailto:hpages.on.github@gmail.com}{hpages.on.github@gmail.com}}
 
 \institute{Bioconductor conference\\Boston}
 

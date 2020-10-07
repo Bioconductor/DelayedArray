@@ -13,7 +13,7 @@ Encoding: UTF-8
 Author: Hervé Pagès <hpages.on.github@gmail.com>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
 	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
-Maintainer: Hervé Pagès <hpages@fredhutch.org>
+Maintainer: Hervé Pagès <hpages.on.github@gmail.com>
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 Depends: R (>= 3.4), methods, stats4, Matrix,
 	BiocGenerics (>= 0.31.5), MatrixGenerics (>= 1.1.3),
