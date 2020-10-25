@@ -21,11 +21,11 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL, as.sparse=NA)
     if (!isTRUEorFALSE(arr.ind))
         stop("'arr.ind' must be TRUE or FALSE")
     FUN <- function(block, arr.ind) {
-        bid <- currentBlockId(block)
+        bid <- currentBlockId()
         ## Dispatch on which() method for array or SparseArraySeed.
         minor <- which(block)
         major <- rep.int(bid, length(minor))
-        grid <- effectiveGrid(block)
+        grid <- effectiveGrid()
         Mindex <- mapToRef(major, minor, grid, linear=TRUE)
         if (arr.ind)
             return(Mindex)
@@ -299,10 +299,10 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 .BLOCK_dense2sparse <- function(x, grid=NULL)
 {
     FUN <- function(block, arr.ind) {
-        bid <- currentBlockId(block)
+        bid <- currentBlockId()
         minor <- base::which(block != 0L)
         major <- rep.int(bid, length(minor))
-        grid <- effectiveGrid(block)
+        grid <- effectiveGrid()
         nzindex <- mapToRef(major, minor, grid, linear=TRUE)
         nzdata <- block[minor]
         list(nzindex, nzdata)
