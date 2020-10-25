@@ -8,7 +8,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	this also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, ordinary arrays and,
 	data frames.
-Version: 0.15.16
+Version: 0.15.17
 Encoding: UTF-8
 Author: Hervé Pagès <hpages.on.github@gmail.com>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
