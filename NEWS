@@ -1,3 +1,79 @@
+CHANGES IN VERSION 0.16.0
+-------------------------
+
+NEW FEATURES
+
+    o Added 'as.sparse' argument to read_block() (see ?read_block) and to
+      AutoRealizationSink() (see ?AutoRealizationSink).
+
+    o SparseArraySeed objects now can hold dimnames. As a consequence
+      read_block() now also propagates the dimnames to sparse blocks,
+      not just to dense blocks.
+
+    o Matrix multiplication is now sparse-aware via sparseMatrices.
+
+    o Added is_sparse<- generic (with methods for HDF5Array/HDF5ArraySeed
+      objects only, see ?HDF5Array in the HDF5Array package).
+
+    o Added viewportApply() and viewportReduce() to the blockApply() family.
+
+    o Added set_grid_context() for testing/debugging callback functions passed
+      to blockApply() and family.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Renamed first write_block() argument 'x' -> 'sink'
+
+    o Renamed:
+        RealizationSink()           -> AutoRealizationSink()
+        get/setRealizationBackend() -> get/setAutoRealizationBackend()
+        blockGrid()                 -> defaultAutoGrid()
+        row/colGrid()               -> row/colAutoGrid()
+
+    o Improved support of sparse data:
+
+      - Slightly more efficient coercion from SparseArraySeed to
+        dgCMatrix/lgCMatrix (small speedup and memory footprint reduction).
+        This provides a minor speedup to the sparse aware block-processed
+        row/col summarization methods for DelayedMatrix objects when the
+        object is sparse. (These methods are: row/colSums(), row/colMeans(),
+        row/colMins(), row/colMaxs(), and row/colRanges(). The methods defined
+        in DelayedMatrixStats are not sparse aware yet so are not affected.)
+
+      - Made the following block-processed operations on DelayedArray objects
+        sparse aware: anyNA(), which(), max(), min(), range(), sum(), prod(),
+        any(), all(), and mean(). With a typical 50%-60% speedup when the
+        DelayedArray object is sparse.
+
+      - Implemented a bunch of methods to operate natively on SparseArraySeed
+        objects. Their main purpose is to support the above i.e. to support
+        block processed methods for DelayedArray objects like sum(), mean(),
+        which(), etc... when the object is sparse. Note that more are needed
+        to also support the sparse aware block-processed row/col summarization
+        methods for DelayedMatrix objects so we can finally ditch the costly
+        coercion from SparseArraySeed to dgCMatrix/lgCMatrix that they currently
+        rely on.
+
+    o The utility functions for retrieving grid context for the current
+      block/viewport should now be called with no argument (previously
+      one needed to pass the current block to them). These functions are
+      effectiveGrid(), currentBlockId(), and currentViewport().
+
+    o DelayedArray now depends on the MatrixGenerics package.
+
+BUG FIXES
+
+    o Various fixes and improvements to block processing of sparse logical
+      DelayedMatrix objects (e.g. DelayedMatrix object with a lgCMatrix
+      seed from thr Matrix package).
+
+    o Fix extract_sparse_array() inefficiency on dgCMatrix and lgCMatrix
+      objects.
+
+    o Switch matrix multiplication to bplapply2() from bpiterate() to fix
+      error handling.
+
+
 CHANGES IN VERSION 0.14.0
 -------------------------
 
