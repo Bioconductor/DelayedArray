@@ -8,13 +8,16 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 	this also works on in-memory array-like objects like DataFrame objects
 	(typically with Rle columns), Matrix objects, ordinary arrays and,
 	data frames.
+biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
+URL: https://bioconductor.org/packages/DelayedArray
+BugReports: https://github.com/Bioconductor/DelayedArray/issues
 Version: 0.15.17
+License: Artistic-2.0
 Encoding: UTF-8
 Author: Hervé Pagès <hpages.on.github@gmail.com>, with contributions from
 	Peter Hickey <peter.hickey@gmail.com> and
 	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
 Maintainer: Hervé Pagès <hpages.on.github@gmail.com>
-biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 Depends: R (>= 3.4), methods, stats4, Matrix,
 	BiocGenerics (>= 0.31.5), MatrixGenerics (>= 1.1.3),
 	S4Vectors (>= 0.27.2), IRanges (>= 2.17.3)
@@ -23,7 +26,6 @@ LinkingTo: S4Vectors
 Suggests: BiocParallel, HDF5Array (>= 1.17.12), genefilter,
 	SummarizedExperiment, airway, pryr, DelayedMatrixStats,
 	knitr, BiocStyle, RUnit
-License: Artistic-2.0
 VignetteBuilder: knitr
 Collate: utils.R
 	sparseMatrix-utils.R
