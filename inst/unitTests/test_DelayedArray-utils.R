@@ -374,3 +374,84 @@ test_DelayedArray_apply <- function()
     do_tests(a1b[ , , 0])
 }
 
+test_DelayedArray_scale <- function()
+{
+    scaled_DelayedMatrix_as_matrix <- function(x) {
+        ans <- as.matrix(x)
+        attr(ans, "scaled:center") <- attr(x, "scaled:center")
+        attr(ans, "scaled:scale") <- attr(x, "scaled:scale")
+        ans
+    }
+    check_scaled_DelayedMatrix <- function(target, current) {
+        checkTrue(is(current, "DelayedMatrix"))
+        checkIdentical(dim(target), dim(current))
+        #checkTrue("scaled:center" %in% names(attributes(current)))
+        #checkTrue("scaled:scale" %in% names(attributes(current)))
+        checkEquals(attr(target, "scaled:center"),
+                    attr(current, "scaled:center"))
+        checkEquals(attr(target, "scaled:scale"),
+                    attr(current, "scaled:scale"))
+        checkEquals(target, scaled_DelayedMatrix_as_matrix(current))
+    }
+
+    m <- matrix(-9:70, ncol=8, dimnames=list(LETTERS[1:10], letters[1:8]))
+    m[1, 1] <- NA
+    m[2, 2] <- NaN
+    m[3, 3] <- Inf
+    m[4, 4] <- -Inf
+    m[5:6, 5] <- c(NaN, Inf)
+    m[6:8, 6] <- c(NaN, NA, -Inf)
+    M <- realize(m)
+
+    ## 'center' is TRUE:
+    target <- scale(m)
+    current <- scale(M)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, scale=FALSE)
+    current <- scale(M, scale=FALSE)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, scale=-4:3)
+    current <- scale(M, scale=-4:3)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, scale=c(NaN, -Inf, -2:1, Inf, NA))
+    current <- scale(M, scale=c(NaN, -Inf, -2:1, Inf, NA))
+    check_scaled_DelayedMatrix(target, current)
+
+    ## 'center' is FALSE:
+    target <- scale(m, center=FALSE)
+    current <- scale(M, center=FALSE)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, center=FALSE, scale=FALSE)
+    current <- scale(M, center=FALSE, scale=FALSE)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, center=FALSE, scale=-4:3)
+    current <- scale(M, center=FALSE, scale=-4:3)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, center=FALSE, scale=c(NaN, -Inf, -2:1, Inf, NA))
+    current <- scale(M, center=FALSE, scale=c(NaN, -Inf, -2:1, Inf, NA))
+    check_scaled_DelayedMatrix(target, current)
+
+    ## 'center' is numeric:
+    target <- scale(m, center=5:-2)
+    current <- scale(M, center=5:-2)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, center=5:-2, scale=FALSE)
+    current <- scale(M, center=5:-2, scale=FALSE)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, center=5:-2, scale=-4:3)
+    current <- scale(M, center=5:-2, scale=-4:3)
+    check_scaled_DelayedMatrix(target, current)
+
+    target <- scale(m, center=5:-2, scale=c(NaN, -Inf, -2:1, Inf, NA))
+    current <- scale(M, center=5:-2, scale=c(NaN, -Inf, -2:1, Inf, NA))
+    check_scaled_DelayedMatrix(target, current)
+}
+

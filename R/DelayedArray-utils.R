@@ -304,51 +304,6 @@ for (.Generic in c("pmax2", "pmin2")) {
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### sweep()
-###
-
-### Only supports a MARGIN of length 1 for now.
-### Ignores 'check.margin'.
-### Works if 'FUN' is a member of the Ops group or, more generally, if 'FUN'
-### works on a DelayedArray object and preserves its dimensions (e.g. pmax2()
-### or pmin2() above).
-setMethod("sweep", "DelayedArray",
-    function(x, MARGIN, STATS, FUN="-", check.margin=TRUE, ...)
-    {
-        FUN <- match.fun(FUN)
-        if (!identical(check.margin, TRUE))
-            warning(wmsg("'check.margin' is ignored when 'x' is ",
-                         "a DelayedArray object or derivative"))
-        x_dim <- dim(x)
-        x_ndim <- length(x_dim)
-        if (!isSingleNumber(MARGIN))
-            stop(wmsg("the \"sweep\" method for DelayedArray objects ",
-                      "only supports a MARGIN of length 1 at the moment"))
-        if (!is.integer(MARGIN))
-            MARGIN <- as.integer(MARGIN)
-        if (MARGIN < 1 || MARGIN > x_ndim)
-            stop("invalid 'MARGIN'")
-
-        ## Check 'STATS' length.
-        ## If 'FUN' is a member of the Ops group, it will check the length
-        ## of 'STATS' and possibly reject it but it will display an obscure
-        ## error message (see .normarg_Ops_vector_arg() in this file). By
-        ## checking the length early, we can display a more appropriate
-        ## error message.
-        .check_Ops_vector_arg_length(STATS, x_dim[[MARGIN]],
-                                     e_what="'STATS'",
-                                     x_what="the extent of 'dim(x)[MARGIN]'",
-                                     x_what2="'dim(x)[MARGIN]'")
-
-        perm <- c(MARGIN, seq_len(x_ndim)[-MARGIN])
-        x2 <- aperm(x, perm)
-        ans2 <- FUN(x2, STATS, ...)
-        aperm(ans2, order(perm))
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Various "unary isometric" array transformations
 ###
 ### A "unary isometric" array transformation is a transformation that returns
@@ -552,7 +507,7 @@ setMethod("unique", "DelayedArray", .BLOCK_unique)
 ###   A <- DelayedArray(a)
 ###   table(A)  # ok
 ###   table(A, grid=defaultAutoGrid(A, 500))
-###   # Error in .BLOCK_unique(x, incomparables = incomparables, ...) : 
+###   # Error in .BLOCK_unique(x, incomparables = incomparables, ...) :
 ###   #   unused argument (nmax = nmax)
 ### A workaround is to call .BLOCK_table():
 ###   DelayedArray:::.BLOCK_table(A, grid=defaultAutoGrid(A, 500))  # ok
@@ -830,4 +785,94 @@ setGeneric("apply", signature="X")
 }
 
 setMethod("apply", "DelayedArray", .apply_DelayedArray)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### sweep()
+###
+
+setGeneric("sweep", signature="x")
+
+### Only supports a MARGIN of length 1 for now.
+### Ignores 'check.margin'.
+### Works if 'FUN' is a member of the Ops group or, more generally, if 'FUN'
+### works on a DelayedArray object and preserves its dimensions (e.g. pmax2()
+### or pmin2() above).
+setMethod("sweep", "DelayedArray",
+    function(x, MARGIN, STATS, FUN="-", check.margin=TRUE, ...)
+    {
+        FUN <- match.fun(FUN)
+        if (!identical(check.margin, TRUE))
+            warning(wmsg("'check.margin' is ignored when 'x' is ",
+                         "a DelayedArray object or derivative"))
+        x_dim <- dim(x)
+        x_ndim <- length(x_dim)
+        if (!isSingleNumber(MARGIN))
+            stop(wmsg("the \"sweep\" method for DelayedArray objects ",
+                      "only supports a MARGIN of length 1 at the moment"))
+        if (!is.integer(MARGIN))
+            MARGIN <- as.integer(MARGIN)
+        if (MARGIN < 1 || MARGIN > x_ndim)
+            stop("invalid 'MARGIN'")
+
+        ## Check 'STATS' length.
+        ## If 'FUN' is a member of the Ops group, it will check the length
+        ## of 'STATS' and possibly reject it but it will display an obscure
+        ## error message (see .normarg_Ops_vector_arg() in this file). By
+        ## checking the length early, we can display a more appropriate
+        ## error message.
+        .check_Ops_vector_arg_length(STATS, x_dim[[MARGIN]],
+                                     e_what="'STATS'",
+                                     x_what="the extent of 'dim(x)[MARGIN]'",
+                                     x_what2="'dim(x)[MARGIN]'")
+
+        perm <- c(MARGIN, seq_len(x_ndim)[-MARGIN])
+        x2 <- aperm(x, perm)
+        ans2 <- FUN(x2, STATS, ...)
+        aperm(ans2, order(perm))
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### scale()
+###
+
+setGeneric("scale", signature="x")
+
+### S3/S4 combo for scale.DelayedMatrix
+scale.DelayedMatrix <- function(x, center=TRUE, scale=TRUE)
+{
+    tx <- t(x)
+    if (!isFALSE(center)) {
+        if (isTRUE(center)) {
+            center <- colMeans(x, na.rm=TRUE)
+        } else if (!is.numeric(center)) {
+            stop(wmsg("'center' must be TRUE or FALSE or a numeric vector"))
+        }
+        tx <- tx - center
+    }
+    if (!isFALSE(scale)) {
+        if (isTRUE(scale)) {
+            scale <- rowSds(tx, center=0, na.rm=TRUE)
+            ## Work around a bug in some DelayedMatrixStats methods (e.g.
+            ## row/colVars() and row/colSds()) where the method is not
+            ## propagating the row/colnames of the supplied DelayedMatrix
+            ## object in some situations e.g. when the object carries a
+            ## delayed transposition.
+            if (is.null(names(scale)))
+                names(scale) <- rownames(tx)
+        } else if (!is.numeric(scale)) {
+            stop(wmsg("'center' must be TRUE or FALSE or a numeric vector"))
+        }
+        tx <- tx / scale
+    }
+    ans <- t(tx)
+    if (is.numeric(center))
+        attr(ans, "scaled:center") <- center
+    if (is.numeric(scale))
+        attr(ans, "scaled:scale") <- scale
+    ans
+}
+setMethod("scale", "DelayedMatrix", scale.DelayedMatrix)
 

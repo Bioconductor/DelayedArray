@@ -100,6 +100,8 @@ S3method(range, DelayedArray)
 S3method(rowsum, dgCMatrix)
 S3method(rowsum, DelayedMatrix)
 
+S3method(scale, DelayedMatrix)
+
 S3method(split, DelayedArray)
 
 S3method(summary, DelayedOp)
@@ -157,6 +159,8 @@ export(
     rowsum.dgCMatrix,
     rowsum.DelayedMatrix,
 
+    scale.DelayedMatrix,
+
     split.DelayedArray,
 
     summary.DelayedOp,
@@ -192,7 +196,6 @@ exportMethods(
     "!",
     #"+", "-", "*", "/", "^", "%%", "%/%",  # "Arith" group generic
     "==", "!=", "<=", ">=", "<", ">",       # "Compare" group generic
-    sweep,
     anyNA, which,
     unique,
     max, min, range, sum, prod, any, all,   # "Summary" group generic
@@ -200,6 +203,7 @@ exportMethods(
     round, signif,
     nchar, tolower, toupper,
     sub, gsub,
+    "%*%",
 
     ## Methods for generics defined in the methods package:
     coerce, show,
@@ -350,7 +354,7 @@ export(
     realize,
 
     ## DelayedArray-utils.R:
-    pmax2, pmin2, apply,
+    pmax2, pmin2, apply, sweep, scale,
 
     ## DelayedMatrix-stats.R:
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
@@ -373,7 +377,7 @@ exportMethods(
     chunkdim, chunkGrid,
     close, write_block,
     realize,
-    pmax2, pmin2, apply,
+    pmax2, pmin2, apply, sweep, scale,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 

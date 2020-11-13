@@ -24,9 +24,6 @@
 \alias{pmax2,DelayedArray,DelayedArray-method}
 \alias{pmin2,DelayedArray,DelayedArray-method}
 
-\alias{sweep}
-\alias{sweep,DelayedArray-method}
-
 \alias{is.na,DelayedArray-method}
 \alias{is.finite,DelayedArray-method}
 \alias{is.infinite,DelayedArray-method}
@@ -68,6 +65,13 @@
 \alias{apply}
 \alias{apply,DelayedArray-method}
 
+\alias{sweep}
+\alias{sweep,DelayedArray-method}
+
+\alias{scale}
+\alias{scale.DelayedMatrix}
+\alias{scale,DelayedMatrix-method}
+
 \title{Common operations on DelayedArray objects}
 
 \description{
@@ -82,7 +86,6 @@
     \item \code{rbind} and \code{cbind}
     \item all the members of the \code{\link[methods]{Ops}},
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups
-    \item \code{sweep}
     \item \code{!}
     \item \code{is.na}, \code{is.finite}, \code{is.infinite}, \code{is.nan}
     \item \code{type<-}
@@ -90,6 +93,9 @@
     \item \code{nchar}, \code{tolower}, \code{toupper},
           \code{grepl}, \code{sub}, \code{gsub}
     \item \code{pmax2} and \code{pmin2}
+    \item \code{\link[base]{sweep}}
+    \item \code{\link[base]{scale}} (when the supplied \code{center} and
+          \code{scale} are not TRUE)
     \item statistical functions like \code{dnorm}, \code{dbinom}, \code{dpois},
           and \code{dlogis} (for the Normal, Binomial, Poisson, and Logistic
           distribution, respectively) and related functions (documented in
@@ -103,6 +109,12 @@
     \item all the members of the \code{\link[methods]{Summary}} group
     \item \code{mean}
     \item \code{apply}
+  }
+
+  Mix delayed and block-processed operations:
+  \itemize{
+    \item \code{\link[base]{scale}} (when the supplied \code{center} and/or
+          \code{scale} are TRUE)
   }
 }
 
@@ -138,7 +150,8 @@
           for the members of the \code{\link[methods]{Ops}},
           \code{\link[methods]{Math}}, and \code{\link[methods]{Math2}} groups.
 
-    \item \link[base]{array} objects in base R.
+    \item \code{\link[base]{sweep}} and \code{\link[base]{scale}} in the
+          \pkg{base} package.
   }
 }
 
@@ -159,9 +172,9 @@ h5ls(toy_h5)
 M1 <- HDF5Array(toy_h5, "M1")
 M2 <- HDF5Array(toy_h5, "M2")
 
-M12 <- rbind(M1, t(M2))        # delayed
+M12 <- rbind(M1, t(M2))            # delayed
 M12
-colMeans(M12)                  # block-processed
+colMeans(M12)                      # block-processed
 
 ## On objects with more than 2 dimensions:
 example(arbind)  # to create arrays a1, a2, a3
@@ -169,7 +182,7 @@ example(arbind)  # to create arrays a1, a2, a3
 A1 <- DelayedArray(a1)
 A2 <- DelayedArray(a2)
 A3 <- DelayedArray(a3)
-A123 <- rbind(A1, A2, A3)      # delayed
+A123 <- rbind(A1, A2, A3)          # delayed
 A123
 
 ## On 1D objects:
@@ -214,11 +227,11 @@ stopifnot(identical(rbind(DF$V, DF$V), DF2$V))
 ## MORE OPERATIONS
 ## ---------------------------------------------------------------------
 
-M1 >= 0.5 & M1 < 0.75          # delayed
-log(M1)                        # delayed
-pmax2(M2, 0)                   # delayed
+M1 >= 0.5 & M1 < 0.75              # delayed
+log(M1)                            # delayed
+pmax2(M2, 0)                       # delayed
 
-type(M2) <- "integer"          # delayed
+type(M2) <- "integer"              # delayed
 M2
 
 ## table() is block-processed:
@@ -229,14 +242,16 @@ a5 <- array(sample(20L, 2000000L, replace=TRUE), c(200, 4, 2500))
 A5 <- as(a5, "HDF5Array")
 table(A5)
 
-A4 - 2 * A5                    # delayed
-table(A4 - 2 * A5)             # block-processed
+A4 - 2 * A5                        # delayed
+table(A4 - 2 * A5)                 # block-processed
 
 ## range() is block-processed:
 range(A4 - 2 * A5)
 range(M1)
 
-cmeans <- colMeans(M2)         # block-processed
-sweep(M2, 2, cmeans)           # delayed
+cmeans <- colMeans(M2)             # block-processed
+sweep(M2, 2, cmeans)               # delayed
+scale(M2)                          # delayed & block-processed
+scale(M2, center=FALSE, scale=10)  # delayed
 }
 \keyword{methods}
