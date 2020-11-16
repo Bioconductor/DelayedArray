@@ -24,7 +24,8 @@ exportClasses(
     Array,
 
     ## ArrayGrid-class.R:
-    ArrayViewport, ArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
+    ArrayViewport, DummyArrayViewport, SafeArrayViewport,
+    ArrayGrid, DummyArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
 
     ## SparseArraySeed-class.R:
     SparseArraySeed,
@@ -63,6 +64,7 @@ exportClasses(
 ### Export S3 methods
 ###
 
+S3method(aperm, DummyArrayGrid)
 S3method(aperm, ArbitraryArrayGrid)
 S3method(aperm, RegularArrayGrid)
 S3method(aperm, SparseArraySeed)
@@ -122,6 +124,7 @@ S3method(unique, DelayedArray)
 ### and (c) methods() doesn't asterisk them.
 
 export(
+    aperm.DummyArrayGrid,
     aperm.ArbitraryArrayGrid,
     aperm.RegularArrayGrid,
     aperm.SparseArraySeed,
@@ -253,8 +256,8 @@ export(
     Lindex2Mindex, Mindex2Lindex, linearInd,
 
     ## ArrayGrid-class.R:
-    ArrayViewport, makeNindexFromArrayViewport,
-    ArbitraryArrayGrid, RegularArrayGrid,
+    DummyArrayViewport, ArrayViewport, makeNindexFromArrayViewport,
+    DummyArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
 
     ## SparseArraySeed-class.R:
     SparseArraySeed, dense2sparse, sparse2dense,

@@ -7,20 +7,57 @@
 ### ArrayViewport objects
 ###
 
-### We don't extend the IRanges class because we don't want to inherit the
-### full Ranges API (most operations in that API would do the wrong thing on
-### ArrayViewport objects).
 setClass("ArrayViewport",
     contains="Array",
     representation(
-        refdim="integer",  # Dimensions of "the reference array" i.e. the
-                           # array on top of which the viewport is defined
-                           # (a.k.a. "the underlying array").
-        ranges="IRanges"   # Must be parallel to the 'refdim' slot.
+        "VIRTUAL",
+        refdim="integer"  # Dimensions of "the reference array" i.e. the
+                          # array on top of which the viewport is defined
+                          # (a.k.a. "the underlying array").
+    )
+)
+
+### Represent a viewport that covers the whole reference array i.e. that
+### has the same dimensions as the reference array.
+### IMPORTANT NOTE: Unlike SafeArrayViewport objects below, the length
+### of a DummyArrayViewport object (i.e. the number of array elements
+### in the viewport) is allowed to be > .Machine$integer.max. This makes
+### these objects **unsafe** to use in some contexts. For example a
+### DummyArrayViewport object can be used to extract a sparse block
+### that is too big to be handled safely:
+###   m0 <- sparseMatrix(i=1, j=1, x=8, dims=c(5e4, 5e4))
+###   block0 <- read_block(m0, DummyArrayViewport(x), as.sparse=TRUE)
+###   m <- as(block0, "dgCMatrix")
+###   m + 1
+###   #Error in asMethod(object) :
+###   #  Cholmod error 'problem too large' at file ../Core/cholmod_dense.c, line 105
+setClass("DummyArrayViewport", contains="ArrayViewport")
+
+### Represent an arbitrary viewport on the reference array with the
+### restriction that the length of the viewport (i.e. the number of
+### array elements in the viewport) must be <= .Machine$integer.max.
+### Unlike DummyArrayViewport objects above, this restriction on their
+### length makes these objects always **safe** to use.
+### Note that we don't extend the IRanges class because we don't want
+### to inherit the full Ranges API (most operations in that API would
+### do the wrong thing on SafeArrayViewport objects).
+setClass("SafeArrayViewport",
+    contains="ArrayViewport",
+    representation(
+        ranges="IRanges"  # One rang along each dimension.
     )
 )
 
 ### Validity
+
+.validate_ArrayViewport <- function(x)
+{
+    msg <- validate_dim_slot(x, "refdim")
+    if (!isTRUE(msg))
+        return(msg)
+    TRUE
+}
+setValidity2("ArrayViewport", .validate_ArrayViewport)
 
 .validate_ranges_slot <- function(x)
 {
@@ -43,19 +80,14 @@ setClass("ArrayViewport",
 
     TRUE
 }
-
-.validate_ArrayViewport <- function(x)
+.validate_SafeArrayViewport <- function(x)
 {
-    msg <- validate_dim_slot(x, "refdim")
-    if (!isTRUE(msg))
-        return(msg)
     msg <- .validate_ranges_slot(x)
     if (!isTRUE(msg))
         return(msg)
     TRUE
 }
-
-setValidity2("ArrayViewport", .validate_ArrayViewport)
+setValidity2("SafeArrayViewport", .validate_SafeArrayViewport)
 
 ### Getters
 
@@ -63,7 +95,10 @@ setGeneric("refdim", function(x) standardGeneric("refdim"))
 
 setMethod("refdim", "ArrayViewport", function(x) x@refdim)
 
-setMethod("ranges", "ArrayViewport", function(x) x@ranges)
+.dims2ranges <- function(dim) IRanges(rep.int(1L, length(dim)), dim)
+
+setMethod("ranges", "DummyArrayViewport", function(x) .dims2ranges(refdim(x)))
+setMethod("ranges", "SafeArrayViewport", function(x) x@ranges)
 
 setMethod("start", "ArrayViewport", function(x) start(ranges(x)))
 
@@ -74,18 +109,23 @@ setMethod("end", "ArrayViewport", function(x) end(ranges(x)))
 ### 'width(x)' and 'dim(x)' are synonyms.
 setMethod("dim", "ArrayViewport", function(x) width(ranges(x)))
 
-### Constructor
+### Constructors
+
+DummyArrayViewport <- function(refdim)
+    new2("DummyArrayViewport", refdim=refdim, check=TRUE)
 
 ### If 'ranges' is omitted, return a viewport that covers the whole
 ### reference array.
 ArrayViewport <- function(refdim, ranges=NULL)
 {
     if (is.null(ranges))
-        ranges <- IRanges(rep.int(1L, length(refdim)), refdim)
-    new("ArrayViewport", refdim=refdim, ranges=ranges)
+        ranges <- .dims2ranges(refdim)
+    new2("SafeArrayViewport", refdim=refdim, ranges=ranges, check=TRUE)
 }
 
 ### Show
+
+setMethod("classNameForDisplay", "ArrayViewport", function(x) "ArrayViewport")
 
 make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
                                            as.2Dslice=FALSE,
@@ -119,8 +159,8 @@ make_string_from_ArrayViewport <- function(viewport, dimnames=NULL,
                                           SIMPLIFY=FALSE,
                                           USE.NAMES=FALSE))
     }
-    if (ans[[1L]] == "" && with.brackets)
-        ans[[1L]] <- " "
+    if (with.brackets)
+        ans <- lapply(ans, function(x) if (x == "") " " else x)
     ans <- paste0(ans, collapse=collapse)
     if (with.brackets)
         ans <- paste0("[", ans, "]")
@@ -132,8 +172,8 @@ setMethod("show", "ArrayViewport",
     {
         dim_in1string <- paste0(dim(object), collapse=" x ")
         refdim_in1string <- paste0(refdim(object), collapse=" x ")
-        cat(dim_in1string, " ", class(object), " object on a ",
-            refdim_in1string, " array: ", sep="")
+        cat(dim_in1string, " ", classNameForDisplay(object), " object ",
+            "on a ", refdim_in1string, " array: ", sep="")
         s <- make_string_from_ArrayViewport(object, with.brackets=TRUE)
         cat(s, "\n", sep="")
     }
@@ -181,7 +221,7 @@ makeNindexFromArrayViewport <- function(viewport, expand.RangeNSBS=FALSE)
 ###
 ### An ArrayGrid object represents a grid on top of an array (called "the
 ### reference array" or "the underlying array"). The ArrayGrid class is a
-### virtual class with 2 concrete subclasses, ArbitraryArrayGrid and
+### virtual class with 3 concrete subclasses, ArbitraryArrayGrid and
 ### RegularArrayGrid, for representing an arbitrarily-spaced or a
 ### regularly-spaced grid, respectively. The API we implement on these objects
 ### is divided into 3 groups of methods:
@@ -210,26 +250,38 @@ setClass("ArrayGrid",
     prototype(elementType="ArrayViewport")
 )
 
+setClass("DummyArrayGrid",
+    contains="ArrayGrid",
+    representation(
+        refdim="integer"    # Dimensions of the reference array.
+    ),
+    prototype(elementType="DummyArrayViewport")
+)
+
 setClass("ArbitraryArrayGrid",
     contains="ArrayGrid",
     representation(
-        tickmarks="list"      # A list of integer vectors, one along each
-                              # dimension of the reference array,
-                              # representing the tickmarks along that
-                              # dimension. Each integer vector must be sorted
-                              # in ascending order.
-    )
+        tickmarks="list"    # A list of integer vectors, one along each
+                            # dimension of the reference array,
+                            # representing the tickmarks along that
+                            # dimension. Each integer vector must be sorted
+                            # in ascending order.
+    ),
+    prototype(elementType="SafeArrayViewport")
 )
 
 setClass("RegularArrayGrid",
     contains="ArrayGrid",
     representation(
-        refdim="integer",     # Dimensions of the reference array.
-        spacings="integer"    # Grid spacing along each dimension.
-    )
+        refdim="integer",   # Dimensions of the reference array.
+        spacings="integer"  # Grid spacing along each dimension.
+    ),
+    prototype(elementType="SafeArrayViewport")
 )
 
 ### Low-level helpers
+
+.get_DummyArrayGrid_spacings_along <- function(x, along) x@refdim[[along]]
 
 .get_ArbitraryArrayGrid_spacings_along <- function(x, along)
     S4Vectors:::diffWithInitialZero(x@tickmarks[[along]])
@@ -284,6 +336,15 @@ get_RegularArrayGrid_dim <- function(refdim, spacings)
 
 ### Validity
 
+.validate_DummyArrayGrid <- function(x)
+{
+    msg <- validate_dim_slot(x, "refdim")
+    if (!isTRUE(msg))
+        return(msg)
+    TRUE
+}
+setValidity2("DummyArrayGrid", .validate_DummyArrayGrid)
+
 .valid_tickmarks <- function(tm)
 {
     is.integer(tm) && !S4Vectors:::anyMissingOrOutside(tm, 0L) && isSorted(tm)
@@ -333,6 +394,8 @@ setValidity2("RegularArrayGrid", .validate_RegularArrayGrid)
 
 ### Getters
 
+setMethod("refdim", "DummyArrayGrid", function(x) x@refdim)
+
 setMethod("refdim", "ArbitraryArrayGrid",
     function(x)
     {
@@ -347,6 +410,8 @@ setMethod("refdim", "ArbitraryArrayGrid",
 
 setMethod("refdim", "RegularArrayGrid", function(x) x@refdim)
 
+setMethod("dim", "DummyArrayGrid", function(x) rep.int(1L, length(refdim(x))))
+
 setMethod("dim", "ArbitraryArrayGrid", function(x) lengths(x@tickmarks))
 
 setMethod("dim", "RegularArrayGrid",
@@ -355,11 +420,20 @@ setMethod("dim", "RegularArrayGrid",
 
 ### Constructors
 
+DummyArrayGrid <- function(refdim)
+{
+    if (!is.numeric(refdim))
+        stop(wmsg("'refdim' must be an integer vector"))
+    if (!is.integer(refdim))
+        refdim <- as.integer(refdim)
+    new2("DummyArrayGrid", refdim=refdim, check=TRUE)
+}
+
 ArbitraryArrayGrid <- function(tickmarks)
 {
     if (!is.list(tickmarks))
         stop(wmsg("'tickmarks' must be a list"))
-    new("ArbitraryArrayGrid", tickmarks=tickmarks)
+    new2("ArbitraryArrayGrid", tickmarks=tickmarks, check=TRUE)
 }
 
 ### Note that none of the dimensions of an RegularArrayGrid object can be 0,
@@ -383,14 +457,24 @@ RegularArrayGrid <- function(refdim, spacings=refdim)
         spacings <- as.integer(spacings)
     if (length(refdim) != length(spacings))
         stop(wmsg("'refdim' and 'spacings' must have the same length"))
-    new("RegularArrayGrid", refdim=refdim, spacings=spacings)
+    new2("RegularArrayGrid", refdim=refdim, spacings=spacings, check=TRUE)
 }
 
 ### [[
 
+setMethod("getArrayElement", "DummyArrayGrid",
+    function(x, subscripts)
+    {
+        stopifnot(is.integer(subscripts),
+                  identical(subscripts, rep.int(1L, length(subscripts))))
+        DummyArrayViewport(refdim(x))
+    }
+)
+
 setMethod("getArrayElement", "ArbitraryArrayGrid",
     function(x, subscripts)
     {
+        stopifnot(is.integer(subscripts))
         x_refdim <- refdim(x)
         ans_end <- mapply(`[[`, x@tickmarks, subscripts, USE.NAMES=FALSE)
         ans_width <- mapply(
@@ -408,6 +492,7 @@ setMethod("getArrayElement", "ArbitraryArrayGrid",
 setMethod("getArrayElement", "RegularArrayGrid",
     function(x, subscripts)
     {
+        stopifnot(is.integer(subscripts))
         x_refdim <- refdim(x)
         ans_offset <- (subscripts - 1L) * x@spacings
         ans_end <- pmin(ans_offset + x@spacings, refdim(x))
@@ -421,6 +506,9 @@ setMethod("getArrayElement", "RegularArrayGrid",
 ### NOT exported.
 setGeneric("get_spacings_along", signature="x",
     function(x, along) standardGeneric("get_spacings_along")
+)
+setMethod("get_spacings_along", "DummyArrayGrid",
+    .get_DummyArrayGrid_spacings_along
 )
 setMethod("get_spacings_along", "ArbitraryArrayGrid",
     .get_ArbitraryArrayGrid_spacings_along
@@ -497,10 +585,13 @@ setMethod("as.character", "ArrayGrid", .as.character.ArrayGrid)
 setMethod("show", "ArrayGrid",
     function(object)
     {
-        dim_in1string <- paste0(dim(object), collapse=" x ")
+        if (!is(object, "DummyArrayGrid")) {
+            dim_in1string <- paste0(dim(object), collapse=" x ")
+            cat(dim_in1string, " ")
+        }
         refdim_in1string <- paste0(refdim(object), collapse=" x ")
-        cat(dim_in1string, " ", class(object), " object on a ",
-            refdim_in1string, " array:\n", sep="")
+        cat(class(object), " object on a ", refdim_in1string, " array:\n",
+            sep="")
         ## Turn 'object' into a character array.
         print(as.character(object, with.brackets=TRUE),
               quote=FALSE, right=TRUE)
@@ -514,17 +605,33 @@ setMethod("show", "ArrayGrid",
 ### Extend base::aperm() by allowing dropping and/or adding ineffective
 ### dimensions. See aperm2.R
 ###
+### NOTE: The methods below use normarg_perm() which doesn't perform a
+### full check of 'perm' e.g. it allows duplicates in it (see normarg_perm()
+### in aperm2.R). Instead we call replaceSlots() with 'check=TRUE' to trigger
+### validation of the modified ArrayGrid object with the expectation that it
+### will fail if for example 'perm' contains NAs or values > length(dim(a)).
+
+.aperm.DummyArrayGrid <- function(a, perm)
+{
+    perm <- normarg_perm(perm, dim(a))
+    ans_refdim <- a@refdim[perm]
+    ans_refdim[is.na(perm)] <- 1L
+    ## See above NOTE for why it's important to call replaceSlots()
+    ## with 'check=TRUE'.
+    BiocGenerics:::replaceSlots(a, refdim=ans_refdim, check=TRUE)
+}
+### S3/S4 combo for aperm.DummyArrayGrid
+aperm.DummyArrayGrid <-
+    function(a, perm, ...) .aperm.DummyArrayGrid(a, perm, ...)
+setMethod("aperm", "DummyArrayGrid", aperm.DummyArrayGrid)
 
 .aperm.ArbitraryArrayGrid <- function(a, perm)
 {
-    ## We don't perform a full check of 'perm' (see normarg_perm() in
-    ## aperm2.R) because we want to allow duplicates in it. Instead we
-    ## call replaceSlots() with 'check=TRUE' to trigger validation of
-    ## the modified ArrayGrid object with the expectation that it will
-    ## fail if for example 'perm' contains NAs or values > length(dim(a)).
     perm <- normarg_perm(perm, dim(a))
     ans_tickmarks <- a@tickmarks[perm]
     ans_tickmarks[is.na(perm)] <- list(1L)
+    ## See above NOTE for why it's important to call replaceSlots()
+    ## with 'check=TRUE'.
     BiocGenerics:::replaceSlots(a, tickmarks=ans_tickmarks, check=TRUE)
 }
 ### S3/S4 combo for aperm.ArbitraryArrayGrid
@@ -534,13 +641,13 @@ setMethod("aperm", "ArbitraryArrayGrid", aperm.ArbitraryArrayGrid)
 
 .aperm.RegularArrayGrid <- function(a, perm)
 {
-    ## See above for why it's important to call replaceSlots() with
-    ## 'check=TRUE'.
     perm <- normarg_perm(perm, dim(a))
     ans_refdim <- a@refdim[perm]
     ans_refdim[is.na(perm)] <- 1L
     ans_spacings <- a@spacings[perm]
     ans_spacings[is.na(perm)] <- 1L
+    ## See above NOTE for why it's important to call replaceSlots()
+    ## with 'check=TRUE'.
     BiocGenerics:::replaceSlots(a, refdim=ans_refdim,
                                    spacings=ans_spacings,
                                    check=TRUE)

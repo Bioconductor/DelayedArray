@@ -5,14 +5,24 @@
 \alias{ArrayViewport-class}
 \alias{ArrayViewport}
 
+\alias{class:DummyArrayViewport}
+\alias{DummyArrayViewport-class}
+\alias{DummyArrayViewport}
+
+\alias{class:SafeArrayViewport}
+\alias{SafeArrayViewport-class}
+\alias{SafeArrayViewport}
+
 \alias{refdim}
 \alias{refdim,ArrayViewport-method}
-\alias{ranges,ArrayViewport-method}
+\alias{ranges,DummyArrayViewport-method}
+\alias{ranges,SafeArrayViewport-method}
 \alias{start,ArrayViewport-method}
 \alias{width,ArrayViewport-method}
 \alias{end,ArrayViewport-method}
 \alias{dim,ArrayViewport-method}
 
+\alias{classNameForDisplay,ArrayViewport-method}
 \alias{show,ArrayViewport-method}
 
 \alias{makeNindexFromArrayViewport}
@@ -20,6 +30,10 @@
 \alias{class:ArrayGrid}
 \alias{ArrayGrid-class}
 \alias{ArrayGrid}
+
+\alias{class:DummyArrayGrid}
+\alias{DummyArrayGrid-class}
+\alias{DummyArrayGrid}
 
 \alias{class:ArbitraryArrayGrid}
 \alias{ArbitraryArrayGrid-class}
@@ -29,8 +43,10 @@
 \alias{RegularArrayGrid-class}
 \alias{RegularArrayGrid}
 
+\alias{refdim,DummyArrayGrid-method}
 \alias{refdim,ArbitraryArrayGrid-method}
 \alias{refdim,RegularArrayGrid-method}
+\alias{dim,DummyArrayGrid-method}
 \alias{dim,ArbitraryArrayGrid-method}
 \alias{dim,RegularArrayGrid-method}
 \alias{as.character.ArrayGrid}
@@ -44,6 +60,8 @@
 \alias{maxlength,RegularArrayGrid-method}
 \alias{show,ArrayGrid-method}
 
+\alias{aperm.DummyArrayGrid}
+\alias{aperm,DummyArrayGrid-method}
 \alias{aperm.ArbitraryArrayGrid}
 \alias{aperm,ArbitraryArrayGrid-method}
 \alias{aperm.RegularArrayGrid}
@@ -215,7 +233,7 @@ stopifnot(identical(dims(Lgrid), matrix(refdim(Lgrid), nrow=1)))
 
 ## Grid elements are ArrayViewport objects:
 grid1[[1L]]
-class(grid1[[1L]])
+stopifnot(is(grid1[[1L]], "ArrayViewport"))
 grid1[[2L]]
 grid1[[2L, 1L, 1L]]
 grid1[[15L, 1L, 4L]]
