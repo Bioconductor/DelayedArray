@@ -54,6 +54,7 @@
 \alias{dims}
 \alias{dims,ArrayGrid-method}
 \alias{lengths,ArrayGrid-method}
+\alias{lengths,DummyArrayGrid-method}
 \alias{maxlength}
 \alias{maxlength,ANY-method}
 \alias{maxlength,ArbitraryArrayGrid-method}

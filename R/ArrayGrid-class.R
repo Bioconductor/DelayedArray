@@ -281,6 +281,14 @@ setClass("RegularArrayGrid",
 
 ### Low-level helpers
 
+.prod2 <- function(x)
+{
+    p <- prod(x)
+    ## We only use .prod2() in a context where 'x' is guaranteed to contain
+    ## non-negative values so 'p' will always be >= 0.
+    if (p <= .Machine$integer.max) as.integer(p) else p
+}
+
 .get_DummyArrayGrid_spacings_along <- function(x, along) x@refdim[[along]]
 
 .get_ArbitraryArrayGrid_spacings_along <- function(x, along)
@@ -299,20 +307,11 @@ setClass("RegularArrayGrid",
 ### Get length of biggest viewport in ArbitraryArrayGrid object 'x'.
 .get_ArbitraryArrayGrid_maxlength <- function(x)
 {
-    ans <- prod(.get_ArbitraryArrayGrid_max_spacings(x))
-    if (ans <= .Machine$integer.max)
-        ans <- as.integer(ans)
-    ans
+    .prod2(.get_ArbitraryArrayGrid_max_spacings(x))
 }
 
 ### Get length of biggest viewport in RegularArrayGrid object 'x'.
-.get_RegularArrayGrid_maxlength <- function(x)
-{
-    ans <- prod(x@spacings)
-    if (ans <= .Machine$integer.max)
-        ans <- as.integer(ans)
-    ans
-}
+.get_RegularArrayGrid_maxlength <- function(x) .prod2(x@spacings)
 
 get_RegularArrayGrid_dim <- function(refdim, spacings)
 {
@@ -554,6 +553,10 @@ setMethod("lengths", "ArrayGrid",
         }
         ans
     }
+)
+
+setMethod("lengths", "DummyArrayGrid",
+    function(x, use.names=TRUE) .prod2(refdim(x))
 )
 
 ### Equivalent to 'max(lengths(x))' except that when 'x' is an ArrayGrid
