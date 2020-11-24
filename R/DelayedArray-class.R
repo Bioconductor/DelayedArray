@@ -457,9 +457,16 @@ stash_DelayedDimnames <- function(x, dimnames)
 
 stash_DelayedAbind <- function(x, objects, along)
 {
-    stopifnot(is(x, "DelayedArray"))
-    objects <- S4Vectors:::prepare_objects_to_bind(x, objects)
-    seeds <- lapply(c(list(x), objects), slot, "seed")
+    stopifnot(is.list(objects))
+    all_objects <- unname(S4Vectors:::delete_NULLs(c(list(x), objects)))
+    ## All supplied objects must be DelayedArray objects or derivatives.
+    seeds <- lapply(all_objects,
+        function(object) {
+            if (!is(object, "DelayedArray"))
+                stop(wmsg("all the supplied objects must be DelayedArray ",
+                          "objects or derivatives"))
+            object@seed
+        })
     op <- new_DelayedAbind(seeds, along)
     DelayedArray(op)
 }
