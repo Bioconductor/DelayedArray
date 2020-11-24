@@ -232,23 +232,6 @@ setMethod("type", "ANY",
 ### as.array(x) (in-memory realization of an array-like object)
 ###
 
-### TODO: Do we actually need this? Using drop() should do it.
-.reduce_array_dimensions <- function(x)
-{
-    x_dim <- dim(x)
-    x_dimnames <- dimnames(x)
-    effdim_idx <- which(x_dim != 1L)  # index of effective dimensions
-    if (length(effdim_idx) >= 2L) {
-        x <- set_dim(x, x_dim[effdim_idx])
-        x <- set_dimnames(x, x_dimnames[effdim_idx])
-    } else {
-        x <- set_dim(x, NULL)
-        if (length(effdim_idx) == 1L)
-            names(x) <- x_dimnames[[effdim_idx]]
-    }
-    x
-}
-
 ### Realize the object i.e. execute all the delayed operations and turn the
 ### object back into an ordinary array.
 .from_Array_to_array <- function(x, drop=FALSE)
@@ -259,7 +242,7 @@ setMethod("type", "ANY",
     ans <- extract_array(x, index)
     ans <- set_dimnames(ans, dimnames(x))
     if (drop)
-        ans <- .reduce_array_dimensions(ans)
+        ans <- drop(ans)
     ans
 }
 

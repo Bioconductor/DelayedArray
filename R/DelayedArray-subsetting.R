@@ -233,9 +233,14 @@ setMethod("drop", "DelayedArray",
     function(x)
     {
         perm <- which(dim(x) != 1L)
-        if (length(perm) <= 1L)
-            return(as.vector(x))  # in-memory realization
-        aperm(x, perm)
+        if (length(perm) >= 2L)
+            return(aperm(x, perm))
+        ## In-memory realization.
+        ## We want to propagate the names so we use 'as.array(x, drop=TRUE)'
+        ## rather than 'as.vector(x)' (both are equivalent on an Array
+        ## derivative with less than 2 effective dimensions except that
+        ## the former propagates the names and the latter doesn't).
+        as.array(x, drop=TRUE)
     }
 )
 
