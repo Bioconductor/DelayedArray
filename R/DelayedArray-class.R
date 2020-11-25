@@ -513,29 +513,68 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
     unname(value)
 }
 
+### Return the mapping as an integer vector 'new2old' parallel to 'new_dim'.
+### 'new2old' has the following properties:
+### 1. It can contain NA's but it must have at least one non-NA element.
+### 2. Its non-NA elements must be >= 1 and <= 'length(old_dim)'.
+### 3. Its non-NA elements must be strictly sorted in ascending order.
+### 4. 'old_dim[new2old]' must be identical to 'new_dim' after replacing
+###    all NA's in it with 1's. That is, it must satisfy:
+###        new_dim2 <- old_dim[new2old]
+###        new_dim2[is.na(new_dim2)] <- 1L
+###        identical(new_dim, new_dim2)
 .map_new_to_old_dim <- function(new_dim, old_dim, x_class)
 {
-    idx1 <- which(new_dim != 1L)
-    idx2 <- which(old_dim != 1L)
-
     cannot_map_msg <- c(
         "Cannot map the supplied dim vector to the current dimensions of ",
         "the object. On a ", x_class, " object, the dim() setter can only ",
         "be used to drop and/or add \"ineffective dimensions\" (i.e. ",
         "dimensions equal to 1) to the object."
     )
-    can_map <- function() {
-        if (length(idx1) != length(idx2))
+    can_map_effective_dimensions <- function(effdim_idx1, effdim_idx2) {
+        if (length(effdim_idx1) != length(effdim_idx2))
             return(FALSE)
-        if (length(idx1) == 0L)
+        if (length(effdim_idx1) == 0L)
             return(TRUE)
-        all(new_dim[idx1] == old_dim[idx2])
+        all(new_dim[effdim_idx1] == old_dim[effdim_idx2])
     }
-    if (!can_map())
+
+    ## Get index of new and old effective dimensions.
+    effdim_idx1 <- which(new_dim != 1L)
+    effdim_idx2 <- which(old_dim != 1L)
+
+    if (!can_map_effective_dimensions(effdim_idx1, effdim_idx2))
         stop(wmsg(cannot_map_msg))
 
-    new2old <- rep.int(NA_integer_, length(new_dim))
-    new2old[idx1] <- idx2
+    ## Map as much ineffective dimensions as possible.
+    ## This prevents from returning a mapping that contains only NA's, which
+    ## would otherwise happen in the rare situation where 'old_dim' (and
+    ## consequently 'new_dim') contains only 1's. So for example, in the
+    ## following situation:
+    ##     A <- DelayedArray(array(1:24, 4:2))
+    ##     A1 <- A[1, 1, 1, drop=FALSE]
+    ##     dim(A1) <- c(1, 1)
+    ## 'A1@seed@perm' will be set to 'c(1L, 2L)', which is ok, and not to
+    ## 'c(NA_integer_, NA_integer_)', which would NOT be ok.
+    map_ineffective_dimensions <- function(effdim_idx1, effdim_idx2) {
+        new2old <- rep.int(NA_integer_, length(new_dim))
+        idx1 <- c(effdim_idx1, length(new_dim) + 1L)
+        idx2 <- c(effdim_idx2, length(old_dim) + 1L)
+        i1 <- i2 <- 0L
+        for (k in seq_along(idx1)) {
+            prev_i1 <- i1
+            i1 <- idx1[[k]]
+            prev_i2 <- i2
+            i2 <- idx2[[k]]
+            n <- min(i1 - prev_i1, i2 - prev_i2) - 1L
+            new2old[prev_i1 + seq_len(n)] <- prev_i2 + seq_len(n)
+        }
+        new2old
+    }
+    new2old <- map_ineffective_dimensions(effdim_idx1, effdim_idx2)
+
+    ## Map **all** effective dimensions.
+    new2old[effdim_idx1] <- effdim_idx2
     new2old
 }
 
