@@ -1348,16 +1348,74 @@ setMethod("is_sparse", "DelayedAbind",
     }
 )
 
+.combine_abinded_sparse_array_seeds <- function(seeds, along, mapping=NULL) {
+    last <- 0L
+    nzindices <- vector("list", length(seeds))
+    for (i in seq_along(seeds)) {
+        current <- seeds[[i]]
+        curidx <- nzindex(current)
+        curidx[,along] <- curidx[,along] + last
+        if (!is.null(mapping)) {
+            curidx[,along] <- mapping[curidx[,along]]
+        }
+        nzindices[[i]] <- curidx
+        last <- last + dim(current)[along]
+    }
+
+    all.nzindex <- do.call(rbind, nzindices)
+    all.nzdata <- unlist(lapply(seeds, nzdata))
+    all.dims <- dim(seeds[[1]])
+    all.dims[along] <- last
+
+    # Dealing with the dimnames.
+    all.dimnames <- dimnames(seeds[[1]])
+    along.dimnames <- lapply(seeds, function(s) dimnames(s)[[along]])
+    null.dimnames <- vapply(along.dimnames, is.null, TRUE)
+    if (!all(null.dimnames)) {
+        if (any(null.dimnames)) {
+            for (i in which(null.dimnames)) {
+                all.dimnames[[i]] <- character(dim(seeds[[i]])[along])
+            }
+        }
+        all.dimnames[[along]] <- unlist(along.dimnames)
+        if (!is.null(mapping)) {
+            all.dimnames[[along]][mapping] <- all.dimnames[[along]]
+        }
+    }
+
+    SparseArraySeed(all.dims, nzindex=all.nzindex, nzdata=all.nzdata, dimnames=all.dimnames)
+}
+
+.extract_sparse_array_from_DelayedAbind <- function(x, index)
+{
+    i <- index[[x@along]]
+
+    if (is.null(i)) {
+        ## This is the easy situation.
+        tmp <- lapply(x@seeds, extract_sparse_array, index)
+        return(.combine_abinded_sparse_array_seeds(tmp, x@along, mapping=NULL))
+    }
+
+    ## From now on 'i' is a vector of positive integers.
+    dims <- get_dims_to_bind(x@seeds, x@along)
+    breakpoints <- cumsum(dims[x@along, ])
+    part_idx <- get_part_index(i, breakpoints)
+    split_part_idx <- split_part_index(part_idx, length(breakpoints))
+    FUN <- function(s) {
+        index[[x@along]] <- split_part_idx[[s]]
+        extract_sparse_array(x@seeds[[s]], index)
+    }
+    tmp <- lapply(seq_along(x@seeds), FUN)
+
+    revmap <- get_rev_index(part_idx)
+    revmap[revmap] <- seq_along(revmap)
+    .combine_abinded_sparse_array_seeds(tmp, x@along, mapping=revmap)
+}
+
 ### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
 ### not contain duplicates. See "extract_sparse_array() Terms of Use"
 ### in SparseArraySeed-class.R
-setMethod("extract_sparse_array", "DelayedAbind",
-    function(x, index)
-    {
-        stop("NOT IMPLEMENTED YET!")
-    }
-)
-
+setMethod("extract_sparse_array", "DelayedAbind", .extract_sparse_array_from_DelayedAbind)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### updateObject()
