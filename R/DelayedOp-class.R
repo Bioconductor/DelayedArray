@@ -664,14 +664,52 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
 ### of 'A * v', 'v * A', and 'A / v',  when 'length(v)' is 'nrow(A)' and
 ### 'v' does not contain infinite or NA or NaN values (in the multiplication
 ### case) and no zero or NA or NaN values (in the division case).
-setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs", function(x) FALSE)
+
+setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs", function(x) {
+    if (identical(x@OP, `*`)) {
+        for (v in c(x@Largs, x@Rargs)) {
+            if (any(!is.finite(v))) {
+                return(FALSE)
+            }
+        }
+        return(TRUE)
+    } else if (identical(x@OP, `/`)) {
+        for (v in c(x@Largs, x@Rargs)) {
+            if (any(!is.finite(v) | v==0)) {
+                return(FALSE)
+            }
+        }
+        return(TRUE)
+    }
+
+    FALSE
+})
 
 setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
-    function(x, index)
-        stop(wmsg("extract_sparse_array() is not supported ",
-                  "on DelayedUnaryIsoOpWithArgs objects"))
-)
+    function(x, index) {
+        ## Assuming that the caller respected "extract_sparse_array() Terms
+        ## of Use" (see SparseArraySeed-class.R), 'is_sparse(x)' should be
+        ## TRUE so we can assume that the operation in x@OP preserves the
+        ## zeroes and thus only need to apply them to the nonzero data.
+        sas <- extract_sparse_array(x@seed, index)
 
+        ## Subset the left and right arguments that go along with a dimension.
+        Largs <- subset_args(x@Largs, x@Lalong, index)
+        Rargs <- subset_args(x@Rargs, x@Ralong, index)
+
+        # Expanding to match the non-zero values.
+        sas_nzindex <- sas@nzindex
+        nzremap <- function(arg, MARGIN) {
+            extractROWS(arg, sas_nzindex[,MARGIN])
+        }
+        Largs <- mapply(nzremap, arg=Largs, MARGIN=x@Lalong, SIMPLIFY=FALSE)
+        Rargs <- mapply(nzremap, arg=Rargs, MARGIN=x@Ralong, SIMPLIFY=FALSE)
+
+        sas_nzdata <- sas@nzdata
+        sas_nzdata <- do.call(x@OP, c(Largs, list(sas_nzdata), Rargs))
+        sas@nzdata <- sas_nzdata
+        sas
+})
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### DelayedSubassign objects
