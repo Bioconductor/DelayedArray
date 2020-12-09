@@ -666,20 +666,23 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
 ### case) and no zero or NA or NaN values (in the division case).
 
 setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs", function(x) {
-    if (identical(x@OP, `*`)) {
-        for (v in c(x@Largs, x@Rargs)) {
-            if (any(!is.finite(v))) {
-                return(FALSE)
+    if (is_sparse(seed(x))) {
+        if (identical(x@OP, `*`)) {
+            for (v in c(x@Largs, x@Rargs)) {
+                if (any(!is.finite(v))) {
+                    return(FALSE)
+                }
             }
-        }
-        return(TRUE)
-    } else if (identical(x@OP, `/`)) {
-        for (v in c(x@Largs, x@Rargs)) {
-            if (any(!is.finite(v) | v==0)) {
-                return(FALSE)
+            return(TRUE)
+
+        } else if (identical(x@OP, `/`)) {
+            for (v in c(x@Largs, x@Rargs)) {
+                if (any(!is.finite(v) | v==0)) {
+                    return(FALSE)
+                }
             }
+            return(TRUE)
         }
-        return(TRUE)
     }
 
     FALSE
