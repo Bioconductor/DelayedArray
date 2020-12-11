@@ -2,6 +2,9 @@
 
 \alias{SparseArraySeed-utils}
 
+\alias{rbind,SparseArraySeed-method}
+\alias{cbind,SparseArraySeed-method}
+
 \alias{is.na,SparseArraySeed-method}
 \alias{is.infinite,SparseArraySeed-method}
 \alias{is.nan,SparseArraySeed-method}

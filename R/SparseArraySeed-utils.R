@@ -4,6 +4,64 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Binding
+###
+
+### Similar to simple_abind() (see bind-arrays.R) but works on
+### SparseArraySeed objects.
+abind_SparseArraySeed_objects <- function(objects, along)
+{
+    stopifnot(is.list(objects))
+    if (length(objects) == 0L)
+        return(NULL)
+
+    ## Check dim compatibility.
+    dims <- get_dims_to_bind(objects, along)
+    if (is.character(dims))
+        stop(wmsg(dims))
+    if (length(objects) == 1L)
+        return(objects[[1L]])
+
+    ## Compute 'ans_dim' and 'ans_dimnames'.
+    ans_dim <- combine_dims_along(dims, along)
+    ans_dimnames <- combine_dimnames_along(objects, dims, along)
+
+    ## Combine the "nzindex" slots.
+    offsets <- cumsum(dims[along, -ncol(dims)])
+    nzindex_list <- lapply(seq_along(objects),
+        function(i) {
+            object <- objects[[i]]
+            nzindex <- object@nzindex
+            if (i >= 2L)
+                nzindex[ , along] = nzindex[ , along, drop=FALSE] +
+                                    offsets[[i - 1L]]
+            nzindex
+	}
+    )
+    ans_nzindex <- do.call(rbind, nzindex_list)
+
+    ## Combine the "nzdata" slots.
+    ans_nzdata <- unlist(lapply(objects, slot, "nzdata"), use.names=FALSE)
+
+    SparseArraySeed(ans_dim, ans_nzindex, ans_nzdata, ans_dimnames, check=FALSE)
+}
+
+setMethod("rbind", "SparseArraySeed",
+    function(...)
+    {
+        abind_SparseArraySeed_objects(list(...), along=1L)
+    }
+)
+
+setMethod("cbind", "SparseArraySeed",
+    function(...)
+    {
+        abind_SparseArraySeed_objects(list(...), along=2L)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Various "unary isometric" array transformations
 ###
 ### A "unary isometric" array transformation is a transformation that returns

@@ -1334,7 +1334,7 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
     ## Reorder the rows or columns in 'ans'.
     Nindex <- vector("list", length=length(index))
     Nindex[[x@along]] <- get_rev_index(part_idx)
-    subset_by_Nindex(ans, Nindex)
+    extract_array(ans, Nindex)
 }
 
 setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
@@ -1348,14 +1348,43 @@ setMethod("is_sparse", "DelayedAbind",
     }
 )
 
+.extract_sparse_array_DelayedAbind <- function(x, index)
+{
+    i <- index[[x@along]]
+
+    if (is.null(i)) {
+        ## This is the easy situation.
+        tmp <- lapply(x@seeds, extract_sparse_array, index)
+        ## Bind the ordinary arrays in 'tmp'.
+        ans <- abind_SparseArraySeed_objects(tmp, x@along)
+        return(ans)
+    }
+
+    ## From now on 'i' is a vector of positive integers.
+    dims <- get_dims_to_bind(x@seeds, x@along)
+    breakpoints <- cumsum(dims[x@along, ])
+    part_idx <- get_part_index(i, breakpoints)
+    split_part_idx <- split_part_index(part_idx, length(breakpoints))
+    FUN <- function(s) {
+        index[[x@along]] <- split_part_idx[[s]]
+        extract_sparse_array(x@seeds[[s]], index)
+    }
+    tmp <- lapply(seq_along(x@seeds), FUN)
+
+    ## Bind the ordinary arrays in 'tmp'.
+    ans <- abind_SparseArraySeed_objects(tmp, x@along)
+
+    ## Reorder the rows or columns in 'ans'.
+    Nindex <- vector("list", length=length(index))
+    Nindex[[x@along]] <- get_rev_index(part_idx)
+    extract_sparse_array(ans, Nindex)
+}
+
 ### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
 ### not contain duplicates. See "extract_sparse_array() Terms of Use"
 ### in SparseArraySeed-class.R
 setMethod("extract_sparse_array", "DelayedAbind",
-    function(x, index)
-    {
-        stop("NOT IMPLEMENTED YET!")
-    }
+    .extract_sparse_array_DelayedAbind
 )
 
 

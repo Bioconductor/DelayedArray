@@ -55,6 +55,72 @@
     SparseArraySeed(dim(sas1), sas1@nzindex, nzdata4)
 }
 
+test_abind_SparseArraySeed_objects <- function()
+{
+    abind_SparseArraySeed_objects <-
+        DelayedArray:::abind_SparseArraySeed_objects
+    simple_abind <- DelayedArray:::simple_abind
+
+    test_on <- function(..., along) {
+	objects <- list(...)
+        current <- abind_SparseArraySeed_objects(objects, along)
+        checkTrue(is(current, "SparseArraySeed"))
+        arrays <- lapply(unname(objects), as.array)
+        target <- do.call(simple_abind, c(arrays, list(along=along)))
+        checkIdentical(target, as.array(current))
+    }
+    do_tests <- function(x1, x2, x3, x4, along) {
+        test_on(x1, along=along)
+        test_on(x2, along=along)
+        test_on(x3, along=along)
+        test_on(x4, along=along)
+        test_on(x1, x2, along=along)
+        test_on(x2, x1, along=along)
+        test_on(x1, x3, along=along)
+        test_on(x3, x1, along=along)
+        test_on(x1, x4, along=along)
+        test_on(x4, x1, along=along)
+        test_on(x2, x3, along=along)
+        test_on(x3, x2, along=along)
+        test_on(x2, x4, along=along)
+        test_on(x4, x2, along=along)
+        test_on(x3, x4, along=along)
+        test_on(x4, x3, along=along)
+        test_on(x1, x2, x3, along=along)
+        test_on(x1, x3, x2, along=along)
+        test_on(x2, x1, x3, along=along)
+        test_on(x2, x3, x1, along=along)
+        test_on(x3, x1, x2, along=along)
+        test_on(x3, x2, x1, along=along)
+        test_on(x1, x2, x3, x4, along=along)
+    }
+
+    sas1 <- .make_toy_sas1()  # integer 3D SparseArraySeed
+    sas2 <- .make_toy_sas2()  # numeric 3D SparseArraySeed
+    dimnames(sas2) <- list(NULL, letters[1:4], letters[24:26])
+    sas3 <- .make_toy_sas3()  # character 3D SparseArraySeed
+    dimnames(sas3) <- list(NULL, LETTERS[1:4], NULL)
+    sas4 <- .make_toy_sas4()  # logical 3D SparseArraySeed
+
+    x1 <- extract_sparse_array(sas1, list(1L, NULL, NULL))
+    x2 <- extract_sparse_array(sas1, list(1:3, NULL, NULL))
+    x3 <- extract_sparse_array(sas1, list(integer(0), NULL, NULL))
+    x4 <- extract_sparse_array(sas1, list(1:2, NULL, NULL))
+    do_tests(x1, x2, x3, x4, along=1L)
+
+    x1 <- extract_sparse_array(sas1, list(NULL, 1L, NULL))
+    x2 <- extract_sparse_array(sas1, list(NULL, 1:3, NULL))
+    x3 <- extract_sparse_array(sas1, list(NULL, integer(0), NULL))
+    x4 <- extract_sparse_array(sas1, list(NULL, 1:2, NULL))
+    do_tests(x1, x2, x3, x4, along=2L)
+
+    x1 <- extract_sparse_array(sas1, list(NULL, NULL, 1L))
+    x2 <- extract_sparse_array(sas1, list(NULL, NULL, 1:3))
+    x3 <- extract_sparse_array(sas1, list(NULL, NULL, integer(0)))
+    x4 <- extract_sparse_array(sas1, list(NULL, NULL, 1:2))
+    do_tests(x1, x2, x3, x4, along=3L)
+}
+
 test_SparseArraySeed_unary_iso_ops <- function()
 {
     do_tests <- function(.Generic, sas) {
