@@ -8,7 +8,7 @@
 \alias{simplify,DelayedUnaryIsoOpStack-method}
 \alias{simplify,DelayedUnaryIsoOpWithArgs-method}
 \alias{simplify,DelayedSubassign-method}
-\alias{simplify,DelayedDimnames-method}
+\alias{simplify,DelayedSetDimnames-method}
 \alias{simplify,DelayedNaryIsoOp-method}
 \alias{simplify,DelayedAbind-method}
 
@@ -73,7 +73,7 @@ netSubsetAndAperm(x, as.DelayedOp=FALSE)
     \code{TRUE} or \code{FALSE}. When \code{TRUE}, the object is considered
     \emph{pristine} even if its dimnames have been modified and no longer
     match the dimnames of its seed (in which case the object carries a
-    single delayed operations of type \link{DelayedDimnames}).
+    single delayed operations of type \link{DelayedSetDimnames}).
   }
   \item{as.DelayedOp}{
     \code{TRUE} or \code{FALSE}. Controls the form of the returned object.

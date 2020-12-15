@@ -98,16 +98,16 @@
 \alias{is_sparse,DelayedSubassign-method}
 \alias{extract_sparse_array,DelayedSubassign-method}
 
-% DelayedDimnames objects
-\alias{class:DelayedDimnames}
-\alias{DelayedDimnames-class}
-\alias{DelayedDimnames}
+% DelayedSetDimnames objects
+\alias{class:DelayedSetDimnames}
+\alias{DelayedSetDimnames-class}
+\alias{DelayedSetDimnames}
 
-\alias{is_noop,DelayedDimnames-method}
-\alias{summary.DelayedDimnames}
-\alias{summary,DelayedDimnames-method}
+\alias{is_noop,DelayedSetDimnames-method}
+\alias{summary.DelayedSetDimnames}
+\alias{summary,DelayedSetDimnames-method}
 
-\alias{dimnames,DelayedDimnames-method}
+\alias{dimnames,DelayedSetDimnames-method}
 
 % DelayedNaryOp objects
 \alias{class:DelayedNaryOp}
@@ -148,6 +148,7 @@
 % updateObject()
 \alias{updateObject,DelayedOp-method}
 \alias{updateObject,SeedDimPicker-method}
+\alias{updateObject,DelayedDimnames-method}
 \alias{updateObject,ConformableSeedCombiner-method}
 \alias{updateObject,SeedBinder-method}
 
@@ -171,7 +172,7 @@ is_noop(x)
 
 \arguments{
   \item{x}{
-    A DelayedSubset, DelayedAperm, or DelayedDimnames object.
+    A DelayedSubset, DelayedAperm, or DelayedSetDimnames object.
   }
 }
 
@@ -194,7 +195,7 @@ is_noop(x)
                                    along the dimensions of the input.
       - DelayedSubassign           Multi-dimensional single bracket
                                    subassignment.
-      - DelayedDimnames            Set/replace the dimnames.
+      - DelayedSetDimnames         Set/replace the dimnames.
   ------------------------------------------------------------------
   * DelayedNaryOp (VIRTUAL)
     o DelayedNaryIsoOp             N-ary op that preserves the
@@ -209,7 +210,7 @@ is_noop(x)
   information about the \emph{seed contract}.
 
   \code{is_noop()} can only be called on a DelayedSubset, DelayedAperm,
-  or DelayedDimnames object at the moment, and will return \code{TRUE}
+  or DelayedSetDimnames object at the moment, and will return \code{TRUE}
   if the object represents a no-op.
 }
 

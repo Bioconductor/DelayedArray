@@ -78,12 +78,12 @@ setMethod("simplify", "DelayedSubset",
             x1@Rvalue <- simplify(x1@Rvalue, incremental=TRUE)
             return(x1)
         }
-        if (is(x1, "DelayedDimnames")) {
+        if (is(x1, "DelayedSetDimnames")) {
             ## ACTION: swap ops.
             x2 <- x
             x2@seed <- x1@seed
             x2 <- simplify(x2, incremental=TRUE)
-            x1 <- new_DelayedDimnames(x2, dimnames(x))
+            x1 <- new_DelayedSetDimnames(x2, dimnames(x))
             return(x1)
         }
         x
@@ -124,12 +124,12 @@ setMethod("simplify", "DelayedAperm",
                 return(x1)
             }
         }
-        if (is(x1, "DelayedDimnames")) {
+        if (is(x1, "DelayedSetDimnames")) {
             ## ACTION: swap ops.
             x2 <- x
             x2@seed <- x1@seed
             x2 <- simplify(x2, incremental=TRUE)
-            x1 <- new_DelayedDimnames(x2, dimnames(x))
+            x1 <- new_DelayedSetDimnames(x2, dimnames(x))
             return(x1)
         }
         x
@@ -147,7 +147,7 @@ setMethod("simplify", "DelayedUnaryIsoOpStack",
             x1@OPS <- c(x1@OPS, x@OPS)
             return(x1)
         }
-        if (is(x1, "DelayedDimnames")) {
+        if (is(x1, "DelayedSetDimnames")) {
             ## ACTION: swap ops.
             x@seed <- x1@seed
             x1@seed <- simplify(x, incremental=TRUE)
@@ -163,7 +163,7 @@ setMethod("simplify", "DelayedUnaryIsoOpWithArgs",
         if (!.normarg_incremental(incremental))
             x@seed <- simplify(x@seed)
         x1 <- x@seed
-        if (is(x1, "DelayedDimnames")) {
+        if (is(x1, "DelayedSetDimnames")) {
             ## ACTION: swap ops.
             x@seed <- x1@seed
             x1@seed <- simplify(x, incremental=TRUE)
@@ -203,16 +203,16 @@ setMethod("simplify", "DelayedSubassign",
                 x1 <- simplify(x1, incremental=TRUE)
             }
             ## Propagate dimnames of left value.
-            x <- new_DelayedDimnames(x1, dimnames(x@seed))
+            x <- new_DelayedSetDimnames(x1, dimnames(x@seed))
             x <- simplify(x, incremental=TRUE)
             return(x)
         }
         Rvalue <- x@Rvalue
-        if (is(Rvalue, "DelayedDimnames")) {
-            ## ACTION: remove DelayedDimnames op from right value.
+        if (is(Rvalue, "DelayedSetDimnames")) {
+            ## ACTION: remove DelayedSetDimnames op from right value.
             x@Rvalue <- Rvalue@seed
         }
-        if (is(x1, "DelayedDimnames")) {
+        if (is(x1, "DelayedSetDimnames")) {
             ## ACTION: swap ops.
             x@seed <- x1@seed
             x1@seed <- x
@@ -222,7 +222,7 @@ setMethod("simplify", "DelayedSubassign",
     }
 )
 
-setMethod("simplify", "DelayedDimnames",
+setMethod("simplify", "DelayedSetDimnames",
     function(x, incremental=FALSE)
     {
         if (!.normarg_incremental(incremental))
@@ -230,9 +230,9 @@ setMethod("simplify", "DelayedDimnames",
         x1 <- x@seed
         if (is_noop(x))
             return(x1)
-        if (is(x1, "DelayedDimnames")) {
+        if (is(x1, "DelayedSetDimnames")) {
             ## ACTION: merge ops + remove if no-op.
-            x <- new_DelayedDimnames(x1@seed, dimnames(x))
+            x <- new_DelayedSetDimnames(x1@seed, dimnames(x))
             if (is_noop(x))
                 return(x@seed)
             return(x)
@@ -276,8 +276,8 @@ isPristine <- function(x, ignore.dimnames=FALSE)
         stop(wmsg("'x' must be a DelayedArray object"))
     if (!isTRUEorFALSE(ignore.dimnames))
         stop(wmsg("'ignore.dimnames' should be TRUE or FALSE"))
-    if (ignore.dimnames && is(x@seed, "DelayedDimnames"))
-        x@seed <- x@seed@seed  # drop DelayedDimnames op
+    if (ignore.dimnames && is(x@seed, "DelayedSetDimnames"))
+        x@seed <- x@seed@seed  # drop DelayedSetDimnames op
     !is(x@seed, "DelayedOp")
 }
 

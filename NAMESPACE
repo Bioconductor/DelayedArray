@@ -33,15 +33,31 @@ exportClasses(
     ## DelayedOp-class.R:
     DelayedOp,
     DelayedUnaryOp,
-    DelayedSubset,
-    DelayedAperm,
     DelayedUnaryIsoOp,
-    DelayedUnaryIsoOpStack,
-    DelayedUnaryIsoOpWithArgs,
-    DelayedSubassign,
-    DelayedDimnames,
     DelayedNaryOp,
+
+    ## DelayedSubset-class.R:
+    DelayedSubset,
+
+    ## DelayedAperm-class.R:
+    DelayedAperm,
+
+    ## DelayedUnaryIsoOpStack-class.R:
+    DelayedUnaryIsoOpStack,
+
+    ## DelayedUnaryIsoOpWithArgs-class.R:
+    DelayedUnaryIsoOpWithArgs,
+
+    ## DelayedSubassign-class.R:
+    DelayedSubassign,
+
+    ## DelayedSetDimnames-class.R:
+    DelayedSetDimnames,
+
+    ## DelayedNaryIsoOp-class.R:
     DelayedNaryIsoOp,
+
+    ## DelayedAbind-class.R:
     DelayedAbind,
 
     ## DelayedArray-class.R:
@@ -111,7 +127,7 @@ S3method(summary, DelayedSubset)
 S3method(summary, DelayedAperm)
 S3method(summary, DelayedUnaryIsoOpStack)
 S3method(summary, DelayedUnaryIsoOpWithArgs)
-S3method(summary, DelayedDimnames)
+S3method(summary, DelayedSetDimnames)
 S3method(summary, DelayedNaryIsoOp)
 S3method(summary, DelayedAbind)
 
@@ -171,7 +187,7 @@ export(
     summary.DelayedAperm,
     summary.DelayedUnaryIsoOpStack,
     summary.DelayedUnaryIsoOpWithArgs,
-    summary.DelayedDimnames,
+    summary.DelayedSetDimnames,
     summary.DelayedNaryIsoOp,
     summary.DelayedAbind,
 

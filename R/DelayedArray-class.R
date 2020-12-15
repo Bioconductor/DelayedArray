@@ -256,7 +256,7 @@ setClass("DelayedArray1",
     seed_dimnames <- dimnames(seed)
 
     ## Translate 'index' slot as DelayedOp objects (1 DelayedSubset and
-    ## 1 DelayedDimnames) and stash them inside 'seed'.
+    ## 1 DelayedSetDimnames) and stash them inside 'seed'.
 
     index <- lapply(unname(object1@index), unname)
     op <- new2("DelayedSubset", seed=seed, index=index)
@@ -271,7 +271,7 @@ setClass("DelayedArray1",
     if (all(S4Vectors:::sapply_isNULL(object1_dimnames)))
         object1_dimnames <- NULL
 
-    op <- new_DelayedDimnames(seed, object1_dimnames)
+    op <- new_DelayedSetDimnames(seed, object1_dimnames)
     if (!is_noop(op))
         seed <- op
 
@@ -448,10 +448,10 @@ stash_DelayedSubassign <- function(x, Nindex, value)
     DelayedArray(op)
 }
 
-stash_DelayedDimnames <- function(x, dimnames)
+stash_DelayedSetDimnames <- function(x, dimnames)
 {
     stopifnot(is(x, "DelayedArray"))
-    op <- new_DelayedDimnames(x@seed, dimnames)
+    op <- new_DelayedSetDimnames(x@seed, dimnames)
     DelayedArray(op)
 }
 
@@ -596,7 +596,7 @@ setReplaceMethod("dim", "DelayedArray", .set_DelayedArray_dim)
 ###
 
 setReplaceMethod("dimnames", "DelayedArray",
-    function(x, value) stash_DelayedDimnames(x, value)
+    function(x, value) stash_DelayedSetDimnames(x, value)
 )
 
 ### names() getter & setter.
