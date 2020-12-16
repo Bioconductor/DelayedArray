@@ -3,10 +3,10 @@
 ### -------------------------------------------------------------------------
 ###
 ### Representation of a delayed "extended aperm()" operation, that is, a
-### delayed aperm() that can drop and/or add ineffective dimensions.
-### Note that since only "ineffective" dimensions (i.e. dimensions equal to 1)
-### can be dropped or added, the length of the output array is guaranteed to
-### be the same as the length of the input array.
+### delayed aperm() that can drop and/or add **ineffective** dimensions.
+### Note that since only **ineffective** dimensions (i.e. dimensions with
+### an extent of 1) can be dropped or added, the length of the output array
+### is guaranteed to be the same as the length of the input array.
 ###
 
 setClass("DelayedAperm",
@@ -39,15 +39,30 @@ setClass("DelayedAperm",
 
 setValidity2("DelayedAperm", .validate_DelayedAperm)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 new_DelayedAperm <- function(seed=new("array"), perm=NULL)
 {
     perm <- normarg_perm(perm, dim(seed))
     new2("DelayedAperm", seed=seed, perm=perm)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_noop() method
+###
+
 setMethod("is_noop", "DelayedAperm",
     function(x) isSequence(x@perm, length(dim(x@seed)))
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
 
 ### S3/S4 combo for summary.DelayedAperm
 
@@ -64,7 +79,10 @@ summary.DelayedAperm <-
 
 setMethod("summary", "DelayedAperm", summary.DelayedAperm)
 
-### Seed contract.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
 
 .get_DelayedAperm_dim <- function(x)
 {
@@ -113,7 +131,10 @@ setMethod("extract_array", "DelayedAperm",
     .extract_array_from_DelayedAperm
 )
 
-### is_sparse() and extract_sparse_array()
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 
 setMethod("is_sparse", "DelayedAperm", function(x) is_sparse(x@seed))
 

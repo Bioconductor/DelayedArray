@@ -35,6 +35,55 @@ setClass("DelayedSubset",
 
 setValidity2("DelayedSubset", .validate_DelayedSubset)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
+### 'Nindex' must be a "multidimensional subsetting Nindex" (see
+### Nindex-utils.R) or NULL.
+new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
+{
+    index <- normalizeNindex(Nindex, seed)
+    new2("DelayedSubset", seed=seed, index=index)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_noop() method
+###
+
+setMethod("is_noop", "DelayedSubset",
+    function(x) all(S4Vectors:::sapply_isNULL(x@index))
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
+
+### S3/S4 combo for summary.DelayedSubset
+
+.DelayedSubset_summary <- function(object) "Subset"
+
+summary.DelayedSubset <-
+    function(object, ...) .DelayedSubset_summary(object, ...)
+
+setMethod("summary", "DelayedSubset", summary.DelayedSubset)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+
+setMethod("dim", "DelayedSubset",
+    function(x) get_Nindex_lengths(x@index, dim(x@seed))
+)
+
+setMethod("dimnames", "DelayedSubset",
+    function(x) subset_dimnames_by_Nindex(dimnames(x@seed), x@index)
+)
+
 subset_DelayedSubset <- function(x, index)
 {
     stopifnot(is(x, "DelayedSubset"))
@@ -58,37 +107,6 @@ subset_DelayedSubset <- function(x, index)
     x
 }
 
-### 'Nindex' must be a "multidimensional subsetting Nindex" (see
-### Nindex-utils.R) or NULL.
-new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
-{
-    index <- normalizeNindex(Nindex, seed)
-    new2("DelayedSubset", seed=seed, index=index)
-}
-
-setMethod("is_noop", "DelayedSubset",
-    function(x) all(S4Vectors:::sapply_isNULL(x@index))
-)
-
-### S3/S4 combo for summary.DelayedSubset
-
-.DelayedSubset_summary <- function(object) "Subset"
-
-summary.DelayedSubset <-
-    function(object, ...) .DelayedSubset_summary(object, ...)
-
-setMethod("summary", "DelayedSubset", summary.DelayedSubset)
-
-### Seed contract.
-
-setMethod("dim", "DelayedSubset",
-    function(x) get_Nindex_lengths(x@index, dim(x@seed))
-)
-
-setMethod("dimnames", "DelayedSubset",
-    function(x) subset_dimnames_by_Nindex(dimnames(x@seed), x@index)
-)
-
 setMethod("extract_array", "DelayedSubset",
     function(x, index)
     {
@@ -97,7 +115,10 @@ setMethod("extract_array", "DelayedSubset",
     }
 )
 
-### is_sparse() and extract_sparse_array()
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 
 setMethod("is_sparse", "DelayedSubset",
     function(x)

@@ -2,7 +2,7 @@
 ### DelayedAbind objects
 ### -------------------------------------------------------------------------
 ###
-### Representation of a delayed abind().
+### Representation of a delayed abind() operation.
 ###
 
 setClass("DelayedAbind",
@@ -34,14 +34,29 @@ setClass("DelayedAbind",
 
 setValidity2("DelayedAbind", .validate_DelayedAbind)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 new_DelayedAbind <- function(seeds, along)
 {
     new2("DelayedAbind", seeds=seeds, along=along)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_noop() method
+###
+
 setMethod("is_noop", "DelayedAbind",
     function(x) length(x@seeds) == 1L
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
 
 ### S3/S4 combo for summary.DelayedAbind
 
@@ -53,7 +68,10 @@ summary.DelayedAbind <-
 
 setMethod("summary", "DelayedAbind", summary.DelayedAbind)
 
-### Seed contract.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
 
 .get_DelayedAbind_dim <- function(x)
 {
@@ -105,7 +123,10 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
 
 setMethod("extract_array", "DelayedAbind", .extract_array_from_DelayedAbind)
 
-### is_sparse() and extract_sparse_array()
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 
 setMethod("is_sparse", "DelayedAbind",
     function(x)

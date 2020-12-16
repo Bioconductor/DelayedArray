@@ -47,6 +47,11 @@ setClass("DelayedSetDimnames",
 
 setValidity2("DelayedSetDimnames", .validate_DelayedSetDimnames)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 new_DelayedSetDimnames <-
     function(seed=new("array"), dimnames=.INHERIT_FROM_SEED)
 {
@@ -80,6 +85,11 @@ new_DelayedSetDimnames <-
     new2("DelayedSetDimnames", seed=seed, dimnames=dimnames)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_noop() method
+###
+
 setMethod("is_noop", "DelayedSetDimnames",
     function(x)
     {
@@ -88,6 +98,11 @@ setMethod("is_noop", "DelayedSetDimnames",
         all(ok) && identical(names(x@dimnames), names(dimnames(x@seed)))
     }
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
 
 ### S3/S4 combo for summary.DelayedSetDimnames
 
@@ -98,9 +113,12 @@ summary.DelayedSetDimnames <-
 
 setMethod("summary", "DelayedSetDimnames", summary.DelayedSetDimnames)
 
-### Seed contract.
-### We inherit the "dim" and "extract_array" default methods for
-### DelayedUnaryIsoOp derivatives, and overwite their "dimnames" method.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+### We inherit the default dim() and extract_array() methods defined for
+### DelayedUnaryIsoOp derivatives, but overwite their dimnames() method.
 
 .get_DelayedSetDimnames_dimnames <- function(x)
 {

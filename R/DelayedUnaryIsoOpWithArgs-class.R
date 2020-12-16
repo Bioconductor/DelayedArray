@@ -32,6 +32,11 @@ setClass("DelayedUnaryIsoOpWithArgs",
     )
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 .normarg_Lalong_or_Ralong <- function(Lalong, Largs, seed_dim)
 {
     if (identical(Lalong, NA))
@@ -81,6 +86,11 @@ new_DelayedUnaryIsoOpWithArgs <- function(seed=new("array"),
     ans
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
+
 ### S3/S4 combo for summary.DelayedUnaryIsoOpWithArgs
 
 .DelayedUnaryIsoOpWithArgs_summary <- function(object) "Unary iso op with args"
@@ -92,9 +102,12 @@ setMethod("summary", "DelayedUnaryIsoOpWithArgs",
     summary.DelayedUnaryIsoOpWithArgs
 )
 
-### Seed contract.
-### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
-### derivatives, and overwite their "extract_array" method.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+### We inherit the default dim() and dimnames() methods defined for
+### DelayedUnaryIsoOp derivatives, but overwite their extract_array() method.
 
 subset_args <- function(args, along, index)
 {
@@ -126,8 +139,10 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
     }
 )
 
-### is_sparse() and extract_sparse_array()
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 ### DelayedUnaryIsoOpWithArgs objects are NOT considered to propagate
 ### structural sparsity at the moment. However it would be nice if
 ### things like 'M * runif(nrow(M))' or 'M / runif(nrow(M))' propagated
@@ -138,7 +153,7 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
 ###   sf <- runif(ncol(sce))
 ###   lcounts <- log2(t(t(counts(sce))/sf) + 1)
 ### 'lcounts' should be considered sparse but right now it's not!
-### TODO: The "is_sparse" method below should be able to propagate sparsity
+### TODO: The is_sparse() method below should be able to propagate sparsity
 ### of 'A * v', 'v * A', and 'A / v',  when 'length(v)' is 'nrow(A)' and
 ### 'v' does not contain infinite or NA or NaN values (in the multiplication
 ### case) and no zero or NA or NaN values (in the division case).

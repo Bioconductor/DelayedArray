@@ -21,6 +21,11 @@ setClass("DelayedUnaryIsoOpStack",
     )
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 new_DelayedUnaryIsoOpStack <- function(seed=new("array"), OPS=list(),
                                        check.op=FALSE)
 {
@@ -47,18 +52,29 @@ new_DelayedUnaryIsoOpStack <- function(seed=new("array"), OPS=list(),
     ans
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
+
 ### S3/S4 combo for summary.DelayedUnaryIsoOpStack
 
-.DelayedUnaryIsoOpStack_summary <- function(object) "Unary iso op stack"
+.DelayedUnaryIsoOpStack_summary <- function(object)
+{
+    sprintf("Stack of %d unary iso op(s)", length(object@OPS))
+}
 
 summary.DelayedUnaryIsoOpStack <-
     function(object, ...) .DelayedUnaryIsoOpStack_summary(object, ...)
 
 setMethod("summary", "DelayedUnaryIsoOpStack", summary.DelayedUnaryIsoOpStack)
 
-### Seed contract.
-### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
-### derivatives, and overwite their "extract_array" method.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+### We inherit the default dim() and dimnames() methods defined for
+### DelayedUnaryIsoOp derivatives, but overwite their extract_array() method.
 
 setMethod("extract_array", "DelayedUnaryIsoOpStack",
     function(x, index)
@@ -75,7 +91,10 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
     }
 )
 
-### is_sparse() and extract_sparse_array()
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 
 ### Make an ordinary array of the specified type and number of dimensions,
 ### and with a single "zero" element. The single element is the "zero"
@@ -102,7 +121,7 @@ setMethod("is_sparse", "DelayedUnaryIsoOpStack",
         seed_ndim <- length(dim(x@seed))
         x@seed <- .make_array_of_one_zero(type(x@seed), seed_ndim)
         a0 <- extract_array(x, rep.int(list(1L), seed_ndim))
-        as.vector(a0) == vector(type(a0), length=1L)
+        identical(as.vector(a0), vector(type(a0), length=1L))
     }
 )
 

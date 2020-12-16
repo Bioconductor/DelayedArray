@@ -49,6 +49,11 @@ setClass("DelayedSubassign",
 
 setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 
+
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 .normarg_Rvalue <- function(Rvalue, selection_dim)
 {
     Rvalue_dim <- dim(Rvalue)
@@ -103,6 +108,11 @@ new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
                              .nogap=nogap)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### is_noop() method
+###
+
 ### Is the subassignment a no-op with respect to its "seed" slot? Note that
 ### even when zero array elements are being replaced, the subassignment can
 ### still alter the type.
@@ -116,6 +126,11 @@ setMethod("is_noop", "DelayedSubassign",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
+
 ### S3/S4 combo for summary.DelayedSubassign
 
 .DelayedSubassign_summary <- function(object) "Subassign"
@@ -124,6 +139,11 @@ summary.DelayedSubassign <-
     function(object, ...) .DelayedSubassign_summary(object, ...)
 
 setMethod("summary", "DelayedSubassign", summary.DelayedSubassign)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### make_Mindex() and subset_DelayedSubassign()
+###
 
 ### Do NOT use if 'x@Lindex' might contain duplicates! NAs are ok.
 ### The returned index won't contain NAs along the dimensions with no gap
@@ -246,9 +266,12 @@ subset_DelayedSubassign <- function(x, index=NULL)
                              check=FALSE)
 }
 
-### Seed contract.
-### We inherit the "dim" and "dimnames" default methods for DelayedUnaryIsoOp
-### derivatives, and overwite their "extract_array" method.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
+### We inherit the default dim() and dimnames() methods defined for
+### DelayedUnaryIsoOp derivatives, but overwite their extract_array() method.
 
 .extract_array_from_DelayedSubassign <- function(x, index)
 {
@@ -275,7 +298,10 @@ setMethod("extract_array", "DelayedSubassign",
     .extract_array_from_DelayedSubassign
 )
 
-### is_sparse() and extract_sparse_array()
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 
 setMethod("is_sparse", "DelayedSubassign",
     function(x) {

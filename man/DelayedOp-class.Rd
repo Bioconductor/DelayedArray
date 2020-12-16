@@ -14,38 +14,6 @@
 \alias{DelayedUnaryOp-class}
 \alias{DelayedUnaryOp}
 
-% DelayedSubset objects
-\alias{class:DelayedSubset}
-\alias{DelayedSubset-class}
-\alias{DelayedSubset}
-
-\alias{is_noop,DelayedSubset-method}
-\alias{summary.DelayedSubset}
-\alias{summary,DelayedSubset-method}
-
-\alias{dim,DelayedSubset-method}
-\alias{dimnames,DelayedSubset-method}
-\alias{extract_array,DelayedSubset-method}
-
-\alias{is_sparse,DelayedSubset-method}
-\alias{extract_sparse_array,DelayedSubset-method}
-
-% DelayedAperm objects
-\alias{class:DelayedAperm}
-\alias{DelayedAperm-class}
-\alias{DelayedAperm}
-
-\alias{is_noop,DelayedAperm-method}
-\alias{summary.DelayedAperm}
-\alias{summary,DelayedAperm-method}
-
-\alias{dim,DelayedAperm-method}
-\alias{dimnames,DelayedAperm-method}
-\alias{extract_array,DelayedAperm-method}
-
-\alias{is_sparse,DelayedAperm-method}
-\alias{extract_sparse_array,DelayedAperm-method}
-
 % DelayedUnaryIsoOp objects
 \alias{class:DelayedUnaryIsoOp}
 \alias{DelayedUnaryIsoOp-class}
@@ -58,112 +26,28 @@
 \alias{is_sparse,DelayedUnaryIsoOp-method}
 \alias{extract_sparse_array,DelayedUnaryIsoOp-method}
 
-% DelayedUnaryIsoOpStack objects
-\alias{class:DelayedUnaryIsoOpStack}
-\alias{DelayedUnaryIsoOpStack-class}
-\alias{DelayedUnaryIsoOpStack}
-
-\alias{summary.DelayedUnaryIsoOpStack}
-\alias{summary,DelayedUnaryIsoOpStack-method}
-
-\alias{extract_array,DelayedUnaryIsoOpStack-method}
-
-\alias{is_sparse,DelayedUnaryIsoOpStack-method}
-\alias{extract_sparse_array,DelayedUnaryIsoOpStack-method}
-
-% DelayedUnaryIsoOpWithArgs objects
-\alias{class:DelayedUnaryIsoOpWithArgs}
-\alias{DelayedUnaryIsoOpWithArgs-class}
-\alias{DelayedUnaryIsoOpWithArgs}
-
-\alias{summary.DelayedUnaryIsoOpWithArgs}
-\alias{summary,DelayedUnaryIsoOpWithArgs-method}
-
-\alias{extract_array,DelayedUnaryIsoOpWithArgs-method}
-
-\alias{is_sparse,DelayedUnaryIsoOpWithArgs-method}
-\alias{extract_sparse_array,DelayedUnaryIsoOpWithArgs-method}
-
-% DelayedSubassign objects
-\alias{class:DelayedSubassign}
-\alias{DelayedSubassign-class}
-\alias{DelayedSubassign}
-
-\alias{is_noop,DelayedSubassign-method}
-\alias{summary.DelayedSubassign}
-\alias{summary,DelayedSubassign-method}
-
-\alias{extract_array,DelayedSubassign-method}
-
-\alias{is_sparse,DelayedSubassign-method}
-\alias{extract_sparse_array,DelayedSubassign-method}
-
-% DelayedSetDimnames objects
-\alias{class:DelayedSetDimnames}
-\alias{DelayedSetDimnames-class}
-\alias{DelayedSetDimnames}
-
-\alias{is_noop,DelayedSetDimnames-method}
-\alias{summary.DelayedSetDimnames}
-\alias{summary,DelayedSetDimnames-method}
-
-\alias{dimnames,DelayedSetDimnames-method}
-
 % DelayedNaryOp objects
 \alias{class:DelayedNaryOp}
 \alias{DelayedNaryOp-class}
 \alias{DelayedNaryOp}
 
-% DelayedNaryIsoOp objects
-\alias{class:DelayedNaryIsoOp}
-\alias{DelayedNaryIsoOp-class}
-\alias{DelayedNaryIsoOp}
-
-\alias{summary.DelayedNaryIsoOp}
-\alias{summary,DelayedNaryIsoOp-method}
-
-\alias{dim,DelayedNaryIsoOp-method}
-\alias{dimnames,DelayedNaryIsoOp-method}
-\alias{extract_array,DelayedNaryIsoOp-method}
-
-\alias{is_sparse,DelayedNaryIsoOp-method}
-\alias{extract_sparse_array,DelayedNaryIsoOp-method}
-
-% DelayedAbind objects
-\alias{class:DelayedAbind}
-\alias{DelayedAbind-class}
-\alias{DelayedAbind}
-
-\alias{is_noop,DelayedAbind-method}
-\alias{summary.DelayedAbind}
-\alias{summary,DelayedAbind-method}
-
-\alias{dim,DelayedAbind-method}
-\alias{dimnames,DelayedAbind-method}
-\alias{extract_array,DelayedAbind-method}
-
-\alias{is_sparse,DelayedAbind-method}
-\alias{extract_sparse_array,DelayedAbind-method}
-
 % updateObject()
 \alias{updateObject,DelayedOp-method}
-\alias{updateObject,SeedDimPicker-method}
-\alias{updateObject,DelayedDimnames-method}
-\alias{updateObject,ConformableSeedCombiner-method}
-\alias{updateObject,SeedBinder-method}
 
 \title{DelayedOp objects}
 
 \description{
+  NOTE: This man page is about \link{DelayedArray} internals and is provided
+  for developers and advanced users only.
+
   In a \link{DelayedArray} object, the delayed operations are stored as a
-  tree of DelayedOp objects. Each node in this tree is a DelayedOp
-  object that represents a delayed operation.
+  tree where the leaves are operands and the nodes are the operations.
+  Each node in the tree is a DelayedOp derivative representing a particular
+  delayed operation.
 
-  DelayedOp objects are used inside \link{DelayedArray} objects and are not
-  intended to be manipulated directly by the end user.
-
-  \code{\link{showtree}} and \code{\link{simplify}} can be used to visualize,
-  inspect, and simplify this tree.
+  DelayedOp is a virtual class with 8 concrete subclasses. Each subclass
+  provides a formal representation for a particular kind of delayed
+  operation.
 }
 
 \usage{
@@ -215,20 +99,28 @@ is_noop(x)
 }
 
 \note{
-  The DelayedOp virtual class and its 8 concrete subclasses are for
-  internal use only and never exposed to the end user.
+  The DelayedOp virtual class and its 8 concrete subclasses are used inside
+  a \link{DelayedArray} object to represent delayed operations carried by
+  the object. They're never exposed to the end user and are not intended to
+  be manipulated directly.
 }
 
 \seealso{
   \itemize{
+    \item DelayedOp concrete subclasses: \link{DelayedSubset},
+          \link{DelayedAperm}, \link{DelayedUnaryIsoOpStack},
+          \link{DelayedUnaryIsoOpWithArgs}, \link{DelayedSubassign},
+          \link{DelayedSetDimnames}, \link{DelayedNaryIsoOp},
+          and \link{DelayedAbind}.
+
     \item \link{DelayedArray} objects.
 
-    \item \code{\link{showtree}} to visualize and access the leaves of
-          a tree of delayed operations carried by a \link{DelayedArray}
-          object.
+    \item \code{\link{showtree}} to visualize the nodes and access the
+          leaves in the tree of delayed operations carried by a
+          \link{DelayedArray} object.
 
-    \item \code{\link{simplify}} to simplify the tree of delayed operations
-          carried by a \link{DelayedArray} object.
+    \item \code{\link{simplify}} to simplify the tree of delayed
+          operations carried by a \link{DelayedArray} object.
 
     \item \code{\link{extract_array}}.
   }

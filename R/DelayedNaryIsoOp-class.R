@@ -47,6 +47,11 @@ setClass("DelayedNaryIsoOp",
 
 setValidity2("DelayedNaryIsoOp", .validate_DelayedNaryIsoOp)
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
 new_DelayedNaryIsoOp <- function(OP=identity, seed=new("array"), ...,
                                  Rargs=list())
 {
@@ -57,6 +62,11 @@ new_DelayedNaryIsoOp <- function(OP=identity, seed=new("array"), ...,
     new2("DelayedNaryIsoOp", seeds=seeds, OP=OP, Rargs=Rargs, check=FALSE)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Display
+###
+
 ### S3/S4 combo for summary.DelayedNaryIsoOp
 
 .DelayedNaryIsoOp_summary <- function(object) "N-ary iso op"
@@ -66,7 +76,10 @@ summary.DelayedNaryIsoOp <-
 
 setMethod("summary", "DelayedNaryIsoOp", summary.DelayedNaryIsoOp)
 
-### Seed contract.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Seed contract
+###
 
 setMethod("dim", "DelayedNaryIsoOp", function(x) dim(x@seeds[[1L]]))
 
@@ -82,7 +95,10 @@ setMethod("extract_array", "DelayedNaryIsoOp",
     }
 )
 
-### is_sparse() and extract_sparse_array()
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Propagation of sparsity
+###
 
 setMethod("is_sparse", "DelayedNaryIsoOp",
     function(x)
@@ -103,7 +119,7 @@ setMethod("is_sparse", "DelayedNaryIsoOp",
         x@seeds <- lapply(x@seeds,
             function(seed) .make_array_of_one_zero(type(seed), seed_ndim))
         a0 <- extract_array(x, rep.int(list(1L), seed_ndim))
-        as.vector(a0) == vector(type(a0), length=1L)
+        identical(as.vector(a0), vector(type(a0), length=1L))
     }
 )
 
