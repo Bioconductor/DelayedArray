@@ -235,11 +235,12 @@ setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs",
         if (!is_sparse(x@seed))
             return(FALSE)
         p <- setdiff(c(x@Lalong, x@Ralong), NA_integer_)
-        if (length(p) != 1L)
+        if (length(p) >= 2L)
             return(FALSE)
         seed_ndim <- length(dim(x@seed))
         dim0 <- rep.int(1L, seed_ndim)
-        dim0[[p]] <- dim(x@seed)[[p]]
+        if (length(p) == 1L)
+            dim0[[p]] <- dim(x@seed)[[p]]
         x@seed <- make_zero_filled_array(type(x@seed), dim0)
         ## Same as 'as.array(x)' but doesn't try to propagate the dimnames.
         a0 <- extract_array(x, vector("list", length=seed_ndim))
