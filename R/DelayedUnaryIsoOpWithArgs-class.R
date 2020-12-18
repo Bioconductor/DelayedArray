@@ -195,7 +195,7 @@ setMethod("extract_array", "DelayedUnaryIsoOpWithArgs",
 ### For example if 'x@seed' is a 12 x 150 x 5 array and 'x@Larg[[2]]',
 ### 'x@Larg[[3]]', 'x@Rarg[[1]]', and 'x@Rarg[[2]]', are vectors that go
 ### along the 3rd, 1st, 2nd, and 1st dimensions, respectively, then by virtue
-### of the "locality principle" (see top at of this file), 'x' is considered
+### of the "locality principle" (see at top of this file), 'x' is considered
 ### to propagate sparsity iff:
 ###
 ###    x@OP(x@Larg[[1]], x@Larg[[2]][k], x@Larg[[3]][i], ...,
