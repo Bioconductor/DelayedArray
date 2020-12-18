@@ -216,6 +216,11 @@ showtree(SM9)
 class(SM9@seed)      # a DelayedUnaryIsoOpWithArgs object
 is_sparse(SM9@seed)  # TRUE
 
+M10 <- 101:104 / SM0
+showtree(M10)
+class(M10@seed)      # a DelayedUnaryIsoOpWithArgs object
+is_sparse(M10@seed)  # FALSE
+
 ## ---------------------------------------------------------------------
 ## ADVANCED EXAMPLE
 ## ---------------------------------------------------------------------
@@ -247,6 +252,8 @@ stopifnot(class(M8@seed) == "DelayedUnaryIsoOpWithArgs")
 stopifnot(!is_sparse(M8@seed))
 stopifnot(class(SM9@seed) == "DelayedUnaryIsoOpWithArgs")
 stopifnot(is_sparse(SM9@seed))
+stopifnot(class(M10@seed) == "DelayedUnaryIsoOpWithArgs")
+stopifnot(!is_sparse(M10@seed))
 }
 
 \keyword{methods}
