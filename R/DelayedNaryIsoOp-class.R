@@ -109,7 +109,7 @@ setMethod("is_sparse", "DelayedNaryIsoOp",
         if (length(x@Rargs) != 0L)
             return(FALSE)
         ## Structural sparsity will be propagated if the operation in
-        ## x@OP preserves the zeroes. To find out whether zeroes are preserved
+        ## x@OP preserves the zeros. To find out whether zeros are preserved
         ## or not, we replace each current seed with an array of one "zero",
         ## that is, with an ordinary array of the same number of dimensions
         ## and type as the seed, but with a single "zero" element. Then we
@@ -117,9 +117,10 @@ setMethod("is_sparse", "DelayedNaryIsoOp",
         ## zero were preserved or not.
         seed_ndim <- length(dim(x@seeds[[1L]]))
         x@seeds <- lapply(x@seeds,
-            function(seed) .make_array_of_one_zero(type(seed), seed_ndim))
-        a0 <- extract_array(x, rep.int(list(1L), seed_ndim))
-        identical(as.vector(a0), vector(type(a0), length=1L))
+            function(seed) make_one_zero_array(type(seed), seed_ndim))
+        ## Same as 'as.array(x)' but doesn't try to propagate the dimnames.
+        a0 <- extract_array(x, vector("list", length=seed_ndim))
+        is_filled_with_zeros(a0)
     }
 )
 

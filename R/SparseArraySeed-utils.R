@@ -148,18 +148,18 @@ setMethod("Summary", "SparseArraySeed",
         if (length(list(...)) != 0L)
             stop(wmsg(.Generic, "() method for SparseArraySeed objects ",
                       "only accepts a single object"))
-        ## Whether 'x' contains zeroes or not doesn't make a difference for
+        ## Whether 'x' contains zeros or not doesn't make a difference for
         ## sum() and any().
         if (.Generic %in% c("sum", "any"))
             return(GENERIC(x@nzdata, na.rm=na.rm))
-        ## Of course a typical SparseArraySeed object "contains" zeroes
-        ## (i.e. it would contain zeroes if we converted it to a dense
+        ## Of course a typical SparseArraySeed object "contains" zeros
+        ## (i.e. it would contain zeros if we converted it to a dense
         ## representation with sparse2dense()). However, this is not
         ## guaranteed so we need to make sure to properly handle the case
         ## where it doesn't (admittedly unusual and definitely an inefficient
         ## way to represent dense data!)
-        x_has_zeroes <- length(x@nzdata) < length(x)
-        if (!x_has_zeroes)
+        x_has_zeros <- length(x@nzdata) < length(x)
+        if (!x_has_zeros)
             return(GENERIC(x@nzdata, na.rm=na.rm))
         x_type <- typeof(x@nzdata)
         if (.Generic == "all") {
@@ -185,8 +185,8 @@ range.SparseArraySeed <- function(..., na.rm=FALSE, finite=FALSE)
         stop(wmsg("range() method for SparseArraySeed objects ",
                   "only accepts a single object"))
     x <- objects[[1L]]
-    x_has_zeroes <- length(x@nzdata) < length(x)
-    if (!x_has_zeroes)
+    x_has_zeros <- length(x@nzdata) < length(x)
+    if (!x_has_zeros)
         return(range(x@nzdata, na.rm=na.rm, finite=finite))
     zero <- vector(typeof(x@nzdata), length=1L)
     range(zero, x@nzdata, na.rm=na.rm, finite=finite)

@@ -257,6 +257,52 @@ validate_dimnames_slot <- function(x, dim, slotname="dimnames")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### set_or_check_dim()
+###
+
+set_or_check_dim <- function(x, dim)
+{
+    x_dim <- dim(x)
+    if (is.null(x_dim)) {
+        dim(x) <- dim
+    } else {
+        stopifnot(identical(x_dim, dim))
+    }
+    x
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Zero-filled arrays
+###
+### The "zero" value used to fill the array is the "zero" associated with the
+### specified 'type' e.g. the empty string ("") if 'type' is "character",
+### FALSE if it's "logical", etc... More generally, the "zero" element is
+### whatever 'vector(type, length=1L)' produces.
+###
+
+make_zero_filled_array <- function(type, dim)
+{
+    array(vector(type, length=prod(dim)), dim=dim)
+}
+
+### Make an array with a single "zero" element.
+make_one_zero_array <- function(type, ndim)
+{
+    ans_dim <- rep.int(1L, ndim)
+    make_zero_filled_array(type, ans_dim)
+}
+
+is_filled_with_zeros <- function(x)
+{
+    stopifnot(is.vector(x) || is.array(x))
+    ## Do NOT use a '=='-based solution (e.g. 'all(x == vector(type(x),
+    ## length=1))') cause it won't work as expected if 'x' contains NAs.
+    identical(as.vector(x), vector(type(x), length=length(x)))
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### outer2()
 ###
 ### Outer product of an arbitrary number of objects. Typically used on

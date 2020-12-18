@@ -85,7 +85,7 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
             a <- OP(a)
             ## Some operations (e.g. dnorm()) don't propagate the "dim"
             ## attribute if the input array is empty.
-            a <- .set_or_check_dim(a, a_dim)
+            a <- set_or_check_dim(a, a_dim)
         }
         a
     }
@@ -96,32 +96,23 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
 ### Propagation of sparsity
 ###
 
-### Make an ordinary array of the specified type and number of dimensions,
-### and with a single "zero" element. The single element is the "zero"
-### associated with the specified type e.g. the empty string ("") if type
-### is "character", FALSE if it's "logical", etc... More generally, the
-### "zero" element is whatever 'vector(type, length=1L)' produces.
-.make_array_of_one_zero <- function(type, ndim)
-{
-    array(vector(type, length=1L), dim=rep.int(1L, ndim))
-}
-
 setMethod("is_sparse", "DelayedUnaryIsoOpStack",
     function(x)
     {
         if (!is_sparse(x@seed))
             return(FALSE)
         ## Structural sparsity will be propagated if the operations in
-        ## x@OPS preserve the zeroes. To find out whether zeroes are preserved
+        ## x@OPS preserve the zeros. To find out whether zeros are preserved
         ## or not, we replace the current seed with an array of one "zero",
         ## that is, with an ordinary array of the same number of dimensions
         ## and type as the seed, but with a single "zero" element. Then we
         ## apply the operations in x@OPS to it and see whether the zero was
         ## preserved or not.
         seed_ndim <- length(dim(x@seed))
-        x@seed <- .make_array_of_one_zero(type(x@seed), seed_ndim)
-        a0 <- extract_array(x, rep.int(list(1L), seed_ndim))
-        identical(as.vector(a0), vector(type(a0), length=1L))
+        x@seed <- make_one_zero_array(type(x@seed), seed_ndim)
+        ## Same as 'as.array(x)' but doesn't try to propagate the dimnames.
+        a0 <- extract_array(x, vector("list", length=seed_ndim))
+        is_filled_with_zeros(a0)
     }
 )
 
@@ -134,7 +125,7 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpStack",
         ## Assuming that the caller respected "extract_sparse_array() Terms
         ## of Use" (see SparseArraySeed-class.R), 'is_sparse(x)' should be
         ## TRUE so we can assume that the operations in x@OPS preserve the
-        ## zeroes and thus only need to apply them to the nonzero data.
+        ## zeros and thus only need to apply them to the nonzero data.
         sas <- extract_sparse_array(x@seed, index)
         sas_nzdata <- sas@nzdata
         for (OP in x@OPS)

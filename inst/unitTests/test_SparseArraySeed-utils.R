@@ -14,7 +14,7 @@
     SparseArraySeed(dim1, nzindex1, nzdata1)
 }
 
-### Toy integer 2D SparseArraySeed with no zeroes or NAs.
+### Toy integer 2D SparseArraySeed with no zeros or NAs.
 .make_toy_sas1b <- function()
 {
     dim1b <- 5:4
@@ -152,7 +152,7 @@ test_SparseArraySeed_anyNA <- function()
         checkIdentical(anyNA(as.array(sas)), anyNA(sas))
 
     sas1 <- .make_toy_sas1()    # integer 3D SparseArraySeed
-    sas1b <- .make_toy_sas1b()  # integer 2D SparseArraySeed (no zeroes or NAs)
+    sas1b <- .make_toy_sas1b()  # integer 2D SparseArraySeed (no zeros or NAs)
     sas2 <- .make_toy_sas2()    # numeric 3D SparseArraySeed
     sas3 <- .make_toy_sas3()    # character 3D SparseArraySeed
     sas4 <- .make_toy_sas4()    # logical 3D SparseArraySeed
@@ -188,7 +188,7 @@ test_SparseArraySeed_Summary <- function()
     }
 
     sas1 <- .make_toy_sas1()    # integer 3D SparseArraySeed
-    sas1b <- .make_toy_sas1b()  # integer 2D SparseArraySeed (no zeroes or NAs)
+    sas1b <- .make_toy_sas1b()  # integer 2D SparseArraySeed (no zeros or NAs)
     sas2 <- .make_toy_sas2()    # numeric 3D SparseArraySeed
     sas4 <- .make_toy_sas4()    # logical 3D SparseArraySeed
     for (.Generic in c("max", "min", "range", "sum", "prod")) {
@@ -213,7 +213,7 @@ test_SparseArraySeed_mean <- function()
     }
 
     sas1 <- .make_toy_sas1()    # integer 3D SparseArraySeed
-    sas1b <- .make_toy_sas1b()  # integer 2D SparseArraySeed (no zeroes or NAs)
+    sas1b <- .make_toy_sas1b()  # integer 2D SparseArraySeed (no zeros or NAs)
     sas2 <- .make_toy_sas2()    # numeric 3D SparseArraySeed
     sas4 <- .make_toy_sas4()    # logical 3D SparseArraySeed
     do_tests(sas1)

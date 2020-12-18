@@ -236,7 +236,7 @@ static int L2M(const int *dim, int ndim, int dim_nrow, SEXP L, int *M)
 			}
 			if (d == 0) {
 				PRINT_TO_ERRMSG_BUF("'dim' cannot contain "
-						    "zeroes (unless 'Lindex' "
+						    "zeros (unless 'Lindex' "
 						    "is empty)");
 				return -1;
 			}
@@ -282,7 +282,7 @@ static int M2L(const int *dim, int ndim, int dim_nrow,
 			}
 			if (d == 0) {
 				PRINT_TO_ERRMSG_BUF("'dim' cannot contain "
-						    "zeroes (unless 'Mindex' "
+						    "zeros (unless 'Mindex' "
 						    "is empty)");
 				return -1;
 			}

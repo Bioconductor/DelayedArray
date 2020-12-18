@@ -18,7 +18,7 @@
     SparseArraySeed(dim1, nzindex1, nzdata1)
 }
 
-### Toy integer 3D SparseArraySeed with no zeroes or NAs.
+### Toy integer 3D SparseArraySeed with no zeros or NAs.
 .make_toy_sas1b <- function()
 {
     dim1b <- c(5L, 10L, 3L)
@@ -29,7 +29,7 @@
     SparseArraySeed(dim1b, nzindex1b, nzdata1b)
 }
 
-### Toy numeric 3D array with one NA and plenty of zeroes, Inf's, -Inf's,
+### Toy numeric 3D array with one NA and plenty of zeros, Inf's, -Inf's,
 ### and NaN's.
 .make_toy_a2 <- function()
 {
@@ -219,7 +219,7 @@ test_DelayedArray_anyNA <- function()
 
     a1 <- as.array(.make_toy_sas1())   # integer 3D array
     A1 <- realize(a1)
-    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeroes or NAs
+    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeros or NAs
     A1b <- realize(a1b)
 
     for (block_size in .BLOCK_SIZES1) {
@@ -282,7 +282,7 @@ test_DelayedArray_Summary <- function()
     }
 
     a1 <- as.array(.make_toy_sas1())   # integer 3D array
-    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeroes or NAs
+    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeros or NAs
     a2 <- .make_toy_a2()  # numeric 3D array
     for (.Generic in c("max", "min", "range")) {
         do_tests(.Generic, a1, .BLOCK_SIZES1, checkIdentical)
@@ -328,7 +328,7 @@ test_DelayedArray_mean <- function()
     }
 
     a1 <- as.array(.make_toy_sas1())   # integer 3D array
-    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeroes or NAs
+    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeros or NAs
     a2 <- .make_toy_a2()  # numeric 3D array
     do_tests(a1, .BLOCK_SIZES1, checkIdentical)
     do_tests(a1b, .BLOCK_SIZES1, checkIdentical)
@@ -361,7 +361,7 @@ test_DelayedArray_apply <- function()
         }
     }
 
-    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeroes or NAs
+    a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeros or NAs
     do_tests(a1b)
     do_tests(a1b[ , , 0])
 

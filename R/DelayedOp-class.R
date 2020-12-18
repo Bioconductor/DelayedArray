@@ -108,17 +108,6 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
     function(x, index) extract_array(x@seed, index)
 )
 
-.set_or_check_dim <- function(x, dim)
-{
-    x_dim <- dim(x)
-    if (is.null(x_dim)) {
-        dim(x) <- dim
-    } else {
-        stopifnot(identical(x_dim, dim))
-    }
-    x
-}
-
 ### is_sparse() and extract_sparse_array()
 ### Like the 3 default methods above (seed contract), the 2 default methods
 ### below also implement a no-op semantic and are also inherited by

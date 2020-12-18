@@ -557,13 +557,13 @@ test_DelayedUnaryIsoOpStack_API <- function()
     .check_extract_sparse_array_on_DelayedOp_with_DIM3(a4, x4)
 
     ## 5. Sparse seed but structural sparsity NOT propagated because
-    ##    the stack of operations doesn't preserve the zeroes
+    ##    the stack of operations doesn't preserve the zeros
 
     OPS <- list(function(a) cos(a),
                 function(a) log(a^2 + 1))
     x5 <- new_DelayedUnaryIsoOpStack(.TEST_SAS3, OPS)
 
-    a5 <- log(cos(.TEST_ARRAY3)^2 + 1)  # does not preserve the zeroes
+    a5 <- log(cos(.TEST_ARRAY3)^2 + 1)  # does not preserve the zeros
     checkIdentical(dim(a5), dim(x5))
     checkIdentical(dimnames(a5), dimnames(x5))
     checkIdentical(a5, as.array(x5))
