@@ -10,7 +10,7 @@
 ###
 ### where:
 ###   - OP is an isometric array transformation i.e. an operation that
-###     returns an array with the same dimensions as the input array.
+###     returns an array with the same dimensions as the input array,
 ###   - 'a' is the input array,
 ###   - 'L1', 'L2', ..., are the left arguments,
 ###   - 'R1', 'R2', ..., are the right arguments,
@@ -27,23 +27,25 @@
 ###
 ### More generally speaking, if, say, arguments 'L2', 'L3', 'R1', and 'R2'
 ### go along the 3rd, 1st, 2nd, and 1st dimensions, respectively, then each
-### value in the output array ('out[i, j, k]') must be determined solely by
-### the corresponding values in the input array ('a[i, j, k]') and arguments
-### ('L2[k]', 'L3[i]', 'R1[j]', 'R2[i]'). In other words, 'out[i, j, k]'
-### must be equal to:
+### value in the output array ('out[i, j, k]') must be determined **solely**
+### by the corresponding values in the input array ('a[i, j, k]') and
+### arguments ('L2[k]', 'L3[i]', 'R1[j]', 'R2[i]').
+### In other words, 'out[i, j, k]' must be equal to:
 ###
-###    OP(L1, L2[k], L3[i], ..., a[i, j, k], R1[j], R2[i], ...)
+###     OP(L1, L2[k], L3[i], ..., a[i, j, k], R1[j], R2[i], ...)
 ###
 ### for any 1 <= 'i' <= 12, 1 <= 'j' <= 150, and 1 <= 'k' <= 5.
 ###
 ### We refer to this property as the "locality principle".
 ###
 ### Concrete examples:
+###
 ### 1. Addition (or any operation in the Ops group) of an array 'a' and an
 ###    atomic vector 'v' of length 'dim(a)[[1]]':
 ###    - `+`(a, v):  OP is `+`, right argument goes along the 1st dimension.
 ###    - `<=`(a, v): OP is `<=`, right argument goes along the 1st dimension.
 ###    - `&`(v, a):  OP is `&`, left argument goes along the 1st dimension.
+###
 ### 2. scale(x, center=v1, scale=v2): OP is `scale`, right arguments 'center'
 ###    and 'scale' go along the 2nd dimension.
 ###

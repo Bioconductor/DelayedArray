@@ -74,6 +74,51 @@
   }
 }
 
+\details{
+  A DelayedUnaryIsoOpStack object is used to represent the delayed version
+  of an operation of the form:
+  \preformatted{
+    out <- a |> OP1 |> OP2 |> ... |> OPk
+  }
+  where:
+  \itemize{
+    \item \code{OP1}, \code{OP2}, ..., \code{OPk} are isometric array
+          transformations i.e. operations that return an array with the
+          same dimensions as the input array.
+    \item \code{a} is the input array.
+    \item The output (\code{out}) is an array of same dimensions as \code{a}.
+  }
+
+  In addition, each operation (\code{OP}) in the pipe must satisfy the
+  property that each value in the output array must be determined **solely**
+  by the corresponding value in the input array. In other words:
+  \preformatted{
+    a |> OP |> `[`(i_1, i_2, ..., i_n)   # i.e. OP(a)[i_1, i_2, ..., i_n]
+  }
+  must be equal to:
+  \preformatted{
+    a |> `[`(i_1, i_2, ..., i_n) |> OP   # i.e. OP(a[i_1, i_2, ..., i_n])
+  }
+  for any valid multidimensional index (i_1, i_2, ..., i_n).
+
+  We refer to this property as the \emph{locality principle}.
+
+  Concrete examples:
+  \enumerate{
+    \item Things like \code{is.na()}, \code{is.finite()}, logical negation
+          (\code{!}), \code{nchar()}, \code{tolower()}.
+    \item Most functions in the \link[methods]{Math} and \link[methods]{Math2}
+          groups e.g. \code{log()}, \code{sqrt()}, \code{abs()},
+          \code{ceiling()}, \code{round()}, etc...
+          Notable exceptions are the \code{cum*()} functions (\code{cummin()},
+          \code{cummax()}, \code{cumsum()}, and \code{cumprod()}): they don't
+          satisfy the \emph{locality principle}.
+    \item Operations in the \link[methods]{Ops} group when one operand is
+          an array and the other a scalar e.g. \code{a + 10}, \code{2 ^ a},
+          \code{a <= 0.5}, etc...
+  }
+}
+
 \seealso{
   \itemize{
     \item \link{DelayedOp} objects.

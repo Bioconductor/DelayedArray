@@ -4,6 +4,43 @@
 ###
 ### Representation of delayed unary isometric operations stacked (a.k.a.
 ### piped) together.
+### That is:
+###
+###     out <- a |> OP1 |> OP2 |> ... |> OPk
+###
+### where:
+###   - OP1, OP2, ..., OPk are isometric array transformations i.e.
+###     operations that return an array with the same dimensions as
+###     the input array,
+###   - 'a' is the input array,
+###   - the output ('out') is an array of same dimensions as 'a'.
+###
+### In addition, each operation in the pipe must satisfy the property that
+### each value in the output array must be determined **solely** by the
+### corresponding value in the input array. In other words:
+###
+###     OP(a)[i_1, i_2, ..., i_n]
+###
+### must be equal to:
+###
+###     OP(a[i_1, i_2, ..., i_n])
+###
+### for any valid multidimensional index (i_1, i_2, ..., i_n).
+###
+### We refer to this property as the "locality principle".
+###
+### Concrete examples:
+###
+### 1. Things like is.na(), is.finite(), logical negation (!), nchar(),
+###    tolower().
+###
+### 2. Most functions in the Math and Math2 groups e.g. log(), sqrt(), abs(),
+###    ceiling(), round(), etc...
+###    Notable exceptions are the cum*() functions (cummin(), cummax(),
+###    cumsum(), and cumprod()): they don't satisfy the "locality principle".
+###
+### 3. Operations in the Ops group when one operand is an array and the
+###    other a scalar e.g. 'a + 10', '2 ^ a', 'a <= 1', etc...
 ###
 
 setClass("DelayedUnaryIsoOpStack",
