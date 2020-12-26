@@ -639,7 +639,7 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
 
     .basic_checks_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
 
-    checkIdentical(FALSE, is_sparse(x3))
+    checkIdentical(TRUE, is_sparse(x3))
 
     ## 4. Sparse seed
 
