@@ -10,7 +10,7 @@ setClass("ConstantMatrix",
 
 setMethod("matrixClass", "ConstantArray", function(x) "ConstantMatrix")
 
-setMethod("DelayedArray", "ConstantArraySeed", function(seed) new_DelayedArray(seed, Class="ConstantMatrix"))
+setMethod("DelayedArray", "ConstantArraySeed", function(seed) new_DelayedArray(seed, Class="ConstantArray"))
 
 ConstantArray <- function(dim, value) {
     DelayedArray(ConstantArraySeed(dim, value))
