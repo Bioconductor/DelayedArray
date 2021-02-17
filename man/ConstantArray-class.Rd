@@ -23,9 +23,9 @@ ConstantArray(dim, value)
 }
 
 \arguments{
-\item{dim}{Integer vector of length greater than 1, containing the dimensions of the array.}
+\item{dim}{Integer vector of length greater than or equal to 1, containing the dimensions of the array.}
 
-\item{value}{Atomic scalar containing the value to fill the matrix.}
+\item{value}{Vector of length 1, containing the value to fill the matrix.}
 
 \item{seed}{A ConstantArraySeed object.}
 }

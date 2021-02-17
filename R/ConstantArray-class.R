@@ -4,7 +4,7 @@ setClass("ConstantArray",
 )
 
 setClass("ConstantMatrix",
-    contains="DelayedMatrix",
+    contains=c("ConstantArray", "DelayedMatrix"),
     representation(seed="ConstantArraySeed")
 )
 
@@ -15,3 +15,8 @@ setMethod("DelayedArray", "ConstantArraySeed", function(seed) new_DelayedArray(s
 ConstantArray <- function(dim, value) {
     DelayedArray(ConstantArraySeed(dim, value))
 }
+
+# Copied from the corresponding methods for RleArray/RleMatrix.
+setAs("ConstantArray", "ConstantMatrix", function(from) new2("ConstantMatrix", from))
+
+setAs("ConstantMatrix", "ConstantArray", function(from) from) 
