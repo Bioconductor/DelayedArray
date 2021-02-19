@@ -3,10 +3,7 @@ setClass("ConstantArray",
     representation(seed="ConstantArraySeed")
 )
 
-setClass("ConstantMatrix",
-    contains=c("ConstantArray", "DelayedMatrix"),
-    representation(seed="ConstantArraySeed")
-)
+setClass("ConstantMatrix", contains=c("ConstantArray", "DelayedMatrix"))
 
 setMethod("matrixClass", "ConstantArray", function(x) "ConstantMatrix")
 
