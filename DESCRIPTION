@@ -68,4 +68,6 @@ Collate: utils.R
 	DelayedMatrix-stats.R
 	RleArraySeed-class.R
 	RleArray-class.R
+    ConstantArraySeed-class.R
+    ConstantArray-class.R
 	zzz.R
