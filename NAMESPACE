@@ -70,13 +70,15 @@ exportClasses(
     ## write_block.R:
     RealizationSink, arrayRealizationSink,
 
-    ## RleArray-class.R:
-    RleArraySeed, SolidRleArraySeed, RleRealizationSink, ChunkedRleArraySeed,
-    RleArray, RleMatrix,
-
     ## ConstantArray-class.R:
-    ConstantArraySeed, 
-    ConstantArray, ConstantMatrix
+    ConstantArraySeed,
+    ConstantArray, ConstantMatrix,
+
+    ## RleArraySeed-class.R:
+    RleArraySeed, SolidRleArraySeed, RleRealizationSink, ChunkedRleArraySeed,
+
+    ## RleArray-class.R:
+    RleArray, RleMatrix
 )
 
 

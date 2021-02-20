@@ -23,7 +23,8 @@ test_ConstantArray <- function()
     checkIdentical(nzdata(out), numeric(0))
 }
 
-test_ConstantArray_other <- function() {
+test_ConstantArray_other <- function()
+{
     # Testing some of the more odd types we can put in here.
     Ac <- ConstantArray(c(500, 200), value="Aaron")
     checkIdentical(as.matrix(Ac), matrix("Aaron", 500, 200))
@@ -44,7 +45,8 @@ test_ConstantArray_other <- function() {
     checkException(ConstantArray(c(500, 200), value=letters), silent=TRUE)
 }
 
-test_ConstantArray_coercion <- function() {
+test_ConstantArray_coercion <- function()
+{
     A1 <- ConstantArray(c(500, 200), value=1)
     checkIdentical(A1, as(A1, "ConstantArray"))
 

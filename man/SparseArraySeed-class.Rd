@@ -78,7 +78,8 @@ sparse2dense(sas)
     columns and where each row is an n-uplet representing an \emph{array index}.
   }
   \item{nzdata}{
-    A vector of length \code{nrow(nzindex)} containing the nonzero data.
+    A vector (atomic or list) of length \code{nrow(nzindex)} containing
+    the nonzero data.
   }
   \item{dimnames}{
     The \emph{dimnames} of the object to be created. Must be \code{NULL} or

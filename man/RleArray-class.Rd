@@ -69,7 +69,7 @@ RleArray(data, dim, dimnames, chunksize=NULL)
 }
 
 \value{
-  An RleArray object.
+  An RleArray (or RleMatrix) object. (Note that RleMatrix extends RleArray.)
 }
 
 \seealso{
@@ -85,6 +85,9 @@ RleArray(data, dim, dimnames, chunksize=NULL)
 
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
+
+    \item \link{ConstantArray} objects for mimicking an array containing
+          a constant value, without actually creating said array in memory.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 

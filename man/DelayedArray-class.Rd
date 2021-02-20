@@ -199,7 +199,11 @@ type(x)
     \item \link{DelayedMatrix-stats} for DelayedMatrix row/col
           summarization.
 
-    \item \link{RleArray} objects.
+    \item \link{ConstantArray} objects for mimicking an array containing
+          a constant value, without actually creating said array in memory.
+
+    \item \link{RleArray} objects for representing in-memory Run Length
+          Encoded array-like datasets.
 
     \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
 

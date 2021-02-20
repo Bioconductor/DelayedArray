@@ -1,52 +1,82 @@
 \name{ConstantArray}
-\alias{ConstantMatrix-class}
-\alias{ConstantArray}
-\alias{ConstantArray-class}
+\docType{class}
+
+\alias{class:ConstantArraySeed}
 \alias{ConstantArraySeed-class}
+\alias{ConstantArraySeed}
+
 \alias{extract_array,ConstantArraySeed-method}
 \alias{extract_sparse_array,ConstantArraySeed-method}
+\alias{is_sparse,ConstantArraySeed-method}
+
+\alias{class:ConstantArray}
+\alias{ConstantArray-class}
+\alias{ConstantArray}
+
+\alias{class:ConstantMatrix}
+\alias{ConstantMatrix-class}
+\alias{ConstantMatrix}
+
+\alias{matrixClass,ConstantArray-method}
 \alias{DelayedArray,ConstantArraySeed-method}
-\alias{ConstantArraySeed}
+\alias{coerce,ConstantArray,ConstantMatrix-method}
+\alias{coerce,ConstantMatrix,ConstantArray-method}
 
 \title{A DelayedArray subclass that contains a constant value}
 
 \description{
-A \linkS4class{DelayedArray} backend to efficiently mimic a matrix containing a constant value, without actually creating said matrix in memory.
+  A \link[DelayedArray]{DelayedArray} subclass to efficiently mimic an array
+  containing a constant value, without actually creating said array in memory.
 }
 
 \usage{
-ConstantArraySeed(dim, value)
-
-ConstantArray(dim, value)
-
-\S4method{DelayedArray}{ConstantArraySeed}(seed)
+## Constructor function:
+ConstantArray(dim, value=NA)
 }
 
 \arguments{
-\item{dim}{Integer vector of length greater than or equal to 1, containing the dimensions of the array.}
-
-\item{value}{Vector of length 1, containing the value to fill the matrix.}
-
-\item{seed}{A ConstantArraySeed object.}
+  \item{dim}{
+    The dimensions (specified as an integer vector) of the ConstantArray
+    object to create.
+  }
+  \item{value}{
+    Vector (atomic or list) of length 1, containing the value to fill the
+    matrix.
+  }
 }
-\value{
-The \code{ConstantArraySeed} constructor returns a ConstantArraySeed object.
 
-The \code{ConstantArray} and \code{DelayedArray} constructors return a ConstantArray object.
+\value{
+  A ConstantArray (or ConstantMatrix) object. (Note that ConstantMatrix
+  extends ConstantArray.)
 }
 
 \details{
-This class allows us to efficiently create arrays containing a single value.
-For example, we can create matrices full of \code{NA} values, to serve as placeholders for missing assays when combining SummarizedExperiment objects.
-We use this class instead of the \linkS4class{RleArray} as the latter requires some workarounds when the product of the dimensions is greater than the maximum integer value.
+  This class allows us to efficiently create arrays containing a single value.
+  For example, we can create matrices full of \code{NA} values, to serve as
+  placeholders for missing assays when combining SummarizedExperiment objects.
+}
+
+\author{Aaron Lun}
+
+\seealso{
+  \itemize{
+    \item \link{DelayedArray} objects.
+
+    \item \link{DelayedArray-utils} for common operations on
+          \link{DelayedArray} objects.
+
+    \item \link{RleArray} objects for representing in-memory Run Length
+          Encoded array-like datasets.
+  }
 }
 
 \examples{
-# This would ordinarily take up 8 TB of memory:
-out <- ConstantArray(c(1e6, 1e6), value=NA_real_)
-out
-}
+## This would ordinarily take up 8 TB of memory:
+CM <- ConstantArray(c(1e6, 1e6), value=NA_real_)
+CM
 
-\author{
-Aaron Lun
+CM2 <-ConstantArray(c(4, 1e6), value=55)
+rbind(CM, CM2)
 }
+\keyword{classes}
+\keyword{methods}
