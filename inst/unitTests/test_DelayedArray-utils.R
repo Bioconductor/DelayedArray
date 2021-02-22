@@ -305,7 +305,7 @@ test_DelayedArray_Summary <- function()
 
 test_DelayedArray_mean <- function()
 {
-    do_tests <- function(a, block_sizes, checkFun) {
+    do_tests <- function(a, block_sizes) {
         on.exit(suppressMessages(setAutoBlockSize()))
         BLOCK_mean <- DelayedArray:::.BLOCK_mean
 
@@ -315,25 +315,25 @@ test_DelayedArray_mean <- function()
         A <- realize(a)
         for (block_size in block_sizes) {
             suppressMessages(setAutoBlockSize(block_size))
-            checkFun(target1, mean(A))
-            checkFun(target1, BLOCK_mean(a))
-            checkFun(target1, mean(aperm(A)))
-            checkFun(target2, mean(A, na.rm=TRUE))
-            checkFun(target2, BLOCK_mean(a, na.rm=TRUE))
-            checkFun(target2, mean(aperm(A), na.rm=TRUE))
-            checkFun(target3, mean(A[ , 10:4, -2]))
-            checkFun(target3, BLOCK_mean(a[ , 10:4, -2]))
-            checkFun(target3, mean(aperm(A[ , 10:4, -2])))
+            checkEquals(target1, mean(A))
+            checkEquals(target1, BLOCK_mean(a))
+            checkEquals(target1, mean(aperm(A)))
+            checkEquals(target2, mean(A, na.rm=TRUE))
+            checkEquals(target2, BLOCK_mean(a, na.rm=TRUE))
+            checkEquals(target2, mean(aperm(A), na.rm=TRUE))
+            checkEquals(target3, mean(A[ , 10:4, -2]))
+            checkEquals(target3, BLOCK_mean(a[ , 10:4, -2]))
+            checkEquals(target3, mean(aperm(A[ , 10:4, -2])))
         }
     }
 
     a1 <- as.array(.make_toy_sas1())   # integer 3D array
     a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeros or NAs
     a2 <- .make_toy_a2()  # numeric 3D array
-    do_tests(a1, .BLOCK_SIZES1, checkIdentical)
-    do_tests(a1b, .BLOCK_SIZES1, checkIdentical)
-    do_tests(a1b - 0.5, .BLOCK_SIZES2, checkIdentical)
-    do_tests(a2, .BLOCK_SIZES2, checkEquals)
+    do_tests(a1, .BLOCK_SIZES1)
+    do_tests(a1b, .BLOCK_SIZES1)
+    do_tests(a1b - 0.5, .BLOCK_SIZES2)
+    do_tests(a2, .BLOCK_SIZES2)
 }
 
 test_DelayedArray_apply <- function()

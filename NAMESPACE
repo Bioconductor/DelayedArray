@@ -15,6 +15,7 @@ import(MatrixGenerics)
 import(S4Vectors)
 import(IRanges)
 
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
 ###
@@ -332,7 +333,7 @@ export(
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Export S4 generics defined in DelayedArray + export corresponding methods
+### Export S4 generics defined in DelayedArray, and corresponding methods
 ###
 
 export(
