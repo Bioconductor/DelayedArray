@@ -765,6 +765,7 @@ colSums(M)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 <<cleanup, include=FALSE>>=
+setHDF5DumpFile()
 unlink("~/mydata", recursive=TRUE, force=TRUE)
 @
 
