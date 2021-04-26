@@ -87,7 +87,7 @@ getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Set/get grid context for the current block of a blockApply(),
-### viewportApply(), or blockReduce() loop
+### gridApply(), or blockReduce() loop
 ###
 
 set_grid_context <- function(effective_grid, current_block_id,
@@ -110,8 +110,8 @@ set_grid_context <- function(effective_grid, current_block_id,
 
 .grid_context_not_found <- c(
     "Grid context not found for the current block. ",
-    "Are we in a blockApply(), blockReduce(), viewportApply(), ",
-    "or viewportReduce() loop?"
+    "Are we in a blockApply(), blockReduce(), gridApply(), ",
+    "or gridReduce() loop?"
 )
 
 .explain_proper_use <- function(funname)
@@ -169,7 +169,7 @@ currentViewport <- function(envir=parent.frame(2))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### viewportApply() and blockApply()
+### gridApply() and blockApply()
 ###
 ### TODO: In theory, the best performance should be obtained when bplapply()
 ### uses a post office queue model. According to
@@ -179,7 +179,7 @@ currentViewport <- function(envir=parent.frame(2))
 ### seems to be slower than using tasks=0 (the default). Investigate this!
 ###
 
-viewportApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
+gridApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!is(grid, "ArrayGrid"))
         stop(wmsg("'grid' must be an ArrayGrid object"))
@@ -202,6 +202,12 @@ viewportApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
     }
     bplapply2(seq_along(grid), FUN_WRAPPER, grid, verbose,
                                FUN, ..., BPPARAM=BPPARAM)
+}
+
+viewportApply <- function(...)
+{
+    .Deprecated("gridApply")
+    gridApply(...)
 }
 
 blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
@@ -234,19 +240,19 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
             message("OK")
         ans
     }
-    viewportApply(grid, FUN_WRAPPER,
-                  FUN, x, as.sparse, verbose, verbose_read_block, ...,
-                  BPPARAM=BPPARAM, verbose=FALSE)
+    gridApply(grid, FUN_WRAPPER,
+              FUN, x, as.sparse, verbose, verbose_read_block, ...,
+              BPPARAM=BPPARAM, verbose=FALSE)
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### viewportReduce() and blockReduce()
+### gridReduce() and blockReduce()
 ###
 ### Two Reduce-like functions.
 ###
 
-viewportReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
+gridReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
 {
     FUN <- match.fun(FUN)
     if (!is(grid, "ArrayGrid"))
@@ -272,6 +278,12 @@ viewportReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
         }
     }
     init
+}
+
+viewportReduce <- function(...)
+{
+    .Deprecated("gridReduce")
+    gridReduce(...)
 }
 
 blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
@@ -318,9 +330,9 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
         BREAKIF_WRAPPER <- BREAKIF
         
     }
-    viewportReduce(FUN_WRAPPER, grid, init,
-                   FUN, x, as.sparse, verbose, verbose_read_block, ...,
-                   BREAKIF=BREAKIF_WRAPPER, verbose=FALSE)
+    gridReduce(FUN_WRAPPER, grid, init,
+               FUN, x, as.sparse, verbose, verbose_read_block, ...,
+               BREAKIF=BREAKIF_WRAPPER, verbose=FALSE)
 }
 
 

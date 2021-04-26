@@ -283,7 +283,7 @@ FUN <- function(viewport, sink) {
     block <- array(runif(length(viewport)), dim=dim(viewport))
     write_block(sink, viewport, block)
 }
-sink <- viewportReduce(FUN, sink_grid, sink, verbose=TRUE)
+sink <- gridReduce(FUN, sink_grid, sink, verbose=TRUE)
 
 ## -- STEP 4 --
 ## Close the sink and turn it into a DelayedArray object:
@@ -366,7 +366,7 @@ FUN <- function(sink_viewport, sink) {
     ## Write the collapsed block to 'sink'.
     write_block(sink, sink_viewport, block)
 }
-sink <- viewportReduce(FUN, sink_grid, sink, verbose=TRUE)
+sink <- gridReduce(FUN, sink_grid, sink, verbose=TRUE)
 
 ## -- STEP 4 --
 ## Close the sink and turn it into a DelayedArray object:
@@ -452,7 +452,7 @@ for (bid in seq_along(U_grid)) {
     U_sink <- write_block(U_sink, U_grid[[bid]], U_block)
 }
 
-## An alternative to the "for" loop is to use viewportReduce():
+## An alternative to the "for" loop is to use gridReduce():
 FUN <- function(U_viewport, U_sink) {
     bid <- currentBlockId()
     R_block <- read_block(R, R_grid[[bid]])
@@ -460,7 +460,7 @@ FUN <- function(U_viewport, U_sink) {
     U_block <- pFUN(R_block, G_block)
     write_block(U_sink, U_viewport, U_block)
 }
-U_sink <- viewportReduce(FUN, U_grid, U_sink, verbose=TRUE)
+U_sink <- gridReduce(FUN, U_grid, U_sink, verbose=TRUE)
 
 close(U_sink)
 U <- as(U_sink, "DelayedArray")

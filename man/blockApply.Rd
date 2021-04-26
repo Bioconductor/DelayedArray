@@ -11,8 +11,10 @@
 \alias{currentBlockId}
 \alias{currentViewport}
 
+\alias{gridApply}
 \alias{viewportApply}
 \alias{blockApply}
+\alias{gridReduce}
 \alias{viewportReduce}
 \alias{blockReduce}
 
@@ -33,8 +35,8 @@ blockReduce(FUN, x, init, ..., BREAKIF=NULL, grid=NULL, as.sparse=FALSE,
             verbose=NA)
 
 ## Lower-level looping functions:
-viewportApply(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
-viewportReduce(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
+gridApply(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
+gridReduce(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
 
 ## Retrieve grid context for the current block/viewport:
 effectiveGrid(envir=parent.frame(2))
@@ -65,7 +67,7 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     If it's set to \code{NA}, then \code{is_sparse(x)} determines how they
     will be passed to \code{FUN}.
 
-    For \code{viewportApply()} and \code{viewportReduce()}, \code{FUN} is
+    For \code{gridApply()} and \code{gridReduce()}, \code{FUN} is
     the callback function to apply to each **viewport** in \code{grid}.
     It must be able to accept as input any of the viewports in \code{grid}.
 
@@ -75,7 +77,7 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     and should normally return a value of the same type as its 2nd
     argument (\code{init}).
 
-    The same applies for \code{viewportReduce()}, except that
+    The same applies for \code{gridReduce()}, except that
     \code{init <- FUN(viewport, init)} will be performed on each
     **viewport**.
   }
@@ -115,17 +117,17 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   \item{init}{
     The value to pass to the first call to \code{FUN(block, init)}
     (or \code{FUN(viewport, init)}) when \code{blockReduce()}
-    (or \code{viewportReduce()}) starts the walk. Note that
-    \code{blockReduce()} and \code{viewportReduce()} always operate
+    (or \code{gridReduce()}) starts the walk. Note that
+    \code{blockReduce()} and \code{gridReduce()} always operate
     sequentially.
   }
   \item{BREAKIF}{
     An optional callback function that detects a break condition.
     Must return \code{TRUE} or \code{FALSE}.
-    At each iteration \code{blockReduce()} (and \code{viewportReduce()})
+    At each iteration \code{blockReduce()} (and \code{gridReduce()})
     will call it on the result of \code{init <- FUN(block, init)}
     (on the result of \code{init <- FUN(viewport, init)} for
-    \code{viewportReduce()}) and exit the walk if \code{BREAKIF(init)}
+    \code{gridReduce()}) and exit the walk if \code{BREAKIF(init)}
     returned \code{TRUE}.
   }
   \item{envir}{
@@ -161,10 +163,10 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
 }
 
 \value{
-  For \code{blockApply()} and \code{viewportApply()}, a list with one
+  For \code{blockApply()} and \code{gridApply()}, a list with one
   list element per block/viewport visited.
 
-  For \code{blockReduce()} and \code{viewportReduce()}, the result of
+  For \code{blockReduce()} and \code{gridReduce()}, the result of
   the last call to \code{FUN}.
 
   For \code{effectiveGrid()}, the grid (\link{ArrayGrid} object) being
@@ -250,10 +252,10 @@ blockReduce(FUN, m, init=FALSE, BREAKIF=identity, grid=m_grid,
 ## implemented.
 
 ## ---------------------------------------------------------------------
-## viewportReduce()
+## gridReduce()
 ## ---------------------------------------------------------------------
 ## The man page for write_block() contains several examples of how to
-## use viewportReduce() to write array blocks to a "realization sink".
+## use gridReduce() to write array blocks to a "realization sink".
 ## See '?write_block'
 }
 \keyword{methods}

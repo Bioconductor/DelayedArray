@@ -46,9 +46,9 @@ BLOCK_write_to_sink <- function(sink, x, verbose=NA)
             message("OK")
         sink
     }
-    viewportReduce(FUN, grid, sink,
-                   x, verbose, verbose_read_block,
-                   verbose=FALSE)
+    gridReduce(FUN, grid, sink,
+               x, verbose, verbose_read_block,
+               verbose=FALSE)
 }
 
 
