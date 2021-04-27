@@ -33,7 +33,7 @@
   RealizationSink derivative.
 
   \code{sinkApply()} is a convenience function for walking on a
-  RealizationSink derivative and filling it with data.
+  RealizationSink derivative, typically for filling it with data.
 
   Note that \code{write_block()} is typically used inside the callback
   function passed to \code{sinkApply}.
@@ -42,6 +42,7 @@
 \usage{
 write_block(sink, viewport, block)
 
+## Walk on a RealizationSink derivative:
 sinkApply(sink, FUN, ..., grid=NULL, verbose=NA)
 
 ## Backend-agnostic RealizationSink constructor:
