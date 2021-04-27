@@ -89,11 +89,12 @@ supportedRealizationBackends()
   }
   \item{FUN}{
     The callback function to apply to each **viewport** of the grid used
-    to walk on \code{sink}. \code{sink <- FUN(sink, viewport, ...)}
-    will be performed on each viewport, so \code{FUN} must take at least
-    two arguments (typically \code{sink} and \code{viewport} but the names
-    can differ) and is expected to return its 1st argument (\code{sink}),
-    typically modified (when \code{FUN} contains a call to \code{write_block}).
+    to walk on \code{sink}. \code{sinkApply()} will perform
+    \code{sink <- FUN(sink, viewport, ...)} on each viewport, so \code{FUN}
+    must take at least two arguments, typically \code{sink} and \code{viewport}
+    (but the exact names can differ). The function is expected to return its
+    1st argument (\code{sink}), typically modified (when \code{FUN} contains
+    a call to \code{write_block}).
   }
   \item{...}{
     Additional arguments passed to \code{FUN}.

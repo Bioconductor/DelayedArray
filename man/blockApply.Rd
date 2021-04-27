@@ -71,15 +71,21 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     For \code{gridApply()} and \code{gridReduce()}, \code{FUN} is
     the callback function to apply to each **viewport** in \code{grid}.
 
-    For \code{blockReduce()}, \code{init <- FUN(block, init, ...)} will be
-    performed on each block, so \code{FUN} must take at least two arguments
-    (typically \code{block} and \code{init} but the names can differ)
-    and is expected to return a value of the same type as its 2nd
+    Beware that \code{FUN} must take at least **two** arguments for
+    \code{blockReduce()} and \code{gridReduce()}. More precisely:
+    \itemize{
+      \item \code{blockReduce()} will perform
+            \code{init <- FUN(block, init, ...)} on each block,
+            so \code{FUN} must take at least arguments \code{block}
+            and \code{init}.
+      \item \code{gridReduce()} will perform
+            \code{init <- FUN(viewport, init, ...)} on each viewport,
+            so \code{FUN} must take at least arguments \code{viewport}
+            and \code{init}.
+    }
+    In both cases, the exact names of the two arguments doesn't really matter.
+    Also \code{FUN} is expected to return a value of the same type as its 2nd
     argument (\code{init}).
-
-    The same applies for \code{gridReduce()}, except that
-    \code{init <- FUN(viewport, init, ...)} will be performed on
-    each **viewport**.
   }
   \item{...}{
     Additional arguments passed to \code{FUN}.
