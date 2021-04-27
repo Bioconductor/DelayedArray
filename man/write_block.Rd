@@ -92,9 +92,11 @@ supportedRealizationBackends()
     to walk on \code{sink}. \code{sinkApply()} will perform
     \code{sink <- FUN(sink, viewport, ...)} on each viewport, so \code{FUN}
     must take at least two arguments, typically \code{sink} and \code{viewport}
-    (but the exact names can differ). The function is expected to return its
-    1st argument (\code{sink}) possibly modified (e.g. when \code{FUN}
-    contains a call to \code{write_block}, which is typically the case).
+    (but the exact names can differ).
+
+    The function is expected to return its 1st argument (\code{sink}) possibly
+    modified (e.g. when \code{FUN} contains a call to \code{write_block()},
+    which is typically the case).
   }
   \item{...}{
     Additional arguments passed to \code{FUN}.
@@ -244,7 +246,7 @@ supportedRealizationBackends()
 
   For \code{sinkApply()}, its 1st argument (\code{sink}) possibly
   modified (e.g. when callback function \code{FUN} contains a call to
-  \code{write_block}, which is typically the case).
+  \code{write_block()}, which is typically the case).
 
   For \code{AutoRealizationSink()}, a RealizationSink derivative with the
   class associated with the current \emph{automatic realization backend}.
