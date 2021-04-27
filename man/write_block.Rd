@@ -67,9 +67,9 @@ supportedRealizationBackends()
             memory (e.g. \link{RleArray} objects). In other words, there are
             NO exceptions.
       \item RealizationSink is a **virtual** class so \code{sink} will always
-            be a RealizationSink derivative, that is, an object that belongs
-            to a **concrete** subclass of RealizationSink (e.g. an
-            \link[HDF5Array]{HDF5RealizationSink} object from the
+            be a RealizationSink **derivative**, that is, an object that
+            belongs to a **concrete** subclass of the RealizationSink class
+            (e.g. an \link[HDF5Array]{HDF5RealizationSink} object from the
             \pkg{HDF5Array} package).
       \item RealizationSink derivatives are considered array-like objects
             i.e. they have dimensions and possibly dimnames.
