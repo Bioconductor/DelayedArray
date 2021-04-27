@@ -37,7 +37,7 @@
   with blocks of data.
 
   Note that \code{write_block()} is typically used inside the callback
-  function passed to \code{sinkApply}.
+  function passed to \code{sinkApply()}.
 }
 
 \usage{
