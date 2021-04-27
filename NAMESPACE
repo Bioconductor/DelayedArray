@@ -297,8 +297,9 @@ export(
     defaultAutoGrid, blockGrid,
     rowAutoGrid, rowGrid,
     colAutoGrid, colGrid,
-    defaultMultAutoGrids, multGrids,
     setAutoGridMaker, getAutoGridMaker,
+    defaultSinkAutoGrid,
+    defaultMultAutoGrids, multGrids,
 
     ## blockApply.R:
     setAutoBPPARAM, getAutoBPPARAM,
@@ -320,6 +321,7 @@ export(
     getAutoRealizationBackend, setAutoRealizationBackend,
     getRealizationBackend, setRealizationBackend,
     AutoRealizationSink, RealizationSink,
+    sinkApply,
 
     ## realize.R:
     BLOCK_write_to_sink,

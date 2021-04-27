@@ -58,8 +58,9 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   }
   \item{FUN}{
     For \code{blockApply} and \code{blockReduce}, \code{FUN} is the callback
-    function to apply to each block of \code{x}. It must be able to accept as
-    input any of the blocks of \code{x}.
+    function to apply to each block of data in \code{x}. More precisely,
+    \code{FUN} will be called on each block of data in \code{x} defined by
+    the grid used to walk on \code{x}.
 
     IMPORTANT: If \code{as.sparse} is set to \code{FALSE}, all blocks will
     be passed to \code{FUN} as ordinary arrays. If it's set to \code{TRUE},
@@ -69,29 +70,28 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
 
     For \code{gridApply()} and \code{gridReduce()}, \code{FUN} is
     the callback function to apply to each **viewport** in \code{grid}.
-    It must be able to accept as input any of the viewports in \code{grid}.
 
-    For \code{blockReduce()}, \code{init <- FUN(block, init)} will be
-    performed on each block so \code{FUN} must take at least two arguments
+    For \code{blockReduce()}, \code{init <- FUN(block, init, ...)} will be
+    performed on each block, so \code{FUN} must take at least two arguments
     (typically \code{block} and \code{init} but the names can differ)
-    and should normally return a value of the same type as its 2nd
+    and is expected to return a value of the same type as its 2nd
     argument (\code{init}).
 
     The same applies for \code{gridReduce()}, except that
-    \code{init <- FUN(viewport, init)} will be performed on each
-    **viewport**.
+    \code{init <- FUN(viewport, init, ...)} will be performed on
+    each **viewport**.
   }
   \item{...}{
-    Optional arguments to \code{FUN}.
+    Additional arguments passed to \code{FUN}.
   }
   \item{grid}{
-    An \link{ArrayGrid} object that defines the blocks (or viewports) to
-    walk on.
+    The grid used for the walk, that is, an \link{ArrayGrid} object that
+    defines the blocks (or viewports) to walk on.
 
     For \code{blockApply()} and \code{blockReduce()} the supplied grid
     must be compatible with the geometry of \code{x}. If not specified,
     an automatic grid is used. By default \code{\link{defaultAutoGrid}(x)}
-    is called to generate an automatic grid. The \emph{automatic grid maker}
+    is called to create an automatic grid. The \emph{automatic grid maker}
     can be changed with \code{\link{setAutoGridMaker}()}.
     See \code{?\link{setAutoGridMaker}} for more information.
   }
@@ -180,7 +180,7 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
 
 \seealso{
   \itemize{
-    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+    \item \code{\link{defaultAutoGrid}} and family to create automatic
           grids to use for block processing of array-like objects.
 
     \item \link{ArrayGrid} for the formal representation of grids and
@@ -250,12 +250,5 @@ blockReduce(FUN, m, init=FALSE, BREAKIF=identity, grid=m_grid,
 
 ## Note that this is how the anyNA() method for DelayedArray objects is
 ## implemented.
-
-## ---------------------------------------------------------------------
-## gridReduce()
-## ---------------------------------------------------------------------
-## The man page for write_block() contains several examples of how to
-## use gridReduce() to write array blocks to a "realization sink".
-## See '?write_block'
 }
 \keyword{methods}

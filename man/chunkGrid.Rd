@@ -45,7 +45,7 @@ chunkdim(x)
 
 \seealso{
   \itemize{
-    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+    \item \code{\link{defaultAutoGrid}} and family to create automatic
           grids to use for block processing of array-like objects.
 
     \item \link{DelayedArray} objects.

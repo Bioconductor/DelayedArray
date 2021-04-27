@@ -23,14 +23,14 @@
     as.integer(block.length)
 }
 
-.normarg_chunk.grid <- function(chunk.grid, x)
+.normarg_chunk.grid <- function(chunk.grid, x, what="'x'")
 {
     if (is.null(chunk.grid))
         return(chunkGrid(x))
     if (!is(chunk.grid, "ArrayGrid"))
         stop(wmsg("'chunk.grid' must be an ArrayGrid object or NULL"))
     if (!identical(refdim(chunk.grid), dim(x)))
-        stop(wmsg("'chunk.grid' is incompatible with 'x'"))
+        stop(wmsg("'chunk.grid' is incompatible with ", what))
     chunk.grid
 }
 
@@ -186,6 +186,93 @@ colGrid <- function(...)
 {
     .Deprecated("colAutoGrid")
     colAutoGrid(...)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### set/getAutoGridMaker()
+###
+
+### We set the automatic grid maker to defaultAutoGrid() by default.
+setAutoGridMaker <- function(GRIDMAKER="defaultAutoGrid")
+{
+    match.fun(GRIDMAKER)  # sanity check
+    set_user_option("auto.grid.maker", GRIDMAKER)
+}
+
+getAutoGridMaker <- function() get_user_option("auto.grid.maker")
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### normarg_grid()
+###
+
+normarg_grid <- function(grid, x)
+{
+    if (is.null(grid)) {
+        etc <- c("Please use setAutoGridMaker() ",
+                 "to set a valid automatic grid maker.")
+        GRIDMAKER <- match.fun(getAutoGridMaker())
+        grid <- try(GRIDMAKER(x), silent=TRUE)
+        if (is(grid, "try-error"))
+            stop(wmsg("The current automatic grid maker returned an ",
+                      "error when called on 'x'. ", etc))
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("The current automatic grid maker didn't return an ",
+                      "ArrayGrid object. ", etc))
+        if (!identical(refdim(grid), dim(x)))
+            stop(wmsg("The current automatic grid maker returned a grid ",
+                      "that is incompatible with 'x'. ", etc))
+    } else {
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
+        if (!identical(refdim(grid), dim(x)))
+            stop(wmsg("'grid' is incompatible with 'x'"))
+    }
+    grid
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### defaultSinkAutoGrid()
+###
+### To create a grid that is "optimal" for use in sinkApply().
+###
+
+defaultSinkAutoGrid <- function(sink, block.length=NULL, chunk.grid=NULL)
+{
+    sink_dim <- dim(sink)
+    if (is.null(sink_dim))
+        stop(wmsg("'sink_dim' must be an array-like object"))
+    block_len <- .normarg_block.length(block.length, type(sink))
+    chunk_grid <- .normarg_chunk.grid(chunk.grid, sink, "'sink'")
+    .block_grid(sink_dim, block_len, chunk_grid, "first-dim-grows-first")
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### normarg_sink_grid()
+###
+### For use in sinkApply().
+###
+### Like normarg_grid() except that it calls 'defaultSinkAutoGrid(sink)'
+### instead of:
+###     GRIDMAKER <- match.fun(getAutoGridMaker())
+###     grid <- GRIDMAKER(sink)
+### to create the grid when it's not supplied.
+###
+
+normarg_sink_grid <- function(grid, sink)
+{
+    if (is.null(grid)) {
+        grid <- defaultSinkAutoGrid(sink)
+    } else {
+        if (!is(grid, "ArrayGrid"))
+            stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
+        if (!identical(refdim(grid), dim(sink)))
+            stop(wmsg("'grid' is incompatible with 'sink'"))
+    }
+    grid
 }
 
 
@@ -420,49 +507,5 @@ multGrids <- function(...)
 {
     .Deprecated("defaultMultAutoGrids")
     defaultMultAutoGrids(...)
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### set/getAutoGridMaker()
-###
-
-### We set the automatic grid maker to defaultAutoGrid() by default.
-setAutoGridMaker <- function(GRIDMAKER="defaultAutoGrid")
-{
-    match.fun(GRIDMAKER)  # sanity check
-    set_user_option("auto.grid.maker", GRIDMAKER)
-}
-
-getAutoGridMaker <- function() get_user_option("auto.grid.maker")
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### normarg_grid()
-###
-
-normarg_grid <- function(grid, x)
-{
-    if (is.null(grid)) {
-        etc <- c("Please use setAutoGridMaker() ",
-                 "to set a valid automatic grid maker.")
-        GRIDMAKER <- match.fun(getAutoGridMaker())
-        grid <- try(GRIDMAKER(x), silent=TRUE)
-        if (is(grid, "try-error"))
-            stop(wmsg("The current automatic grid maker returned an ",
-                      "error when called on 'x'. ", etc))
-        if (!is(grid, "ArrayGrid"))
-            stop(wmsg("The current automatic grid maker didn't return an ",
-                      "ArrayGrid object. ", etc))
-        if (!identical(refdim(grid), dim(x)))
-            stop(wmsg("The current automatic grid maker returned a grid ",
-                      "that is incompatible with 'x'. ", etc))
-    } else {
-        if (!is(grid, "ArrayGrid"))
-            stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
-        if (!identical(refdim(grid), dim(x)))
-            stop(wmsg("'grid' is incompatible with 'x'"))
-    }
-    grid
 }
 

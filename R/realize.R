@@ -18,16 +18,13 @@ BLOCK_write_to_sink <- function(sink, x, verbose=NA)
 
     ## 'x' and 'sink' might both have their physical chunks but we must
     ## choose a grid that is compatible with the physical chunks of 'sink'.
-    ## Calling 'defaultAutoGrid()' on 'sink' will produce such grid.
-    ## Note that it might be beneficial to use a grid that is also compatible
-    ## with the physical chunks of 'x' so we might want to come up with a
-    ## dedicated utility for that e.g. 'defaultAutoGrid2(sink, x)'.
-    ## Also by using block.shape="first-dim-grows-first" in the call below
-    ## we'll get a grid that guarentees linear writing to the sink in case
-    ## 'chunkdim(sink)' is NULL.
-    grid <- defaultAutoGrid(sink, block.shape="first-dim-grows-first")
+    ## Calling 'defaultSinkAutoGrid()' on 'sink' will produce such grid.
+    ## TODO: Note that it might be beneficial to use a grid that is **also**
+    ## compatible with the physical chunks of 'x' so we might want to add
+    ## that kind of capability to 'defaultSinkAutoGrid()'.
+    grid <- defaultSinkAutoGrid(sink)
 
-    FUN <- function(viewport, sink, x, verbose, verbose_read_block)
+    FUN <- function(sink, viewport, x, verbose, verbose_read_block)
     {
         effective_grid <- effectiveGrid()
         current_block_id <- currentBlockId()
@@ -46,9 +43,8 @@ BLOCK_write_to_sink <- function(sink, x, verbose=NA)
             message("OK")
         sink
     }
-    gridReduce(FUN, grid, sink,
-               x, verbose, verbose_read_block,
-               verbose=FALSE)
+    sinkApply(sink, FUN, x, verbose, verbose_read_block,
+              grid=grid, verbose=FALSE)
 }
 
 

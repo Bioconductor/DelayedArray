@@ -67,7 +67,7 @@ read_block(x, viewport, as.sparse=FALSE)
     \item \code{\link{blockApply}} and family for convenient block
           processing of an array-like object.
 
-    \item \code{\link{defaultAutoGrid}} and family to generate automatic
+    \item \code{\link{defaultAutoGrid}} and family to create automatic
           grids to use for block processing of array-like objects.
 
     \item \link[Matrix]{dgCMatrix-class} and \link[Matrix]{lgCMatrix-class}

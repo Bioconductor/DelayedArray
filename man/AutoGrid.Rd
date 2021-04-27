@@ -10,29 +10,45 @@
 \alias{colGrid}
 \alias{getAutoGridMaker}
 \alias{setAutoGridMaker}
+\alias{defaultSinkAutoGrid}
 
-\title{Generate automatic grids to use for block processing
+\title{Create automatic grids to use for block processing
        of array-like objects}
 
 \description{
-  \code{defaultAutoGrid()} is the default \emph{automatic grid maker}.
-  It creates a grid that is suitable for block processing of the array-like
-  object passed to it.
+  We provide various utility functions to create grids that can be used
+  for block processing of array-like objects:
+  \itemize{
+    \item \code{defaultAutoGrid()} is the default \emph{automatic grid maker}.
+          It creates a grid that is suitable for block processing of the
+          array-like object passed to it.
 
-  \code{rowAutoGrid()} and \code{colAutoGrid()} are additional
-  \emph{automatic grid makers}, specific to the 2-dimensional case.
-  They can be used to define blocks of full rows or full columns.
+    \item \code{rowAutoGrid()} and \code{colAutoGrid()} are more specialized
+          \emph{automatic grid makers}, for the 2-dimensional case.
+          They can be used to create a grid where the blocks are made of
+          full rows or full columns, respectively.
+
+    \item \code{defaultSinkAutoGrid()} is a specialized version of
+          \code{defaultAutoGrid()} for creating a grid that is suitable
+          for writing to a \link{RealizationSink} derivative while walking
+          on it.
+  }
 }
 
 \usage{
 defaultAutoGrid(x, block.length=NULL, chunk.grid=NULL, block.shape=NULL)
 
+## Two specialized "automatic grid makers" for the 2-dimensional case:
 rowAutoGrid(x, nrow=NULL, block.length=NULL)
 colAutoGrid(x, ncol=NULL, block.length=NULL)
 
 ## Replace default automatic grid maker with user-defined one:
 getAutoGridMaker()
 setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
+
+## A specialized version of defaultAutoGrid() to create an automatic
+## grid on a RealizationSink derivative:
+defaultSinkAutoGrid(sink, block.length=NULL, chunk.grid=NULL)
 }
 
 \arguments{
@@ -44,14 +60,16 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
   \item{block.length}{
     The length of the blocks i.e. the number of array elements per block.
     By default the automatic block length (returned by
-    \code{getAutoBlockLength(type(x))}) is used.
+    \code{getAutoBlockLength(type(x))}, or \code{getAutoBlockLength(type(sink))}
+    in the case of \code{defaultSinkAutoGrid()}) is used.
     Depending on how much memory is available on your machine, you might
     want to increase (or decrease) the automatic block length by adjusting
     the automatic block size with \code{setAutoBlockSize()}.
   }
   \item{chunk.grid}{
     The grid of physical chunks.
-    By default \code{\link{chunkGrid}(x)} is used.
+    By default \code{\link{chunkGrid}(x)} (or \code{\link{chunkGrid}(sink)}
+    in the case of \code{defaultSinkAutoGrid()}) is used.
   }
   \item{block.shape}{
     A string specifying the shape of the blocks.
@@ -86,13 +104,20 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
     package startup and can be reset anytime to this value by calling
     \code{setAutoGridMaker()} with no argument.
   }
+  \item{sink}{
+    A \link{RealizationSink} derivative.
+  }
 }
 
 \details{
   By default, primary block processing functions \code{\link{blockApply}()}
   and \code{\link{blockReduce}()} use the grid returned by
-  \code{defaultAutoGrid(x)} to process array-like object \code{x}
-  block by block. This can be changed with \code{setAutoGridMaker()}.
+  \code{defaultAutoGrid(x)} to walk on the blocks of array-like
+  object \code{x}. This can be changed with \code{setAutoGridMaker()}.
+
+  By default \code{\link{sinkApply}()} uses the grid returned by
+  \code{defaultSinkAutoGrid(sink)} to walk on the viewports of
+  \link{RealizationSink} derivative \code{sink} and write to them.
 }
 
 \value{
@@ -122,6 +147,16 @@ setAutoGridMaker(GRIDMAKER="defaultAutoGrid")
   \code{colAutoGrid}: A \link{RegularArrayGrid} object on reference array
   \code{x} where the grid elements define blocks made of full columns
   of \code{x}.
+
+  \code{defaultSinkAutoGrid}: Like \code{defaultAutoGrid} except
+  that \code{defaultSinkAutoGrid} always returns a grid with a
+  "first-dim-grows-first" shape (note that, unlike the former, the
+  latter has no \code{block.shape} argument).
+  The advantage of using a grid with a "first-dim-grows-first" shape in
+  the context of writing to the viewports of a \link{RealizationSink}
+  derivative is that such a grid is guaranteed to work with "linear write
+  only" realization backends. See important notes about "Cross realization
+  backend compatibility" in \code{?\link{write_block}} for more information.
 }
 
 \seealso{

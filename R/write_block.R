@@ -268,3 +268,37 @@ RealizationSink <- function(...)
     AutoRealizationSink(...)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### sinkApply()
+###
+### Thin wrapper around gridReduce().
+###
+### Note that, despite its name, this is actually a convenience wrapper
+### around gridReduce(), and **not** around gridApply(). However, we call it
+### sinkApply() and make its interface look similar to the gridApply/blockApply
+### interface because this seems more user-friendly.
+### Finally note that an important difference with gridReduce() is that the
+### first two arguments of callback function 'FUN' are expected to be 'sink'
+### and 'viewport' (in that order) rather than 'viewport' and 'init'.
+
+sinkApply <- function(sink, FUN, ..., grid=NULL, verbose=NA)
+{
+    if (!is(sink, "RealizationSink"))
+        stop(wmsg("'sink' must be a RealizationSink derivative"))
+    FUN <- match.fun(FUN)
+    grid <- normarg_sink_grid(grid, sink)
+    verbose <- normarg_verbose(verbose)
+
+    ## Only purpose of this wrapper is to swap the order of the first
+    ## two arguments.
+    FUN_WRAPPER <- function(viewport, init, FUN, ...)
+    {
+        effective_grid <- effectiveGrid()
+        current_block_id <- currentBlockId()
+        set_grid_context(effective_grid, current_block_id)
+        FUN(init, viewport, ...)
+    }
+    gridReduce(FUN_WRAPPER, grid, sink, FUN, ..., verbose=verbose)
+}
+

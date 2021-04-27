@@ -24,17 +24,25 @@
 \alias{getRealizationBackend}
 \alias{setRealizationBackend}
 
-\title{Write array blocks}
+\alias{sinkApply}
+
+\title{Write blocks of data to a RealizationSink}
 
 \description{
-  Use \code{write_block} to write a block of array data to a RealizationSink
-  object. The function is typically used in the context of block processing
-  of array-like objects (typically \link{DelayedArray} objects but
-  not necessarily).
+  Use \code{write_block()} to write a block of array data to a
+  RealizationSink derivative.
+
+  \code{sinkApply()} is a convenience function for walking on a
+  RealizationSink derivative and filling it with data.
+
+  Note that \code{write_block()} is typically used inside the callback
+  function passed to \code{sinkApply}.
 }
 
 \usage{
 write_block(sink, viewport, block)
+
+sinkApply(sink, FUN, ..., grid=NULL, verbose=NA)
 
 ## Backend-agnostic RealizationSink constructor:
 AutoRealizationSink(dim, dimnames=NULL, type="double", as.sparse=FALSE)
@@ -52,20 +60,22 @@ supportedRealizationBackends()
     \itemize{
       \item \link{DelayedArray} objects are NEVER writable, even when they
             don't carry delayed operations (e.g. \link[HDF5Array]{HDF5Array}
-            objects from the \pkg{HDF5Array} package), even when they don't
-            carry delayed operations and have all their data in memory (e.g.
-            \link{RleArray} objects).
-      \item RealizationSink is a virtual class so \code{sink} must be an
-            instance of a **concrete** RealizationSink subclass (e.g.
-            an \link[HDF5Array]{HDF5RealizationSink} object from the
+            objects from the \pkg{HDF5Array} package), and even when they
+            don't carry delayed operations **and** have all their data in
+            memory (e.g. \link{RleArray} objects). In other words, there are
+            NO exceptions.
+      \item RealizationSink is a **virtual** class so \code{sink} will always
+            be a RealizationSink derivative, that is, an object that belongs
+            to a **concrete** subclass of RealizationSink (e.g. an
+            \link[HDF5Array]{HDF5RealizationSink} object from the
             \pkg{HDF5Array} package).
       \item RealizationSink derivatives are considered array-like objects
             i.e. they have dimensions and possibly dimnames.
     }
-    Although \code{write_block()} will typically be used on a RealizationSink
-    derivative, it can also be used on an ordinary array or other writable
-    in-memory array-like arrays like dgCMatrix objects from the \pkg{Matrix}
-    package.
+    Although \code{write_block()} and \code{sinkApply()} will typically be
+    used on a RealizationSink derivative, they can also be used on an ordinary
+    array or other writable in-memory array-like objects like dgCMatrix objects
+    from the \pkg{Matrix} package.
   }
   \item{viewport}{
     An \link{ArrayViewport} object compatible with \code{sink}, that is,
@@ -75,21 +85,45 @@ supportedRealizationBackends()
     An ordinary (dense) array or \link{SparseArraySeed} object of the
     same dimensions as \code{viewport}.
   }
+  \item{FUN}{
+    The callback function to apply to each **viewport** of the grid used
+    to walk on \code{sink}. \code{sink <- FUN(sink, viewport, ...)}
+    will be performed on each viewport, so \code{FUN} must take at least
+    two arguments (typically \code{sink} and \code{viewport} but the names
+    can differ) and is expected to return its 1st argument (\code{sink}),
+    typically modified (when \code{FUN} contains a call to \code{write_block}).
+  }
+  \item{...}{
+    Additional arguments passed to \code{FUN}.
+  }
+  \item{grid}{
+    The grid used for the walk, that is, an \link{ArrayGrid} object that
+    defines the viewports to walk on. It must be compatible with the
+    geometry of \code{sink}. If not specified, an automatic grid is
+    created by calling \code{\link{defaultSinkAutoGrid}(sink)}, and used.
+    See \code{?\link{defaultSinkAutoGrid}} for more information.
+  }
+  \item{verbose}{
+    Whether block processing progress should be displayed or not.
+    If set to \code{NA} (the default), verbosity is controlled
+    by \code{DelayedArray:::get_verbose_block_processing()}.
+    Setting \code{verbose} to \code{TRUE} or \code{FALSE} overrides this.
+  }
   \item{dim}{
     The dimensions (specified as an integer vector) of the RealizationSink
-    object to create.
+    derivative to create.
   }
   \item{dimnames}{
     The dimnames (specified as a list of character vectors or NULLs) of
-    the RealizationSink object to create.
+    the RealizationSink derivative to create.
   }
   \item{type}{
     The type of the data that will be written to the RealizationSink
-    object to create.
+    derivative to create.
   }
   \item{as.sparse}{
     Whether the data should be written as sparse or not to the
-    RealizationSink object to create. Not all \emph{realization
+    RealizationSink derivative to create. Not all \emph{realization
     backends} support this.
   }
   \item{BACKEND}{
@@ -117,7 +151,7 @@ supportedRealizationBackends()
     \item Coerce the realization sink to \link{DelayedArray}.
   }
 
-  A realization sink is formally represented by a RealizationSink object.
+  A realization sink is formally represented by a RealizationSink derivative.
   Note that RealizationSink is a virtual class with various concrete
   subclasses like \link[HDF5Array]{HDF5RealizationSink} from the
   \pkg{HDF5Array} package, or \link{RleRealizationSink}.
@@ -129,14 +163,14 @@ supportedRealizationBackends()
   \code{\link[HDF5Array]{HDF5RealizationSink}()}.
 
   To create a realization sink in a backend-agnostic way, use
-  \code{AutoRealizationSink()}. It will create a RealizationSink object
+  \code{AutoRealizationSink()}. It will create a RealizationSink derivative
   for the current \emph{automatic realization backend} (see below).
 
   Once writing to the realization sink is completed, the RealizationSink
-  object must be closed (with \code{close(sink)}), then coerced to
+  derivative must be closed (with \code{close(sink)}), then coerced to
   \link{DelayedArray} (with \code{as(sink, "DelayedArray")}. What
   specific \link{DelayedArray} derivative this coercion will return
-  depends on the specific class of the RealizationSink object. For
+  depends on the specific class of the RealizationSink derivative. For
   example, if \code{sink} is an \link[HDF5Array]{HDF5RealizationSink}
   object from the \pkg{HDF5Array} package, then \code{as(sink, "DelayedArray")}
   will return an \link[HDF5Array]{HDF5Array} instance (the
@@ -145,7 +179,7 @@ supportedRealizationBackends()
   *** The \emph{automatic realization backend} ***
 
   The \emph{automatic realization backend} is a user-controlled global
-  setting that indicates what specific RealizationSink object
+  setting that indicates what specific RealizationSink derivative
   \code{AutoRealizationSink()} should return.
   In the context of block processing of a \link{DelayedArray} object,
   this controls where/how realization happens e.g. as an ordinary array
@@ -192,10 +226,10 @@ supportedRealizationBackends()
           created with something like:
           \preformatted{    colAutoGrid(sink)}
           for a two-dimensional sink, or with something like:
-          \preformatted{    defaultAutoGrid(sink, block.shape="first-dim-grows-first")}
+          \preformatted{    defaultSinkAutoGrid(sink)}
           for a sink with an arbitrary number of dimensions.
 
-          See \code{?\link{defaultAutoGrid}} for more information.
+          See \code{?\link{defaultSinkAutoGrid}} for more information.
 
           For obvious reasons, "linear write only" realization
           backends do not support concurrent writing.
@@ -205,8 +239,11 @@ supportedRealizationBackends()
 \value{
   For \code{write_block()}, the modified array-like object \code{sink}.
 
-  For \code{AutoRealizationSink()}, a RealizationSink object for the
-  current \emph{automatic realization backend}.
+  For \code{sinkApply()}, its 1st argument (\code{sink}), typically modified
+  (when callback function \code{FUN} contains a call to \code{write_block}).
+
+  For \code{AutoRealizationSink()}, a RealizationSink derivative with the
+  class associated with the current \emph{automatic realization backend}.
 
   For \code{getAutoRealizationBackend}, \code{NULL} (no backend set yet)
   or a single string specifying the name of the \emph{automatic realization
@@ -218,17 +255,18 @@ supportedRealizationBackends()
 
 \seealso{
   \itemize{
-    \item \link{ArrayViewport} objects.
+    \item \code{\link{defaultSinkAutoGrid}} to create an automatic grid
+          on a RealizationSink derivative.
 
-    \item \link{SparseArraySeed} objects.
+    \item \link{ArrayGrid} for the formal representation of grids and
+          viewports.
 
     \item \code{\link{read_block}}.
 
+    \item \link{SparseArraySeed} objects.
+
     \item \code{\link{blockApply}} and family for convenient block
           processing of an array-like object.
-
-    \item \code{\link{defaultAutoGrid}} and family to generate automatic
-          grids to use for block processing of array-like objects.
 
     \item \link[HDF5Array]{HDF5RealizationSink} objects in the
           \pkg{HDF5Array} package.
@@ -264,7 +302,7 @@ dim(sink)
 ## Define the grid of viewports to walk on. Here we define a grid made
 ## of very small viewports on 'sink'. Note that, for real-world use cases,
 ## block processing will typically use grids made of much bigger
-## viewports, usually obtained with defaultAutoGrid() or family.
+## viewports, usually obtained with defaultSinkAutoGrid().
 ## Also please note that this grid would not be compatible with "linear
 ## write only" realization backends. See "Cross realization backend
 ## compatibility" above in this man page for more information.
@@ -279,11 +317,11 @@ for (bid in seq_along(sink_grid)) {
 }
 
 ## -- An alternative to STEP 3 --
-FUN <- function(viewport, sink) {
+FUN <- function(sink, viewport) {
     block <- array(runif(length(viewport)), dim=dim(viewport))
     write_block(sink, viewport, block)
 }
-sink <- gridReduce(FUN, sink_grid, sink, verbose=TRUE)
+sink <- sinkApply(sink, FUN, grid=sink_grid, verbose=TRUE)
 
 ## -- STEP 4 --
 ## Close the sink and turn it into a DelayedArray object:
@@ -356,7 +394,7 @@ for (bid in seq_along(sink_grid)) {
 }
 
 ## -- An alternative to STEP 3 --
-FUN <- function(sink_viewport, sink) {
+FUN <- function(sink, sink_viewport) {
     ## Read block from 'a'.
     bid <- currentBlockId()
     a_viewport <- a_grid[[bid]]
@@ -366,7 +404,7 @@ FUN <- function(sink_viewport, sink) {
     ## Write the collapsed block to 'sink'.
     write_block(sink, sink_viewport, block)
 }
-sink <- gridReduce(FUN, sink_grid, sink, verbose=TRUE)
+sink <- sinkApply(sink, FUN, grid=sink_grid, verbose=TRUE)
 
 ## -- STEP 4 --
 ## Close the sink and turn it into a DelayedArray object:
@@ -429,7 +467,7 @@ pFUN <- function(r, g) {
     matrix(runif(200 * ncol(r)), nrow=200)
 }
 
-## 3. A RealizationSink object where to write the matrices returned
+## 3. A RealizationSink derivative where to write the matrices returned
 ##    by pFUN() as we go:
 setAutoRealizationBackend("HDF5Array")
 U_sink <- AutoRealizationSink(c(200L, 1000L))
@@ -452,15 +490,15 @@ for (bid in seq_along(U_grid)) {
     U_sink <- write_block(U_sink, U_grid[[bid]], U_block)
 }
 
-## An alternative to the "for" loop is to use gridReduce():
-FUN <- function(U_viewport, U_sink) {
+## An alternative to the "for" loop is to use sinkApply():
+FUN <- function(U_sink, U_viewport) {
     bid <- currentBlockId()
     R_block <- read_block(R, R_grid[[bid]])
     G_block <- read_block(G, G_grid[[bid]])
     U_block <- pFUN(R_block, G_block)
     write_block(U_sink, U_viewport, U_block)
 }
-U_sink <- gridReduce(FUN, U_grid, U_sink, verbose=TRUE)
+U_sink <- sinkApply(U_sink, FUN, grid=U_grid, verbose=TRUE)
 
 close(U_sink)
 U <- as(U_sink, "DelayedArray")
@@ -568,7 +606,7 @@ class(sink)  # HDF5-specific realization sink
 dim(sink)
 chunkdim(sink)
 
-grid <- defaultAutoGrid(sink, block.length=600)
+grid <- defaultSinkAutoGrid(sink, block.length=600)
 for (bid in seq_along(grid)) {
     viewport <- grid[[bid]]
     block <- 101 * bid + runif(length(viewport))
