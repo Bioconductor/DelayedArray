@@ -32,14 +32,27 @@
 
 \alias{coerce,ANY,SparseArraySeed-method}
 
+\alias{coerce,SparseArraySeed,CsparseMatrix-method}
+\alias{coerce,SparseArraySeed,RsparseMatrix-method}
 \alias{coerce,SparseArraySeed,sparseMatrix-method}
+\alias{coerce,SparseArraySeed,dgCMatrix-method}
+\alias{coerce,SparseArraySeed,dgRMatrix-method}
+\alias{coerce,SparseArraySeed,lgCMatrix-method}
+\alias{coerce,SparseArraySeed,lgRMatrix-method}
+
 \alias{coerce,dgCMatrix,SparseArraySeed-method}
+\alias{coerce,dgRMatrix,SparseArraySeed-method}
 \alias{coerce,lgCMatrix,SparseArraySeed-method}
+\alias{coerce,lgRMatrix,SparseArraySeed-method}
 
 \alias{is_sparse,dgCMatrix-method}
+\alias{is_sparse,dgRMatrix-method}
 \alias{is_sparse,lgCMatrix-method}
+\alias{is_sparse,lgRMatrix-method}
 \alias{extract_sparse_array,dgCMatrix-method}
+\alias{extract_sparse_array,dgRMatrix-method}
 \alias{extract_sparse_array,lgCMatrix-method}
+\alias{extract_sparse_array,lgRMatrix-method}
 
 \alias{aperm.SparseArraySeed}
 \alias{aperm,SparseArraySeed-method}
@@ -124,6 +137,10 @@ sparse2dense(sas)
     \item \link{SparseArraySeed-utils} for native operations on
           SparseArraySeed objects.
 
+    \item S4 classes \linkS4class{dgCMatrix}, \linkS4class{dgRMatrix}, and
+          \linkS4class{lsparseMatrix}, defined in the \pkg{Matrix} package,
+          for the de facto standard of sparse matrix representations in R.
+
     \item The \code{\link{read_block}} function.
 
     \item \code{\link{blockApply}} and family for convenient block
@@ -182,29 +199,44 @@ t(sas2)
 stopifnot(identical(as.matrix(t(sas2)), t(as.matrix(sas2))))
 
 ## ---------------------------------------------------------------------
-## COERCION FROM/TO dgCMatrix OR lgCMatrix OBJECTS
+## COERCION FROM/TO dg[C|R]Matrix OR lg[C|R]Matrix OBJECTS
 ## ---------------------------------------------------------------------
-## dgCMatrix and lgCMatrix objects are defined in the Matrix package.
+## dg[C|R]Matrix and lg[C|R]Matrix objects are defined in the Matrix
+## package.
 
-M2 <- as(sas2, "dgCMatrix")
-stopifnot(identical(M2, as(m2, "dgCMatrix")))
+## dgCMatrix/dgRMatrix:
 
-sas2b <- as(M2, "SparseArraySeed")
-## 'sas2b' is the same as 'sas2' except that 'nzdata(sas2b)' has
+M2C <- as(sas2, "dgCMatrix")
+stopifnot(identical(M2C, as(m2, "dgCMatrix")))
+
+sas2C <- as(M2C, "SparseArraySeed")
+## 'sas2C' is the same as 'sas2' except that 'nzdata(sas2C)' has
 ## type "double" instead of "integer":
-stopifnot(all.equal(sas2b, sas2))
-typeof(nzdata(sas2b))  # double
+stopifnot(all.equal(sas2, sas2C))
+typeof(nzdata(sas2C))  # double
 typeof(nzdata(sas2))   # integer
+
+M2R <- as(sas2, "dgRMatrix")
+stopifnot(identical(M2R, as(m2, "dgRMatrix")))
+sas2R <- as(M2R, "SparseArraySeed")
+stopifnot(all.equal(as.matrix(sas2), as.matrix(sas2R)))
+
+## lgCMatrix/lgRMatrix:
 
 m3 <- m2 == 99  # logical matrix
 sas3 <- dense2sparse(m3)
 class(sas3)
 type(sas3)
-M3 <- as(sas3, "lgCMatrix")
-stopifnot(identical(M3, as(m3, "lgCMatrix")))
 
-sas3b <- as(M3, "SparseArraySeed")
-stopifnot(identical(sas3, sas3b))
+M3C <- as(sas3, "lgCMatrix")
+stopifnot(identical(M3C, as(m3, "lgCMatrix")))
+sas3C <- as(M3C, "SparseArraySeed")
+identical(as.matrix(sas3), as.matrix(sas3C))
+
+M3R <- as(sas3, "lgRMatrix")
+#stopifnot(identical(M3R, as(m3, "lgRMatrix")))
+sas3R <- as(M3R, "SparseArraySeed")
+identical(as.matrix(sas3), as.matrix(sas3R))
 
 ## ---------------------------------------------------------------------
 ## SEED CONTRACT

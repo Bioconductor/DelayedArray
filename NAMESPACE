@@ -8,7 +8,7 @@ importFrom(stats, setNames,
                   dpois, ppois, qpois,
                   dlogis, plogis, qlogis)
 importFrom(stats4, summary)
-importClassFrom(Matrix, dgCMatrix, lgCMatrix)
+importClassFrom(Matrix, dgCMatrix, dgRMatrix, lgCMatrix, lgRMatrix)
 importFrom(Matrix, sparseMatrix, crossprod, tcrossprod)
 import(BiocGenerics)
 import(MatrixGenerics)

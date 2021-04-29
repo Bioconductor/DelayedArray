@@ -317,25 +317,12 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
     nzdata_list <- lapply(block_results, `[[`, 2L)
     nzindex <- do.call(rbind, nzindex_list)
     nzdata <- unlist(nzdata_list, recursive=FALSE)
-    SparseArraySeed(dim(x), nzindex, nzdata, check=FALSE)
+    SparseArraySeed(dim(x), nzindex, nzdata, dimnames(x), check=FALSE)
 }
 
 setAs("DelayedArray", "SparseArraySeed",
     function(from) .BLOCK_dense2sparse(from)
 )
-
-.from_DelayedMatrix_to_sparseMatrix <- function(from)
-{
-    ans <- as(.BLOCK_dense2sparse(from), "sparseMatrix")
-    ## The above does NOT propagate the dimnames at the moment (the
-    ## intermediate SparseArraySeed container cannot currently store them)
-    ## so we propagate them explicitly.
-    from_dimnames <- dimnames(from)
-    if (!is.null(from_dimnames))
-        dimnames(ans) <- from_dimnames
-    ans
-}
-setAs("DelayedMatrix", "sparseMatrix", .from_DelayedMatrix_to_sparseMatrix)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

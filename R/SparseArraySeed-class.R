@@ -27,8 +27,8 @@ setClass("SparseArraySeed",
 ### - dense2sparse(), sparse2dense().
 ### - Based on sparse2dense(): extract_array(), as.array(), as.matrix().
 ### - Based on dense2sparse(): coercion to SparseArraySeed.
-### - Back and forth coercion between SparseArraySeed and dgCMatrix or
-###   lgCMatrix objects from the Matrix package.
+### - Back and forth coercion between SparseArraySeed and dg[C|R]Matrix or
+###   lg[C|R]Matrix objects from the Matrix package.
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -353,10 +353,10 @@ setMethod("as.matrix", "SparseArraySeed", .from_SparseArraySeed_to_matrix)
 
 setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
 
-### Going back and forth between SparseArraySeed and dgCMatrix or lgCMatrix
-### objects from the Matrix package:
+### Going back and forth between SparseArraySeed and dg[C|R]Matrix or
+### lg[C|R]Matrix objects from the Matrix package:
 
-.from_SparseArraySeed_to_sparseMatrix <- function(from)
+.from_SparseArraySeed_to_CsparseMatrix <- function(from)
 {
     from_dim <- dim(from)
     if (length(from_dim) != 2L)
@@ -364,9 +364,47 @@ setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
                   "or lgCMatrix must have exactly 2 dimensions"))
     i <- from@nzindex[ , 1L]
     j <- from@nzindex[ , 2L]
-    sparseMatrix2(from_dim, i, j, from@nzdata, dimnames=dimnames(from))
+    CsparseMatrix(from_dim, i, j, from@nzdata, dimnames=dimnames(from))
 }
-setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_sparseMatrix)
+
+.from_SparseArraySeed_to_RsparseMatrix <- function(from)
+{
+    from_dim <- dim(from)
+    if (length(from_dim) != 2L)
+        stop(wmsg("the ", class(from), " object to coerce to dgRMatrix ",
+                  "or lgRMatrix must have exactly 2 dimensions"))
+    i <- from@nzindex[ , 1L]
+    j <- from@nzindex[ , 2L]
+    RsparseMatrix(from_dim, i, j, from@nzdata, dimnames=dimnames(from))
+}
+
+setAs("SparseArraySeed", "CsparseMatrix",
+    .from_SparseArraySeed_to_CsparseMatrix
+)
+setAs("SparseArraySeed", "RsparseMatrix",
+    .from_SparseArraySeed_to_RsparseMatrix
+)
+setAs("SparseArraySeed", "sparseMatrix",
+    .from_SparseArraySeed_to_CsparseMatrix
+)
+setAs("SparseArraySeed", "dgCMatrix",
+    function(from) as(as(from, "CsparseMatrix"), "dgCMatrix")
+)
+setAs("SparseArraySeed", "dgRMatrix",
+    function(from) as(as(from, "RsparseMatrix"), "dgRMatrix")
+)
+setAs("SparseArraySeed", "lgCMatrix",
+    function(from) as(as(from, "CsparseMatrix"), "lgCMatrix")
+)
+### Will fail if 'as(from, "RsparseMatrix")' returns a dgRMatrix object
+### because the Matrix package doesn't support coercion from dgRMatrix
+### to lgRMatrix at the moment:
+###   > as(SparseArraySeed(4:3, rbind(c(4, 3)), -2), "lgRMatrix")
+###   Error in as(as(from, "RsparseMatrix"), "lgRMatrix") :
+###     no method or default for coercing “dgRMatrix” to “lgRMatrix”
+setAs("SparseArraySeed", "lgRMatrix",
+    function(from) as(as(from, "RsparseMatrix"), "lgRMatrix")
+)
 
 .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix <-
     function(from, use.dimnames=TRUE)
@@ -378,35 +416,66 @@ setAs("SparseArraySeed", "sparseMatrix", .from_SparseArraySeed_to_sparseMatrix)
     SparseArraySeed(dim(from), ans_nzindex, from@x, ans_dimnames, check=FALSE)
 }
 
+.make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix <-
+    function(from, use.dimnames=TRUE)
+{
+    i <- rep.int(seq_len(nrow(from)), diff(from@p))
+    j <- from@j + 1L
+    ans_nzindex <- cbind(i, j, deparse.level=0L)
+    ans_dimnames <- if (use.dimnames) dimnames(from) else NULL
+    SparseArraySeed(dim(from), ans_nzindex, from@x, ans_dimnames, check=FALSE)
+}
+
 setAs("dgCMatrix", "SparseArraySeed",
     function(from) .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(from)
+)
+setAs("dgRMatrix", "SparseArraySeed",
+    function(from) .make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix(from)
 )
 setAs("lgCMatrix", "SparseArraySeed",
     function(from) .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(from)
 )
+setAs("lgRMatrix", "SparseArraySeed",
+    function(from) .make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix(from)
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### is_sparse() and extract_sparse_array() methods for dgCMatrix and
-### lgCMatrix objects from the Matrix package
+### is_sparse() and extract_sparse_array() methods for dg[C|R]Matrix and
+### lg[C|R]Matrix objects from the Matrix package
 ###
 ### TODO: Support more sparseMatrix derivatives (e.g. dgTMatrix, dgRMatrix)
 ### as the need arises.
 ###
 
 setMethod("is_sparse", "dgCMatrix", function(x) TRUE)
+setMethod("is_sparse", "dgRMatrix", function(x) TRUE)
 setMethod("is_sparse", "lgCMatrix", function(x) TRUE)
+setMethod("is_sparse", "lgRMatrix", function(x) TRUE)
 
-.extract_sparse_array_from_sparseMatrix <- function(x, index)
+.extract_sparse_array_from_dgCMatrix_or_lgCMatrix <- function(x, index)
 {
     sm <- subset_by_Nindex(x, index)  # a dgCMatrix or lgCMatrix object
     .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(sm, use.dimnames=FALSE)
 }
+
+.extract_sparse_array_from_dgRMatrix_or_lgRMatrix <- function(x, index)
+{
+    sm <- subset_by_Nindex(x, index)  # a dgRMatrix or lgRMatrix object
+    .make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix(sm, use.dimnames=FALSE)
+}
+
 setMethod("extract_sparse_array", "dgCMatrix",
-    .extract_sparse_array_from_sparseMatrix
+    .extract_sparse_array_from_dgCMatrix_or_lgCMatrix
+)
+setMethod("extract_sparse_array", "dgRMatrix",
+    .extract_sparse_array_from_dgRMatrix_or_lgRMatrix
 )
 setMethod("extract_sparse_array", "lgCMatrix",
-    .extract_sparse_array_from_sparseMatrix
+    .extract_sparse_array_from_dgCMatrix_or_lgCMatrix
+)
+setMethod("extract_sparse_array", "lgRMatrix",
+    .extract_sparse_array_from_dgRMatrix_or_lgRMatrix
 )
 
 

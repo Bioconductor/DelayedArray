@@ -5,7 +5,7 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### sparseMatrix2() -- NOT exported
+### CsparseMatrix() -- NOT exported
 ###
 ### A replacement for Matrix::sparseMatrix() that is typically 50%-60% faster
 ### and more memory efficient. Like Matrix::sparseMatrix(), it only supports
@@ -16,7 +16,7 @@
 ### 'i', 'j', 'nzdata' must be **parallel** atomic vectors (integer vectors
 ### with no NAs for 'i' and 'j', and integer, double or logical vector for
 ### 'nzdata', possibly with NAs).
-sparseMatrix2 <- function(dim, i, j, nzdata, dimnames=NULL)
+CsparseMatrix <- function(dim, i, j, nzdata, dimnames=NULL)
 {
     stopifnot(is.integer(dim), length(dim) == 2L,
               is.integer(i), is.integer(j))
@@ -33,6 +33,30 @@ sparseMatrix2 <- function(dim, i, j, nzdata, dimnames=NULL)
     if (is.integer(ans_x))
         ans_x <- as.double(ans_x)
     new(ans_class, Dim=dim, i=ans_i, p=ans_p, x=ans_x, Dimnames=dimnames)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### RsparseMatrix() -- NOT exported
+###
+
+RsparseMatrix <- function(dim, i, j, nzdata, dimnames=NULL)
+{
+    stopifnot(is.integer(dim), length(dim) == 2L,
+              is.integer(i), is.integer(j))
+    nzdata_type <- typeof(nzdata)
+    ans_class <- switch(nzdata_type,
+                        'integer'=, 'double'="dgRMatrix",
+                        'logical'="lgRMatrix",
+                        stop(wmsg("unsupported data type: ", nzdata_type)))
+    dimnames <- normarg_dimnames(dimnames, dim)
+    oo <- order(i, j)
+    ans_j <- j[oo] - 1L  # dgRMatrix and lgRMatrix objects want this zero-based
+    ans_p <- c(0L, cumsum(tabulate(i[oo], nbins=dim[[1L]])))
+    ans_x <- nzdata[oo]
+    if (is.integer(ans_x))
+        ans_x <- as.double(ans_x)
+    new(ans_class, Dim=dim, j=ans_j, p=ans_p, x=ans_x, Dimnames=dimnames)
 }
 
 

@@ -80,12 +80,28 @@ t.Array <- function(x)
 }
 setMethod("t", "Array", t.Array)
 
-### Any Array derivative will be coercible to dgCMatrix or lgCMatrix as long
-### as there is a method for coercing it to sparseMatrix.
+### Any Array derivative will be coercible to a sparseMatrix subclass (e.g.
+### dg[C|R]Matrix or lg[C|R]Matrix) as long as there is a method for coercing
+### it to SparseArraySeed.
 setAs("Array", "dgCMatrix",
-    function(from) as(as(from, "sparseMatrix"), "dgCMatrix")
+    function(from) as(as(from, "SparseArraySeed"), "dgCMatrix")
+)
+setAs("Array", "dgRMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "dgRMatrix")
 )
 setAs("Array", "lgCMatrix",
-    function(from) as(as(from, "sparseMatrix"), "lgCMatrix")
+    function(from) as(as(from, "SparseArraySeed"), "lgCMatrix")
+)
+setAs("Array", "lgRMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "lgRMatrix")
+)
+setAs("Array", "CsparseMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "CsparseMatrix")
+)
+setAs("Array", "RsparseMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "RsparseMatrix")
+)
+setAs("Array", "sparseMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "sparseMatrix")
 )
 

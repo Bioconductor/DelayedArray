@@ -149,7 +149,7 @@
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed"))
-            block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
         ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
         init + rowSums(block, na.rm=na.rm)
     }
@@ -175,7 +175,7 @@
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed"))
-            block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
         ## Dispatch on colSums() method for matrix, dgCMatrix or lgCMatrix.
         init + colSums(block, na.rm=na.rm)
     }
@@ -287,10 +287,10 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
-            ## Transposing a SparseArraySeed object is faster than
-            ## transposing a sparseMatrix object so we transpose **before**
-            ## coercion to sparseMatrix.
-            block <- as(t(block), "sparseMatrix")  # to dgCMatrix or lgCMatrix
+            ## Transposing a SparseArraySeed object is faster than transposing
+            ## a CsparseMatrix derivative so we transpose **before** coercion
+            ## to CsparseMatrix.
+            block <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
             block_rowmins <- colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMins().
@@ -324,7 +324,7 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
-            block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
             block_colmins <- colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::colMins().
@@ -393,10 +393,10 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
-            ## Transposing a SparseArraySeed object is faster than
-            ## transposing a sparseMatrix object so we transpose **before**
-            ## coercion to sparseMatrix.
-            block <- as(t(block), "sparseMatrix")  # to dgCMatrix or lgCMatrix
+            ## Transposing a SparseArraySeed object is faster than transposing
+            ## a CsparseMatrix derivative so we transpose **before** coercion
+            ## to CsparseMatrix.
+            block <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
             block_rowmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMaxs().
@@ -430,7 +430,7 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
-            block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
             block_colmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::colMaxs().

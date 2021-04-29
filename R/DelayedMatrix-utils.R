@@ -7,7 +7,7 @@
 .read_matrix_block <- function(...) {
     block <- read_block(..., as.sparse=NA)
     if (is(block, "SparseArraySeed"))
-        block <- as(block, "sparseMatrix")  # to dgCMatrix or lgCMatrix
+        block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
     block 
 }
 
