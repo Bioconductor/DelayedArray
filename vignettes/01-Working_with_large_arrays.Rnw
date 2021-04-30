@@ -1,6 +1,6 @@
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Working with large arrays in R}
-%\VignetteDepends{knitr,Matrix,DelayedArray,HDF5Array,SummarizedExperiment,airway,pryr}
+%\VignetteDepends{knitr,Matrix,DelayedArray,HDF5Array,SummarizedExperiment,airway,lobstr}
 
 % 2019-12-22: A temporary fix to avoid the following pdflatex error caused by
 % an issue in LaTeX package filehook-scrlfile (used by beamer):
@@ -50,7 +50,7 @@ library(DelayedArray)
 library(HDF5Array)
 library(SummarizedExperiment)
 library(airway)
-library(pryr)
+library(lobstr)
 @
 
 \maketitle
@@ -237,19 +237,19 @@ sum(m != 0) / length(m)
   \begin{columns}[t]
     \begin{column}{0.60\textwidth}
       \begin{exampleblock}{}
-<<object_size>>=
-library(pryr)  # for object_size()
-object_size(m)
+<<obj_size>>=
+library(lobstr)  # for obj_size()
+obj_size(m)
 
 library(Matrix)
-object_size(as(m, "dgCMatrix"))
+obj_size(as(m, "dgCMatrix"))
 
 library(DelayedArray)
-object_size(as(m, "RleMatrix"))
-object_size(as(t(m), "RleMatrix"))
+obj_size(as(m, "RleMatrix"))
+obj_size(as(t(m), "RleMatrix"))
 
 library(HDF5Array)
-object_size(as(m, "HDF5Matrix"))
+obj_size(as(m, "HDF5Matrix"))
 @
       \end{exampleblock}
     \end{column}

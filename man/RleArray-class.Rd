@@ -271,13 +271,13 @@ rm(M)
 object.size(list2env(list(aa=1:10)))   # 56 bytes
 object.size(list2env(list(aa=1:1e6)))  # always 56 bytes!
 
-## So we'll use object_size() instead (from package pryr):
-library(pryr)
-object_size(list2env(list(aa=1:10)))   # 264 B
-object_size(list2env(list(aa=1:1e6)))  # 4 MB
-object_size(list2env(list(aa=as.double(1:1e6))))  # 8 MB
+## So we'll use obj_size() instead (from package lobstr):
+library(lobstr)
+obj_size(list2env(list(aa=1:10)))   # 264 B
+obj_size(list2env(list(aa=1:1e6)))  # 4 MB
+obj_size(list2env(list(aa=as.double(1:1e6))))  # 8 MB
 
-object_size(M1)  # 16.7 MB
+obj_size(M1)  # 16.7 MB
 
 type(M1) <- "integer"  # Delayed!
 M1                     # Note the class: it's no longer RleMatrix!
@@ -289,9 +289,9 @@ M1                     # Note the class: it's no longer RleMatrix!
 ## a DelayedArray object is stored in its "seed" and its seed is never
 ## modified **in-place**, that is, no operation on the object will ever
 ## modify its seed):
-object_size(M1)  # Still the same (well, a very tiny more, because the
-                 # object is now carrying one more delayed operation,
-                 # the `type<-` operation)
+obj_size(M1)  # Still the same (well, a very tiny more, because the
+              # object is now carrying one more delayed operation,
+              # the `type<-` operation)
 
 ## To effectively reduce the memory footprint of the object, a new object
 ## needs to be created. This is achieved simply by **realizing** M1 as a
@@ -309,10 +309,10 @@ setAutoBlockSize()      # Reset automatic block size to factory settings.
 
 
 M2
-object_size(M2)  # 6.91 MB (Less than half the original size! This is
-                 # because RleArray objects use some internal tricks to
-                 # reduce memory footprint even more when the data in
-                 # their seed is of type "integer".)
+obj_size(M2)  # 6.91 MB (Less than half the original size! This is
+              # because RleArray objects use some internal tricks to
+              # reduce memory footprint even more when the data in
+              # their seed is of type "integer".)
 
 ## Finally note that the 2-step approach described here (i.e.
 ## type(A) <- "integer" followed by realization) is generic and works

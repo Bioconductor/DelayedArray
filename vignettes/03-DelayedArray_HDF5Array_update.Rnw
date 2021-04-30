@@ -1,0 +1,212 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{DelayedArray / HDF5Array update}
+%\VignetteDepends{knitr,Matrix,DelayedArray,HDF5Array,lobstr}
+
+% 2019-12-22: A temporary fix to avoid the following pdflatex error caused by
+% an issue in LaTeX package filehook-scrlfile (used by beamer):
+%   ! Package filehook Error: Detected unknown definition of \InputIfFileExists.
+%   Use the 'force' option of 'filehook' to overwrite it..
+% The error appeared on tokay2 in Dec 2019 after reinstalling MiKTeX 2.9.
+% See comment by Phelype Oleinik here for the fix:
+%   https://tex.stackexchange.com/questions/512189/problem-with-chemmacros-beamer-and-filehook-scrlfile-sty
+\PassOptionsToPackage{force}{filehook}
+
+\documentclass[8pt]{beamer}
+
+\mode<presentation> {
+\usetheme{Madrid}
+\usecolortheme{crane}
+}
+
+\usepackage{slides}
+\renewcommand\Rclass[1]{{\texttt{#1}\index{#1 (class)}}}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\title{DelayedArray / HDF5Array update}
+
+\author{Herv\'e Pag\`es}
+
+\institute{Fred Hutch, Seattle}
+
+\date{April 2021}
+
+\begin{document}
+
+<<setup, include=FALSE>>=
+library(knitr)
+opts_chunk$set(size="scriptsize")
+options(width=80)
+library(Matrix)
+library(DelayedArray)
+library(HDF5Array)
+library(lobstr)
+@
+
+\maketitle
+
+\frame{\tableofcontents}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Recent additions to package DelayedArray}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{ConstantArray objects (by Aaron)}
+
+  \begin{block}{}
+  This would ordinarily take up 8 TB of memory:
+<<ConstantArray>>=
+library(DelayedArray)
+CM <- ConstantArray(c(1e6, 1e6), value=NA_real_)
+CM
+lobstr::obj_size(CM)
+@
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{sinkApply()}
+
+  \begin{block}{}
+    \Rcode{sinkApply()}: a convenience function for walking on a
+    \Rcode{RealizationSink} derivative for the purpose of filling
+    it with blocks of data
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    Example: Fill a 1e6 x 1e6 on-disk matrix with random data
+    \begin{knitrout}\scriptsize
+    \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}
+    \color{fgcolor}
+    \begin{kframe}
+\begin{verbatim}
+sink <- HDF5RealizationSink(c(1e6L, 1e6L))  # or TileDBRealizationSink
+
+sink_grid <- defaultSinkAutoGrid(sink)
+
+FUN <- function(sink, viewport) {
+    block <- array(runif(length(viewport)), dim=dim(viewport))
+    write_block(sink, viewport, block)
+}
+
+sink <- sinkApply(sink, FUN, grid=sink_grid)
+
+close(sink)
+M <- as(sink, "DelayedArray")
+\end{verbatim}
+    \end{kframe}
+    \end{knitrout}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{rbind(), cbind(), and sparsity}
+
+  \begin{block}{}
+    \Rcode{rbind()} and \Rcode{cbind()} of \Rcode{DelayedArray} objects
+    now propagate sparsity
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    \begin{knitrout}\scriptsize
+    \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}
+    \color{fgcolor}
+    \begin{kframe}
+\begin{verbatim}
+tenx1 <- HDF5Array::TENxMatrix("tenx1.h5")  # is_sparse(tenx1) is TRUE
+tenx2 <- HDF5Array::TENxMatrix("tenx2.h5")  # is_sparse(tenx2) is TRUE
+
+bigtenx <- cbind(tenx1, tenx2)
+is_sparse(bigtenx)  # TRUE
+
+blockApply(bigtenx, FUN, ...)   # will take advantage of sparsity
+\end{verbatim}
+    \end{kframe}
+    \end{knitrout}
+  \end{block}
+\end{frame}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Recent additions to package HDF5Array}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Recent additions to package HDF5Array}
+
+  \begin{block}{}
+    \Rcode{HDF5Array()}: can now take an URL to a file on Amazon S3
+    (kind of slow!)
+  \end{block}
+
+  \bigskip
+
+  \begin{block}{}
+    \Rcode{H5SparseMatrix}: a \Rcode{DelayedMatrix} subclass for
+    representing and operating on an HDF5 sparse matrix stored
+    in CSR/CSC/Yale format (e.g. 10x Genomics and h5ad formats)
+  \end{block}
+\end{frame}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Work in progress and future work}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+  \frametitle{Work in progress and future work}
+
+  Work in progress:
+
+  \begin{block}{}
+    \Rcode{h5summarize(..., op="sum")}: Optimized summarization of
+    an HDF5 dataset or subset:
+    \begin{itemize}
+      \item Implemented in C (calls to \Biocpkg{Rhdf5lib})
+      \item Operates at the level of the physical chunks
+      \item More efficient than blockApply()
+    \end{itemize}
+  \end{block}
+
+  \bigskip
+
+  Future work:
+
+  \begin{block}{}
+    \Rcode{SparseArray} objects:
+    \begin{itemize}
+      \item In-memory sparse representation of arrays of arbitrary dimensions
+      \item Used internally by block processing of sparse \Rcode{DelayedArray}
+            objects (current name is \Rcode{SparseArraySeed})
+      \item Will go to their own package (currently in \Rcode{DelayedArray})
+      \item Implement fast native operations: arithmetic, \Rcode{Math}
+            group (e.g. \Rcode{log}), summarization, etc..
+            Will benefit block processing of sparse \Rcode{DelayedArray}
+            objects
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+
+\end{document}
+

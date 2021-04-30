@@ -24,7 +24,7 @@ Depends: R (>= 4.0.0), methods, stats4, Matrix,
 Imports: stats
 LinkingTo: S4Vectors
 Suggests: BiocParallel, HDF5Array (>= 1.17.12), genefilter,
-	SummarizedExperiment, airway, pryr, DelayedMatrixStats,
+	SummarizedExperiment, airway, lobstr, DelayedMatrixStats,
 	knitr, rmarkdown, BiocStyle, RUnit
 VignetteBuilder: knitr
 Collate: utils.R
