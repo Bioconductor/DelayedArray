@@ -181,9 +181,12 @@ blockApply(bigtenx, FUN, ...)   # will take advantage of sparsity
     \Rcode{h5summarize(..., op="sum")}: Optimized summarization of
     an HDF5 dataset or subset:
     \begin{itemize}
-      \item Implemented in C (calls to \Biocpkg{Rhdf5lib})
+      \item Implemented in C (direct calls to HDF5 C lib in \Biocpkg{Rhdf5lib})
       \item Operates at the level of the physical chunks
-      \item More efficient than blockApply()
+      \item More efficient than \Rcode{blockApply()}
+      \item Integration to \Biocpkg{DelayedArray}/\Biocpkg{DelayedMatrixStats}:
+            \Rocde{h5summarize()} will be used behind the scene by things
+            like \Rcode{rowVars()}
     \end{itemize}
   \end{block}
 
@@ -192,15 +195,16 @@ blockApply(bigtenx, FUN, ...)   # will take advantage of sparsity
   Future work:
 
   \begin{block}{}
-    \Rcode{SparseArray} objects:
+    \Rcode{SparseArray} objects: In-memory sparse representation of
+    arrays of arbitrary dimensions
     \begin{itemize}
-      \item In-memory sparse representation of arrays of arbitrary dimensions
-      \item Used internally by block processing of sparse \Rcode{DelayedArray}
-            objects (current name is \Rcode{SparseArraySeed})
+      \item Already used internally by block processing of sparse
+            \Rcode{DelayedArray} objects (current name is
+            \Rcode{SparseArraySeed})
       \item Will go to their own package (currently in \Rcode{DelayedArray})
       \item Implement fast native operations: arithmetic, \Rcode{Math}
             group (e.g. \Rcode{log}), summarization, etc..
-            Will benefit block processing of sparse \Rcode{DelayedArray}
+            This will benefit block processing of sparse \Rcode{DelayedArray}
             objects
     \end{itemize}
   \end{block}
