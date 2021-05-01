@@ -226,7 +226,7 @@ exportMethods(
     unique,
     max, min, range, sum, prod, any, all,   # "Summary" group generic
     mean,
-    round, signif,
+    log, round, signif,
     nchar, tolower, toupper,
     sub, gsub,
     "%*%",

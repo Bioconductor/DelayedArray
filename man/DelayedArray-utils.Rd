@@ -38,6 +38,7 @@
 \alias{tolower,DelayedArray-method}
 \alias{toupper,DelayedArray-method}
 
+\alias{log,DelayedArray-method}
 \alias{round,DelayedArray-method}
 \alias{signif,DelayedArray-method}
 

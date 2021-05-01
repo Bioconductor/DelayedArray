@@ -351,6 +351,15 @@ setMethod("Math", "DelayedArray",
         stash_DelayedUnaryIsoOpStack(x, function(a) match.fun(.Generic)(a))
 )
 
+setMethod("log", "DelayedArray",
+    function(x, base=exp(1))
+    {
+        if (!isSingleNumberOrNA(base))
+            stop(wmsg("'base' must be a single numeric"))
+        stash_DelayedUnaryIsoOpStack(x, function(a) log(a, base=base))
+    }
+)
+
 .DelayedArray_Math2 <- function(.Generic, x, digits)
 {
     stopifnot(is(x, "DelayedArray"))
