@@ -1,3 +1,58 @@
+CHANGES IN VERSION 0.18.0
+-------------------------
+
+NEW FEATURES
+
+    o Implement ConstantArray objects. The ConstantArray class is a
+      DelayedArray subclass to efficiently mimic an array containing a
+      constant value, without actually creating said array in memory.
+
+    o Add scale() method for DelayedMatrix objects.
+
+    o Add sinkApply(), a convenience function for walking on a RealizationSink
+      derivative and filling it with blocks of data.
+
+    o Proper support for dgRMatrix and lgRMatrix objects as DelayedArray
+      object seeds:
+      - is_sparse() now returns TRUE on dgRMatrix and lgRMatrix objects.
+      - Support coercion back and forth between SparseArraySeed objects
+        and dgRMatrix/lgRMatrix objects.
+      - Add extract_sparse_array() methods for dgRMatrix and lgRMatrix
+        objects.
+      These changes bring the treatment of dgRMatrix and lgRMatrix objects
+      to the same level as dgCMatrix and lgCMatrix objects. For example,
+      wrapping a dgRMatrix or lgRMatrix object in a DelayedArray object will
+      trigger the same sparse-optimized mechanisms during block processing
+      as when wrapping a dgCMatrix or lgCMatrix object.
+
+    o rbind() and cbind() on sparse DelayedArray objects are now fully
+      supported.
+
+    o Delayed operations of type DelayedUnaryIsoOpWithArgs now preserve
+      sparsity when appropriate.
+
+    o Implement DummyArrayGrid and DummyArrayViewport objects.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Rename viewportApply()/viewportReduce() -> gridApply()/gridReduce().
+
+BUG FIXES
+
+    o Subsetting of a DelayedArray object now propagates the names/dimnames,
+      even when drop=TRUE and the result has only 1 dimension (issue #78).
+
+    o log() on a DelayedArray object now handles the 'base' argument.
+
+    o Fix issue in is_sparse() methods for DelayedUnaryIsoOpStack and
+      DelayedNaryIsoOp objects.
+
+    o cbind()/rbind() no longer coerce supplied objects to type of 1st object
+      (commit f1279e07).
+
+    o Fix small issue in dim() setter (commit c9488537).
+
+
 CHANGES IN VERSION 0.16.0
 -------------------------
 
