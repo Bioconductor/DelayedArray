@@ -94,12 +94,19 @@ normarg_dim <- function(dim)
 {
     if (!is.numeric(dim))
         stop(wmsg("'dim' must be an integer vector"))
-    if (!is.integer(dim))
-        dim <- as.integer(dim)
     if (length(dim) == 0L)
         stop(wmsg("'dim' cannot be an empty vector"))
-    if (S4Vectors:::anyMissingOrOutside(dim, 0L))
-        stop(wmsg("'dim' cannot contain negative or NA values"))
+    if (any(is.na(dim)))
+        stop(wmsg("'dim' cannot contain NAs"))
+    if (any(dim < 0))
+        stop(wmsg("'dim' cannot contain negative values"))
+    if (!is.integer(dim)) {
+        if (any(dim > .Machine$integer.max))
+            stop(wmsg("'dim' cannot contain values greater ",
+                      "than '.Machine$integer.max' (= 2^31-1 = ",
+                      .Machine$integer.max, ")"))
+        dim <- as.integer(dim)
+    }
     dim
 }
 
