@@ -10,6 +10,7 @@ importFrom(stats, setNames,
 importFrom(stats4, summary)
 importClassFrom(Matrix, dgCMatrix, dgRMatrix, lgCMatrix, lgRMatrix)
 importFrom(Matrix, sparseMatrix, crossprod, tcrossprod)
+
 import(BiocGenerics)
 import(MatrixGenerics)
 import(S4Vectors)
@@ -393,7 +394,7 @@ export(
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 
-### Exactly the same list as above.
+### Same list as above.
 exportMethods(
     rowsum, colsum,
     arbind, acbind,

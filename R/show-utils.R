@@ -351,8 +351,8 @@
         s <- make_string_from_ArrayViewport(viewport, dimnames=x_dimnames,
                                             as.2Dslice=TRUE)
         cat(s, "\n", sep="")
-        Nindex <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
-        slice <- subset_by_Nindex(x, Nindex)
+        Nindex <- makeNindexFromArrayViewport(viewport)
+        slice <- extract_array_by_Nindex(x, Nindex)
         slice <- set_dim(slice, dim(slice)[1:2])
         .print_2Darray_data(slice, m1, m2, n1, n2, quote=quote)
         cat("\n")
