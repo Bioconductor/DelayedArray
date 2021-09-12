@@ -44,7 +44,7 @@ setClass("DummyArrayViewport", contains="ArrayViewport")
 setClass("SafeArrayViewport",
     contains="ArrayViewport",
     representation(
-        ranges="IRanges"  # One rang along each dimension.
+        ranges="IRanges"  # One range per dimension.
     )
 )
 

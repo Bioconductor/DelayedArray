@@ -186,7 +186,8 @@ dense2sparse <- function(x)
         stop(wmsg("'x' must be an array-like object"))
     ## Make sure to use 'type()' and not 'typeof()'.
     zero <- vector(type(x), length=1L)
-    nzindex <- which(x != zero, arr.ind=TRUE)  # M-index
+    is_not_zero <- x != zero
+    nzindex <- which(is_not_zero | is.na(is_not_zero), arr.ind=TRUE)  # M-index
     SparseArraySeed(x_dim, nzindex, x[nzindex], dimnames(x), check=FALSE)
 }
 
