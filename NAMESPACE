@@ -263,6 +263,7 @@ exportMethods(
     rowRanges, colRanges,
 
     ## Methods for generics defined in the S4Vectors package:
+    bindROWS,
     showAsCell, isEmpty,
     splitAsList,
 

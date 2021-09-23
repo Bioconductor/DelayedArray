@@ -176,6 +176,14 @@ SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, dimnames=NULL,
 ### dense2sparse() and sparse2dense()
 ###
 
+.which_is_nonzero <- function(x, arr.ind=FALSE)
+{
+    ## Make sure to use 'type()' and not 'typeof()'.
+    zero <- vector(type(x), length=1L)
+    is_nonzero <- x != zero
+    which(is_nonzero | is.na(is_nonzero), arr.ind=arr.ind)
+}
+
 ### 'x' must be an array-like object that supports 'type()' and subsetting
 ### by an M-index subscript.
 ### Return a SparseArraySeed object.
@@ -184,11 +192,12 @@ dense2sparse <- function(x)
     x_dim <- dim(x)
     if (is.null(x_dim))
         stop(wmsg("'x' must be an array-like object"))
-    ## Make sure to use 'type()' and not 'typeof()'.
-    zero <- vector(type(x), length=1L)
-    is_not_zero <- x != zero
-    nzindex <- which(is_not_zero | is.na(is_not_zero), arr.ind=TRUE)  # M-index
-    SparseArraySeed(x_dim, nzindex, x[nzindex], dimnames(x), check=FALSE)
+    ans_nzindex <- .which_is_nonzero(x, arr.ind=TRUE)  # M-index
+    ans_nzdata <- x[ans_nzindex]
+    ## Work around bug in base::`[`
+    if (length(x_dim) == 1L)
+        ans_nzdata <- as.vector(ans_nzdata)
+    SparseArraySeed(x_dim, ans_nzindex, ans_nzdata, dimnames(x), check=FALSE)
 }
 
 ### 'sas' must be a SparseArraySeed object.
