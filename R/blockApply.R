@@ -101,10 +101,10 @@ set_grid_context <- function(effective_grid, current_block_id,
 {
     if (!(is.array(envir) || is(envir, "SparseArraySeed")))
         return(envir)
-    msg <- c("starting with DelayedArray 0.15.12, passing 'block' ",
-             "to ", funname, "() is no longer needed and will soon ",
-             "be considered an error")
-    .Deprecated(msg=c("  ", wmsg(msg)))
+    msg <- c("starting with DelayedArray 0.21.1, passing 'block' ",
+             "to ", funname, "() is no longer needed and is ",
+             "considered an error")
+    .Defunct(msg=c("  ", wmsg(msg)))
     parent.frame(3)
 }
 
@@ -206,7 +206,7 @@ gridApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
 
 viewportApply <- function(...)
 {
-    .Deprecated("gridApply")
+    .Defunct("gridApply")
     gridApply(...)
 }
 
@@ -282,7 +282,7 @@ gridReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
 
 viewportReduce <- function(...)
 {
-    .Deprecated("gridReduce")
+    .Defunct("gridReduce")
     gridReduce(...)
 }
 

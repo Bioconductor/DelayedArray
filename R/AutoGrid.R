@@ -95,7 +95,7 @@ defaultAutoGrid <-
 
 blockGrid <- function(...)
 {
-    .Deprecated("defaultAutoGrid")
+    .Defunct("defaultAutoGrid")
     defaultAutoGrid(...)
 }
 
@@ -149,7 +149,7 @@ rowAutoGrid <- function(x, nrow=NULL, block.length=NULL)
 
 rowGrid <- function(...)
 {
-    .Deprecated("rowAutoGrid")
+    .Defunct("rowAutoGrid")
     rowAutoGrid(...)
 }
 
@@ -184,7 +184,7 @@ colAutoGrid <- function(x, ncol=NULL, block.length=NULL)
 
 colGrid <- function(...)
 {
-    .Deprecated("colAutoGrid")
+    .Defunct("colAutoGrid")
     colAutoGrid(...)
 }
 
@@ -505,7 +505,7 @@ defaultMultAutoGrids <-
 
 multGrids <- function(...)
 {
-    .Deprecated("defaultMultAutoGrids")
+    .Defunct("defaultMultAutoGrids")
     defaultMultAutoGrids(...)
 }
 

@@ -130,7 +130,7 @@ getAutoRealizationBackend <- function()
 
 getRealizationBackend <- function()
 {
-    .Deprecated("getAutoRealizationBackend")
+    .Defunct("getAutoRealizationBackend")
     getAutoRealizationBackend()
 }
 
@@ -227,7 +227,7 @@ setAutoRealizationBackend <- function(BACKEND=NULL)
 
 setRealizationBackend <- function(...)
 {
-    .Deprecated("setAutoRealizationBackend")
+    .Defunct("setAutoRealizationBackend")
     setAutoRealizationBackend(...)
 }
 
@@ -264,7 +264,7 @@ AutoRealizationSink <- function(dim, dimnames=NULL, type="double",
 
 RealizationSink <- function(...)
 {
-    .Deprecated("AutoRealizationSink")
+    .Defunct("AutoRealizationSink")
     AutoRealizationSink(...)
 }
 
