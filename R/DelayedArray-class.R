@@ -253,7 +253,17 @@ setClass("DelayedArray1",
 .from_internals_v1_to_v2 <- function(object1)
 {
     seed <- object1@seed
-    seed_dimnames <- dimnames(seed)
+    ## 'dimnames(seed)' can fail e.g. if 'seed' is or contains an
+    ## HDF5ArraySeed object that points to a non-existing file, but we still
+    ## want to be able to update object1.
+    ## Our use case for this is ExperimentHub resource EH1656. This is a
+    ## SummarizedExperiment object (added to ExperimentHub on 2017-10-06
+    ## by the restfulSEData folks) where the assay is a very old DelayedMatrix
+    ## instance (predates DelayedArray 0.4) that binds together 14 old
+    ## HDF5ArraySeed instances that point to a non-existing file ('assays.h5').
+    seed_dimnames <- try(dimnames(seed), silent=TRUE)
+    if (inherits(seed_dimnames, "try-error"))
+        seed_dimnames <- NULL
 
     ## Translate 'index' slot as DelayedOp objects (1 DelayedSubset and
     ## 1 DelayedSetDimnames) and stash them inside 'seed'.

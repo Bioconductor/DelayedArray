@@ -61,7 +61,20 @@ new_DelayedSetDimnames <-
         dimnames <- rep.int(list(.INHERIT_FROM_SEED), seed_ndim)
     } else {
         dimnames <- normarg_dimnames(dimnames, seed_dim)
-        seed_dimnames <- dimnames(seed)
+        ## 'dimnames(seed)' can fail e.g. if 'seed' is or contains an
+        ## HDF5ArraySeed object that points to a non-existing file, but we
+        ## still want new_DelayedSetDimnames() to work on such seed.
+        ## Our use case for this is ExperimentHub resource EH1656. This is a
+        ## SummarizedExperiment object (added to ExperimentHub on 2017-10-06
+        ## by the restfulSEData folks) where the assay is a very old
+        ## DelayedMatrix instance (predates DelayedArray 0.4) that binds
+        ## together 14 old HDF5ArraySeed instances that point to a non-existing
+        ## file ('assays.h5'). When updateObject( , check=FALSE) is called on
+        ## EH1656, new_DelayedSetDimnames() gets called on a seed that contains
+        ## an HDF5ArraySeed object that points to a non-existing file.
+        seed_dimnames <- try(dimnames(seed), silent=TRUE)
+        if (inherits(seed_dimnames, "try-error"))
+            seed_dimnames <- NULL
         dimnames <- lapply(setNames(seq_len(seed_ndim), names(dimnames)),
                            function(along) {
                                dn <- dimnames[[along]]
@@ -95,7 +108,14 @@ setMethod("is_noop", "DelayedSetDimnames",
     {
         ok <- vapply(x@dimnames, identical, logical(1), .INHERIT_FROM_SEED,
                      USE.NAMES=FALSE)
-        all(ok) && identical(names(x@dimnames), names(dimnames(x@seed)))
+        ## 'dimnames(x@seed)' can fail e.g. if 'x@seed' is or contains an
+        ## HDF5ArraySeed object that points to a non-existing file, but we
+        ## still want is_noop() to work on such DelayedSetDimnames object.
+        ## See new_DelayedSetDimnames() above for our use case.
+        x_seed_dimnames <- try(dimnames(x@seed), silent=TRUE)
+        if (inherits(x_seed_dimnames, "try-error"))
+            x_seed_dimnames <- NULL
+        all(ok) && identical(names(x@dimnames), names(x_seed_dimnames))
     }
 )
 
