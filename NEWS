@@ -1,3 +1,27 @@
+CHANGES IN VERSION 0.22.0
+-------------------------
+
+DEPRECATED AND DEFUNCT
+
+    o The following stuff is now defunct after being deprecated in previous
+      versions of the package:
+      - blockGrid(): replaced with defaultAutoGrid()
+      - rowGrid(): replaced with rowAutoGrid()
+      - colGrid(): replaced with colAutoGrid()
+      - multGrids(): replaced with defaultMultAutoGrids()
+      - linearInd(): replaced with Mindex2Lindex()
+      - viewportApply(): replaced with gridApply()
+      - viewportReduce(): replaced with gridReduce()
+      - getRealizationBackend(): replaced with getAutoRealizationBackend()
+      - setRealizationBackend(): replaced with setAutoRealizationBackend()
+      - RealizationSink(): replaced with AutoRealizationSink()
+
+BUG FIXES
+
+    o Small tweak to updateObject() method for DelayedArray objects (see
+      commit abcd154).
+
+
 CHANGES IN VERSION 0.20.0
 -------------------------
 
