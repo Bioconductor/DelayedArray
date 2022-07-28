@@ -30,7 +30,7 @@
 \alias{is.nan,DelayedArray-method}
 \alias{!,DelayedArray-method}
 
-\alias{type<-,DelayedArray,ANY-method}
+\alias{type<-,DelayedArray-method}
 
 \alias{lengths,DelayedArray-method}
 

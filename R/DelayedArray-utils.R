@@ -328,7 +328,7 @@ for (.Generic in .UNARY_ISO_OPS) {
     )
 }
 
-setMethod("type<-", c("DelayedArray", "ANY"),
+setReplaceMethod("type", "DelayedArray",
     function(x, value)
         stash_DelayedUnaryIsoOpStack(x,
             function(a) `storage.mode<-`(a, value=value))
