@@ -19,7 +19,7 @@ Author: Hervé Pagès <hpages.on.github@gmail.com>, with contributions from
 	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
 Maintainer: Hervé Pagès <hpages.on.github@gmail.com>
 Depends: R (>= 4.0.0), methods, stats4, Matrix,
-	BiocGenerics (>= 0.43.1), MatrixGenerics (>= 1.1.3),
+	BiocGenerics (>= 0.43.4), MatrixGenerics (>= 1.1.3),
 	S4Vectors (>= 0.27.2), IRanges (>= 2.17.3)
 Imports: stats
 LinkingTo: S4Vectors

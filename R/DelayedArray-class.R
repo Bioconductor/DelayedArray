@@ -485,8 +485,8 @@ stash_DelayedAbind <- function(x, objects, along)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
-### Extend base::aperm() by allowing dropping and/or adding ineffective
-### dimensions. See aperm2.R
+### Like aperm2() in S4Arrays, extend base::aperm() by allowing dropping
+### and/or adding ineffective dimensions.
 ###
 
 ### S3/S4 combo for aperm.DelayedArray

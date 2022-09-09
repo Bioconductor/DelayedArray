@@ -605,8 +605,8 @@ setMethod("show", "ArrayGrid",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### aperm()
 ###
-### Extend base::aperm() by allowing dropping and/or adding ineffective
-### dimensions. See aperm2.R
+### Like aperm2() in S4Arrays, the methods below extend base::aperm() by
+### allowing dropping and/or adding ineffective dimensions.
 ###
 ### NOTE: The methods below use normarg_perm() which doesn't perform a
 ### full check of 'perm' e.g. it allows duplicates in it (see normarg_perm()

@@ -218,7 +218,7 @@ exportMethods(
     as.array, as.matrix, as.data.frame, as.vector,
     as.logical, as.integer, as.numeric, as.complex, as.character, as.raw,
     c, split,
-    drop, t,
+    drop,
     is.na, is.finite, is.infinite, is.nan,
     "!",
     #"+", "-", "*", "/", "^", "%%", "%/%",  # "Arith" group generic
@@ -249,6 +249,7 @@ exportMethods(
 
     ## Methods for generics defined in the BiocGenerics package:
     cbind, rbind,
+    t, aperm,
     dims,
     grepl,
     path, "path<-",
@@ -352,7 +353,7 @@ export(
     extract_array,
 
     ## ArrayGrid-class.R:
-    refdim, maxlength, aperm, downsample,
+    refdim, maxlength, downsample,
 
     ## SparseArraySeed-class.R:
     nzindex, nzdata, sparsity,
@@ -400,7 +401,7 @@ exportMethods(
     rowsum, colsum,
     arbind, acbind,
     extract_array,
-    refdim, maxlength, aperm, downsample,
+    refdim, maxlength, downsample,
     nzindex, nzdata, sparsity, is_sparse, extract_sparse_array,
     read_block, read_sparse_block,
     mapToGrid, mapToRef,

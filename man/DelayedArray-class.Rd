@@ -28,7 +28,6 @@
 
 \alias{type}
 
-\alias{aperm}
 \alias{aperm.DelayedArray}
 \alias{aperm,DelayedArray-method}
 

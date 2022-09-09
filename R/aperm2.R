@@ -75,8 +75,3 @@ aperm2 <- function(a, perm)
     ans
 }
 
-### Like aperm2() above the various "aperm" methods implemented in the
-### package extend base::aperm() by allowing dropping and/or adding
-### ineffective dimensions.
-setGeneric("aperm", signature="a")
-
