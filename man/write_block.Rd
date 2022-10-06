@@ -315,7 +315,7 @@ dim(sink)
 sink_grid <- RegularArrayGrid(dim(sink), spacings=c(20, 20, 4))
 
 ## -- STEP 3 --
-## Walk on the grid, and, for each of viewport, write random data to it.
+## Walk on the grid, and, for each viewport, write random data to it.
 for (bid in seq_along(sink_grid)) {
     viewport <- sink_grid[[bid]]
     block <- array(runif(length(viewport)), dim=dim(viewport))
@@ -373,8 +373,8 @@ dim(sink)
 ## Define two grids: one for 'sink' and one for 'a'. Since we're going
 ## to walk on the two grids simultaneously, read a block from 'a' and
 ## write it to 'sink', we need to make sure that we define grids that
-## are "aligned". More precisely the two grids must have the same number
-## of viewports and the viewports in one must correspond to the viewports
+## are "aligned". More precisely, the two grids must have the same number
+## of viewports, and the viewports in one must correspond to the viewports
 ## in the other one:
 sink_grid <- colAutoGrid(sink, ncol=10)
 a_spacings <- c(dim(sink_grid[[1L]]), dim(a)[[3]])
@@ -382,9 +382,9 @@ a_grid <- RegularArrayGrid(dim(a), spacings=a_spacings)
 dims(sink_grid)  # dimensions of the individual viewports
 dims(a_grid)     # dimensions of the individual viewports
 
-## Here is how to check that the two grids are "aligned":
+## Let's check that our two grids are actually "aligned":
 stopifnot(identical(length(sink_grid), length(a_grid)))
-stopifnot(identical(dims(sink_grid), dims(a_grid)[ , -3]))
+stopifnot(identical(dims(sink_grid), dims(a_grid)[ , 1:2, drop=FALSE]))
 
 ## -- STEP 3 --
 ## Walk on the two grids simultaneously:
