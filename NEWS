@@ -1,3 +1,11 @@
+CHANGES IN VERSION 0.24.0
+-------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Move the aperm() S4 generic to BiocGenerics.
+
+
 CHANGES IN VERSION 0.22.0
 -------------------------
 
