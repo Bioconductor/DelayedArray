@@ -24,6 +24,13 @@ seq2 <- function(to, by)
 ### A simple wrapper to BiocParallel::bplapply() that falls back to lapply()
 ### if 'BPPARAM' is NULL.
 ###
+### Also disable HDF5 file locking for the duration of the bplapply() loop,
+### just in case the user is dealing with HDF5-backed DelayedArray objects
+### or other objects that involve HDF5 files. This is needed for concurrent
+### access to a single dataset from multiple processes, even for read-only
+### access!
+### See https://portal.hdfgroup.org/display/knowledge/Questions+about+thread-safety+and+concurrent+access
+###
 
 bplapply2 <- function(X, FUN, ..., BPPARAM=NULL)
 {
@@ -32,6 +39,13 @@ bplapply2 <- function(X, FUN, ..., BPPARAM=NULL)
     if (!requireNamespace("BiocParallel", quietly=TRUE))
         stop(wmsg("Couldn't load the BiocParallel package. Please ",
                   "install the BiocParallel package and try again."))
+    ## The only value that is allowed for HDF5_USE_FILE_LOCKING is "FALSE"
+    ## (all uppercase).
+    ## Note sure this is actually a good idea so commenting out for now.
+    #if (Sys.getenv("HDF5_USE_FILE_LOCKING") != "FALSE") {
+    #    Sys.setenv(HDF5_USE_FILE_LOCKING="FALSE")
+    #    on.exit(Sys.unsetenv("HDF5_USE_FILE_LOCKING"))
+    #}
     BiocParallel::bplapply(X, FUN, ..., BPPARAM=BPPARAM)
 }
 
