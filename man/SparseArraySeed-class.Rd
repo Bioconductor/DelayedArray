@@ -17,8 +17,6 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
-\alias{is_sparse<-}
-\alias{is_sparse,ANY-method}
 \alias{extract_sparse_array}
 
 \alias{is_sparse,SparseArraySeed-method}
@@ -45,10 +43,14 @@
 \alias{coerce,lgCMatrix,SparseArraySeed-method}
 \alias{coerce,lgRMatrix,SparseArraySeed-method}
 
-\alias{is_sparse,dgCMatrix-method}
-\alias{is_sparse,dgRMatrix-method}
-\alias{is_sparse,lgCMatrix-method}
-\alias{is_sparse,lgRMatrix-method}
+\alias{coerce,Array,dgCMatrix-method}
+\alias{coerce,Array,dgRMatrix-method}
+\alias{coerce,Array,lgCMatrix-method}
+\alias{coerce,Array,lgRMatrix-method}
+\alias{coerce,Array,CsparseMatrix-method}
+\alias{coerce,Array,RsparseMatrix-method}
+\alias{coerce,Array,sparseMatrix-method}
+
 \alias{extract_sparse_array,dgCMatrix-method}
 \alias{extract_sparse_array,dgRMatrix-method}
 \alias{extract_sparse_array,lgCMatrix-method}
@@ -141,12 +143,13 @@ sparse2dense(sas)
           \linkS4class{lsparseMatrix}, defined in the \pkg{Matrix} package,
           for the de facto standard of sparse matrix representations in R.
 
-    \item The \code{\link{read_block}} function.
+    \item The \code{\link[S4Arrays]{read_block}} function in the
+          \pkg{S4Arrays} package.
 
     \item \code{\link{blockApply}} and family for convenient block
           processing of an array-like object.
 
-    \item \code{\link{extract_array}}.
+    \item \code{\link[S4Arrays]{extract_array}} in the \pkg{S4Arrays} package.
 
     \item \link{DelayedArray} objects.
 
@@ -245,7 +248,8 @@ identical(as.matrix(sas3), as.matrix(sas3R))
 ## In particular they support extract_array():
 extract_array(sas1, list(c(5, 3:2, 5), NULL, 3))
 
-## See '?extract_array' for more information about the "seed contract".
+## See '?extract_array' in the S4Arrays package for more information
+## about the "seed contract".
 
 ## This means that they can be wrapped in a DelayedArray object:
 A1 <- DelayedArray(sas1)

@@ -1,6 +1,7 @@
 .onLoad <- function(libname, pkgname)
 {
     options(DelayedArray.simplify=TRUE)
+    #user_options_file_exists <- S4Arrays:::user_options_file_exists
     #if (!user_options_file_exists()) {
     #    ## Initialize DelayedArray user controlled global options (setting
     #    ## the 1st option creates the file where the options are stored).
@@ -9,6 +10,7 @@
     #    set_auto.block.shape()
     #    setAutoBPPARAM()
     #}
+    user_option_is_set <- S4Arrays:::user_option_is_set
     if (!user_option_is_set("auto.grid.maker"))
         setAutoGridMaker()
     if (!user_option_is_set("auto.block.size"))

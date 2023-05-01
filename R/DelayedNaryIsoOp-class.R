@@ -84,7 +84,7 @@ setMethod("summary", "DelayedNaryIsoOp", summary.DelayedNaryIsoOp)
 setMethod("dim", "DelayedNaryIsoOp", function(x) dim(x@seeds[[1L]]))
 
 setMethod("dimnames", "DelayedNaryIsoOp",
-    function(x) get_first_non_NULL_dimnames(x@seeds)
+    function(x) S4Arrays:::get_first_non_NULL_dimnames(x@seeds)
 )
 
 setMethod("extract_array", "DelayedNaryIsoOp",
@@ -117,10 +117,10 @@ setMethod("is_sparse", "DelayedNaryIsoOp",
         ## zero were preserved or not.
         seed_ndim <- length(dim(x@seeds[[1L]]))
         x@seeds <- lapply(x@seeds,
-            function(seed) make_one_zero_array(type(seed), seed_ndim))
+            function(seed) S4Arrays:::make_one_zero_array(type(seed), seed_ndim))
         ## Same as 'as.array(x)' but doesn't try to propagate the dimnames.
         a0 <- extract_array(x, vector("list", length=seed_ndim))
-        is_filled_with_zeros(a0)
+        S4Arrays:::is_filled_with_zeros(a0)
     }
 )
 

@@ -26,7 +26,7 @@ setClass("DelayedAbind",
         return(paste0("the array-like objects to bind must have at least ",
                       x@along, " dimensions for this binding operation"))
 
-    dims <- get_dims_to_bind(x@seeds, x@along)
+    dims <- S4Arrays:::get_dims_to_bind(x@seeds, x@along)
     if (is.character(dims))
         return(dims)
     TRUE
@@ -75,16 +75,16 @@ setMethod("summary", "DelayedAbind", summary.DelayedAbind)
 
 .get_DelayedAbind_dim <- function(x)
 {
-    dims <- get_dims_to_bind(x@seeds, x@along)
-    combine_dims_along(dims, x@along)
+    dims <- S4Arrays:::get_dims_to_bind(x@seeds, x@along)
+    S4Arrays:::combine_dims_along(dims, x@along)
 }
 
 setMethod("dim", "DelayedAbind", .get_DelayedAbind_dim)
 
 .get_DelayedAbind_dimnames <- function(x)
 {
-    dims <- get_dims_to_bind(x@seeds, x@along)
-    combine_dimnames_along(x@seeds, dims, x@along)
+    dims <- S4Arrays:::get_dims_to_bind(x@seeds, x@along)
+    S4Arrays:::combine_dimnames_along(x@seeds, dims, x@along)
 }
 
 setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
@@ -97,15 +97,15 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
         ## This is the easy situation.
         arrays <- lapply(x@seeds, extract_array, index)
         ## Bind the ordinary arrays in 'arrays'.
-        ans <- do.call(simple_abind, c(arrays, list(along=x@along)))
+        ans <- do.call(S4Arrays:::simple_abind, c(arrays, list(along=x@along)))
         return(ans)
     }
 
     ## From now on 'i' is a vector of positive integers.
-    dims <- get_dims_to_bind(x@seeds, x@along)
+    dims <- S4Arrays:::get_dims_to_bind(x@seeds, x@along)
     breakpoints <- cumsum(dims[x@along, ])
-    part_idx <- get_part_index(i, breakpoints)
-    split_part_idx <- split_part_index(part_idx, length(breakpoints))
+    part_idx <- S4Arrays:::get_part_index(i, breakpoints)
+    split_part_idx <- S4Arrays:::split_part_index(part_idx, length(breakpoints))
     FUN <- function(s) {
         index[[x@along]] <- split_part_idx[[s]]
         extract_array(x@seeds[[s]], index)
@@ -113,11 +113,11 @@ setMethod("dimnames", "DelayedAbind", .get_DelayedAbind_dimnames)
     arrays <- lapply(seq_along(x@seeds), FUN)
 
     ## Bind the ordinary arrays in 'arrays'.
-    ans <- do.call(simple_abind, c(arrays, list(along=x@along)))
+    ans <- do.call(S4Arrays:::simple_abind, c(arrays, list(along=x@along)))
 
     ## Reorder the rows or columns in 'ans'.
     Nindex <- vector("list", length=length(index))
-    Nindex[[x@along]] <- get_rev_index(part_idx)
+    Nindex[[x@along]] <- S4Arrays:::get_rev_index(part_idx)
     extract_array(ans, Nindex)
 }
 
@@ -148,10 +148,10 @@ setMethod("is_sparse", "DelayedAbind",
     }
 
     ## From now on 'i' is a vector of positive integers.
-    dims <- get_dims_to_bind(x@seeds, x@along)
+    dims <- S4Arrays:::get_dims_to_bind(x@seeds, x@along)
     breakpoints <- cumsum(dims[x@along, ])
-    part_idx <- get_part_index(i, breakpoints)
-    split_part_idx <- split_part_index(part_idx, length(breakpoints))
+    part_idx <- S4Arrays:::get_part_index(i, breakpoints)
+    split_part_idx <- S4Arrays:::split_part_index(part_idx, length(breakpoints))
     FUN <- function(s) {
         index[[x@along]] <- split_part_idx[[s]]
         extract_sparse_array(x@seeds[[s]], index)
@@ -163,7 +163,7 @@ setMethod("is_sparse", "DelayedAbind",
 
     ## Reorder the rows or columns in 'ans'.
     Nindex <- vector("list", length=length(index))
-    Nindex[[x@along]] <- get_rev_index(part_idx)
+    Nindex[[x@along]] <- S4Arrays:::get_rev_index(part_idx)
     extract_sparse_array(ans, Nindex)
 }
 

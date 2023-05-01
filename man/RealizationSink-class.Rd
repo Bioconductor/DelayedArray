@@ -1,7 +1,4 @@
-\name{write_block}
-
-\alias{write_block}
-\alias{write_block,ANY-method}
+\name{RealizationSink}
 
 \alias{class:RealizationSink}
 \alias{RealizationSink-class}
@@ -26,23 +23,25 @@
 
 \alias{sinkApply}
 
-\title{Write blocks of data to a RealizationSink}
+\title{RealizationSink objects}
 
 \description{
-  Use \code{write_block()} to write a block of array data to a
-  RealizationSink derivative.
+  Use a RealizationSink object in combination with
+  \code{\link[S4Arrays]{write_block}()} to write blocks of array
+  data to disk.
+
+  RealizationSink is a virtual class with various concrete subclasses
+  supporting writing data to specific formats.
 
   \code{sinkApply()} is a convenience function for walking on a
-  RealizationSink derivative, typically for the purpose of filling it
+  RealizationSink object, typically for the purpose of filling it
   with blocks of data.
 
-  Note that \code{write_block()} is typically used inside the callback
-  function passed to \code{sinkApply()}.
+  Note that \code{\link[S4Arrays]{write_block}()} is typically used
+  inside the callback function passed to \code{sinkApply()}.
 }
 
 \usage{
-write_block(sink, viewport, block)
-
 ## Walk on a RealizationSink derivative:
 sinkApply(sink, FUN, ..., grid=NULL, verbose=NA)
 
@@ -74,18 +73,10 @@ supportedRealizationBackends()
       \item RealizationSink derivatives are considered array-like objects
             i.e. they have dimensions and possibly dimnames.
     }
-    Although \code{write_block()} and \code{sinkApply()} will typically be
-    used on a RealizationSink derivative, they can also be used on an ordinary
-    array or other writable in-memory array-like objects like dgCMatrix objects
-    from the \pkg{Matrix} package.
-  }
-  \item{viewport}{
-    An \link{ArrayViewport} object compatible with \code{sink}, that is,
-    such that \code{refdim(viewport)} is identical to \code{dim(sink)}.
-  }
-  \item{block}{
-    An ordinary (dense) array or \link{SparseArraySeed} object of the
-    same dimensions as \code{viewport}.
+    Although \code{\link[S4Arrays]{write_block}()} and \code{sinkApply()}
+    will typically be used on a RealizationSink derivative, they can also
+    be used on an ordinary array or other writable in-memory array-like
+    objects like dgCMatrix objects from the \pkg{Matrix} package.
   }
   \item{FUN}{
     The callback function to apply to each **viewport** of the grid used
@@ -94,18 +85,18 @@ supportedRealizationBackends()
     must take at least two arguments, typically \code{sink} and \code{viewport}
     (but the exact names can differ).
 
-    The function is expected to return its 1st argument (\code{sink}) possibly
-    modified (e.g. when \code{FUN} contains a call to \code{write_block()},
-    which is typically the case).
+    The function is expected to return its 1st argument (\code{sink})
+    possibly modified (e.g. when \code{FUN} contains a call to
+    \code{\link[S4Arrays]{write_block}()}, which is typically the case).
   }
   \item{...}{
     Additional arguments passed to \code{FUN}.
   }
   \item{grid}{
-    The grid used for the walk, that is, an \link{ArrayGrid} object that
-    defines the viewports to walk on. It must be compatible with the
-    geometry of \code{sink}. If not specified, an automatic grid is
-    created by calling \code{\link{defaultSinkAutoGrid}(sink)}, and used.
+    The grid used for the walk, that is, an \link[S4Arrays]{ArrayGrid}
+    object that defines the viewports to walk on. It must be compatible
+    with the geometry of \code{sink}. If not specified, an automatic grid
+    is created by calling \code{\link{defaultSinkAutoGrid}(sink)}, and used.
     See \code{?\link{defaultSinkAutoGrid}} for more information.
   }
   \item{verbose}{
@@ -150,8 +141,8 @@ supportedRealizationBackends()
   Here is how to use it:
   \enumerate{
     \item Create a realization sink.
-    \item Write blocks of array data to the realization sink with
-          one or several calls to \code{write_block()}.
+    \item Write blocks of array data to the realization sink with one
+          or several calls to \code{\link[S4Arrays]{write_block}()}.
     \item Close the realization sink with \code{close()}.
     \item Coerce the realization sink to \link{DelayedArray}.
   }
@@ -210,13 +201,13 @@ supportedRealizationBackends()
           \link{DelayedArray} object will support concurrent
           \code{read_block()} calls, it is not so safe to assume that
           any RealizationSink derivative will support concurrent calls
-          to \code{write_block()}. For example, at the moment,
-          \link[HDF5Array]{HDF5RealizationSink} objects do not
+          to \code{\link[S4Arrays]{write_block}()}. For example, at the
+          moment, \link[HDF5Array]{HDF5RealizationSink} objects do not
           support concurrent writing.
 
-          This means that in order to remain compatible across realization
-          backends, code that contains calls to \code{write_block()} should
-          NOT be parallelized.
+          This means that in order to remain compatible across
+          realization backends, code that contains calls to
+          \code{\link[S4Arrays]{write_block}()} should NOT be parallelized.
 
     \item Some realization backends are "linear write only", that is,
           they don't support \emph{random write access}, only
@@ -242,11 +233,9 @@ supportedRealizationBackends()
 }
 
 \value{
-  For \code{write_block()}, the modified array-like object \code{sink}.
-
   For \code{sinkApply()}, its 1st argument (\code{sink}) possibly
   modified (e.g. when callback function \code{FUN} contains a call to
-  \code{write_block()}, which is typically the case).
+  \code{\link[S4Arrays]{write_block}()}, which is typically the case).
 
   For \code{AutoRealizationSink()}, a RealizationSink derivative with the
   class associated with the current \emph{automatic realization backend}.
@@ -261,13 +250,14 @@ supportedRealizationBackends()
 
 \seealso{
   \itemize{
+    \item \code{\link[S4Arrays]{read_block}} and
+          \code{\link[S4Arrays]{write_block}} in the \pkg{S4Arrays} package.
+
+    \item \link[S4Arrays]{ArrayGrid} in the \pkg{S4Arrays} package for
+          the formal representation of grids and viewports.
+
     \item \code{\link{defaultSinkAutoGrid}} to create an automatic grid
           on a RealizationSink derivative.
-
-    \item \link{ArrayGrid} for the formal representation of grids and
-          viewports.
-
-    \item \code{\link{read_block}}.
 
     \item \link{SparseArraySeed} objects.
 

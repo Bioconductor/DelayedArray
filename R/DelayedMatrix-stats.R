@@ -78,7 +78,7 @@
     }
 
     ## Outer loop on the grid rows. Parallelized.
-    bplapply2(seq_len(nrow(grid)),
+    S4Arrays:::bplapply2(seq_len(nrow(grid)),
         function(i) {
             init <- do.call(INIT, c(list(grid, i), INIT_args))
             process_grid_row(init, FUN, FUN_args, x,
@@ -118,7 +118,7 @@
     }
 
     ## Outer loop on the grid columns. Parallelized.
-    bplapply2(seq_len(ncol(grid)),
+    S4Arrays:::bplapply2(seq_len(ncol(grid)),
         function(j) {
             init <- do.call(INIT, c(list(grid, j), INIT_args))
             process_grid_col(init, FUN, FUN_args, x,

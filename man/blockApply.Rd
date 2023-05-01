@@ -91,8 +91,8 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     Additional arguments passed to \code{FUN}.
   }
   \item{grid}{
-    The grid used for the walk, that is, an \link{ArrayGrid} object that
-    defines the blocks (or viewports) to walk on.
+    The grid used for the walk, that is, an \link[S4Arrays]{ArrayGrid}
+    object that defines the blocks (or viewports) to walk on.
 
     For \code{blockApply()} and \code{blockReduce()} the supplied grid
     must be compatible with the geometry of \code{x}. If not specified,
@@ -103,7 +103,8 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   }
   \item{as.sparse}{
     Passed to the internal calls to \code{read_block}.
-    See \code{?\link{read_block}} for more information.
+    See \code{?\link[S4Arrays]{read_block}} in the \pkg{S4Arrays} package
+    for more information.
   }
   \item{BPPARAM}{
     A \code{NULL}, in which case blocks are processed sequentially, or
@@ -152,9 +153,9 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     \item The \emph{effective grid}, that is, the user-supplied grid
           or \code{defaultAutoGrid(x)} if the user didn't supply any grid.
     \item The \emph{current block id} (a.k.a. block rank).
-    \item The \emph{current viewport}, that is, the \link{ArrayViewport}
-          object describing the position of the current block w.r.t. the
-          effective grid.
+    \item The \emph{current viewport}, that is, the
+          \link[S4Arrays]{ArrayViewport} object describing the
+          position of the current block w.r.t. the effective grid.
   }
   Note that \code{effectiveGrid()}, \code{currentBlockId()}, and
   \code{currentViewport()} can only be called (with no arguments) from
@@ -175,13 +176,13 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   For \code{blockReduce()} and \code{gridReduce()}, the result of
   the last call to \code{FUN}.
 
-  For \code{effectiveGrid()}, the grid (\link{ArrayGrid} object) being
-  effectively used.
+  For \code{effectiveGrid()}, the grid (\link[S4Arrays]{ArrayGrid} object)
+  being effectively used.
 
   For \code{currentBlockId()}, the id (a.k.a. rank) of the current block.
 
-  For \code{currentViewport()}, the viewport (\link{ArrayViewport} object)
-  of the current block.
+  For \code{currentViewport()}, the viewport (\link[S4Arrays]{ArrayViewport}
+  object) of the current block.
 }
 
 \seealso{
@@ -189,10 +190,11 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
     \item \code{\link{defaultAutoGrid}} and family to create automatic
           grids to use for block processing of array-like objects.
 
-    \item \link{ArrayGrid} for the formal representation of grids and
-          viewports.
+    \item \link[S4Arrays]{ArrayGrid} in the \pkg{S4Arrays} package for
+          the formal representation of grids and viewports.
 
-    \item \code{\link{read_block}} and \code{\link{write_block}}.
+    \item \code{\link[S4Arrays]{read_block}} and
+          \code{\link[S4Arrays]{write_block}} in the \pkg{S4Arrays} package.
 
     \item \code{\link[BiocParallel]{MulticoreParam}},
           \code{\link[BiocParallel]{SnowParam}}, and

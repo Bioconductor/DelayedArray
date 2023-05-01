@@ -265,8 +265,9 @@ setMethod("pmax2", c("ANY", "ANY"),
         if (is.null(ans_dim)) {
             names(ans) <- .combine_names(e1, e2)
         } else {
-            ans <- set_dim(ans, ans_dim)
-            ans <- set_dimnames(ans, get_first_non_NULL_dimnames(list(e1, e2)))
+            ans <- S4Arrays:::set_dim(ans, ans_dim)
+            ans_dimnames <- S4Arrays:::get_first_non_NULL_dimnames(list(e1, e2))
+            ans <- S4Arrays:::set_dimnames(ans, ans_dimnames)
         }
         ans
     }
@@ -280,8 +281,9 @@ setMethod("pmin2", c("ANY", "ANY"),
         if (is.null(ans_dim)) {
             names(ans) <- .combine_names(e1, e2)
         } else {
-            ans <- set_dim(ans, ans_dim)
-            ans <- set_dimnames(ans, get_first_non_NULL_dimnames(list(e1, e2)))
+            ans <- S4Arrays:::set_dim(ans, ans_dim)
+            ans_dimnames <- S4Arrays:::get_first_non_NULL_dimnames(list(e1, e2))
+            ans <- S4Arrays:::set_dimnames(ans, ans_dimnames)
         }
         ans
     }
@@ -784,8 +786,8 @@ setGeneric("apply", signature="X")
         function(i) {
             Nindex <- vector("list", length=length(X_dim))
             Nindex[[MARGIN]] <- i
-            slice <- subset_by_Nindex(X, Nindex, drop=FALSE)
-            slice <- set_dim(slice, dim(slice)[-MARGIN])
+            slice <- S4Arrays:::subset_by_Nindex(X, Nindex, drop=FALSE)
+            slice <- S4Arrays:::set_dim(slice, dim(slice)[-MARGIN])
             FUN(slice, ...)
         })
 

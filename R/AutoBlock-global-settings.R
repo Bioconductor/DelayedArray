@@ -12,14 +12,14 @@
 ### We set the automatic block size to 100 Mb by default.
 set_auto.block.size <- function(size=1e8)
 {
-    set_user_option("auto.block.size", size)
+    S4Arrays:::set_user_option("auto.block.size", size)
 }
 
 setAutoBlockSize <- function(size=1e8)
 {
     if (!isSingleNumber(size) || size < 1)
         stop(wmsg("the block size must be a single number >= 1"))
-    prev_size <- get_user_option("auto.block.size")
+    prev_size <- S4Arrays:::get_user_option("auto.block.size")
     set_auto.block.size(size)
     message("automatic block size set to ", size, " bytes ",
             "(was ", prev_size, ")")
@@ -28,7 +28,7 @@ setAutoBlockSize <- function(size=1e8)
 
 getAutoBlockSize <- function()
 {
-    size <- get_user_option("auto.block.size")
+    size <- S4Arrays:::get_user_option("auto.block.size")
     if (!isSingleNumber(size) || size < 1)
         stop(wmsg("DelayedArray user-controlled global option ",
                   "auto.block.size should be a single number >= 1. ",
@@ -112,7 +112,7 @@ SUPPORTED_BLOCK_SHAPES <- c("hypercube",
 ### We set the automatic block shape to "hypercube" by default.
 set_auto.block.shape <- function(shape="hypercube")
 {
-    set_user_option("auto.block.shape", shape)
+    S4Arrays:::set_user_option("auto.block.shape", shape)
 }
 
 setAutoBlockShape <- function(shape=c("hypercube",
@@ -121,7 +121,7 @@ setAutoBlockShape <- function(shape=c("hypercube",
                                       "last-dim-grows-first"))
 {
     shape <- match.arg(shape)
-    prev_shape <- get_user_option("auto.block.shape")
+    prev_shape <- S4Arrays:::get_user_option("auto.block.shape")
     set_auto.block.shape(shape)
     message("automatic block shape set to \"", shape, "\" ",
              "(was \"", prev_shape, "\")")
@@ -130,7 +130,7 @@ setAutoBlockShape <- function(shape=c("hypercube",
 
 getAutoBlockShape <- function()
 {
-    shape <- get_user_option("auto.block.shape")
+    shape <- S4Arrays:::get_user_option("auto.block.shape")
     if (!(isSingleString(shape) && shape %in% SUPPORTED_BLOCK_SHAPES)) {
         in1string <- paste(paste0("\"", SUPPORTED_BLOCK_SHAPES, "\""),
                            collapse=", ")

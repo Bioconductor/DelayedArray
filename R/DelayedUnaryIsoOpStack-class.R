@@ -122,7 +122,7 @@ setMethod("extract_array", "DelayedUnaryIsoOpStack",
             a <- OP(a)
             ## Some operations (e.g. dnorm()) don't propagate the "dim"
             ## attribute if the input array is empty.
-            a <- set_or_check_dim(a, a_dim)
+            a <- S4Arrays:::set_or_check_dim(a, a_dim)
         }
         a
     }
@@ -146,10 +146,10 @@ setMethod("is_sparse", "DelayedUnaryIsoOpStack",
         ## apply the operations in x@OPS to it and see whether the zero was
         ## preserved or not.
         seed_ndim <- length(dim(x@seed))
-        x@seed <- make_one_zero_array(type(x@seed), seed_ndim)
+        x@seed <- S4Arrays:::make_one_zero_array(type(x@seed), seed_ndim)
         ## Same as 'as.array(x)' but doesn't try to propagate the dimnames.
         a0 <- extract_array(x, vector("list", length=seed_ndim))
-        is_filled_with_zeros(a0)
+        S4Arrays:::is_filled_with_zeros(a0)
     }
 )
 

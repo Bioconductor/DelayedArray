@@ -11,37 +11,31 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 URL: https://bioconductor.org/packages/DelayedArray
 BugReports: https://github.com/Bioconductor/DelayedArray/issues
-Version: 0.27.0
+Version: 0.27.1
 License: Artistic-2.0
 Encoding: UTF-8
-Author: Hervé Pagès <hpages.on.github@gmail.com>, with contributions from
-	Peter Hickey <peter.hickey@gmail.com> and
-	Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>
+Authors@R: c(
+	person("Hervé", "Pagès", role=c("aut", "cre"),
+		email="hpages.on.github@gmail.com"),
+	person("Aaron", "Lun", role="ctb",
+		email="infinite.monkeys.with.keyboards@gmail.com"),
+	person("Peter", "Hickey", role="ctb",
+		email="peter.hickey@gmail.com"))
 Maintainer: Hervé Pagès <hpages.on.github@gmail.com>
 Depends: R (>= 4.0.0), methods, stats4, Matrix,
 	BiocGenerics (>= 0.43.4), MatrixGenerics (>= 1.1.3),
-	S4Vectors (>= 0.27.2), IRanges (>= 2.17.3)
+	S4Vectors (>= 0.27.2), IRanges (>= 2.17.3), S4Arrays (>= 1.1.1)
 Imports: stats
 LinkingTo: S4Vectors
 Suggests: BiocParallel, HDF5Array (>= 1.17.12), genefilter,
 	SummarizedExperiment, airway, lobstr, DelayedMatrixStats,
 	knitr, rmarkdown, BiocStyle, RUnit
 VignetteBuilder: knitr
-Collate: utils.R
-	sparseMatrix-utils.R
+Collate: sparseMatrix-utils.R
 	compress_atomic_vector.R
-	Nindex-utils.R
-	array_selection.R
-	aperm2.R
-	bind-arrays.R
-	Array-class.R
-	extract_array.R
-	ArrayGrid-class.R
-	show-utils.R
 	SparseArraySeed-class.R
 	SparseArraySeed-utils.R
-	read_block.R
-	mapToGrid.R
+	read_sparse_block.R
 	makeCappedVolumeBox.R
 	AutoBlock-global-settings.R
 	AutoGrid.R
@@ -60,7 +54,7 @@ Collate: utils.R
 	DelayedArray-class.R
 	DelayedArray-subsetting.R
 	chunkGrid.R
-	write_block.R
+	RealizationSink-class.R
 	realize.R
 	DelayedArray-utils.R
 	DelayedMatrix-utils.R
@@ -69,4 +63,5 @@ Collate: utils.R
 	ConstantArray-class.R
 	RleArraySeed-class.R
 	RleArray-class.R
+	compat.R
 	zzz.R

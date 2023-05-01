@@ -643,7 +643,7 @@ setMethod("show", "DelayedArray",
     function(object)
     {
         .check_DelayedArray_internals(object)
-        show_compact_array(object)
+        S4Arrays:::show_compact_array(object)
     }
 )
 
@@ -667,7 +667,7 @@ setMethod("c", "DelayedArray",
         } else {
             objects <- list(x, ...)
         }
-        combine_array_objects(objects)
+        S4Arrays:::combine_array_objects(objects)
     }
 )
 

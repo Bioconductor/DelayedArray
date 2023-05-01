@@ -36,8 +36,8 @@ chunkdim(x)
 }
 
 \value{
-  \code{chunkGrid} returns NULL or an \link{ArrayGrid} object defining a
-  grid on reference array \code{x}.
+  \code{chunkGrid} returns NULL or an \link[S4Arrays]{ArrayGrid} object
+  defining a grid on reference array \code{x}.
 
   \code{chunkdim} returns NULL or the chunk dimensions in an integer vector
   parallel to \code{dim(x)}.
@@ -50,8 +50,8 @@ chunkdim(x)
 
     \item \link{DelayedArray} objects.
 
-    \item \link{ArrayGrid} for the formal representation of grids and
-          viewports.
+    \item \link[S4Arrays]{ArrayGrid} in the \pkg{S4Arrays} package for
+          the formal representation of grids and viewports.
   }
 }
 

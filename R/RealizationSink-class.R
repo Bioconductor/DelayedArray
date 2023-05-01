@@ -1,46 +1,8 @@
 ### =========================================================================
-### Write array blocks
+### RealizationSink objects
 ### -------------------------------------------------------------------------
 
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### write_block()
-###
-
-### 'sink' must be a **writable** array-like object, typically a
-### RealizationSink concrete subclass. We also make write_block() work
-### on ordinary arrays or other in-memory array-like objects (e.g.
-### sparseMatrix derivatives from the Matrix package) by defining
-### the default method below.
-### For now dispatch is only on the first argument ('sink') but we
-### could change this in the future to also dispatch on the third
-### argument ('block') when the need arises.
-### Must return 'sink' (possibly modified if it's an in-memory object).
-setGeneric("write_block", signature="sink",
-    function(sink, viewport, block)
-    {
-        stopifnot(is(viewport, "ArrayViewport"),
-                  identical(refdim(viewport), dim(sink)),
-                  identical(dim(block), dim(viewport)))
-        standardGeneric("write_block")
-    }
-)
-
-### Work on any array-like object that supports '[<-'.
-setMethod("write_block", "ANY",
-    function(sink, viewport, block)
-    {
-        if (is(block, "SparseArraySeed"))
-            block <- sparse2dense(block)
-        Nindex <- makeNindexFromArrayViewport(viewport)
-        replace_by_Nindex(sink, Nindex, block)
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### RealizationSink objects
-###
 ### Virtual class with no slots. Intended to be extended to support specific
 ### realization backends. Concrete subclasses must implement the "sink
 ### contract", that is:
@@ -125,7 +87,7 @@ setAs("arrayRealizationSink", "DelayedArray",
 
 getAutoRealizationBackend <- function()
 {
-    get_user_option("auto.realization.backend")
+    S4Arrays:::get_user_option("auto.realization.backend")
 }
 
 getRealizationBackend <- function()
@@ -221,7 +183,7 @@ setAutoRealizationBackend <- function(BACKEND=NULL)
                auto_realization_sink_constructor,
                envir=.auto_realization_backend_envir)
     }
-    set_user_option("auto.realization.backend", BACKEND)
+    S4Arrays:::set_user_option("auto.realization.backend", BACKEND)
     return(invisible(NULL))
 }
 

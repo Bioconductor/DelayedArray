@@ -197,10 +197,10 @@ colGrid <- function(...)
 setAutoGridMaker <- function(GRIDMAKER="defaultAutoGrid")
 {
     match.fun(GRIDMAKER)  # sanity check
-    set_user_option("auto.grid.maker", GRIDMAKER)
+    S4Arrays:::set_user_option("auto.grid.maker", GRIDMAKER)
 }
 
-getAutoGridMaker <- function() get_user_option("auto.grid.maker")
+getAutoGridMaker <- function() S4Arrays:::get_user_option("auto.grid.maker")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

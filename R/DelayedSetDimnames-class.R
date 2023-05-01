@@ -60,7 +60,7 @@ new_DelayedSetDimnames <-
     if (identical(dimnames, .INHERIT_FROM_SEED)) {
         dimnames <- rep.int(list(.INHERIT_FROM_SEED), seed_ndim)
     } else {
-        dimnames <- normarg_dimnames(dimnames, seed_dim)
+        dimnames <- S4Arrays:::normarg_dimnames(dimnames, seed_dim)
         ## 'dimnames(seed)' can fail e.g. if 'seed' is or contains an
         ## HDF5ArraySeed object that points to a non-existing file, but we
         ## still want new_DelayedSetDimnames() to work on such seed.
@@ -151,7 +151,7 @@ setMethod("summary", "DelayedSetDimnames", summary.DelayedSetDimnames)
                           dn <- seed_dimnames[[along]]
                       dn
                   })
-    simplify_NULL_dimnames(ans)
+    S4Arrays:::simplify_NULL_dimnames(ans)
 }
 
 setMethod("dimnames", "DelayedSetDimnames", .get_DelayedSetDimnames_dimnames)

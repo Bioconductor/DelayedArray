@@ -56,7 +56,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL, as.sparse=NA)
 {
     index <- as.list(Mindex)
     a <- extract_array(x, index)
-    set_dim(a, NULL)
+    S4Arrays:::set_dim(a, NULL)
 }
 
 ### 'x' is **trusted** to be an array-like object.
@@ -77,7 +77,7 @@ BLOCK_which <- function(x, arr.ind=FALSE, grid=NULL, as.sparse=NA)
     nblock <- length(grid)
     majmin <- mapToGrid(Mindex, grid, linear=TRUE)
     minor_by_block <- split(majmin$minor, majmin$major)
-    res <- bplapply2(seq_along(minor_by_block),
+    res <- S4Arrays:::bplapply2(seq_along(minor_by_block),
         ## TODO: Not a pure function (because it refers to 'minor_by_block',
         ## 'nblock', 'grid', and 'x') so will probably fail with
         ## parallelization backends that don't use a fork (e.g. SnowParam on
@@ -250,7 +250,7 @@ setMethod("drop", "DelayedArray",
         stop(wmsg("'x' is missing"))
     if (!isTRUEorFALSE(drop))
         stop(wmsg("'drop' must be TRUE or FALSE"))
-    Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
+    Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
     nsubscript <- length(Nindex)
     if (nsubscript == 0L)
         return(x)  # no-op
@@ -379,7 +379,7 @@ setAs("DelayedArray", "SparseArraySeed",
 {
     if (missing(x))
         stop("'x' is missing")
-    Nindex <- extract_Nindex_from_syscall(sys.call(), parent.frame())
+    Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
     nsubscript <- length(Nindex)
     x_dim <- dim(x)
     x_ndim <- length(x_dim)

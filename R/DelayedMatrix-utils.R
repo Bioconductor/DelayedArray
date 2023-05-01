@@ -15,6 +15,11 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### rowsum() / colsum()
 ###
+### Block processed!
+###
+### TODO: Provide the option to write the data to a RealizationSink object
+### as we go. See https://github.com/Bioconductor/DelayedArray/issues/41
+### and bsseq/R/DelayedArray_utils.R (in bsseq package).
 
 .compute_rowsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
 {
@@ -58,6 +63,9 @@
     grid_nrow <- nrow(grid)
     grid_ncol <- ncol(grid)
     ans <- matrix(0L, nrow=nrow(grid[[i, 1L]]), ncol=length(ugroup))
+    ## For a colsum() that does 'rowsum(t(x), ...)' (rather than
+    ## the current 't(rowsum(t(x), ...))'), do this instead:
+    #ans <- matrix(0L, nrow=length(ugroup), ncol=nrow(grid[[i, 1L]]))
     ## Inner loop on the grid cols. Sequential.
     for (j in seq_len(grid_ncol)) {
         if (verbose)
@@ -68,6 +76,10 @@
                                                group, na.rm=na.rm)
         m <- match(colnames(block_ans), ugroup)
         ans[ , m] <- ans[ , m] + block_ans
+        ## For a colsum() that does 'rowsum(t(x), ...)' (rather than
+        ## the current 't(rowsum(t(x), ...))'), do this instead:
+        #m <- match(rownames(block_ans), ugroup)
+        #ans[m, ] <- ans[m, ] + block_ans
         if (verbose)
             message("OK")
     }
@@ -76,13 +88,13 @@
 
 .BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
-    ugroup <- as.character(compute_ugroup(group, nrow(x), reorder))
+    ugroup <- as.character(S4Arrays:::compute_ugroup(group, nrow(x), reorder))
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
     grid <- normarg_grid(grid, x)
 
     ## Outer loop on the grid columns. Parallelized.
-    block_results <- bplapply2(seq_len(ncol(grid)),
+    block_results <- S4Arrays:::bplapply2(seq_len(ncol(grid)),
         function(j) {
             .compute_rowsum_for_grid_col(x, grid, j, group, ugroup,
                                          na.rm=na.rm,
@@ -97,13 +109,13 @@
 }
 .BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
-    ugroup <- as.character(compute_ugroup(group, ncol(x), reorder))
+    ugroup <- as.character(S4Arrays:::compute_ugroup(group, ncol(x), reorder))
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
     grid <- normarg_grid(grid, x)
 
     ## Outer loop on the grid rows. Parallelized.
-    block_results <- bplapply2(seq_len(nrow(grid)),
+    block_results <- S4Arrays:::bplapply2(seq_len(nrow(grid)),
         function(i) {
             .compute_colsum_for_grid_row(x, grid, i, group, ugroup,
                                          na.rm=na.rm,
@@ -114,6 +126,10 @@
 
     ans <- do.call(rbind, block_results)
     dimnames(ans) <- list(rownames(x), ugroup)
+    ## For a colsum() that does 'rowsum(t(x), ...)' (rather than
+    ## the current 't(rowsum(t(x), ...))'), do this instead:
+    #ans <- do.call(cbind, block_results)
+    #dimnames(ans) <- list(ugroup, rownames(x))
     ans
 }
 
@@ -140,7 +156,8 @@ setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
               ncol(x) == nrow(y))
 
     ans_dim <- c(nrow(x), ncol(y))
-    ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
+    ans_dimnames <- S4Arrays:::simplify_NULL_dimnames(list(rownames(x),
+                                                           colnames(y)))
     ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
     sink <- AutoRealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
@@ -209,7 +226,8 @@ setMethod("%*%", c("DelayedMatrix", "ANY"),
     stopifnot(length(x_dim) == 2L, length(y_dim) == 2L, ncol(x) == nrow(y))
 
     ans_dim <- c(nrow(x), ncol(y))
-    ans_dimnames <- simplify_NULL_dimnames(list(rownames(x), colnames(y)))
+    ans_dimnames <- S4Arrays:::simplify_NULL_dimnames(list(rownames(x),
+                                                           colnames(y)))
     ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
     sink <- AutoRealizationSink(ans_dim, ans_dimnames, ans_type)
     on.exit(close(sink))
@@ -311,14 +329,14 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
     setAutoBPPARAM(NULL) # Avoid re-parallelizing in further calls to 'MULT'.
 
     if (chosen_scheme=="x") {
-        out <- bplapply2(seq_len(length(x_grid)),
+        out <- S4Arrays:::bplapply2(seq_len(length(x_grid)),
                          FUN=.left_mult, 
                          x=x, y=y, grid=x_grid, 
                          MULT=MULT, 
                          BPPARAM=BPPARAM)
         ans <- do.call(rbind, out)
     } else if (chosen_scheme=="y") {
-        out <- bplapply2(seq_len(length(y_grid)),
+        out <- S4Arrays:::bplapply2(seq_len(length(y_grid)),
                          FUN=.right_mult, 
                          x=x, y=y, grid=y_grid, 
                          MULT=MULT, 
@@ -399,7 +417,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
     setAutoBPPARAM(NULL) # Avoid re-parallelizing in further calls to 'MULT'.
 
     if (getAutoMultParallelAgnostic()) {
-        out <- bplapply2(seq_len(length(slow)),
+        out <- S4Arrays:::bplapply2(seq_len(length(slow)),
                          FUN=.left_mult, 
                          x=x, y=x, grid=slow,
                          MULT=MULT,
@@ -407,7 +425,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
         ans <- do.call(rbind, out)
 
     } else {
-        ans <- bplapply2(seq_len(length(fast)),
+        ans <- S4Arrays:::bplapply2(seq_len(length(fast)),
                          FUN=.solo_mult,
                          x=x, grid=fast,
                          MULT=MULT,
@@ -439,9 +457,9 @@ setMethod("tcrossprod", c("DelayedMatrix", "missing"), function(x, y)
 ###
 
 setAutoMultParallelAgnostic <- function(agnostic=TRUE) {
-    set_user_option("auto.mult.parallel.agnostic", agnostic)
+    S4Arrays:::set_user_option("auto.mult.parallel.agnostic", agnostic)
 }
 
 getAutoMultParallelAgnostic <- function() {
-    get_user_option("auto.mult.parallel.agnostic")
+    S4Arrays:::get_user_option("auto.mult.parallel.agnostic")
 }
