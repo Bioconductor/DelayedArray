@@ -41,10 +41,10 @@ setValidity2("DelayedSubset", .validate_DelayedSubset)
 ###
 
 ### 'Nindex' must be a "multidimensional subsetting Nindex" (see
-### Nindex-utils.R) or NULL.
+### R/Nindex-utils.R in the S4Arrays package) or NULL.
 new_DelayedSubset <- function(seed=new("array"), Nindex=NULL)
 {
-    index <- normalizeNindex(Nindex, seed)
+    index <- S4Arrays:::normalize_Nindex(Nindex, seed)
     new2("DelayedSubset", seed=seed, index=index)
 }
 
@@ -77,11 +77,11 @@ setMethod("summary", "DelayedSubset", summary.DelayedSubset)
 ###
 
 setMethod("dim", "DelayedSubset",
-    function(x) get_Nindex_lengths(x@index, dim(x@seed))
+    function(x) S4Arrays:::get_Nindex_lengths(x@index, dim(x@seed))
 )
 
 setMethod("dimnames", "DelayedSubset",
-    function(x) subset_dimnames_by_Nindex(dimnames(x@seed), x@index)
+    function(x) S4Arrays:::subset_dimnames_by_Nindex(dimnames(x@seed), x@index)
 )
 
 subset_DelayedSubset <- function(x, index)

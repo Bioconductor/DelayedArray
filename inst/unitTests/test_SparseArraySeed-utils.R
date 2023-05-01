@@ -59,7 +59,7 @@ test_abind_SparseArraySeed_objects <- function()
 {
     abind_SparseArraySeed_objects <-
         DelayedArray:::abind_SparseArraySeed_objects
-    simple_abind <- DelayedArray:::simple_abind
+    simple_abind <- S4Arrays:::simple_abind
 
     test_on <- function(..., along) {
 	objects <- list(...)

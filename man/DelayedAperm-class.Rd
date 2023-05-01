@@ -74,8 +74,8 @@
     A DelayedAperm object.
   }
   \item{index}{
-    See \code{?\link{extract_array}} for a description of the \code{index}
-    argument.
+    See \code{?\link[S4Arrays]{extract_array}} in the \pkg{S4Arrays}
+    package for a description of the \code{index} argument.
   }
   \item{...}{
     Not used.
@@ -90,7 +90,9 @@
           leaves in the tree of delayed operations carried by a
           \link{DelayedArray} object.
 
-    \item \code{\link{extract_array}} and \code{\link{extract_sparse_array}}.
+    \item \link[S4Arrays]{extract_array} in the \pkg{S4Arrays} package.
+
+    \item \code{\link{extract_sparse_array}}.
   }
 }
 

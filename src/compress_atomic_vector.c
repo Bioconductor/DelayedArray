@@ -5,6 +5,9 @@
 #include "DelayedArray.h"
 
 
+/* TODO: This stuff has nothing to do here! Get rid of it or move it to
+   S4Vectors. */
+
 /****************************************************************************
  * C_simple_object_size()
  */
@@ -61,16 +64,12 @@ SEXP C_simple_object_size(SEXP x)
 
 SEXP C_encode_atomic_vector(SEXP x)
 {
-	SEXP ans;
-
-	return ans;
+	return R_NilValue;
 }
 
 SEXP C_decode_atomic_vector(SEXP x)
 {
-	SEXP ans;
-
-	return ans;
+	return R_NilValue;
 }
 
 
@@ -80,15 +79,11 @@ SEXP C_decode_atomic_vector(SEXP x)
 
 SEXP C_compress_atomic_vector(SEXP x)
 {
-	SEXP ans;
-
-	return ans;
+	return R_NilValue;
 }
 
 SEXP C_decompress_atomic_vector(SEXP x)
 {
-	SEXP ans;
-
-	return ans;
+	return R_NilValue;
 }
 

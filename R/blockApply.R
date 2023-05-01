@@ -79,10 +79,10 @@ setAutoBPPARAM <- function(BPPARAM=NULL)
             stop(wmsg("'BPPARAM' must be a BiocParallelParam ",
                       "object from the BiocParallel package"))
     }
-    set_user_option("auto.BPPARAM", BPPARAM)
+    S4Arrays:::set_user_option("auto.BPPARAM", BPPARAM)
 }
 
-getAutoBPPARAM <- function() get_user_option("auto.BPPARAM")
+getAutoBPPARAM <- function() S4Arrays:::get_user_option("auto.BPPARAM")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -200,8 +200,8 @@ gridApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
             message("OK")
         ans
     }
-    bplapply2(seq_along(grid), FUN_WRAPPER, grid, verbose,
-                               FUN, ..., BPPARAM=BPPARAM)
+    S4Arrays:::bplapply2(seq_along(grid), FUN_WRAPPER, grid, verbose,
+                                          FUN, ..., BPPARAM=BPPARAM)
 }
 
 viewportApply <- function(...)

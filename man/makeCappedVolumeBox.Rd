@@ -19,8 +19,8 @@
   (3) it has the specified shape.
 
   \code{makeRegularArrayGridOfCappedLengthViewports} makes a
-  \link{RegularArrayGrid} object with grid elements that are capped volume
-  boxes with the specified constraints.
+  \link[S4Arrays]{RegularArrayGrid} object with grid elements that
+  are capped volume boxes with the specified constraints.
 
   These are low-level utilities used internally to support
   \code{\link{defaultAutoGrid}} and family.
@@ -98,8 +98,8 @@ makeRegularArrayGridOfCappedLengthViewports(refdim,
     \item \code{\link{defaultAutoGrid}} and family to create automatic
           grids to use for block processing of array-like objects.
 
-    \item \link{ArrayGrid} for the formal representation of grids and
-          viewports.
+    \item \link[S4Arrays]{ArrayGrid} in the \pkg{S4Arrays} package for
+          the formal representation of grids and viewports.
   }
 }
 

@@ -48,6 +48,16 @@ setClassUnion("integer_OR_NULL", c("integer", "NULL"))
     TRUE
 }
 
+.contact_author_msg <- function(Class)
+{
+    msg <- c("Please contact the author of the ", Class, " class")
+    class_package <- attr(Class, "package")
+    if (!is.null(class_package))
+        msg <- c(msg, " (defined in the ", class_package, " package)")
+    c(msg, " about this and point him/her to the man page for ",
+           "extract_array() in the DelayedArray package (?extract_array).")
+}
+
 setGeneric("chunkdim",
     function(x)
     {

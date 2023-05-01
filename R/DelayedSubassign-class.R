@@ -85,14 +85,14 @@ setValidity2("DelayedSubassign", .validate_DelayedSubassign)
 }
 
 ### 'Nindex' must be a "multidimensional subsetting Nindex" (see
-### Nindex-utils.R) or NULL.
+### R/Nindex-utils.R in the S4Arrays package) or NULL.
 new_DelayedSubassign <- function(seed=new("array"), Nindex=NULL, Rvalue=NA)
 {
-    Lindex <- normalizeNindex(Nindex, seed)
+    Lindex <- S4Arrays:::normalize_Nindex(Nindex, seed)
     seed_dim <- dim(seed)
-    nogap <- subscript_has_nogap(Lindex, seed_dim)
+    nogap <- S4Arrays:::subscript_has_nogap(Lindex, seed_dim)
     if (!(is.null(dim(Rvalue)) && is.vector(Rvalue) && length(Rvalue) == 1L)) {
-        selection_dim <- get_Nindex_lengths(Lindex, seed_dim)
+        selection_dim <- S4Arrays:::get_Nindex_lengths(Lindex, seed_dim)
         Rvalue <- .normarg_Rvalue(Rvalue, selection_dim)
         ## For each non-NULL subscript, keep **last** duplicate only and
         ## replace all previous duplicates with NAs.
@@ -120,7 +120,7 @@ setMethod("is_noop", "DelayedSubassign",
     function(x)
     {
         ## Is any array element being replaced by this subassignment?
-        if (all(get_Nindex_lengths(x@Lindex, dim(x@seed)) != 0L))
+        if (all(S4Arrays:::get_Nindex_lengths(x@Lindex, dim(x@seed)) != 0L))
             return(FALSE)
         type(x) == type(x@seed)
     }
@@ -258,7 +258,7 @@ subset_DelayedSubassign <- function(x, index=NULL)
         ans_Rvalue <- new2("DelayedSubset", seed=x@Rvalue, index=Rindex,
                                             check=FALSE)
     }
-    ans_nogap <- subscript_has_nogap(ans_Lindex, dim(ans_seed))
+    ans_nogap <- S4Arrays:::subscript_has_nogap(ans_Lindex, dim(ans_seed))
     new2("DelayedSubassign", seed=ans_seed,
                              Lindex=ans_Lindex,
                              Rvalue=ans_Rvalue,
@@ -285,13 +285,13 @@ subset_DelayedSubassign <- function(x, index=NULL)
     }
     if (all(x2@.nogap)) {
         if (is.null(dim(x2@Rvalue))) {
-            a_dim <- get_Nindex_lengths(index, dim(x2@seed))
+            a_dim <- S4Arrays:::get_Nindex_lengths(index, dim(x2@seed))
             a2 <- array(a2, a_dim)
         }
         return(a2)
     }
     a <- extract_array(x2@seed@seed, x2@seed@index)
-    replace_by_Nindex(a, x2@Lindex, a2)
+    S4Arrays:::replace_by_Nindex(a, x2@Lindex, a2)
 }
 
 setMethod("extract_array", "DelayedSubassign",

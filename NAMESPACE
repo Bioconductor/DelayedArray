@@ -15,6 +15,7 @@ import(BiocGenerics)
 import(MatrixGenerics)
 import(S4Vectors)
 import(IRanges)
+import(S4Arrays)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -22,13 +23,6 @@ import(IRanges)
 ###
 
 exportClasses(
-    ## Array-class.R:
-    Array,
-
-    ## ArrayGrid-class.R:
-    ArrayViewport, DummyArrayViewport, SafeArrayViewport,
-    ArrayGrid, DummyArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
-
     ## SparseArraySeed-class.R:
     SparseArraySeed,
 
@@ -69,7 +63,7 @@ exportClasses(
     ## chunkGrid.R:
     integer_OR_NULL,
 
-    ## write_block.R:
+    ## RealizationSink-class.R:
     RealizationSink, arrayRealizationSink,
 
     ## ConstantArray-class.R:
@@ -88,34 +82,12 @@ exportClasses(
 ### Export S3 methods
 ###
 
-S3method(aperm, DummyArrayGrid)
-S3method(aperm, ArbitraryArrayGrid)
-S3method(aperm, RegularArrayGrid)
 S3method(aperm, SparseArraySeed)
 S3method(aperm, DelayedArray)
 
-S3method(as.array, Array)
 S3method(as.array, SparseArraySeed)
 
-S3method(as.character, Array)
-S3method(as.character, ArrayGrid)
-
-S3method(as.complex, Array)
-
-S3method(as.data.frame, Array)
-
-S3method(as.integer, Array)
-
-S3method(as.logical, Array)
-
-S3method(as.matrix, Array)
 S3method(as.matrix, SparseArraySeed)
-
-S3method(as.numeric, Array)
-
-S3method(as.raw, Array)
-
-S3method(as.vector, Array)
 
 S3method(mean, SparseArraySeed)
 S3method(mean, DelayedArray)
@@ -139,8 +111,6 @@ S3method(summary, DelayedSetDimnames)
 S3method(summary, DelayedNaryIsoOp)
 S3method(summary, DelayedAbind)
 
-S3method(t, Array)
-
 S3method(unique, DelayedArray)
 
 ### We also export them thru the export() directive so that (a) they can be
@@ -148,34 +118,12 @@ S3method(unique, DelayedArray)
 ### and (c) methods() doesn't asterisk them.
 
 export(
-    aperm.DummyArrayGrid,
-    aperm.ArbitraryArrayGrid,
-    aperm.RegularArrayGrid,
     aperm.SparseArraySeed,
     aperm.DelayedArray,
 
-    as.array.Array,
     as.array.SparseArraySeed,
 
-    as.character.ArrayGrid,
-    as.character.Array,
-
-    as.complex.Array,
-
-    as.data.frame.Array,
-
-    as.integer.Array,
-
-    as.logical.Array,
-
-    as.matrix.Array,
     as.matrix.SparseArraySeed,
-
-    as.numeric.Array,
-
-    as.raw.Array,
-
-    as.vector.Array,
 
     mean.SparseArraySeed,
     mean.DelayedArray,
@@ -198,8 +146,6 @@ export(
     summary.DelayedSetDimnames,
     summary.DelayedNaryIsoOp,
     summary.DelayedAbind,
-
-    t.Array,
 
     unique.DelayedArray
 )
@@ -249,7 +195,7 @@ exportMethods(
 
     ## Methods for generics defined in the BiocGenerics package:
     cbind, rbind,
-    t, aperm,
+    aperm,
     dims,
     grepl,
     path, "path<-",
@@ -269,7 +215,10 @@ exportMethods(
     splitAsList,
 
     ## Methods for generics defined in the IRanges package:
-    ranges, start, end, width
+    ranges, start, end, width,
+
+    ## Methods for generics defined in the S4Arrays package:
+    arbind, acbind, is_sparse, extract_array, write_block
 )
 
 
@@ -278,13 +227,6 @@ exportMethods(
 ###
 
 export(
-    ## array_selection.R:
-    Lindex2Mindex, Mindex2Lindex, linearInd,
-
-    ## ArrayGrid-class.R:
-    DummyArrayViewport, ArrayViewport, makeNindexFromArrayViewport,
-    DummyArrayGrid, ArbitraryArrayGrid, RegularArrayGrid,
-
     ## SparseArraySeed-class.R:
     SparseArraySeed, dense2sparse, sparse2dense,
 
@@ -319,7 +261,7 @@ export(
     ## DelayedArray-class.R:
     new_DelayedArray,
 
-    ## write_block.R:
+    ## RealizationSink-class.R:
     supportedRealizationBackends,
     getAutoRealizationBackend, setAutoRealizationBackend,
     getRealizationBackend, setRealizationBackend,
@@ -346,24 +288,11 @@ export(
     ## sparseMatrix-utils.R:
     rowsum, colsum,
 
-    ## bind-arrays.R:
-    arbind, acbind,
-
-    ## extract_array.R:
-    extract_array,
-
-    ## ArrayGrid-class.R:
-    refdim, maxlength, downsample,
-
     ## SparseArraySeed-class.R:
-    nzindex, nzdata, sparsity,
-    is_sparse, "is_sparse<-", extract_sparse_array,
+    nzindex, nzdata, sparsity, extract_sparse_array,
 
-    ## read_block.R:
-    read_block, read_sparse_block,
-
-    ## mapToGrid.R:
-    mapToGrid, mapToRef,
+    ## read_sparse_block.R:
+    read_sparse_block,
 
     ## makeCappedVolumeBox.R:
     isLinear,
@@ -383,8 +312,8 @@ export(
     ## chunkGrid.R:
     chunkdim, chunkGrid,
 
-    ## write_block.R:
-    close, write_block,
+    ## RealizationSink-class.R:
+    close,
 
     ## realize.R:
     realize,
@@ -399,21 +328,40 @@ export(
 ### Same list as above.
 exportMethods(
     rowsum, colsum,
-    arbind, acbind,
-    extract_array,
-    refdim, maxlength, downsample,
-    nzindex, nzdata, sparsity, is_sparse, extract_sparse_array,
-    read_block, read_sparse_block,
-    mapToGrid, mapToRef,
+    nzindex, nzdata, sparsity, extract_sparse_array,
+    read_sparse_block,
     isLinear,
     is_noop,
     nseed, seed, "seed<-",
     simplify, netSubsetAndAperm,
     matrixClass, DelayedArray,
     chunkdim, chunkGrid,
-    close, write_block,
+    close,
     realize,
     pmax2, pmin2, apply, sweep, scale,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### TEMPORARY HACK: Re-export stuff that used to be defined in DelayedArray
+### but that has been moved to and is now imported from S4Arrays. This is
+### for compatibility with package code written before this move.
+### TODO: Fix affected packages and get rid of this.
+
+export(
+    ## Used in DelayedMatrixStats package (DelayedArray::t() also used
+    ## in beachmat):
+    t, makeNindexFromArrayViewport,
+
+    ## Used in beachmat:
+    DummyArrayGrid, RegularArrayGrid, extract_array, is_sparse, write_block,
+
+    ## Used in bsseq:
+    ArbitraryArrayGrid, read_block
+)
+
+exportMethods(
+    t
 )
 

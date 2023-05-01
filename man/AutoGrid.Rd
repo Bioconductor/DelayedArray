@@ -91,9 +91,9 @@ defaultSinkAutoGrid(sink, block.length=NULL, chunk.grid=NULL)
     \code{\link{blockReduce}()} to make a grid when no grid is supplied
     via their \code{grid} argument.
     The function will be called on array-like object \code{x} and must
-    return an \link{ArrayGrid} object, say \code{grid}, that is compatible
-    with \code{x} i.e. such that \code{refdim(grid)} is identical to
-    \code{dim(x)}.
+    return an \link[S4Arrays]{ArrayGrid} object, say \code{grid}, that
+    is compatible with \code{x} i.e. such that \code{refdim(grid)} is
+    identical to \code{dim(x)}.
 
     \code{GRIDMAKER} can be specified as a function or as a single string
     naming a function. It can be a user-defined function or a pre-defined
@@ -121,8 +121,8 @@ defaultSinkAutoGrid(sink, block.length=NULL, chunk.grid=NULL)
 }
 
 \value{
-  \code{defaultAutoGrid}: An \link{ArrayGrid} object on reference array
-  \code{x}. The grid elements define the blocks that will be used to
+  \code{defaultAutoGrid}: An \link[S4Arrays]{ArrayGrid} object on reference
+  array \code{x}. The grid elements define the blocks that will be used to
   process \code{x} by block. The grid is \emph{optimal} in the sense that:
   \enumerate{
     \item It's \emph{compatible} with the grid of physical chunks a.k.a.
@@ -137,16 +137,17 @@ defaultSinkAutoGrid(sink, block.length=NULL, chunk.grid=NULL)
           already have a length that is >= \code{block.length}, in which
           case the returned grid is the same as the chunk grid.
   }
-  Note that the returned grid is regular (i.e. is a \link{RegularArrayGrid}
-  object) unless the chunk grid is not regular (i.e. is an
-  \link{ArbitraryArrayGrid} object).
+  Note that the returned grid is regular (i.e. is a
+  \link[S4Arrays]{RegularArrayGrid} object) unless the chunk grid is
+  not regular (i.e. is an \link[S4Arrays]{ArbitraryArrayGrid} object).
 
-  \code{rowAutoGrid}: A \link{RegularArrayGrid} object on reference array
-  \code{x} where the grid elements define blocks made of full rows of \code{x}.
+  \code{rowAutoGrid}: A \link[S4Arrays]{RegularArrayGrid} object on
+  reference array \code{x} where the grid elements define blocks made
+  of full rows of \code{x}.
 
-  \code{colAutoGrid}: A \link{RegularArrayGrid} object on reference array
-  \code{x} where the grid elements define blocks made of full columns
-  of \code{x}.
+  \code{colAutoGrid}: A \link[S4Arrays]{RegularArrayGrid} object on
+  reference array \code{x} where the grid elements define blocks made
+  of full columns of \code{x}.
 
   \code{defaultSinkAutoGrid}: Like \code{defaultAutoGrid} except
   that \code{defaultSinkAutoGrid} always returns a grid with a
@@ -156,7 +157,8 @@ defaultSinkAutoGrid(sink, block.length=NULL, chunk.grid=NULL)
   the context of writing to the viewports of a \link{RealizationSink}
   derivative is that such a grid is guaranteed to work with "linear write
   only" realization backends. See important notes about "Cross realization
-  backend compatibility" in \code{?\link{write_block}} for more information.
+  backend compatibility" in \code{?\link[S4Arrays]{write_block}} in the
+  \pkg{S4Arrays} package for more information.
 }
 
 \seealso{
@@ -167,15 +169,16 @@ defaultSinkAutoGrid(sink, block.length=NULL, chunk.grid=NULL)
     \item \code{\link{blockApply}} and family for convenient block
           processing of an array-like object.
 
-    \item \link{ArrayGrid} for the formal representation of grids and
-          viewports.
+    \item \link[S4Arrays]{ArrayGrid} in the \pkg{S4Arrays} package for
+          the formal representation of grids and viewports.
 
     \item The \code{\link{makeCappedVolumeBox}} utility to make
           \emph{capped volume boxes}.
 
     \item \code{\link{chunkGrid}}.
 
-    \item \code{\link{read_block}} and \code{\link{write_block}}.
+    \item \code{\link[S4Arrays]{read_block}} and
+          \code{\link[S4Arrays]{write_block}} in the \pkg{S4Arrays} package.
   }
 }
 
@@ -248,7 +251,7 @@ rowAutoGrid(m, nrow=10)  # 5 blocks of 10 rows each
 rowAutoGrid(m, nrow=15)  # 3 blocks of 15 rows each plus 1 block of 5 rows
 colAutoGrid(m, ncol=5)   # 2 blocks of 5 cols each plus 1 block of 2 cols
 
-## See '?write_block' for an advanced example of user-implemented
+## See '?RealizationSink' for advanced examples of user-implemented
 ## block processing using colAutoGrid() and a realization sink.
 
 ## ---------------------------------------------------------------------

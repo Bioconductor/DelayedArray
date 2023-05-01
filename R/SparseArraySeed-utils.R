@@ -7,8 +7,8 @@
 ### Binding
 ###
 
-### Similar to simple_abind() (see bind-arrays.R) but works on
-### SparseArraySeed objects.
+### Similar to S4Arrays:::simple_abind() (see R/abind.R in the S4Arrays
+### package) but works on SparseArraySeed objects.
 abind_SparseArraySeed_objects <- function(objects, along)
 {
     stopifnot(is.list(objects))
@@ -16,15 +16,15 @@ abind_SparseArraySeed_objects <- function(objects, along)
         return(NULL)
 
     ## Check dim compatibility.
-    dims <- get_dims_to_bind(objects, along)
+    dims <- S4Arrays:::get_dims_to_bind(objects, along)
     if (is.character(dims))
         stop(wmsg(dims))
     if (length(objects) == 1L)
         return(objects[[1L]])
 
     ## Compute 'ans_dim' and 'ans_dimnames'.
-    ans_dim <- combine_dims_along(dims, along)
-    ans_dimnames <- combine_dimnames_along(objects, dims, along)
+    ans_dim <- S4Arrays:::combine_dims_along(dims, along)
+    ans_dimnames <- S4Arrays:::combine_dimnames_along(objects, dims, along)
 
     ## Combine the "nzindex" slots.
     offsets <- cumsum(dims[along, -ncol(dims)])

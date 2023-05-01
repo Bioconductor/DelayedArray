@@ -90,8 +90,9 @@ is_noop(x)
 
   All the nodes are array-like objects that must comply with the \emph{seed
   contract} i.e. they must support \code{dim()}, \code{dimnames()}, and
-  \code{extract_array()}. See \code{?\link{extract_array}} for more
-  information about the \emph{seed contract}.
+  \code{extract_array()}. See \code{?\link[S4Arrays]{extract_array}}
+  in the \pkg{S4Arrays} package for more information about the
+  \emph{seed contract}.
 
   \code{is_noop()} can only be called on a DelayedSubset, DelayedAperm,
   or DelayedSetDimnames object at the moment, and will return \code{TRUE}
@@ -122,7 +123,7 @@ is_noop(x)
     \item \code{\link{simplify}} to simplify the tree of delayed
           operations carried by a \link{DelayedArray} object.
 
-    \item \code{\link{extract_array}}.
+    \item \code{\link[S4Arrays]{extract_array}} in the \pkg{S4Arrays} package.
   }
 }
 

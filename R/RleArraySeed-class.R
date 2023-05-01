@@ -119,10 +119,10 @@ get_chunk_lengths <- function(envir)
 
 .validate_RleArraySeed <- function(x)
 {
-    msg <- validate_dim_slot(x, "DIM")
+    msg <- S4Arrays:::validate_dim_slot(x, "DIM")
     if (!isTRUE(msg))
         return(msg)
-    msg <- validate_dimnames_slot(x, x@DIM, "DIMNAMES")
+    msg <- S4Arrays:::validate_dimnames_slot(x, x@DIM, "DIMNAMES")
     if (!isTRUE(msg))
         return(msg)
     TRUE
@@ -226,7 +226,7 @@ setValidity2("ChunkedRleArraySeed", .validate_ChunkedRleArraySeed)
 setMethod("dim", "RleArraySeed", function(x) x@DIM)
 
 setMethod("dimnames", "RleArraySeed",
-    function(x) simplify_NULL_dimnames(x@DIMNAMES)
+    function(x) S4Arrays:::simplify_NULL_dimnames(x@DIMNAMES)
 )
 
 
@@ -274,9 +274,9 @@ setAs("RleRealizationSink", "Rle",
 .extract_array_from_SolidRleArraySeed <- function(x, index)
 {
     x_dim <- dim(x)
-    i <- to_linear_index(index, x_dim)
+    i <- S4Arrays:::to_linear_index(index, x_dim)
     ans <- S4Vectors:::extract_positions_from_Rle(x@rle, i, decoded=TRUE)
-    set_dim(ans, get_Nindex_lengths(index, x_dim))
+    S4Arrays:::set_dim(ans, S4Arrays:::get_Nindex_lengths(index, x_dim))
 }
 setMethod("extract_array", "SolidRleArraySeed",
     .extract_array_from_SolidRleArraySeed
@@ -285,11 +285,12 @@ setMethod("extract_array", "SolidRleArraySeed",
 .extract_array_from_ChunkedRleArraySeed <- function(x, index)
 {
     x_dim <- dim(x)
-    i <- to_linear_index(index, x_dim)
+    i <- S4Arrays:::to_linear_index(index, x_dim)
     ans <- vector(x@type)
     if (length(i) != 0L) {
-        part_idx <- get_part_index(i, x@breakpoints)
-        split_part_idx <- split_part_index(part_idx, length(x@breakpoints))
+        part_idx <- S4Arrays:::get_part_index(i, x@breakpoints)
+        split_part_idx <- S4Arrays:::split_part_index(part_idx,
+                                                      length(x@breakpoints))
         chunk_idx <- which(lengths(split_part_idx) != 0L)  # chunks to visit
         res <- lapply(chunk_idx, function(i1) {
             chunk <- .get_chunk(x@chunks, i1)
@@ -300,9 +301,9 @@ setMethod("extract_array", "SolidRleArraySeed",
             S4Vectors:::extract_positions_from_Rle(chunk, i2, decoded=TRUE)
         })
         res <- c(list(ans), res)
-        ans <- unlist(res, use.names=FALSE)[get_rev_index(part_idx)]
+        ans <- unlist(res, use.names=FALSE)[S4Arrays:::get_rev_index(part_idx)]
     }
-    set_dim(ans, get_Nindex_lengths(index, x_dim))
+    S4Arrays:::set_dim(ans, S4Arrays:::get_Nindex_lengths(index, x_dim))
 }
 setMethod("extract_array", "ChunkedRleArraySeed",
     .extract_array_from_ChunkedRleArraySeed
@@ -316,8 +317,8 @@ setMethod("extract_array", "ChunkedRleArraySeed",
 ### NOT exported!
 RleRealizationSink <- function(dim, dimnames=NULL, type="double")
 {
-    dim <- normarg_dim(dim)
-    dimnames <- normarg_dimnames(dimnames, dim)
+    dim <- S4Arrays:::normarg_dim(dim)
+    dimnames <- S4Arrays:::normarg_dimnames(dimnames, dim)
     chunks <- new.env(hash=TRUE, parent=emptyenv())
     new2("RleRealizationSink", DIM=dim, DIMNAMES=dimnames,
                                type=type, chunks=chunks)
@@ -380,8 +381,8 @@ setAs("RleRealizationSink", "ChunkedRleArraySeed",
 ### Otherwise return a ChunkedRleArraySeed instance.
 .make_RleArraySeed_from_Rle <- function(data, dim, dimnames, chunksize=NULL)
 {
-    dim <- normarg_dim(dim)
-    dimnames <- normarg_dimnames(dimnames, dim)
+    dim <- S4Arrays:::normarg_dim(dim)
+    dimnames <- S4Arrays:::normarg_dimnames(dimnames, dim)
     ans_len <- length(data)
     if (ans_len != prod(dim))
         stop(wmsg("length of input data [" , ans_len, "] does not ",
@@ -475,13 +476,13 @@ setAs("RleRealizationSink", "ChunkedRleArraySeed",
         if (missing(dimnames))
             dimnames <- .infer_dimnames(data)
     } else {
-        dim <- normarg_dim(dim)
+        dim <- S4Arrays:::normarg_dim(dim)
         ans_len <- sum(lengths(data))  # can be >= 2^31
         if (ans_len != prod(dim))
             stop(wmsg("total length of input data [" , ans_len, "] does not ",
                       "match object dimensions [product ", prod(dim), "]"))
     }
-    dimnames <- normarg_dimnames(dimnames, dim)
+    dimnames <- S4Arrays:::normarg_dimnames(dimnames, dim)
     if (length(data) == 0L) {
         unlisted_data <- unlist(data, use.names=FALSE)
         if (is.null(unlisted_data))

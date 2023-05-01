@@ -31,7 +31,7 @@ setClass("DelayedAperm",
 .validate_DelayedAperm <- function(x)
 {
     ## 'perm' slot.
-    msg <- validate_perm(x@perm, dim(x@seed))
+    msg <- S4Arrays:::validate_perm(x@perm, dim(x@seed))
     if (!isTRUE(msg))
         return(msg)
     TRUE
@@ -46,7 +46,7 @@ setValidity2("DelayedAperm", .validate_DelayedAperm)
 
 new_DelayedAperm <- function(seed=new("array"), perm=NULL)
 {
-    perm <- normarg_perm(perm, dim(seed))
+    perm <- S4Arrays:::normarg_perm(perm, dim(seed))
     new2("DelayedAperm", seed=seed, perm=perm)
 }
 
@@ -99,7 +99,7 @@ setMethod("dim", "DelayedAperm", .get_DelayedAperm_dim)
     seed_dimnames <- dimnames(x@seed)
     if (is.null(seed_dimnames))
         return(NULL)
-    simplify_NULL_dimnames(seed_dimnames[x@perm])
+    S4Arrays:::simplify_NULL_dimnames(seed_dimnames[x@perm])
 }
 
 setMethod("dimnames", "DelayedAperm", .get_DelayedAperm_dimnames)
@@ -124,7 +124,7 @@ project_index_on_seed <- function(index, x)
     a <- extract_array(x@seed, seed_index)
     a <- aperm2(a, x@perm)
     index[!is.na(x@perm)] <- list(NULL)
-    subset_by_Nindex(a, index)
+    S4Arrays:::subset_by_Nindex(a, index)
 }
 
 setMethod("extract_array", "DelayedAperm",

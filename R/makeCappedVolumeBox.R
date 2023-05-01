@@ -2,6 +2,7 @@
 ### Utilities to make capped volume boxes
 ### -------------------------------------------------------------------------
 ###
+### TODO: Move to S4Arrays
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### makeCappedVolumeBox()
@@ -25,8 +26,8 @@
         ans[is_max] <- L
     }
     ans[is_max] <- as.integer(L)
-    q <- get_RegularArrayGrid_dim(maxdim, ans + 1L) /
-         get_RegularArrayGrid_dim(maxdim, ans)
+    q <- S4Arrays:::get_RegularArrayGrid_dim(maxdim, ans + 1L) /
+         S4Arrays:::get_RegularArrayGrid_dim(maxdim, ans)
     for (along in which(is_max)[order(q[is_max])]) {
         ans[[along]] <- ans[[along]] + 1L
         p <- prod(ans)

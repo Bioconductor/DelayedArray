@@ -23,7 +23,7 @@ setClass("ConstantArraySeed",
 setValidity2("ConstantArraySeed",
     function(object)
     {
-        msg <- validate_dim_slot(object, "dim")
+        msg <- S4Arrays:::validate_dim_slot(object, "dim")
         if (!isTRUE(msg))
             return(msg)
         if (length(object@value) != 1L)
@@ -33,13 +33,14 @@ setValidity2("ConstantArraySeed",
 )
 
 setMethod("extract_array", "ConstantArraySeed",
-    function(x, index) array(x@value, get_Nindex_lengths(index, dim(x)))
+    function(x, index)
+        array(x@value, S4Arrays:::get_Nindex_lengths(index, dim(x)))
 )
 
 setMethod("extract_sparse_array", "ConstantArraySeed",
     function(x, index)
     {
-        ans_dim <- get_Nindex_lengths(index, dim(x))
+        ans_dim <- S4Arrays:::get_Nindex_lengths(index, dim(x))
         ans_nzdata <- rep.int(x@value, 0L)
         SparseArraySeed(ans_dim, nzdata=ans_nzdata, check=FALSE)
     }

@@ -66,7 +66,7 @@ setClass("SparseArraySeed",
 
 .validate_SparseArraySeed <- function(x)
 {
-    msg <- validate_dim_slot(x, "dim")
+    msg <- S4Arrays:::validate_dim_slot(x, "dim")
     if (!isTRUE(msg))
         return(msg)
     msg <- .validate_nzindex_slot(x)
@@ -75,7 +75,7 @@ setClass("SparseArraySeed",
     msg <- .validate_nzdata_slot(x)
     if (!isTRUE(msg))
         return(msg)
-    msg <- validate_dimnames_slot(x, x@dim)
+    msg <- S4Arrays:::validate_dimnames_slot(x, x@dim)
     if (!isTRUE(msg))
         return(msg)
     TRUE
@@ -95,13 +95,13 @@ setGeneric("nzdata", function(x) standardGeneric("nzdata"))
 setMethod("nzdata", "SparseArraySeed", function(x) x@nzdata)
 
 setMethod("dimnames", "SparseArraySeed",
-    function(x) simplify_NULL_dimnames(x@dimnames)
+    function(x) S4Arrays:::simplify_NULL_dimnames(x@dimnames)
 )
 
 setReplaceMethod("dimnames", "SparseArraySeed",
     function(x, value)
     {
-        x@dimnames <- normarg_dimnames(value, dim(x))
+        x@dimnames <- S4Arrays:::normarg_dimnames(value, dim(x))
         x
     }
 )
@@ -165,7 +165,7 @@ SparseArraySeed <- function(dim, nzindex=NULL, nzdata=NULL, dimnames=NULL,
             dimnames(nzindex) <- NULL
         nzdata <- .normarg_nzdata(nzdata, nrow(nzindex))
     }
-    dimnames <- normarg_dimnames(dimnames, dim)
+    dimnames <- S4Arrays:::normarg_dimnames(dimnames, dim)
     new2("SparseArraySeed", dim=dim, nzindex=nzindex, nzdata=nzdata,
                             dimnames=dimnames,
                             check=check)
@@ -210,29 +210,13 @@ sparse2dense <- function(sas)
     zero <- vector(typeof(sas_nzdata), length=1L)
     ans <- array(zero, dim=dim(sas))
     ans[nzindex(sas)] <- sas_nzdata
-    set_dimnames(ans, dimnames(sas))
+    S4Arrays:::set_dimnames(ans, dimnames(sas))
 }
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The is_sparse() and extract_sparse_array() generics
+### The extract_sparse_array() generic
 ###
-
-### is_sparse() detects **structural** sparsity which is a global qualitative
-### property of array-like object 'x' rather than a quantitative one.
-### In other words it doesn't look at the data in 'x' to decide whether 'x'
-### should be considered sparse or not. Said otherwise, it is NOT about
-### quantitative sparsity measured by sparsity().
-### IMPORTANT: Seeds for which is_sparse() returns TRUE **must** support
-### extract_sparse_array().
-setGeneric("is_sparse", function(x) standardGeneric("is_sparse"))
-
-setGeneric("is_sparse<-", signature="x",
-    function(x, value) standardGeneric("is_sparse<-")
-)
-
-### By default, nothing is considered sparse.
-setMethod("is_sparse", "ANY", function(x) FALSE)
 
 ### This is the workhorse behind read_sparse_block().
 ### Similar to extract_array() except that:
@@ -256,7 +240,7 @@ setGeneric("extract_sparse_array",
             stop(wmsg("first argument to extract_sparse_array() ",
                       "must be an array-like object"))
         ans <- standardGeneric("extract_sparse_array")
-        expected_dim <- get_Nindex_lengths(index, x_dim)
+        expected_dim <- S4Arrays:::get_Nindex_lengths(index, x_dim)
         ## TODO: Display a more user/developper-friendly error by
         ## doing something like the extract_array() generic where
         ## check_returned_array() is used to display a long and
@@ -292,7 +276,7 @@ setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
 .extract_sparse_array_from_SparseArraySeed <- function(x, index)
 {
     stopifnot(is(x, "SparseArraySeed"))
-    ans_dim <- get_Nindex_lengths(index, dim(x))
+    ans_dim <- S4Arrays:::get_Nindex_lengths(index, dim(x))
     x_nzindex <- x@nzindex
     for (along in seq_along(ans_dim)) {
         i <- index[[along]]
@@ -334,7 +318,7 @@ setMethod("extract_sparse_array", "SparseArraySeed",
         })
     if (all(S4Vectors:::sapply_isNULL(sm_index)))
         return(ans0)
-    subset_by_Nindex(ans0, sm_index)
+    S4Arrays:::subset_by_Nindex(ans0, sm_index)
 }
 setMethod("extract_array", "SparseArraySeed",
     .extract_array_from_SparseArraySeed
@@ -449,6 +433,32 @@ setAs("lgRMatrix", "SparseArraySeed",
     function(from) .make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix(from)
 )
 
+### Any Array derivative will be coercible to a sparseMatrix subclass (e.g.
+### dg[C|R]Matrix or lg[C|R]Matrix) as long as there is a method for coercing
+### it to SparseArraySeed.
+
+setAs("Array", "dgCMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "dgCMatrix")
+)
+setAs("Array", "dgRMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "dgRMatrix")
+)
+setAs("Array", "lgCMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "lgCMatrix")
+)
+setAs("Array", "lgRMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "lgRMatrix")
+)
+setAs("Array", "CsparseMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "CsparseMatrix")
+)
+setAs("Array", "RsparseMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "RsparseMatrix")
+)
+setAs("Array", "sparseMatrix",
+    function(from) as(as(from, "SparseArraySeed"), "sparseMatrix")
+)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### is_sparse() and extract_sparse_array() methods for dg[C|R]Matrix and
@@ -458,20 +468,15 @@ setAs("lgRMatrix", "SparseArraySeed",
 ### as the need arises.
 ###
 
-setMethod("is_sparse", "dgCMatrix", function(x) TRUE)
-setMethod("is_sparse", "dgRMatrix", function(x) TRUE)
-setMethod("is_sparse", "lgCMatrix", function(x) TRUE)
-setMethod("is_sparse", "lgRMatrix", function(x) TRUE)
-
 .extract_sparse_array_from_dgCMatrix_or_lgCMatrix <- function(x, index)
 {
-    sm <- subset_by_Nindex(x, index)  # a dgCMatrix or lgCMatrix object
+    sm <- S4Arrays:::subset_by_Nindex(x, index)  # a [d|l]gCMatrix object
     .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(sm, use.dimnames=FALSE)
 }
 
 .extract_sparse_array_from_dgRMatrix_or_lgRMatrix <- function(x, index)
 {
-    sm <- subset_by_Nindex(x, index)  # a dgRMatrix or lgRMatrix object
+    sm <- S4Arrays:::subset_by_Nindex(x, index)  # a [d|l]gRMatrix object
     .make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix(sm, use.dimnames=FALSE)
 }
 
@@ -499,8 +504,8 @@ setMethod("extract_sparse_array", "lgRMatrix",
 .aperm.SparseArraySeed <- function(a, perm)
 {
     a_dim <- dim(a)
-    perm <- normarg_perm(perm, a_dim)
-    msg <- validate_perm(perm, a_dim)
+    perm <- S4Arrays:::normarg_perm(perm, a_dim)
+    msg <- S4Arrays:::validate_perm(perm, a_dim)
     if (!isTRUE(msg))
         stop(wmsg(msg))
     new_dim <- a_dim[perm]
