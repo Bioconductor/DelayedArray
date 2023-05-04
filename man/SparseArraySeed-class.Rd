@@ -17,10 +17,10 @@
 \alias{dense2sparse}
 \alias{sparse2dense}
 
-\alias{extract_sparse_array}
+\alias{OLD_extract_sparse_array}
 
 \alias{is_sparse,SparseArraySeed-method}
-\alias{extract_sparse_array,SparseArraySeed-method}
+\alias{OLD_extract_sparse_array,SparseArraySeed-method}
 \alias{extract_array,SparseArraySeed-method}
 
 \alias{as.array.SparseArraySeed}
@@ -51,10 +51,10 @@
 \alias{coerce,Array,RsparseMatrix-method}
 \alias{coerce,Array,sparseMatrix-method}
 
-\alias{extract_sparse_array,dgCMatrix-method}
-\alias{extract_sparse_array,dgRMatrix-method}
-\alias{extract_sparse_array,lgCMatrix-method}
-\alias{extract_sparse_array,lgRMatrix-method}
+\alias{OLD_extract_sparse_array,dgCMatrix-method}
+\alias{OLD_extract_sparse_array,dgRMatrix-method}
+\alias{OLD_extract_sparse_array,lgCMatrix-method}
+\alias{OLD_extract_sparse_array,lgRMatrix-method}
 
 \alias{aperm.SparseArraySeed}
 \alias{aperm,SparseArraySeed-method}

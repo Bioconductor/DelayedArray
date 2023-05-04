@@ -13,7 +13,7 @@
 \alias{extract_array,DelayedAperm-method}
 
 \alias{is_sparse,DelayedAperm-method}
-\alias{extract_sparse_array,DelayedAperm-method}
+\alias{OLD_extract_sparse_array,DelayedAperm-method}
 
 \alias{updateObject,SeedDimPicker-method}
 
@@ -66,7 +66,7 @@
 
 \S4method{is_sparse}{DelayedAperm}(x)
 
-\S4method{extract_sparse_array}{DelayedAperm}(x, index)
+\S4method{OLD_extract_sparse_array}{DelayedAperm}(x, index)
 }
 
 \arguments{
@@ -92,7 +92,7 @@
 
     \item \link[S4Arrays]{extract_array} in the \pkg{S4Arrays} package.
 
-    \item \code{\link{extract_sparse_array}}.
+    \item \code{\link{OLD_extract_sparse_array}}.
   }
 }
 

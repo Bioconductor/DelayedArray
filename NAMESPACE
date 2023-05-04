@@ -289,7 +289,7 @@ export(
     rowsum, colsum,
 
     ## SparseArraySeed-class.R:
-    nzindex, nzdata, sparsity, extract_sparse_array,
+    nzindex, nzdata, sparsity, OLD_extract_sparse_array,
 
     ## read_sparse_block.R:
     read_sparse_block,
@@ -328,7 +328,7 @@ export(
 ### Same list as above.
 exportMethods(
     rowsum, colsum,
-    nzindex, nzdata, sparsity, extract_sparse_array,
+    nzindex, nzdata, sparsity, OLD_extract_sparse_array,
     read_sparse_block,
     isLinear,
     is_noop,

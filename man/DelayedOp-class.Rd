@@ -24,7 +24,7 @@
 \alias{extract_array,DelayedUnaryIsoOp-method}
 
 \alias{is_sparse,DelayedUnaryIsoOp-method}
-\alias{extract_sparse_array,DelayedUnaryIsoOp-method}
+\alias{OLD_extract_sparse_array,DelayedUnaryIsoOp-method}
 
 % DelayedNaryOp objects
 \alias{class:DelayedNaryOp}

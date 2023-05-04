@@ -108,7 +108,7 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
     function(x, index) extract_array(x@seed, index)
 )
 
-### is_sparse() and extract_sparse_array()
+### is_sparse() and OLD_extract_sparse_array()
 ### Like the 3 default methods above (seed contract), the 2 default methods
 ### below also implement a no-op semantic and are also inherited by
 ### DelayedArray objects.
@@ -116,10 +116,10 @@ setMethod("extract_array", "DelayedUnaryIsoOp",
 setMethod("is_sparse", "DelayedUnaryIsoOp", function(x) is_sparse(x@seed))
 
 ### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
-### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### not contain duplicates. See "OLD_extract_sparse_array() Terms of Use"
 ### in SparseArraySeed-class.R
-setMethod("extract_sparse_array", "DelayedUnaryIsoOp",
-    function(x, index) extract_sparse_array(x@seed, index)
+setMethod("OLD_extract_sparse_array", "DelayedUnaryIsoOp",
+    function(x, index) OLD_extract_sparse_array(x@seed, index)
 )
 
 

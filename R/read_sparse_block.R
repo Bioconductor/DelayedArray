@@ -3,7 +3,7 @@
 ### -------------------------------------------------------------------------
 ###
 
-### Like extract_sparse_array(), which it is based on, read_sparse_block()
+### Like OLD_extract_sparse_array(), which it is based on, read_sparse_block()
 ### should be called only on an array-like object 'x' for which 'is_sparse(x)'
 ### is TRUE. For the sake of efficiency, this is NOT checked and is the
 ### responsibility of the user. See SparseArraySeed-class.R
@@ -33,7 +33,7 @@ setMethod("read_sparse_block", "ANY",
     function(x, viewport)
     {
         index <- makeNindexFromArrayViewport(viewport, expand.RangeNSBS=TRUE)
-        extract_sparse_array(x, index)
+        OLD_extract_sparse_array(x, index)
     }
 )
 

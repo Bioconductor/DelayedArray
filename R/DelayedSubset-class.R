@@ -132,19 +132,19 @@ setMethod("is_sparse", "DelayedSubset",
 )
 
 ### 'is_sparse(x)' is assumed to be TRUE and 'index' is assumed to
-### not contain duplicates. See "extract_sparse_array() Terms of Use"
+### not contain duplicates. See "OLD_extract_sparse_array() Terms of Use"
 ### in SparseArraySeed-class.R
-setMethod("extract_sparse_array", "DelayedSubset",
+setMethod("OLD_extract_sparse_array", "DelayedSubset",
     function(x, index)
     {
         x2 <- subset_DelayedSubset(x, index)
-        ## Assuming that the caller respected "extract_sparse_array() Terms
+        ## Assuming that the caller respected "OLD_extract_sparse_array() Terms
         ## of Use" (see SparseArraySeed-class.R), 'is_sparse(x)' should be
         ## TRUE and the subscripts in 'index' should not contain duplicates.
         ## This in turn means that the subscripts in 'x2@index' should not
         ## contain duplicates either so the call below should also respect
-        ## "extract_sparse_array() Terms of Use".
-        extract_sparse_array(x2@seed, x2@index)
+        ## "OLD_extract_sparse_array() Terms of Use".
+        OLD_extract_sparse_array(x2@seed, x2@index)
     }
 )
 

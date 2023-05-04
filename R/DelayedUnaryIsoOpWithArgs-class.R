@@ -250,14 +250,14 @@ setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs",
     }
 )
 
-setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
+setMethod("OLD_extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
     function(x, index)
     {
-        ## Assuming that the caller respected "extract_sparse_array() Terms
+        ## Assuming that the caller respected "OLD_extract_sparse_array() Terms
         ## of Use" (see SparseArraySeed-class.R), 'is_sparse(x)' should be
         ## TRUE so we can assume that the operation in x@OP preserves the
         ## zeros and thus only need to apply them to the nonzero data.
-        sas <- extract_sparse_array(x@seed, index)
+        sas <- OLD_extract_sparse_array(x@seed, index)
 
         ## Subset the left and right arguments that go along a dimension.
         Largs <- subset_args(x@Largs, x@Lalong, index)

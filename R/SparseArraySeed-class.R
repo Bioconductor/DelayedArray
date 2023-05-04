@@ -215,7 +215,7 @@ sparse2dense <- function(sas)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The extract_sparse_array() generic
+### The OLD_extract_sparse_array() generic
 ###
 
 ### This is the workhorse behind read_sparse_block().
@@ -231,15 +231,15 @@ sparse2dense <- function(sas)
 ###   (3) The subscripts in 'index' should NOT contain duplicates.
 ### IMPORTANT NOTE: For the sake of efficiency, (2) and (3) are NOT checked
 ### and are the responsibility of the user. We'll refer to (2) and (3) as
-### the "extract_sparse_array() Terms of Use".
-setGeneric("extract_sparse_array",
+### the "OLD_extract_sparse_array() Terms of Use".
+setGeneric("OLD_extract_sparse_array",
     function(x, index)
     {
         x_dim <- dim(x)
         if (is.null(x_dim))
-            stop(wmsg("first argument to extract_sparse_array() ",
+            stop(wmsg("first argument to OLD_extract_sparse_array() ",
                       "must be an array-like object"))
-        ans <- standardGeneric("extract_sparse_array")
+        ans <- standardGeneric("OLD_extract_sparse_array")
         expected_dim <- S4Arrays:::get_Nindex_lengths(index, x_dim)
         ## TODO: Display a more user/developper-friendly error by
         ## doing something like the extract_array() generic where
@@ -253,7 +253,7 @@ setGeneric("extract_sparse_array",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### is_sparse(), extract_sparse_array(), and extract_array() methods for
+### is_sparse(), OLD_extract_sparse_array(), and extract_array() methods for
 ### SparseArraySeed objects
 ###
 
@@ -267,13 +267,13 @@ setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
 ### that corresponds to duplicates subscripts. It does not check for
 ### duplicates in 'index' either because this check could have a
 ### non-negligible cost.
-### All this is OK because .extract_sparse_array_from_SparseArraySeed()
+### All this is OK because .OLD_extract_sparse_array_from_SparseArraySeed()
 ### should always be used in a context where 'index' does NOT contain
 ### duplicates. The only situation where 'index' CAN contain duplicates
-### is when .extract_sparse_array_from_SparseArraySeed() is called by
+### is when .OLD_extract_sparse_array_from_SparseArraySeed() is called by
 ### .extract_array_from_SparseArraySeed(), in which case the missing
 ### nonzero data is added later.
-.extract_sparse_array_from_SparseArraySeed <- function(x, index)
+.OLD_extract_sparse_array_from_SparseArraySeed <- function(x, index)
 {
     stopifnot(is(x, "SparseArraySeed"))
     ans_dim <- S4Arrays:::get_Nindex_lengths(index, dim(x))
@@ -289,13 +289,13 @@ setMethod("is_sparse", "SparseArraySeed", function(x) TRUE)
     ans_nzdata <- x@nzdata[keep_idx]
     SparseArraySeed(ans_dim, ans_nzindex, ans_nzdata, check=FALSE)
 }
-setMethod("extract_sparse_array", "SparseArraySeed",
-    .extract_sparse_array_from_SparseArraySeed
+setMethod("OLD_extract_sparse_array", "SparseArraySeed",
+    .OLD_extract_sparse_array_from_SparseArraySeed
 )
 
 .extract_array_from_SparseArraySeed <- function(x, index)
 {
-    sas0 <- .extract_sparse_array_from_SparseArraySeed(x, index)
+    sas0 <- .OLD_extract_sparse_array_from_SparseArraySeed(x, index)
     ## If the subscripts in 'index' contain duplicates, 'sas0' is
     ## "incomplete" in the sense that it does not contain the nonzero data
     ## that should have been repeated according to the duplicates in the
@@ -461,36 +461,36 @@ setAs("Array", "sparseMatrix",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### is_sparse() and extract_sparse_array() methods for dg[C|R]Matrix and
+### is_sparse() and OLD_extract_sparse_array() methods for dg[C|R]Matrix and
 ### lg[C|R]Matrix objects from the Matrix package
 ###
 ### TODO: Support more sparseMatrix derivatives (e.g. dgTMatrix, dgRMatrix)
 ### as the need arises.
 ###
 
-.extract_sparse_array_from_dgCMatrix_or_lgCMatrix <- function(x, index)
+.OLD_extract_sparse_array_from_dgCMatrix_or_lgCMatrix <- function(x, index)
 {
     sm <- S4Arrays:::subset_by_Nindex(x, index)  # a [d|l]gCMatrix object
     .make_SparseArraySeed_from_dgCMatrix_or_lgCMatrix(sm, use.dimnames=FALSE)
 }
 
-.extract_sparse_array_from_dgRMatrix_or_lgRMatrix <- function(x, index)
+.OLD_extract_sparse_array_from_dgRMatrix_or_lgRMatrix <- function(x, index)
 {
     sm <- S4Arrays:::subset_by_Nindex(x, index)  # a [d|l]gRMatrix object
     .make_SparseArraySeed_from_dgRMatrix_or_lgRMatrix(sm, use.dimnames=FALSE)
 }
 
-setMethod("extract_sparse_array", "dgCMatrix",
-    .extract_sparse_array_from_dgCMatrix_or_lgCMatrix
+setMethod("OLD_extract_sparse_array", "dgCMatrix",
+    .OLD_extract_sparse_array_from_dgCMatrix_or_lgCMatrix
 )
-setMethod("extract_sparse_array", "dgRMatrix",
-    .extract_sparse_array_from_dgRMatrix_or_lgRMatrix
+setMethod("OLD_extract_sparse_array", "dgRMatrix",
+    .OLD_extract_sparse_array_from_dgRMatrix_or_lgRMatrix
 )
-setMethod("extract_sparse_array", "lgCMatrix",
-    .extract_sparse_array_from_dgCMatrix_or_lgCMatrix
+setMethod("OLD_extract_sparse_array", "lgCMatrix",
+    .OLD_extract_sparse_array_from_dgCMatrix_or_lgCMatrix
 )
-setMethod("extract_sparse_array", "lgRMatrix",
-    .extract_sparse_array_from_dgRMatrix_or_lgRMatrix
+setMethod("OLD_extract_sparse_array", "lgRMatrix",
+    .OLD_extract_sparse_array_from_dgRMatrix_or_lgRMatrix
 )
 
 

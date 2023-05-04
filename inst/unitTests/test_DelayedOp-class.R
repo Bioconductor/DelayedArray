@@ -98,25 +98,25 @@ set.seed(99L)
     checkIdentical(unname(a[i3, c(6:5, 6L), integer(0)]), unname(current))
 }
 
-.check_extract_sparse_array_on_DelayedOp_with_DIM3 <- function(a, x)
+.check_OLD_extract_sparse_array_on_DelayedOp_with_DIM3 <- function(a, x)
 {
     checkTrue(is_sparse(x))
 
-    ## The behavior of extract_sparse_array() is **undefined** when the
-    ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
+    ## The behavior of OLD_extract_sparse_array() is **undefined** when the
+    ## subscripts in 'index' contain duplicates (see "OLD_extract_sparse_array()
     ## Terms of Use" in SparseArraySeed-class.R). So do NOT use such
     ## subscripts in the tests below.
-    current <- extract_sparse_array(x, list(NULL, NULL, NULL))
+    current <- OLD_extract_sparse_array(x, list(NULL, NULL, NULL))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(a, sparse2dense(current))
 
     i3 <- c(3:8, 1L)
-    current <- extract_sparse_array(x, list(i3, 6:5, NULL))
+    current <- OLD_extract_sparse_array(x, list(i3, 6:5, NULL))
     checkTrue(is(current, "SparseArraySeed"))
     target <- extract_array(a, list(i3, 6:5, NULL))
     checkIdentical(target, sparse2dense(current))
 
-    current <- extract_sparse_array(x, list(i3, 6:5, integer(0)))
+    current <- OLD_extract_sparse_array(x, list(i3, 6:5, integer(0)))
     checkTrue(is(current, "SparseArraySeed"))
     target <- extract_array(a, list(i3, 6:5, integer(0)))
     checkIdentical(target, sparse2dense(current))
@@ -275,7 +275,7 @@ test_DelayedSubset_API <- function()
     x3 <- new_DelayedSubset(.TEST_SAS3)
 
     .basic_checks_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
-    .check_extract_sparse_array_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
+    .check_OLD_extract_sparse_array_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
 
     ## 4. Sparse seed -- structural sparsity propagated
 
@@ -294,22 +294,22 @@ test_DelayedSubset_API <- function()
     checkIdentical(unname(a4[7:5, 2L, integer(0), drop=FALSE]), unname(current))
 
     checkTrue(is_sparse(x4))
-    sas4 <- extract_sparse_array(.TEST_SAS3, index4)
-    ## The behavior of extract_sparse_array() is **undefined** when the
-    ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
+    sas4 <- OLD_extract_sparse_array(.TEST_SAS3, index4)
+    ## The behavior of OLD_extract_sparse_array() is **undefined** when the
+    ## subscripts in 'index' contain duplicates (see "OLD_extract_sparse_array()
     ## Terms of Use" in SparseArraySeed-class.R). So do NOT use such
     ## subscripts in the tests below.
-    current <- extract_sparse_array(x4, list(NULL, NULL, NULL))
+    current <- OLD_extract_sparse_array(x4, list(NULL, NULL, NULL))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(sas4, current)
-    current <- extract_sparse_array(x4, list(c(6:7, 3:2), NULL, NULL))
-    target <- extract_sparse_array(sas4, list(c(6:7, 3:2), NULL, NULL))
+    current <- OLD_extract_sparse_array(x4, list(c(6:7, 3:2), NULL, NULL))
+    target <- OLD_extract_sparse_array(sas4, list(c(6:7, 3:2), NULL, NULL))
     checkIdentical(target, current)
-    current <- extract_sparse_array(x4, list(c(6:7, 3:2), NULL, integer(0)))
-    target <- extract_sparse_array(sas4, list(c(6:7, 3:2), NULL, integer(0)))
+    current <- OLD_extract_sparse_array(x4, list(c(6:7, 3:2), NULL, integer(0)))
+    target <- OLD_extract_sparse_array(sas4, list(c(6:7, 3:2), NULL, integer(0)))
     checkIdentical(target, current)
-    current <- extract_sparse_array(x4, list(c(6:7, 3:2), 2L, NULL))
-    target <- extract_sparse_array(sas4, list(c(6:7, 3:2), 2L, NULL))
+    current <- OLD_extract_sparse_array(x4, list(c(6:7, 3:2), 2L, NULL))
+    target <- OLD_extract_sparse_array(sas4, list(c(6:7, 3:2), 2L, NULL))
     checkIdentical(target, current)
 
     ## 5. Sparse seed but structural sparsity NOT propagated because
@@ -403,7 +403,7 @@ test_DelayedAperm_API <- function()
     x3 <- new_DelayedAperm(.TEST_SAS3)
 
     .basic_checks_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
-    .check_extract_sparse_array_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
+    .check_OLD_extract_sparse_array_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
 
     ## 4. Sparse seed -- transpose 1st and 3rd dims
 
@@ -424,19 +424,19 @@ test_DelayedAperm_API <- function()
 
     checkTrue(is_sparse(x4))
     sas4 <- aperm(.TEST_SAS3, 3:1)
-    ## The behavior of extract_sparse_array() is **undefined** when the
-    ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
+    ## The behavior of OLD_extract_sparse_array() is **undefined** when the
+    ## subscripts in 'index' contain duplicates (see "OLD_extract_sparse_array()
     ## Terms of Use" in SparseArraySeed-class.R). So do NOT use such
     ## subscripts in the tests below.
-    current <- extract_sparse_array(x4, list(NULL, NULL, NULL))
+    current <- OLD_extract_sparse_array(x4, list(NULL, NULL, NULL))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(sas4, current)
-    current <- extract_sparse_array(x4, list(NULL, 6:5, i3))
-    target <- extract_sparse_array(sas4, list(NULL, 6:5, i3))
+    current <- OLD_extract_sparse_array(x4, list(NULL, 6:5, i3))
+    target <- OLD_extract_sparse_array(sas4, list(NULL, 6:5, i3))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(target, current)
-    current <- extract_sparse_array(x4, list(integer(0), 6:5, i3))
-    target <- extract_sparse_array(sas4, list(integer(0), 6:5, i3))
+    current <- OLD_extract_sparse_array(x4, list(integer(0), 6:5, i3))
+    target <- OLD_extract_sparse_array(sas4, list(integer(0), 6:5, i3))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(target, current)
 
@@ -459,19 +459,19 @@ test_DelayedAperm_API <- function()
 
     checkTrue(is_sparse(x5))
     sas5 <- aperm(.TEST_SAS3, 2:1)
-    ## The behavior of extract_sparse_array() is **undefined** when the
-    ## subscripts in 'index' contain duplicates (see "extract_sparse_array()
+    ## The behavior of OLD_extract_sparse_array() is **undefined** when the
+    ## subscripts in 'index' contain duplicates (see "OLD_extract_sparse_array()
     ## Terms of Use" in SparseArraySeed-class.R). So do NOT use such
     ## subscripts in the tests below.
-    current <- extract_sparse_array(x5, list(NULL, NULL))
+    current <- OLD_extract_sparse_array(x5, list(NULL, NULL))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(sas5, current)
-    current <- extract_sparse_array(x5, list(6:5, i3))
-    target <- extract_sparse_array(sas5, list(6:5, i3))
+    current <- OLD_extract_sparse_array(x5, list(6:5, i3))
+    target <- OLD_extract_sparse_array(sas5, list(6:5, i3))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(target, current)
-    current <- extract_sparse_array(x5, list(6:5, integer(0)))
-    target <- extract_sparse_array(sas5, list(6:5, integer(0)))
+    current <- OLD_extract_sparse_array(x5, list(6:5, integer(0)))
+    target <- OLD_extract_sparse_array(sas5, list(6:5, integer(0)))
     checkTrue(is(current, "SparseArraySeed"))
     checkIdentical(target, current)
 }
@@ -543,7 +543,7 @@ test_DelayedUnaryIsoOpStack_API <- function()
     x3 <- new_DelayedUnaryIsoOpStack(.TEST_SAS3)
 
     .basic_checks_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
-    .check_extract_sparse_array_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
+    .check_OLD_extract_sparse_array_on_DelayedOp_with_DIM3(.TEST_ARRAY3, x3)
 
     ## 4. Sparse seed -- 1 / (log(a)^2 + 1)
 
@@ -554,7 +554,7 @@ test_DelayedUnaryIsoOpStack_API <- function()
 
     a4 <- 1 / (log(.TEST_ARRAY3)^2 + 1)
     .basic_checks_on_DelayedOp_with_DIM3(a4, x4)
-    .check_extract_sparse_array_on_DelayedOp_with_DIM3(a4, x4)
+    .check_OLD_extract_sparse_array_on_DelayedOp_with_DIM3(a4, x4)
 
     ## 5. Sparse seed but structural sparsity NOT propagated because
     ##    the stack of operations doesn't preserve the zeros

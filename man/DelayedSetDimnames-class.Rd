@@ -58,7 +58,7 @@
 ## ~ ~ ~ Propagation of sparsity ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 ## DelayedSetDimnames objects inherit the default
-## is_sparse() and extract_sparse_array() methods defined
+## is_sparse() and OLD_extract_sparse_array() methods defined
 ## for DelayedUnaryIsoOp derivatives.
 }
 

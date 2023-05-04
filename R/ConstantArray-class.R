@@ -37,7 +37,7 @@ setMethod("extract_array", "ConstantArraySeed",
         array(x@value, S4Arrays:::get_Nindex_lengths(index, dim(x)))
 )
 
-setMethod("extract_sparse_array", "ConstantArraySeed",
+setMethod("OLD_extract_sparse_array", "ConstantArraySeed",
     function(x, index)
     {
         ans_dim <- S4Arrays:::get_Nindex_lengths(index, dim(x))

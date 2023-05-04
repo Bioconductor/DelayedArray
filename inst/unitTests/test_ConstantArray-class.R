@@ -18,7 +18,7 @@ test_ConstantArray <- function()
     checkTrue(is_sparse(A3))
     checkIdentical(as.matrix(A3), matrix(0, 100, 200))
 
-    out <- extract_sparse_array(A3, list(1:10, 1:20))
+    out <- OLD_extract_sparse_array(A3, list(1:10, 1:20))
     checkIdentical(dim(out), c(10L, 20L))
     checkIdentical(nzdata(out), numeric(0))
 }
