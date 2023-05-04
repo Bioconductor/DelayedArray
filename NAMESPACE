@@ -353,7 +353,7 @@ export(
     DummyArrayGrid, RegularArrayGrid, extract_array, is_sparse, write_block,
 
     ## Used in bsseq:
-    ArbitraryArrayGrid, read_block
+    colsum, ArbitraryArrayGrid, read_block
 )
 
 exportMethods(

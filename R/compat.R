@@ -1,4 +1,5 @@
 setMethod("t", "DelayedArray", S4Arrays::t.Array)
+colsum <- S4Arrays::colsum
 makeNindexFromArrayViewport <- S4Arrays::makeNindexFromArrayViewport
 DummyArrayGrid <- S4Arrays::DummyArrayGrid
 RegularArrayGrid <- S4Arrays::RegularArrayGrid
