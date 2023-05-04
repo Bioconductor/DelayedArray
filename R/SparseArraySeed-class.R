@@ -358,7 +358,8 @@ setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
                   "or lgCMatrix must have exactly 2 dimensions"))
     i <- from@nzindex[ , 1L]
     j <- from@nzindex[ , 2L]
-    CsparseMatrix(from_dim, i, j, from@nzdata, dimnames=dimnames(from))
+    SparseArray:::CsparseMatrix(from_dim, i, j, from@nzdata,
+                                dimnames=dimnames(from))
 }
 
 .from_SparseArraySeed_to_RsparseMatrix <- function(from)
@@ -369,7 +370,8 @@ setAs("ANY", "SparseArraySeed", function(from) dense2sparse(from))
                   "or lgRMatrix must have exactly 2 dimensions"))
     i <- from@nzindex[ , 1L]
     j <- from@nzindex[ , 2L]
-    RsparseMatrix(from_dim, i, j, from@nzdata, dimnames=dimnames(from))
+    SparseArray:::RsparseMatrix(from_dim, i, j, from@nzdata,
+                                dimnames=dimnames(from))
 }
 
 setAs("SparseArraySeed", "CsparseMatrix",

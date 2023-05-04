@@ -12,13 +12,6 @@ static const R_CallMethodDef callMethods[] = {
 	CALLMETHOD_DEF(C_compress_atomic_vector, 1),
 	CALLMETHOD_DEF(C_decompress_atomic_vector, 1),
 
-/* sparseMatrix_utils.c */
-	CALLMETHOD_DEF(C_rowsum_dgCMatrix, 4),
-	CALLMETHOD_DEF(C_colMins_dgCMatrix, 2),
-	CALLMETHOD_DEF(C_colMaxs_dgCMatrix, 2),
-	CALLMETHOD_DEF(C_colRanges_dgCMatrix, 2),
-	CALLMETHOD_DEF(C_colVars_dgCMatrix, 2),
-
 	{NULL, NULL, 0}
 };
 

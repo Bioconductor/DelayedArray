@@ -291,7 +291,7 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
             ## a CsparseMatrix derivative so we transpose **before** coercion
             ## to CsparseMatrix.
             block <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-            block_rowmins <- colMins_dgCMatrix(block, na.rm=na.rm)
+            block_rowmins <- SparseArray:::colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMins().
             block_rowmins <- MatrixGenerics::rowMins(block, na.rm=na.rm)
@@ -325,7 +325,7 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
             block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-            block_colmins <- colMins_dgCMatrix(block, na.rm=na.rm)
+            block_colmins <- SparseArray:::colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::colMins().
             block_colmins <- MatrixGenerics::colMins(block, na.rm=na.rm)
@@ -397,7 +397,7 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
             ## a CsparseMatrix derivative so we transpose **before** coercion
             ## to CsparseMatrix.
             block <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-            block_rowmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
+            block_rowmaxs <- SparseArray:::colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMaxs().
             block_rowmaxs <- MatrixGenerics::rowMaxs(block, na.rm=na.rm)
@@ -431,7 +431,7 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
             block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-            block_colmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
+            block_colmaxs <- SparseArray:::colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::colMaxs().
             block_colmaxs <- MatrixGenerics::colMaxs(block, na.rm=na.rm)

@@ -16,9 +16,13 @@
      TileDBArray, alabaster.matrix, and SCArray.
 
   2. Depend and import SparseArray.
+     ---
+     THIS STEP WAS COMPLETED ON MAY 3, 2023.
 
   3. Get rid of R/sparseMatrix-utils.R and src/sparseMatrix_utils.c (this is
      now in SparseArray).
+     ---
+     THIS STEP WAS COMPLETED ON MAY 3, 2023.
 
   4. Prepare for the switch from .OLD_read_block() to .NEW_read_block() (see
      S4Arrays/R/read_block.R) by implementing:

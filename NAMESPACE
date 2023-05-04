@@ -16,6 +16,7 @@ import(MatrixGenerics)
 import(S4Vectors)
 import(IRanges)
 import(S4Arrays)
+import(SparseArray)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -95,7 +96,6 @@ S3method(mean, DelayedArray)
 S3method(range, SparseArraySeed)
 S3method(range, DelayedArray)
 
-S3method(rowsum, dgCMatrix)
 S3method(rowsum, DelayedMatrix)
 
 S3method(scale, DelayedMatrix)
@@ -131,7 +131,6 @@ export(
     range.SparseArraySeed,
     range.DelayedArray,
 
-    rowsum.dgCMatrix,
     rowsum.DelayedMatrix,
 
     scale.DelayedMatrix,
@@ -218,7 +217,7 @@ exportMethods(
     ranges, start, end, width,
 
     ## Methods for generics defined in the S4Arrays package:
-    arbind, acbind, is_sparse, extract_array, write_block
+    rowsum, arbind, acbind, extract_array, is_sparse, write_block
 )
 
 
@@ -285,9 +284,6 @@ export(
 ###
 
 export(
-    ## sparseMatrix-utils.R:
-    rowsum, colsum,
-
     ## SparseArraySeed-class.R:
     nzindex, nzdata, sparsity, OLD_extract_sparse_array,
 
@@ -327,7 +323,6 @@ export(
 
 ### Same list as above.
 exportMethods(
-    rowsum, colsum,
     nzindex, nzdata, sparsity, OLD_extract_sparse_array,
     read_sparse_block,
     isLinear,
