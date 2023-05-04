@@ -43,7 +43,8 @@
 <<setup, include=FALSE>>=
 library(knitr)
 opts_chunk$set(size="scriptsize")
-if (!dir.exists("~/mydata")) dir.create("~/mydata")
+mydata_dir <- file.path(tempdir(), "mydata")
+if (!dir.exists(mydata_dir)) dir.create(mydata_dir)
 options(width=80)
 library(Matrix)
 library(DelayedArray)
@@ -519,7 +520,8 @@ seed(M6b)
     \begin{column}{0.44\textwidth}
       \begin{exampleblock}{}
 <<>>=
-setHDF5DumpFile("~/mydata/M6c.h5")
+hdf5_dumpfile <- file.path(mydata_dir, "M6c.h5")
+setHDF5DumpFile(hdf5_dumpfile)
 setHDF5DumpName("M6c")
 M6c <- as(M6, "HDF5Array")
 @
@@ -529,7 +531,7 @@ M6c <- as(M6, "HDF5Array")
       \begin{exampleblock}{}
 <<>>=
 seed(M6c)
-h5ls("~/mydata/M6c.h5")
+h5ls(hdf5_dumpfile)
 @
       \end{exampleblock}
     \end{column}
@@ -766,7 +768,7 @@ colSums(M)
 
 <<cleanup, include=FALSE>>=
 setHDF5DumpFile()
-unlink("~/mydata", recursive=TRUE, force=TRUE)
+unlink(mydata_dir, recursive=TRUE, force=TRUE)
 @
 
 \end{document}
