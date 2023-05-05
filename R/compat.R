@@ -15,3 +15,4 @@ set_dimnames <- S4Arrays:::set_dimnames
 subset_by_Nindex <- S4Arrays:::subset_by_Nindex
 to_linear_index <- S4Arrays:::to_linear_index
 bplapply2 <- S4Arrays:::bplapply2
+simplify_NULL_dimnames <- S4Arrays:::simplify_NULL_dimnames
