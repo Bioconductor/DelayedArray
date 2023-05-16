@@ -502,27 +502,6 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
 ### them preserves the length of the object).
 ###
 
-.normalize_dim_replacement_value <- function(value, x_dim)
-{
-    if (is.null(value))
-        stop(wmsg("you can't do that, sorry"))
-    if (!is.numeric(value))
-        stop(wmsg("the supplied dim vector must be numeric"))
-    if (length(value) == 0L)
-        stop(wmsg("the supplied dim vector cannot be empty"))
-    if (!is.integer(value))
-        value <- as.integer(value)
-    if (S4Vectors:::anyMissingOrOutside(value, 0L))
-        stop(wmsg("the supplied dim vector cannot contain negative ",
-                  "or NA values"))
-    prod1 <- prod(value)
-    prod2 <- prod(x_dim)
-    if (prod1 != prod2)
-        stop(wmsg("the supplied dims [product ", prod1, "] do not match ",
-                  "the length of object [", prod2, "]"))
-    unname(value)
-}
-
 ### Return the mapping as an integer vector 'new2old' parallel to 'new_dim'.
 ### 'new2old' has the following properties:
 ### 1. It can contain NA's but it must have at least one non-NA element.
@@ -591,7 +570,7 @@ setMethod("aperm", "DelayedArray", aperm.DelayedArray)
 .set_DelayedArray_dim <- function(x, value)
 {
     x_dim <- dim(x)
-    value <- .normalize_dim_replacement_value(value, x_dim)
+    value <- unname(S4Arrays:::normalize_dim_replacement_value(value, x_dim))
     new2old <- .map_new_to_old_dim(value, x_dim, class(x))
     ans <- aperm(x, new2old)
     stopifnot(identical(dim(ans), value))  # sanity check

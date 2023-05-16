@@ -43,14 +43,6 @@
 \alias{coerce,lgCMatrix,SparseArraySeed-method}
 \alias{coerce,lgRMatrix,SparseArraySeed-method}
 
-\alias{coerce,Array,dgCMatrix-method}
-\alias{coerce,Array,dgRMatrix-method}
-\alias{coerce,Array,lgCMatrix-method}
-\alias{coerce,Array,lgRMatrix-method}
-\alias{coerce,Array,CsparseMatrix-method}
-\alias{coerce,Array,RsparseMatrix-method}
-\alias{coerce,Array,sparseMatrix-method}
-
 \alias{OLD_extract_sparse_array,dgCMatrix-method}
 \alias{OLD_extract_sparse_array,dgRMatrix-method}
 \alias{OLD_extract_sparse_array,lgCMatrix-method}
