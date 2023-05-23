@@ -32,7 +32,7 @@
        (b) SparseArray::read_block_as_sparse() methods: one for each
            read_sparse_block() method defined in DelayedArray and its revdeps.
 
-  5. Switch from .OLD_read_block_OLD() to .NEW_read_block() in S4Arrays.
+  5. Switch from .OLD_read_block() to .NEW_read_block() in S4Arrays.
 
   6. Then, all the OLD_extract_sparse_array() and read_sparse_block() methods
      can be deprecated.

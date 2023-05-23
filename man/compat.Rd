@@ -1,7 +1,6 @@
 \name{compat}
 
 \alias{t,DelayedArray-method}
-\alias{colsum}
 \alias{makeNindexFromArrayViewport}
 \alias{class:ArrayGrid}
 \alias{ArrayGrid-class}
@@ -31,7 +30,6 @@
   See:
   \itemize{
     \item \code{S4Arrays::\link[S4Arrays]{t.Array}}
-    \item \code{S4Arrays::\link[S4Arrays]{colsum}}
     \item \code{S4Arrays::\link[S4Arrays]{makeNindexFromArrayViewport}}
     \item \code{S4Arrays::\link[S4Arrays]{ArrayGrid}}
     \item \code{S4Arrays::\link[S4Arrays]{DummyArrayGrid}}

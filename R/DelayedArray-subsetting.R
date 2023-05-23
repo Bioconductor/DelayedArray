@@ -324,6 +324,33 @@ setAs("DelayedArray", "SparseArraySeed",
     function(from) .BLOCK_dense2sparse(from)
 )
 
+.BLOCK_from_DelayedArray_to_COO_SparseArray <- function(x, grid=NULL)
+{
+    FUN <- function(block, arr.ind) {
+        bid <- currentBlockId()
+        minor <- base::which(block != 0L)
+        major <- rep.int(bid, length(minor))
+        grid <- effectiveGrid()
+        nzcoo <- mapToRef(major, minor, grid, linear=TRUE)
+        nzvals <- block[minor]
+        list(nzcoo, nzvals)
+    }
+    block_results <- blockApply(x, FUN, grid=grid)
+    nzcoo_list <- lapply(block_results, `[[`, 1L)
+    nzvals_list <- lapply(block_results, `[[`, 2L)
+    nzcoo <- do.call(rbind, nzcoo_list)
+    nzvals <- unlist(nzvals_list, recursive=FALSE)
+    SparseArray:::new_COO_SparseArray(dim(x), dimnames(x), nzcoo, nzvals,
+                                      check=FALSE)
+}
+
+setAs("DelayedArray", "COO_SparseArray",
+    function(from) .BLOCK_from_DelayedArray_to_COO_SparseArray(from)
+)
+setAs("DelayedArray", "SparseArray",
+    function(from) .BLOCK_from_DelayedArray_to_COO_SparseArray(from)
+)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### [<- (a.k.a. subassignment)
