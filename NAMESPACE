@@ -217,7 +217,10 @@ exportMethods(
     ranges, start, end, width,
 
     ## Methods for generics defined in the S4Arrays package:
-    rowsum, arbind, acbind, extract_array, is_sparse, write_block
+    rowsum, arbind, acbind, extract_array, is_sparse, write_block,
+
+    ## Methods for generics defined in the SparseArray package:
+    nzdata
 )
 
 
@@ -285,7 +288,7 @@ export(
 
 export(
     ## SparseArraySeed-class.R:
-    nzindex, nzdata, sparsity, OLD_extract_sparse_array,
+    nzindex, sparsity, OLD_extract_sparse_array,
 
     ## read_sparse_block.R:
     read_sparse_block,
@@ -323,7 +326,7 @@ export(
 
 ### Same list as above.
 exportMethods(
-    nzindex, nzdata, sparsity, OLD_extract_sparse_array,
+    nzindex, sparsity, OLD_extract_sparse_array,
     read_sparse_block,
     isLinear,
     is_noop,

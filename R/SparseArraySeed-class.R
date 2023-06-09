@@ -91,7 +91,6 @@ setValidity2("SparseArraySeed", .validate_SparseArraySeed)
 setGeneric("nzindex", function(x) standardGeneric("nzindex"))
 setMethod("nzindex", "SparseArraySeed", function(x) x@nzindex)
 
-setGeneric("nzdata", function(x) standardGeneric("nzdata"))
 setMethod("nzdata", "SparseArraySeed", function(x) x@nzdata)
 
 setMethod("dimnames", "SparseArraySeed",

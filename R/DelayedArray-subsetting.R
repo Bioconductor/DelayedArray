@@ -332,15 +332,15 @@ setAs("DelayedArray", "SparseArraySeed",
         major <- rep.int(bid, length(minor))
         grid <- effectiveGrid()
         nzcoo <- mapToRef(major, minor, grid, linear=TRUE)
-        nzvals <- block[minor]
-        list(nzcoo, nzvals)
+        nzdata <- block[minor]
+        list(nzcoo, nzdata)
     }
     block_results <- blockApply(x, FUN, grid=grid)
     nzcoo_list <- lapply(block_results, `[[`, 1L)
-    nzvals_list <- lapply(block_results, `[[`, 2L)
+    nzdata_list <- lapply(block_results, `[[`, 2L)
     nzcoo <- do.call(rbind, nzcoo_list)
-    nzvals <- unlist(nzvals_list, recursive=FALSE)
-    SparseArray:::new_COO_SparseArray(dim(x), dimnames(x), nzcoo, nzvals,
+    nzdata <- unlist(nzdata_list, recursive=FALSE)
+    SparseArray:::new_COO_SparseArray(dim(x), dimnames(x), nzcoo, nzdata,
                                       check=FALSE)
 }
 
