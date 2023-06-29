@@ -43,30 +43,27 @@
 }
 
 \usage{
-\S4method{rowSums}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
+## N.B.: Showing ONLY the col*() methods (usage of row*() methods is
+## the same):
+
 \S4method{colSums}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 
-\S4method{rowMeans}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{colMeans}{DelayedMatrix}(x, na.rm=FALSE, dims=1)
 
-\S4method{rowMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
-\S4method{colMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colMins}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, useNames=TRUE)
 
-\S4method{rowMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
-\S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, useNames=TRUE)
 
-\S4method{rowRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{colRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 
-\S4method{rowVars}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL)
-\S4method{colVars}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL)
+\S4method{colVars}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, useNames=TRUE)
 }
 
 \arguments{
   \item{x}{
     A \link{DelayedMatrix} object.
   }
-  \item{na.rm, center}{
+  \item{na.rm, useNames, center}{
     See man pages for the corresponding generics in the \pkg{MatrixGenerics}
     package (e.g. \code{?MatrixGenerics::\link[MatrixGenerics]{rowVars}})
     for a description of these arguments.
@@ -135,14 +132,14 @@ stopifnot(
   identical(csums, colSums(m12)),
   identical(rmeans, rowMeans(m12)),
   identical(cmeans, colMeans(m12)),
-  identical(rmins, rowMins(m12, useNames=FALSE)),
-  identical(cmins, colMins(m12, useNames=FALSE)),
-  identical(rmaxs, rowMaxs(m12, useNames=FALSE)),
-  identical(cmaxs, colMaxs(m12, useNames=FALSE)),
+  identical(rmins, rowMins(m12)),
+  identical(cmins, colMins(m12)),
+  identical(rmaxs, rowMaxs(m12)),
+  identical(cmaxs, colMaxs(m12)),
   identical(rranges, cbind(rmins, rmaxs, deparse.level=0)),
   identical(cranges, cbind(cmins, cmaxs, deparse.level=0)),
-  all.equal(rvars, rowVars(m12, useNames=FALSE)),
-  all.equal(cvars, colVars(m12, useNames=FALSE))
+  all.equal(rvars, rowVars(m12)),
+  all.equal(cvars, colVars(m12))
 )
 }
 \keyword{methods}
