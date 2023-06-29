@@ -4,12 +4,6 @@
 ###
 
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### .BLOCK_row_summary()
-###
-### Obsolete! Use .process_grid_by_row() and .process_grid_by_col() instead.
-###
-
 ### Raise an error if invalid input type. Otherwise return "integer",
 ### "numeric", "double", or "complex".
 .get_ans_type <- function(x, must.be.numeric=FALSE)
@@ -24,28 +18,12 @@
     ans_type
 }
 
-### Workhorse behind rowSums(), rowMaxs(), and rowlMins() methods for
-### DelayedMatrix objects.
-### Could also be used for other row summarization methods e.g.
-### rowProds(), rowAnys(), rowAlls(), rowAnyNAs(), etc... An important
-### requirement is that '.Generic' must satisfy the following property:
-### for any matrix 'm', 'match.fun(.Generic)(m)' must return an
-### atomic vector of length 'nrow(m)'.
-.BLOCK_row_summary <- function(.Generic, x, na.rm=FALSE, grid=NULL)
-{
-    GENERIC <- match.fun(.Generic)
-    if (!isTRUEorFALSE(na.rm))
-        stop("'na.rm' must be TRUE or FALSE")
-    .get_ans_type(x, must.be.numeric=TRUE)  # only to check input type (we
-                                            # ignore returned ans type)
-    block_results <- blockApply(x, GENERIC, na.rm=na.rm,
-                                grid=grid, as.sparse=FALSE)
-    GENERIC(matrix(unlist(block_results, use.names=FALSE), nrow=nrow(x)))
-}
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### .process_grid_by_row() and .process_grid_by_col()
+###
+### Obsolete! Use block_apply_by_grid_row() and block_apply_by_grid_col()
+### instead.
 ###
 
 .process_grid_by_row <-
@@ -136,15 +114,13 @@
 ### They propagate the rownames or colnames.
 ###
 
-.BLOCK_rowSums <-
-    function(x, na.rm=FALSE,
-             grid=NULL, as.sparse=NA, BPPARAM=getAutoBPPARAM(),
-             verbose=get_verbose_block_processing())
+BLOCK_rowSums <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
 
-    INIT <- function(grid, i) vector("numeric", length=nrow(grid[[i, 1L]]))
+    INIT <- function(grid, i) numeric(nrow(grid[[i, 1L]]))
     INIT_args <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
@@ -155,22 +131,20 @@
     }
     FUN_args <- list(na.rm=na.rm)
 
-    row_summaries <-
-        .process_grid_by_row(INIT, INIT_args, FUN, FUN_args, x,
-                             grid=grid, as.sparse=as.sparse, BPPARAM=BPPARAM,
-                             verbose=verbose)
-    unlist(row_summaries, recursive=FALSE, use.names=FALSE)
+    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    setNames(ans, rownames(x))
 }
 
-.BLOCK_colSums <-
-    function(x, na.rm=FALSE,
-             grid=NULL, as.sparse=NA, BPPARAM=getAutoBPPARAM(),
-             verbose=get_verbose_block_processing())
+BLOCK_colSums <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
 
-    INIT <- function(grid, j) vector("numeric", length=ncol(grid[[1L, j]]))
+    INIT <- function(grid, j) numeric(ncol(grid[[1L, j]]))
     INIT_args <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
@@ -181,11 +155,11 @@
     }
     FUN_args <- list(na.rm=na.rm)
 
-    col_summaries <-
-        .process_grid_by_col(INIT, INIT_args, FUN, FUN_args, x,
-                             grid=grid, as.sparse=as.sparse, BPPARAM=BPPARAM,
-                             verbose=verbose)
-    unlist(col_summaries, recursive=FALSE, use.names=FALSE)
+    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    setNames(ans, colnames(x))
 }
 
 .check_dims <- function(dims, method)
@@ -199,9 +173,7 @@
 .rowSums_DelayedMatrix <- function(x, na.rm=FALSE, dims=1)
 {
     .check_dims(dims, "rowSums")
-    #ans <- .BLOCK_row_summary("rowSums", x, na.rm=na.rm)
-    ans <- .BLOCK_rowSums(x, na.rm=na.rm)
-    setNames(ans, rownames(x))
+    BLOCK_rowSums(x, na.rm=na.rm)
 }
 setMethod("rowSums", "DelayedMatrix", .rowSums_DelayedMatrix)
 
@@ -209,9 +181,7 @@ setMethod("rowSums", "DelayedMatrix", .rowSums_DelayedMatrix)
 .colSums_DelayedMatrix <- function(x, na.rm=FALSE, dims=1)
 {
     .check_dims(dims, "colSums")
-    #ans <- .BLOCK_row_summary("rowSums", t(x), na.rm=na.rm)
-    ans <- .BLOCK_colSums(x, na.rm=na.rm)
-    setNames(ans, colnames(x))
+    BLOCK_colSums(x, na.rm=na.rm)
 }
 setMethod("colSums", "DelayedMatrix", .colSums_DelayedMatrix)
 
@@ -223,35 +193,73 @@ setMethod("colSums", "DelayedMatrix", .colSums_DelayedMatrix)
 ### They propagate the rownames or colnames.
 ###
 
-### TODO: Use .process_grid_by_row() instead of blockApply() to walk on 'x'.
-### See .BLOCK_rowSums() above for an example.
-.BLOCK_rowMeans <- function(x, na.rm=FALSE, grid=NULL)
+BLOCK_rowMeans <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                           BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
-        stop("'na.rm' must be TRUE or FALSE")
-    .get_ans_type(x)  # only to check input type (we ignore returned ans type)
+        stop(wmsg("'na.rm' must be TRUE or FALSE"))
 
-    FUN <- function(block, na.rm=FALSE) {
+    INIT <- function(grid, i) {
+        n <- nrow(grid[[i, 1L]])
+        data.frame(sums=numeric(n), nvals=integer(n))
+    }
+    INIT_args <- list()
+
+    FUN <- function(init, block, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
         block_sums <- rowSums(block, na.rm=na.rm)
         block_nvals <- rep.int(ncol(block), nrow(block))
         if (na.rm)
             block_nvals <- block_nvals - rowSums(is.na(block))
-        cbind(sums=block_sums, nvals=block_nvals)
+        init + data.frame(sums=block_sums, nvals=block_nvals)
     }
-    block_results <- blockApply(x, FUN, na.rm=na.rm,
-                                grid=grid, as.sparse=FALSE)
-    combined_results <- do.call(rbind, block_results)
-    row_sums <- rowSums(matrix(combined_results[ , "sums"], nrow=nrow(x)))
-    row_nvals <- rowSums(matrix(combined_results[ , "nvals"], nrow=nrow(x)))
-    setNames(row_sums / row_nvals, rownames(x))
+    FUN_args <- list(na.rm=na.rm)
+
+    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    df <- do.call(rbind, res_list)
+    setNames(df$sums / df$nvals, rownames(x))
+}
+
+BLOCK_colMeans <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                           BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    if (!isTRUEorFALSE(na.rm))
+        stop(wmsg("'na.rm' must be TRUE or FALSE"))
+
+    INIT <- function(grid, j) {
+        n <- ncol(grid[[1L, j]])
+        data.frame(sums=numeric(n), nvals=integer(n))
+    }
+    INIT_args <- list()
+
+    FUN <- function(init, block, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        ## Dispatch on colSums() method for matrix, dgCMatrix or lgCMatrix.
+        block_sums <- colSums(block, na.rm=na.rm)
+        block_nvals <- rep.int(nrow(block), ncol(block))
+        if (na.rm)
+            block_nvals <- block_nvals - colSums(is.na(block))
+        init + data.frame(sums=block_sums, nvals=block_nvals)
+    }
+    FUN_args <- list(na.rm=na.rm)
+
+    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    df <- do.call(rbind, res_list)
+    setNames(df$sums / df$nvals, colnames(x))
 }
 
 ### base::rowMeans() has a 'dims' argument. We do NOT support it.
 .rowMeans_DelayedMatrix <- function(x, na.rm=FALSE, dims=1)
 {
     .check_dims(dims, "rowMeans")
-    ans <- .BLOCK_rowMeans(x, na.rm=na.rm)
-    setNames(ans, rownames(x))
+    BLOCK_rowMeans(x, na.rm=na.rm)
 }
 setMethod("rowMeans", "DelayedMatrix", .rowMeans_DelayedMatrix)
 
@@ -259,8 +267,7 @@ setMethod("rowMeans", "DelayedMatrix", .rowMeans_DelayedMatrix)
 .colMeans_DelayedMatrix <- function(x, na.rm=FALSE, dims=1)
 {
     .check_dims(dims, "colMeans")
-    ans <- .BLOCK_rowMeans(t(x), na.rm=na.rm)
-    setNames(ans, colnames(x))
+    BLOCK_colMeans(x, na.rm=na.rm)
 }
 setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
 
@@ -272,10 +279,8 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
 ### They do NOT propagate the rownames or colnames.
 ###
 
-.BLOCK_rowMins <-
-    function(x, na.rm=FALSE,
-             grid=NULL, as.sparse=NA, BPPARAM=getAutoBPPARAM(),
-             verbose=get_verbose_block_processing())
+BLOCK_rowMins <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
@@ -294,7 +299,8 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
             block_rowmins <- colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMins().
-            block_rowmins <- MatrixGenerics::rowMins(block, na.rm=na.rm)
+            block_rowmins <- MatrixGenerics::rowMins(block, na.rm=na.rm,
+                                                     useNames=FALSE)
         }
         if (is.null(init))
             return(block_rowmins)
@@ -302,17 +308,14 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
     }
     FUN_args <- list(na.rm=na.rm)
 
-    row_summaries <-
-        .process_grid_by_row(INIT, INIT_args, FUN, FUN_args, x,
-                             grid=grid, as.sparse=as.sparse, BPPARAM=BPPARAM,
-                             verbose=verbose)
-    unlist(row_summaries, recursive=FALSE, use.names=FALSE)
+    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    unlist(res_list, recursive=FALSE, use.names=FALSE)
 }
 
-.BLOCK_colMins <-
-    function(x, na.rm=FALSE,
-             grid=NULL, as.sparse=NA, BPPARAM=getAutoBPPARAM(),
-             verbose=get_verbose_block_processing())
+BLOCK_colMins <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
@@ -328,7 +331,8 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
             block_colmins <- colMins_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::colMins().
-            block_colmins <- MatrixGenerics::colMins(block, na.rm=na.rm)
+            block_colmins <- MatrixGenerics::colMins(block, na.rm=na.rm,
+                                                     useNames=FALSE)
         }
         if (is.null(init))
             return(block_colmins)
@@ -336,11 +340,10 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
     }
     FUN_args <- list(na.rm=na.rm)
 
-    col_summaries <-
-        .process_grid_by_col(INIT, INIT_args, FUN, FUN_args, x,
-                             grid=grid, as.sparse=as.sparse, BPPARAM=BPPARAM,
-                             verbose=verbose)
-    unlist(col_summaries, recursive=FALSE, use.names=FALSE)
+    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    unlist(res_list, recursive=FALSE, use.names=FALSE)
 }
 
 .check_rows_cols <- function(rows, cols, method)
@@ -355,8 +358,7 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
 .rowMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "rowMins")
-    #.BLOCK_row_summary("rowMins", x, na.rm=na.rm)
-    .BLOCK_rowMins(x, na.rm=na.rm)
+    BLOCK_rowMins(x, na.rm=na.rm)
 }
 setMethod("rowMins", "DelayedMatrix", .rowMins_DelayedMatrix)
 
@@ -365,8 +367,7 @@ setMethod("rowMins", "DelayedMatrix", .rowMins_DelayedMatrix)
 .colMins_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "colMins")
-    #.BLOCK_row_summary("rowMins", t(x), na.rm=na.rm)
-    .BLOCK_colMins(x, na.rm=na.rm)
+    BLOCK_colMins(x, na.rm=na.rm)
 }
 setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 
@@ -378,10 +379,8 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 ### They do NOT propagate the rownames or colnames.
 ###
 
-.BLOCK_rowMaxs <-
-    function(x, na.rm=FALSE,
-             grid=NULL, as.sparse=NA, BPPARAM=getAutoBPPARAM(),
-             verbose=get_verbose_block_processing())
+BLOCK_rowMaxs <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
@@ -400,7 +399,8 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
             block_rowmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMaxs().
-            block_rowmaxs <- MatrixGenerics::rowMaxs(block, na.rm=na.rm)
+            block_rowmaxs <- MatrixGenerics::rowMaxs(block, na.rm=na.rm,
+                                                     useNames=FALSE)
         }
         if (is.null(init))
             return(block_rowmaxs)
@@ -408,17 +408,14 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
     }
     FUN_args <- list(na.rm=na.rm)
 
-    row_summaries <-
-        .process_grid_by_row(INIT, INIT_args, FUN, FUN_args, x,
-                             grid=grid, as.sparse=as.sparse, BPPARAM=BPPARAM,
-                             verbose=verbose)
-    unlist(row_summaries, recursive=FALSE, use.names=FALSE)
+    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    unlist(res_list, recursive=FALSE, use.names=FALSE)
 }
 
-.BLOCK_colMaxs <-
-    function(x, na.rm=FALSE,
-             grid=NULL, as.sparse=NA, BPPARAM=getAutoBPPARAM(),
-             verbose=get_verbose_block_processing())
+BLOCK_colMaxs <- function(x, na.rm=FALSE, grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
@@ -434,7 +431,8 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
             block_colmaxs <- colMaxs_dgCMatrix(block, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::colMaxs().
-            block_colmaxs <- MatrixGenerics::colMaxs(block, na.rm=na.rm)
+            block_colmaxs <- MatrixGenerics::colMaxs(block, na.rm=na.rm,
+                                                     useNames=FALSE)
         }
         if (is.null(init))
             return(block_colmaxs)
@@ -442,11 +440,10 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
     }
     FUN_args <- list(na.rm=na.rm)
 
-    col_summaries <-
-        .process_grid_by_col(INIT, INIT_args, FUN, FUN_args, x,
-                             grid=grid, as.sparse=as.sparse, BPPARAM=BPPARAM,
-                             verbose=verbose)
-    unlist(col_summaries, recursive=FALSE, use.names=FALSE)
+    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    unlist(res_list, recursive=FALSE, use.names=FALSE)
 }
 
 ### MatrixGenerics::rowMaxs() has the 'rows' and 'cols' arguments.
@@ -454,8 +451,7 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 .rowMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "rowMaxs")
-    #.BLOCK_row_summary("rowMaxs", x, na.rm=na.rm)
-    .BLOCK_rowMaxs(x, na.rm=na.rm)
+    BLOCK_rowMaxs(x, na.rm=na.rm)
 }
 setMethod("rowMaxs", "DelayedMatrix", .rowMaxs_DelayedMatrix)
 
@@ -464,8 +460,7 @@ setMethod("rowMaxs", "DelayedMatrix", .rowMaxs_DelayedMatrix)
 .colMaxs_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "colMaxs")
-    #.BLOCK_row_summary("rowMaxs", t(x), na.rm=na.rm)
-    .BLOCK_colMaxs(x, na.rm=na.rm)
+    BLOCK_colMaxs(x, na.rm=na.rm)
 }
 setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
 
@@ -477,19 +472,24 @@ setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
 ### They do NOT propagate the rownames or colnames.
 ###
 
-### TODO: Use .process_grid_by_row() instead of blockApply() to walk on 'x'.
-### See .BLOCK_rowMins() and .BLOCK_rowMaxs() above for examples.
-.BLOCK_rowRanges <- function(x, na.rm=FALSE, grid=NULL)
+### TODO:
+### - Use block_apply_by_grid_row() instead of blockApply() to walk on 'x'.
+### - Support arguments 'as.sparse', 'BPPARAM', and 'verbose'.
+### See BLOCK_rowMins() and BLOCK_rowMaxs() above for examples.
+BLOCK_rowRanges <- function(x, na.rm=FALSE, grid=NULL)
 {
     if (!isTRUEorFALSE(na.rm))
         stop("'na.rm' must be TRUE or FALSE")
     .get_ans_type(x, must.be.numeric=TRUE)  # only to check input type (we
                                             # ignore returned ans type)
-    block_results <- blockApply(x, MatrixGenerics::rowRanges, na.rm=na.rm,
-                                grid=grid, as.sparse=FALSE)
+    block_results <- blockApply(x, MatrixGenerics::rowRanges,
+                                   na.rm=na.rm, useNames=FALSE,
+                                   grid=grid, as.sparse=FALSE)
     combined_results <- do.call(rbind, block_results)
-    row_mins <- rowMins(matrix(combined_results[ , 1L], nrow=nrow(x)))
-    row_maxs <- rowMaxs(matrix(combined_results[ , 2L], nrow=nrow(x)))
+    row_mins <- rowMins(matrix(combined_results[ , 1L], nrow=nrow(x)),
+                        useNames=FALSE)
+    row_maxs <- rowMaxs(matrix(combined_results[ , 2L], nrow=nrow(x)),
+                        useNames=FALSE)
     ans <- cbind(row_mins, row_maxs, deparse.level=0)
     ## 'ans' can have unexpected dimnames because of the following bug
     ## in cbind/rbind:
@@ -504,7 +504,7 @@ setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
 .rowRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "rowRanges")
-    .BLOCK_rowRanges(x, na.rm=na.rm)
+    BLOCK_rowRanges(x, na.rm=na.rm)
 }
 setMethod("rowRanges", "DelayedMatrix", .rowRanges_DelayedMatrix)
 
@@ -513,7 +513,7 @@ setMethod("rowRanges", "DelayedMatrix", .rowRanges_DelayedMatrix)
 .colRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 {
     .check_rows_cols(rows, cols, "colRanges")
-    .BLOCK_rowRanges(t(x), na.rm=na.rm)
+    BLOCK_rowRanges(t(x), na.rm=na.rm)
 }
 setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
 
@@ -525,7 +525,121 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
 ### They do NOT propagate the rownames or colnames.
 ###
 
-### TODO
+BLOCK_rowVars <- function(x, na.rm=FALSE, center=NULL,
+                          grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    if (!isTRUEorFALSE(na.rm))
+        stop(wmsg("'na.rm' must be TRUE or FALSE"))
+
+    x_nrow <- nrow(x)
+    if (is.null(center)) {
+        center <- BLOCK_rowMeans(x, na.rm=na.rm,
+                                 grid=grid, as.sparse=as.sparse,
+                                 BPPARAM=BPPARAM, verbose=verbose)
+    } else {
+        if (!is.numeric(center))
+            stop("'center' must be NULL or a numeric vector")
+        if (length(center) != x_nrow) {
+            if (length(center) != 1L)
+                stop("'center' must have length 1 or nrow(x)")
+            center <- rep.int(center, x_nrow)
+        }
+    }
+
+    INIT <- function(grid, i) {
+        n <- nrow(grid[[i, 1L]])
+        data.frame(sums=numeric(n), nvals=integer(n))
+    }
+    INIT_args <- list()
+
+    FUN <- function(init, block, center, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        viewport <- currentViewport()
+        block_center <- extractROWS(center, ranges(viewport)[1L])
+        delta <- block - block_center
+        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
+        block_sums <- rowSums(delta * delta, na.rm=na.rm)
+        block_nvals <- rep.int(ncol(block), nrow(block))
+        if (na.rm)
+            block_nvals <- block_nvals - rowSums(is.na(block))
+        init + data.frame(sums=block_sums, nvals=block_nvals)
+    }
+    FUN_args <- list(center, na.rm=na.rm)
+
+    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    df <- do.call(rbind, res_list)
+    setNames(df$sums / (df$nvals - 1L), rownames(x))
+}
+
+BLOCK_colVars <- function(x, na.rm=FALSE, center=NULL,
+                          grid=NULL, as.sparse=NA,
+                          BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    if (!isTRUEorFALSE(na.rm))
+        stop(wmsg("'na.rm' must be TRUE or FALSE"))
+
+    x_ncol <- ncol(x)
+    if (is.null(center)) {
+        center <- BLOCK_colMeans(x, na.rm=na.rm,
+                                 grid=grid, as.sparse=as.sparse,
+                                 BPPARAM=BPPARAM, verbose=verbose)
+    } else {
+        if (!is.numeric(center))
+            stop("'center' must be NULL or a numeric vector")
+        if (length(center) != x_ncol) {
+            if (length(center) != 1L)
+                stop("'center' must have length 1 or ncol(x)")
+            center <- rep.int(center, x_ncol)
+        }
+    }
+
+    INIT <- function(grid, j) {
+        n <- ncol(grid[[1L, j]])
+        data.frame(sums=numeric(n), nvals=integer(n))
+    }
+    INIT_args <- list()
+
+    FUN <- function(init, block, center, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        viewport <- currentViewport()
+        block_center <- extractROWS(center, ranges(viewport)[2L])
+        delta <- block - rep(block_center, each=nrow(block))
+        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
+        block_sums <- colSums(delta * delta, na.rm=na.rm)
+        block_nvals <- rep.int(nrow(block), ncol(block))
+        if (na.rm)
+            block_nvals <- block_nvals - colSums(is.na(block))
+        init + data.frame(sums=block_sums, nvals=block_nvals)
+    }
+    FUN_args <- list(center, na.rm=na.rm)
+
+    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
+                                        grid=grid, as.sparse=as.sparse,
+                                        BPPARAM=BPPARAM, verbose=verbose)
+    df <- do.call(rbind, res_list)
+    setNames(df$sums / (df$nvals - 1L), colnames(x))
+}
+
+setMethod("rowVars", "DelayedMatrix",
+    function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL)
+    {
+        .check_rows_cols(rows, cols, "rowVars")
+        BLOCK_rowVars(x, na.rm=na.rm, center=center)
+    }
+)
+
+setMethod("colVars", "DelayedMatrix",
+    function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL)
+    {
+        .check_rows_cols(rows, cols, "colVars")
+        BLOCK_colVars(x, na.rm=na.rm, center=center)
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

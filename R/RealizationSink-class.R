@@ -258,7 +258,7 @@ sinkApply <- function(sink, FUN, ..., grid=NULL, verbose=NA)
     {
         effective_grid <- effectiveGrid()
         current_block_id <- currentBlockId()
-        set_grid_context(effective_grid, current_block_id)
+        set_grid_context(effective_grid, current_block_id, viewport)
         FUN(init, viewport, ...)
     }
     gridReduce(FUN_WRAPPER, grid, sink, FUN, ..., verbose=verbose)
