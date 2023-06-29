@@ -86,15 +86,21 @@ getAutoBPPARAM <- function() S4Arrays:::get_user_option("auto.BPPARAM")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Set/get grid context for the current block of a blockApply(),
-### gridApply(), or blockReduce() loop
+### Set/get grid context for the current block of a gridApply(), blockApply(),
+### gridReduce(), or blockReduce() loop
 ###
 
-set_grid_context <- function(effective_grid, current_block_id,
+set_grid_context <- function(effective_grid,
+                             current_block_id,
+                             current_viewport,
                              envir=parent.frame(1))
 {
-    assign(".effective_grid", effective_grid, envir=envir)
-    assign(".current_block_id", current_block_id, envir=envir)
+    if (!is.null(effective_grid))
+        assign(".effective_grid", effective_grid, envir=envir)
+    if (!is.null(current_block_id))
+        assign(".current_block_id", current_block_id, envir=envir)
+    if (!is.null(current_viewport))
+        assign(".current_viewport", current_viewport, envir=envir)
 }
 
 .backward_compat <- function(envir, funname)
@@ -157,6 +163,10 @@ currentBlockId <- function(envir=parent.frame(2))
 currentViewport <- function(envir=parent.frame(2))
 {
     envir <- .backward_compat(envir, "currentViewport")
+    current_viewport <- try(get(".current_viewport", envir=envir,
+                                inherits=FALSE), silent=TRUE)
+    if (!inherits(current_viewport, "try-error"))
+        return(current_viewport)
     effective_grid <- try(effectiveGrid(envir), silent=TRUE)
     if (inherits(effective_grid, "try-error"))
         stop(wmsg(.grid_context_not_found),
@@ -194,7 +204,7 @@ gridApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
                     appendLF=FALSE)
         }
         viewport <- grid[[bid]]
-        set_grid_context(grid, bid)
+        set_grid_context(grid, bid, viewport)
         ans <- FUN(viewport, ...)
         if (verbose)
             message("OK")
@@ -232,7 +242,7 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
         } else {
             block <- read_block(x, viewport, as.sparse=as.sparse)
         }
-        set_grid_context(effective_grid, current_block_id)
+        set_grid_context(effective_grid, current_block_id, viewport)
         if (verbose)
             message("\\ Processing it ... ", appendLF=FALSE)
         ans <- FUN(block, ...)
@@ -264,7 +274,7 @@ gridReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
     nblock <- length(grid)
     for (bid in seq_len(nblock)) {
         viewport <- grid[[bid]]
-        set_grid_context(grid, bid)
+        set_grid_context(grid, bid, viewport)
         if (verbose)
             message("\\ Processing viewport ", bid, "/", nblock, " ... ",
                     appendLF=FALSE)
@@ -310,7 +320,7 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
         } else {
             block <- read_block(x, viewport, as.sparse=as.sparse)
         }
-        set_grid_context(effective_grid, current_block_id)
+        set_grid_context(effective_grid, current_block_id, viewport)
         if (verbose)
             message("\\ Processing it ... ", appendLF=FALSE)
         init <- FUN(block, init, ...)
@@ -333,6 +343,99 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
     gridReduce(FUN_WRAPPER, grid, init,
                FUN, x, as.sparse, verbose, verbose_read_block, ...,
                BREAKIF=BREAKIF_WRAPPER, verbose=FALSE)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Two specialized internal helpers for the 2D case
+###
+
+### Return a list with one list element per row in the grid.
+block_apply_by_grid_row <- function(INIT, INIT_args, FUN, FUN_args, x,
+                                    grid=NULL, as.sparse=FALSE,
+                                    BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    INIT <- match.fun(INIT)
+    FUN <- match.fun(FUN)
+    grid <- normarg_grid(grid, x)
+    if (!(is.logical(as.sparse) && length(as.sparse) == 1L))
+        stop(wmsg("'as.sparse' must be a FALSE, TRUE, or NA"))
+    verbose <- normarg_verbose(verbose)
+
+    process_grid_row <- function(init, FUN, FUN_args, x,
+                                 grid, i, as.sparse, verbose)
+    {
+        grid_nrow <- nrow(grid)
+        grid_ncol <- ncol(grid)
+        ## Inner loop on the grid columns. Sequential.
+        for (j in seq_len(grid_ncol)) {
+            viewport <- grid[[i, j]]
+            block <- read_block(x, viewport, as.sparse=as.sparse)
+            set_grid_context(grid, NULL, viewport)
+            if (verbose)
+                message("Processing block [[", i, "/", grid_nrow, ", ",
+                                               j, "/", grid_ncol, "]] ... ",
+                        appendLF=FALSE)
+            init <- do.call(FUN, c(list(init, block), FUN_args))
+            if (verbose)
+                message("OK")
+        }
+        init
+    }
+
+    ## Outer loop on the grid rows. Parallelized.
+    S4Arrays:::bplapply2(seq_len(nrow(grid)),
+        function(i) {
+            init <- do.call(INIT, c(list(grid, i), INIT_args))
+            process_grid_row(init, FUN, FUN_args, x,
+                             grid, i, as.sparse, verbose)
+        },
+        BPPARAM=BPPARAM
+    )
+}
+
+### Return a list with one list element per column in the grid.
+block_apply_by_grid_col <- function(INIT, INIT_args, FUN, FUN_args, x,
+                                    grid=NULL, as.sparse=FALSE,
+                                    BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    INIT <- match.fun(INIT)
+    FUN <- match.fun(FUN)
+    grid <- normarg_grid(grid, x)
+    if (!(is.logical(as.sparse) && length(as.sparse) == 1L))
+        stop(wmsg("'as.sparse' must be a FALSE, TRUE, or NA"))
+    verbose <- normarg_verbose(verbose)
+
+    process_grid_col <- function(init, FUN, FUN_args, x,
+                                 grid, j, as.sparse, verbose)
+    {
+        grid_nrow <- nrow(grid)
+        grid_ncol <- ncol(grid)
+        ## Inner loop on the grid rows. Sequential.
+        for (i in seq_len(grid_nrow)) {
+            viewport <- grid[[i, j]]
+            block <- read_block(x, viewport, as.sparse=as.sparse)
+            set_grid_context(grid, NULL, viewport)
+            if (verbose)
+                message("Processing block [[", i, "/", grid_nrow, ", ",
+                                               j, "/", grid_ncol, "]] ... ",
+                        appendLF=FALSE)
+            init <- do.call(FUN, c(list(init, block), FUN_args))
+            if (verbose)
+                message("OK")
+        }
+        init
+    }
+
+    ## Outer loop on the grid columns. Parallelized.
+    S4Arrays:::bplapply2(seq_len(ncol(grid)),
+        function(j) {
+            init <- do.call(INIT, c(list(grid, j), INIT_args))
+            process_grid_col(init, FUN, FUN_args, x,
+                             grid, j, as.sparse, verbose)
+        },
+        BPPARAM=BPPARAM
+    )
 }
 
 

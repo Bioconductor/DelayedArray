@@ -207,6 +207,7 @@ exportMethods(
     rowMins, colMins,
     rowMaxs, colMaxs,
     rowRanges, colRanges,
+    rowVars, colVars,
 
     ## Methods for generics defined in the S4Vectors package:
     bindROWS,

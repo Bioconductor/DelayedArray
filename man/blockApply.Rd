@@ -48,7 +48,8 @@ getAutoBPPARAM()
 setAutoBPPARAM(BPPARAM=NULL)
 
 ## For testing/debugging callback functions:
-set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
+set_grid_context(effective_grid, current_block_id, current_viewport,
+                 envir=parent.frame(1))
 }
 
 \arguments{
@@ -140,7 +141,7 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   \item{envir}{
     Do not use (unless you know what you are doing).
   }
-  \item{effective_grid, current_block_id}{
+  \item{effective_grid, current_block_id, current_viewport}{
     See Details below.
   }
 }
@@ -163,9 +164,9 @@ set_grid_context(effective_grid, current_block_id, envir=parent.frame(1))
   passed to \code{blockApply()} and family.
 
   If you need to be able to test/debug your callback function
-  as a standalone function, set an arbitrary \emph{effective grid}
-  and \emph{current block id} by calling
-  \preformatted{    set_grid_context(effective_grid, current_block_id)}
+  as a standalone function, set an arbitrary \emph{effective grid},
+  \emph{current block id}, and \emph{current_viewport}, by calling
+  \preformatted{    set_grid_context(effective_grid, current_block_id, current_viewport)}
   **right before** calling the callback function.
 }
 
