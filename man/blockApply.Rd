@@ -48,7 +48,7 @@ getAutoBPPARAM()
 setAutoBPPARAM(BPPARAM=NULL)
 
 ## For testing/debugging callback functions:
-set_grid_context(effective_grid, current_block_id, current_viewport,
+set_grid_context(effective_grid, current_block_id, current_viewport=NULL,
                  envir=parent.frame(1))
 }
 
