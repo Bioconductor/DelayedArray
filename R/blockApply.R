@@ -92,7 +92,7 @@ getAutoBPPARAM <- function() S4Arrays:::get_user_option("auto.BPPARAM")
 
 set_grid_context <- function(effective_grid,
                              current_block_id,
-                             current_viewport,
+                             current_viewport=NULL,
                              envir=parent.frame(1))
 {
     if (!is.null(effective_grid))
