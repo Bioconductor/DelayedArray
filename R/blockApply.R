@@ -338,7 +338,6 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
         }
     } else {
         BREAKIF_WRAPPER <- BREAKIF
-        
     }
     gridReduce(FUN_WRAPPER, grid, init,
                FUN, x, as.sparse, verbose, verbose_read_block, ...,
@@ -347,93 +346,168 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Two specialized internal helpers for the 2D case
+### Specialized internal helpers for the 2D case
 ###
 
-### Return a list with one list element per row in the grid.
-block_apply_by_grid_row <- function(INIT, INIT_args, FUN, FUN_args, x,
-                                    grid=NULL, as.sparse=FALSE,
-                                    BPPARAM=getAutoBPPARAM(), verbose=NA)
+### We give our preference to "full width" blocks because they avoid walking
+### twice on each "horizontal strip" e.g. in the case of BLOCK_rowVars()
+### when 'center' is not supplied.
+### However we only go for "full width" blocks when we are **absolutely
+### certain** that this is going to play well with the chunk geometry.
+### If "full width" blocks are not possible or too risky, our second choice
+### is to go for the most "horizontally elongated" blocks, because, it's
+### better to have a high number of narrow strips than a small number of
+### thick strips from a parallelization point of view (we can efficiently
+### use more workers).
+### In case of any uncertainty about the physical layout of the data (i.e.
+### if 'chunkdim(x)' is NULL), we just use square blocks to lower the risk
+### of using completely inappropriate block geometry.
+best_grid_for_hstrip_apply <- function(x, grid=NULL)
+{
+    if (!is.null(grid))
+        return(normarg_grid(grid, x))  # only to check the supplied 'grid'
+    x_chunkdim <- chunkdim(x)
+    if (is.null(x_chunkdim)) {
+        if (is.matrix(x))
+            return(rowAutoGrid(x))  # "full width" blocks
+        ## We're in doubt about how "full width" blocks are going to play
+        ## with the physical layout of the data (e.g. 'x' is a TENxMatrix
+        ## object that was subsetted by row).
+        return(defaultAutoGrid(x, block.shape="hypercube"))  # square blocks
+    }
+    chunk_nrow <- x_chunkdim[[1L]]
+    n <- getAutoBlockSize() /
+         (as.double(get_type_size(type(x))) * chunk_nrow * ncol(x))
+    if (n < 1)
+        return(defaultAutoGrid(x, block.shape="last-dim-grows-first"))
+    block_nrow <- min(as.integer(n) * chunk_nrow, nrow(x))
+    rowAutoGrid(x, nrow=block_nrow)  # "full width" blocks
+}
+
+best_grid_for_vstrip_apply <- function(x, grid=NULL)
+{
+    if (!is.null(grid))
+        return(normarg_grid(grid, x))  # only to check the supplied 'grid'
+    x_chunkdim <- chunkdim(x)
+    if (is.null(x_chunkdim)) {
+        if (is.matrix(x))
+            return(colAutoGrid(x))  # "full height" blocks
+        ## We're in doubt about how "full height" blocks are going to play
+        ## with the physical layout of the data (e.g. 'x' is a TENxMatrix
+        ## object that was subsetted by row and then transposed).
+        return(defaultAutoGrid(x, block.shape="hypercube"))  # square blocks
+    }
+    chunk_ncol <- x_chunkdim[[2L]]
+    n <- getAutoBlockSize() /
+         (as.double(get_type_size(type(x))) * nrow(x) * chunk_ncol)
+    if (n < 1)
+        return(defaultAutoGrid(x, block.shape="first-dim-grows-first"))
+    block_ncol <- min(as.integer(n) * chunk_ncol, ncol(x))
+    colAutoGrid(x, ncol=block_ncol)  # "full height" blocks
+}
+
+reduce_grid_hstrip <- function(i, grid, x, INIT, INIT_MoreArgs,
+                                           FUN, FUN_MoreArgs,
+                                           FINAL, FINAL_MoreArgs,
+                                           as.sparse, verbose)
 {
     INIT <- match.fun(INIT)
     FUN <- match.fun(FUN)
-    grid <- normarg_grid(grid, x)
+    if (!is.null(FINAL))
+        FINAL <- match.fun(FINAL)
+    verbose <- normarg_verbose(verbose)
+    init <- do.call(INIT, c(list(i, grid), INIT_MoreArgs))
+    grid_nrow <- nrow(grid)
+    grid_ncol <- ncol(grid)
+    ## Walk on the blocks of the i-th horizontal strip. Sequential.
+    for (j in seq_len(grid_ncol)) {
+        viewport <- grid[[i, j]]
+        block <- read_block(x, viewport, as.sparse=as.sparse)
+        set_grid_context(grid, NULL, viewport)
+        if (verbose)
+            message("Processing block [[", i, "/", grid_nrow, ", ",
+                                           j, "/", grid_ncol, "]] ... ",
+                    appendLF=FALSE)
+        init <- do.call(FUN, c(list(init, block), FUN_MoreArgs))
+        if (verbose)
+            message("OK")
+    }
+    if (!is.null(FINAL))
+        init <- do.call(FINAL, c(list(init), FINAL_MoreArgs))
+    init
+}
+
+reduce_grid_vstrip <- function(j, grid, x, INIT, INIT_MoreArgs,
+                                           FUN, FUN_MoreArgs,
+                                           FINAL, FINAL_MoreArgs,
+                                           as.sparse, verbose)
+{
+    INIT <- match.fun(INIT)
+    FUN <- match.fun(FUN)
+    if (!is.null(FINAL))
+        FINAL <- match.fun(FINAL)
+    verbose <- normarg_verbose(verbose)
+    init <- do.call(INIT, c(list(j, grid), INIT_MoreArgs))
+    grid_nrow <- nrow(grid)
+    grid_ncol <- ncol(grid)
+    ## Walk on the blocks of the j-th vertical strip. Sequential.
+    for (i in seq_len(grid_nrow)) {
+        viewport <- grid[[i, j]]
+        block <- read_block(x, viewport, as.sparse=as.sparse)
+        set_grid_context(grid, NULL, viewport)
+        if (verbose)
+            message("Processing block [[", i, "/", grid_nrow, ", ",
+                                           j, "/", grid_ncol, "]] ... ",
+                    appendLF=FALSE)
+        init <- do.call(FUN, c(list(init, block), FUN_MoreArgs))
+        if (verbose)
+            message("OK")
+    }
+    if (!is.null(FINAL))
+        init <- do.call(FINAL, c(list(init), FINAL_MoreArgs))
+    init
+}
+
+### Walk on the horizontal grid strips.
+### Return a list with one list element per strip.
+hstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                            FINAL=NULL, FINAL_MoreArgs=list(),
+                            grid=NULL, as.sparse=FALSE,
+                            BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    grid <- best_grid_for_hstrip_apply(x, grid)
     if (!(is.logical(as.sparse) && length(as.sparse) == 1L))
         stop(wmsg("'as.sparse' must be a FALSE, TRUE, or NA"))
-    verbose <- normarg_verbose(verbose)
 
-    process_grid_row <- function(init, FUN, FUN_args, x,
-                                 grid, i, as.sparse, verbose)
-    {
-        grid_nrow <- nrow(grid)
-        grid_ncol <- ncol(grid)
-        ## Inner loop on the grid columns. Sequential.
-        for (j in seq_len(grid_ncol)) {
-            viewport <- grid[[i, j]]
-            block <- read_block(x, viewport, as.sparse=as.sparse)
-            set_grid_context(grid, NULL, viewport)
-            if (verbose)
-                message("Processing block [[", i, "/", grid_nrow, ", ",
-                                               j, "/", grid_ncol, "]] ... ",
-                        appendLF=FALSE)
-            init <- do.call(FUN, c(list(init, block), FUN_args))
-            if (verbose)
-                message("OK")
-        }
-        init
-    }
-
-    ## Outer loop on the grid rows. Parallelized.
+    ## Outer loop on the horizontal grid strips. Parallelized.
     S4Arrays:::bplapply2(seq_len(nrow(grid)),
-        function(i) {
-            init <- do.call(INIT, c(list(grid, i), INIT_args))
-            process_grid_row(init, FUN, FUN_args, x,
-                             grid, i, as.sparse, verbose)
-        },
+        reduce_grid_hstrip, grid, x,
+        INIT, INIT_MoreArgs,
+        FUN, FUN_MoreArgs,
+        FINAL, FINAL_MoreArgs,
+        as.sparse, verbose,
         BPPARAM=BPPARAM
     )
 }
 
-### Return a list with one list element per column in the grid.
-block_apply_by_grid_col <- function(INIT, INIT_args, FUN, FUN_args, x,
-                                    grid=NULL, as.sparse=FALSE,
-                                    BPPARAM=getAutoBPPARAM(), verbose=NA)
+### Walk on the vertical grid strips.
+### Return a list with one list element per strip.
+vstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                            FINAL=NULL, FINAL_MoreArgs=list(),
+                            grid=NULL, as.sparse=FALSE,
+                            BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
-    INIT <- match.fun(INIT)
-    FUN <- match.fun(FUN)
-    grid <- normarg_grid(grid, x)
+    grid <- best_grid_for_vstrip_apply(x, grid)
     if (!(is.logical(as.sparse) && length(as.sparse) == 1L))
         stop(wmsg("'as.sparse' must be a FALSE, TRUE, or NA"))
-    verbose <- normarg_verbose(verbose)
 
-    process_grid_col <- function(init, FUN, FUN_args, x,
-                                 grid, j, as.sparse, verbose)
-    {
-        grid_nrow <- nrow(grid)
-        grid_ncol <- ncol(grid)
-        ## Inner loop on the grid rows. Sequential.
-        for (i in seq_len(grid_nrow)) {
-            viewport <- grid[[i, j]]
-            block <- read_block(x, viewport, as.sparse=as.sparse)
-            set_grid_context(grid, NULL, viewport)
-            if (verbose)
-                message("Processing block [[", i, "/", grid_nrow, ", ",
-                                               j, "/", grid_ncol, "]] ... ",
-                        appendLF=FALSE)
-            init <- do.call(FUN, c(list(init, block), FUN_args))
-            if (verbose)
-                message("OK")
-        }
-        init
-    }
-
-    ## Outer loop on the grid columns. Parallelized.
+    ## Outer loop on the vertical grid strips. Parallelized.
     S4Arrays:::bplapply2(seq_len(ncol(grid)),
-        function(j) {
-            init <- do.call(INIT, c(list(grid, j), INIT_args))
-            process_grid_col(init, FUN, FUN_args, x,
-                             grid, j, as.sparse, verbose)
-        },
+        reduce_grid_vstrip, grid, x,
+        INIT, INIT_MoreArgs,
+        FUN, FUN_MoreArgs,
+        FINAL, FINAL_MoreArgs,
+        as.sparse, verbose,
         BPPARAM=BPPARAM
     )
 }
