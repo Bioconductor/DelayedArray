@@ -22,8 +22,7 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### .process_grid_by_row() and .process_grid_by_col()
 ###
-### Obsolete! Use block_apply_by_grid_row() and block_apply_by_grid_col()
-### instead.
+### Obsolete! Use hstrip_apply() and vstrip_apply() instead.
 ###
 
 .process_grid_by_row <-
@@ -123,8 +122,8 @@ BLOCK_rowSums <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    INIT <- function(grid, i) numeric(nrow(grid[[i, 1L]]))
-    INIT_args <- list()
+    INIT <- function(i, grid) numeric(nrow(grid[[i, 1L]]))
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed"))
@@ -132,12 +131,12 @@ BLOCK_rowSums <- function(x, na.rm=FALSE, useNames=TRUE,
         ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
         init + rowSums(block, na.rm=na.rm)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- rownames(x)
     ans
@@ -152,8 +151,8 @@ BLOCK_colSums <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    INIT <- function(grid, j) numeric(ncol(grid[[1L, j]]))
-    INIT_args <- list()
+    INIT <- function(j, grid) numeric(ncol(grid[[1L, j]]))
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed"))
@@ -161,12 +160,12 @@ BLOCK_colSums <- function(x, na.rm=FALSE, useNames=TRUE,
         ## Dispatch on colSums() method for matrix, dgCMatrix or lgCMatrix.
         init + colSums(block, na.rm=na.rm)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- colnames(x)
     ans
@@ -203,6 +202,30 @@ setMethod("colSums", "DelayedMatrix", .colSums_DelayedMatrix)
 ### They propagate the rownames or colnames.
 ###
 
+.row_sums_and_nvals <- function(x, na.rm=FALSE)
+{
+    if (is(x, "SparseArraySeed"))
+        x <- as(x, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+    ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
+    row_sums <- rowSums(x, na.rm=na.rm)
+    row_nvals <- rep.int(ncol(x), nrow(x))
+    if (na.rm)
+        row_nvals <- row_nvals - rowSums(is.na(x))
+    data.frame(sum=row_sums, nval=row_nvals)
+}
+
+.col_sums_and_nvals <- function(x, na.rm=FALSE)
+{
+    if (is(x, "SparseArraySeed"))
+        x <- as(x, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+    ## Dispatch on colSums() method for matrix, dgCMatrix or lgCMatrix.
+    col_sums <- colSums(x, na.rm=na.rm)
+    col_nvals <- rep.int(nrow(x), ncol(x))
+    if (na.rm)
+        col_nvals <- col_nvals - colSums(is.na(x))
+    data.frame(sum=col_sums, nval=col_nvals)
+}
+
 BLOCK_rowMeans <- function(x, na.rm=FALSE, useNames=TRUE,
                            grid=NULL, as.sparse=NA,
                            BPPARAM=getAutoBPPARAM(), verbose=NA)
@@ -212,29 +235,24 @@ BLOCK_rowMeans <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    INIT <- function(grid, i) {
+    INIT <- function(i, grid) {
         n <- nrow(grid[[i, 1L]])
-        data.frame(sums=numeric(n), nvals=integer(n))
+        .row_sums_and_nvals(matrix(nrow=n, ncol=0L))
     }
-    INIT_args <- list()
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
-        if (is(block, "SparseArraySeed"))
-            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
-        block_sums <- rowSums(block, na.rm=na.rm)
-        block_nvals <- rep.int(ncol(block), nrow(block))
-        if (na.rm)
-            block_nvals <- block_nvals - rowSums(is.na(block))
-        init + data.frame(sums=block_sums, nvals=block_nvals)
+        init + .row_sums_and_nvals(block, na.rm=na.rm)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    df <- do.call(rbind, res_list)
-    ans <- df$sums / df$nvals
+    FINAL <- function(init) { init$sum / init$nval }
+
+    strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     FINAL=FINAL,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- rownames(x)
     ans
@@ -249,29 +267,24 @@ BLOCK_colMeans <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    INIT <- function(grid, j) {
+    INIT <- function(j, grid) {
         n <- ncol(grid[[1L, j]])
-        data.frame(sums=numeric(n), nvals=integer(n))
+        .col_sums_and_nvals(matrix(nrow=0L, ncol=n))
     }
-    INIT_args <- list()
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
-        if (is(block, "SparseArraySeed"))
-            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-        ## Dispatch on colSums() method for matrix, dgCMatrix or lgCMatrix.
-        block_sums <- colSums(block, na.rm=na.rm)
-        block_nvals <- rep.int(nrow(block), ncol(block))
-        if (na.rm)
-            block_nvals <- block_nvals - colSums(is.na(block))
-        init + data.frame(sums=block_sums, nvals=block_nvals)
+        init + .col_sums_and_nvals(block, na.rm=na.rm)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    df <- do.call(rbind, res_list)
-    ans <- df$sums / df$nvals
+    FINAL <- function(init) { init$sum / init$nval }
+
+    strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     FINAL=FINAL,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- colnames(x)
     ans
@@ -313,8 +326,8 @@ BLOCK_rowMins <- function(x, na.rm=FALSE, useNames=TRUE,
     if (ncol(x) == 0L)
         return(rep.int(Inf, nrow(x)))
 
-    INIT <- function(grid, i) NULL
-    INIT_args <- list()
+    INIT <- function(i, grid) NULL
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
@@ -332,12 +345,12 @@ BLOCK_rowMins <- function(x, na.rm=FALSE, useNames=TRUE,
             return(block_rowmins)
         pmin(init, block_rowmins)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- rownames(x)
     ans
@@ -355,8 +368,8 @@ BLOCK_colMins <- function(x, na.rm=FALSE, useNames=TRUE,
     if (nrow(x) == 0L)
         return(rep.int(Inf, ncol(x)))
 
-    INIT <- function(grid, j) NULL
-    INIT_args <- list()
+    INIT <- function(j, grid) NULL
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
@@ -371,12 +384,12 @@ BLOCK_colMins <- function(x, na.rm=FALSE, useNames=TRUE,
             return(block_colmins)
         pmin(init, block_colmins)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- colnames(x)
     ans
@@ -429,8 +442,8 @@ BLOCK_rowMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
     if (ncol(x) == 0L)
         return(rep.int(-Inf, nrow(x)))
 
-    INIT <- function(grid, i) NULL
-    INIT_args <- list()
+    INIT <- function(i, grid) NULL
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
@@ -448,12 +461,12 @@ BLOCK_rowMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
             return(block_rowmaxs)
         pmax(init, block_rowmaxs)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- rownames(x)
     ans
@@ -471,8 +484,8 @@ BLOCK_colMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
     if (nrow(x) == 0L)
         return(rep.int(-Inf, ncol(x)))
 
-    INIT <- function(grid, j) NULL
-    INIT_args <- list()
+    INIT <- function(j, grid) NULL
+    INIT_MoreArgs <- list()
 
     FUN <- function(init, block, na.rm=FALSE) {
         if (is(block, "SparseArraySeed")) {
@@ -487,12 +500,12 @@ BLOCK_colMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
             return(block_colmaxs)
         pmax(init, block_colmaxs)
     }
-    FUN_args <- list(na.rm=na.rm)
+    FUN_MoreArgs <- list(na.rm=na.rm)
 
-    res_list <- block_apply_by_grid_col(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    ans <- unlist(res_list, recursive=FALSE, use.names=FALSE)
+    strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- colnames(x)
     ans
@@ -527,7 +540,7 @@ setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
 ###
 
 ### TODO:
-### - Use block_apply_by_grid_row() instead of blockApply() to walk on 'x'.
+### - Use hstrip_apply() instead of blockApply() to walk on 'x'.
 ### - Support arguments 'useNames', 'as.sparse', 'BPPARAM', and 'verbose'.
 ### See BLOCK_rowMins() and BLOCK_rowMaxs() above for examples.
 BLOCK_rowRanges <- function(x, na.rm=FALSE, grid=NULL)
@@ -579,6 +592,190 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
 ### They do NOT propagate the rownames or colnames.
 ###
 
+.compute_rowVars_for_full_width_blocks <-
+    function(grid, x, na.rm=FALSE, center=NULL,
+             as.sparse=NA, BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    stopifnot(ncol(grid) == 1L)
+    stopifnot(is.null(center) ||
+              (is.numeric(center) && length(center) == nrow(x)))
+
+    blockApply(x,
+        function(block, na.rm, center) {
+            if (is(block, "SparseArraySeed"))
+                block <- as(block, "CsparseMatrix")  # to [d|l]gCMatrix
+            if (is.null(center)) {
+                block_center <- NULL
+            } else {
+                viewport_range1 <- ranges(currentViewport())[1L]
+                block_center <- extractROWS(center, viewport_range1)
+            }
+            rowVars(block, na.rm=na.rm, center=block_center, useNames=FALSE)
+        },
+        na.rm, center,
+        grid=grid, as.sparse=as.sparse,
+        BPPARAM=BPPARAM, verbose=verbose
+    )
+}
+
+.compute_colVars_for_full_height_blocks <-
+    function(grid, x, na.rm=FALSE, center=NULL,
+             as.sparse=NA, BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    stopifnot(nrow(grid) == 1L)
+    stopifnot(is.null(center) ||
+              (is.numeric(center) && length(center) == ncol(x)))
+
+    blockApply(x,
+        function(block, na.rm, center) {
+            if (is(block, "SparseArraySeed"))
+                block <- as(block, "CsparseMatrix")  # to [d|l]gCMatrix
+            if (is.null(center)) {
+                block_center <- NULL
+            } else {
+                viewport_range2 <- ranges(currentViewport())[2L]
+                block_center <- extractROWS(center, viewport_range2)
+            }
+            colVars(block, na.rm=na.rm, center=block_center, useNames=FALSE)
+        },
+        na.rm, center,
+        grid=grid, as.sparse=as.sparse,
+        BPPARAM=BPPARAM, verbose=verbose
+    )
+}
+
+.compute_rowVars_for_horizontal_strips <-
+    function(grid, x, na.rm=FALSE, center=NULL,
+             as.sparse=NA, BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    stopifnot(is.null(center) ||
+              (is.numeric(center) && length(center) == nrow(x)))
+
+    INIT <- function(i, grid, x, na.rm=FALSE, center=NULL,
+                              as.sparse=NA, verbose=NA)
+    {
+        n <- nrow(grid[[i, 1L]])
+        if (!is.null(center))
+            return(data.frame(sum2=numeric(n), nval=integer(n)))
+        reduce_grid_hstrip(i, grid, x,
+            INIT=function(i, grid, n) {
+                    .row_sums_and_nvals(matrix(nrow=n, ncol=0L))
+            },
+            INIT_MoreArgs=list(n=n),
+            FUN=function(init, block, na.rm) {
+                    init + .row_sums_and_nvals(block, na.rm=na.rm)
+            },
+            FUN_MoreArgs=list(na.rm=na.rm),
+            FINAL=function(init, n) {
+                    center <- init$sum / init$nval
+                    data.frame(sum2=numeric(n), nval=init$nval, center=center)
+            },
+            FINAL_MoreArgs=list(n=n),
+            as.sparse,
+            verbose
+        )
+    }
+    INIT_MoreArgs <- list(x=x, na.rm=na.rm, center=center,
+                          as.sparse=as.sparse, verbose=verbose)
+
+    FINAL <- function(init) { init$sum2 / (init$nval - 1L) }
+
+    FUN <- function(init, block, na.rm, center) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        if (is.null(center)) {
+            block_center <- init$center
+        } else {
+            viewport_range1 <- ranges(currentViewport())[1L]
+            block_center <- extractROWS(center, viewport_range1)
+            block_nvals <- rep.int(ncol(block), nrow(block))
+            if (na.rm)
+                block_nvals <- block_nvals - rowSums(is.na(block))
+        }
+        delta <- block - block_center
+        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
+        block_sums2 <- rowSums(delta * delta, na.rm=na.rm)
+        if (is.null(center)) {
+            init$sum2 <- init$sum2 + block_sums2
+            init
+        } else {
+            init + data.frame(sum2=block_sums2, nval=block_nvals)
+        }
+    }
+    FUN_MoreArgs <- list(na.rm, center)
+
+    hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                    FINAL=FINAL,
+                    grid=grid, as.sparse=as.sparse,
+                    BPPARAM=BPPARAM, verbose=verbose)
+}
+
+.compute_colVars_for_vertical_strips <-
+    function(grid, x, na.rm=FALSE, center=NULL,
+             as.sparse=NA, BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    stopifnot(is.null(center) ||
+              (is.numeric(center) && length(center) == ncol(x)))
+
+    INIT <- function(j, grid, x, na.rm=FALSE, center=NULL,
+                              as.sparse=NA, verbose=NA)
+    {
+        n <- ncol(grid[[1L, j]])
+        if (!is.null(center))
+            return(data.frame(sum2=numeric(n), nval=integer(n)))
+        reduce_grid_vstrip(j, grid, x,
+            INIT=function(j, grid, n) {
+                    .col_sums_and_nvals(matrix(nrow=0L, ncol=n))
+            },
+            INIT_MoreArgs=list(n=n),
+            FUN=function(init, block, na.rm) {
+                    init + .col_sums_and_nvals(block, na.rm=na.rm)
+            },
+            FUN_MoreArgs=list(na.rm=na.rm),
+            FINAL=function(init, n) {
+                    center <- init$sum / init$nval
+                    data.frame(sum2=numeric(n), nval=init$nval, center=center)
+            },
+            FINAL_MoreArgs=list(n=n),
+            as.sparse,
+            verbose
+        )
+    }
+    INIT_MoreArgs <- list(x=x, na.rm=na.rm, center=center,
+                          as.sparse=as.sparse, verbose=verbose)
+
+    FINAL <- function(init) { init$sum2 / (init$nval - 1L) }
+
+    FUN <- function(init, block, na.rm, center) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        if (is.null(center)) {
+            block_center <- init$center
+        } else {
+            viewport_range2 <- ranges(currentViewport())[2L]
+            block_center <- extractROWS(center, viewport_range2)
+            block_nvals <- rep.int(nrow(block), ncol(block))
+            if (na.rm)
+                block_nvals <- block_nvals - colSums(is.na(block))
+        }
+        delta <- block - rep(block_center, each=nrow(block))
+        ## Dispatch on colSums() method for matrix, dgCMatrix or lgCMatrix.
+        block_sums2 <- colSums(delta * delta, na.rm=na.rm)
+        if (is.null(center)) {
+            init$sum2 <- init$sum2 + block_sums2
+            init
+        } else {
+            init + data.frame(sum2=block_sums2, nval=block_nvals)
+        }
+    }
+    FUN_MoreArgs <- list(na.rm, center)
+
+    vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                    FINAL=FINAL,
+                    grid=grid, as.sparse=as.sparse,
+                    BPPARAM=BPPARAM, verbose=verbose)
+}
+
 BLOCK_rowVars <- function(x, na.rm=FALSE, center=NULL, useNames=TRUE,
                           grid=NULL, as.sparse=NA,
                           BPPARAM=getAutoBPPARAM(), verbose=NA)
@@ -588,47 +785,27 @@ BLOCK_rowVars <- function(x, na.rm=FALSE, center=NULL, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    x_nrow <- nrow(x)
-    if (is.null(center)) {
-        center <- BLOCK_rowMeans(x, na.rm=na.rm, useNames=FALSE,
-                                 grid=grid, as.sparse=as.sparse,
-                                 BPPARAM=BPPARAM, verbose=verbose)
-    } else {
+    if (!is.null(center)) {
         if (!is.numeric(center))
-            stop("'center' must be NULL or a numeric vector")
+            stop(wmsg("'center' must be NULL or a numeric vector"))
+        x_nrow <- nrow(x)
         if (length(center) != x_nrow) {
             if (length(center) != 1L)
-                stop("'center' must have length 1 or nrow(x)")
+                stop(wmsg("'center' must have length 1 or nrow(x)"))
             center <- rep.int(center, x_nrow)
         }
     }
 
-    INIT <- function(grid, i) {
-        n <- nrow(grid[[i, 1L]])
-        data.frame(sums=numeric(n), nvals=integer(n))
+    grid <- best_grid_for_hstrip_apply(x, grid=grid)
+    if (ncol(grid) == 1L) {
+        fun <- .compute_rowVars_for_full_width_blocks
+    } else {
+        fun <- .compute_rowVars_for_horizontal_strips
     }
-    INIT_args <- list()
-
-    FUN <- function(init, block, center, na.rm=FALSE) {
-        if (is(block, "SparseArraySeed"))
-            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-        viewport <- currentViewport()
-        block_center <- extractROWS(center, ranges(viewport)[1L])
-        delta <- block - block_center
-        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
-        block_sums <- rowSums(delta * delta, na.rm=na.rm)
-        block_nvals <- rep.int(ncol(block), nrow(block))
-        if (na.rm)
-            block_nvals <- block_nvals - rowSums(is.na(block))
-        init + data.frame(sums=block_sums, nvals=block_nvals)
-    }
-    FUN_args <- list(center, na.rm=na.rm)
-
-    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    df <- do.call(rbind, res_list)
-    ans <- df$sums / (df$nvals - 1L)
+    strip_results <- fun(grid, x, na.rm=na.rm, center=center,
+                               as.sparse=as.sparse,
+                               BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- rownames(x)
     ans
@@ -643,47 +820,27 @@ BLOCK_colVars <- function(x, na.rm=FALSE, center=NULL, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    x_ncol <- ncol(x)
-    if (is.null(center)) {
-        center <- BLOCK_colMeans(x, na.rm=na.rm, useNames=FALSE,
-                                 grid=grid, as.sparse=as.sparse,
-                                 BPPARAM=BPPARAM, verbose=verbose)
-    } else {
+    if (!is.null(center)) {
         if (!is.numeric(center))
-            stop("'center' must be NULL or a numeric vector")
+            stop(wmsg("'center' must be NULL or a numeric vector"))
+        x_ncol <- ncol(x)
         if (length(center) != x_ncol) {
             if (length(center) != 1L)
-                stop("'center' must have length 1 or ncol(x)")
+                stop(wmsg("'center' must have length 1 or ncol(x)"))
             center <- rep.int(center, x_ncol)
         }
     }
 
-    INIT <- function(grid, j) {
-        n <- ncol(grid[[1L, j]])
-        data.frame(sums=numeric(n), nvals=integer(n))
+    grid <- best_grid_for_vstrip_apply(x, grid=grid)
+    if (nrow(grid) == 1L) {
+        fun <- .compute_colVars_for_full_height_blocks
+    } else {
+        fun <- .compute_colVars_for_vertical_strips
     }
-    INIT_args <- list()
-
-    FUN <- function(init, block, center, na.rm=FALSE) {
-        if (is(block, "SparseArraySeed"))
-            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-        viewport <- currentViewport()
-        block_center <- extractROWS(center, ranges(viewport)[2L])
-        delta <- block - rep(block_center, each=nrow(block))
-        ## Dispatch on rowSums() method for matrix, dgCMatrix or lgCMatrix.
-        block_sums <- colSums(delta * delta, na.rm=na.rm)
-        block_nvals <- rep.int(nrow(block), ncol(block))
-        if (na.rm)
-            block_nvals <- block_nvals - colSums(is.na(block))
-        init + data.frame(sums=block_sums, nvals=block_nvals)
-    }
-    FUN_args <- list(center, na.rm=na.rm)
-
-    res_list <- block_apply_by_grid_row(INIT, INIT_args, FUN, FUN_args, x,
-                                        grid=grid, as.sparse=as.sparse,
-                                        BPPARAM=BPPARAM, verbose=verbose)
-    df <- do.call(rbind, res_list)
-    ans <- df$sums / (df$nvals - 1L)
+    strip_results <- fun(grid, x, na.rm=na.rm, center=center,
+                               as.sparse=as.sparse,
+                               BPPARAM=BPPARAM, verbose=verbose)
+    ans <- unlist(strip_results, recursive=FALSE, use.names=FALSE)
     if (useNames)
         names(ans) <- colnames(x)
     ans
