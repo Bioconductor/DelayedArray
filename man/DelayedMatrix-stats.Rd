@@ -54,7 +54,7 @@
 
 \S4method{colMaxs}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, useNames=TRUE)
 
-\S4method{colRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colRanges}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, useNames=TRUE)
 
 \S4method{colVars}{DelayedMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, useNames=TRUE)
 }

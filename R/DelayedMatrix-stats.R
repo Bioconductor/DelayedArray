@@ -6,6 +6,7 @@
 
 ### Raise an error if invalid input type. Otherwise return "integer",
 ### "numeric", "double", or "complex".
+### NOTE: No longer used in this file but used in DelayedMatrixStats.
 .get_ans_type <- function(x, must.be.numeric=FALSE)
 {
     x_type <- type(x)
@@ -110,7 +111,6 @@
 ### row/colSums()
 ###
 ### The methods for ordinary matrices are defined in the base package.
-### They propagate the rownames or colnames.
 ###
 
 BLOCK_rowSums <- function(x, na.rm=FALSE, useNames=TRUE,
@@ -199,7 +199,6 @@ setMethod("colSums", "DelayedMatrix", .colSums_DelayedMatrix)
 ### row/colMeans()
 ###
 ### The methods for ordinary matrices are defined in the base package.
-### They propagate the rownames or colnames.
 ###
 
 .row_sums_and_nvals <- function(x, na.rm=FALSE)
@@ -311,7 +310,6 @@ setMethod("colMeans", "DelayedMatrix", .colMeans_DelayedMatrix)
 ### row/colMins()
 ###
 ### The methods for ordinary matrices are defined in the matrixStats package.
-### They do NOT propagate the rownames or colnames.
 ###
 
 BLOCK_rowMins <- function(x, na.rm=FALSE, useNames=TRUE,
@@ -323,8 +321,12 @@ BLOCK_rowMins <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    if (ncol(x) == 0L)
-        return(rep.int(Inf, nrow(x)))
+    if (ncol(x) == 0L) {
+        ans <- rep.int(Inf, nrow(x))
+        if (useNames)
+            names(ans) <- rownames(x)
+        return(ans)
+    }
 
     INIT <- function(i, grid) NULL
     INIT_MoreArgs <- list()
@@ -334,8 +336,9 @@ BLOCK_rowMins <- function(x, na.rm=FALSE, useNames=TRUE,
             ## Transposing a SparseArraySeed object is faster than transposing
             ## a CsparseMatrix derivative so we transpose **before** coercion
             ## to CsparseMatrix.
-            block <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-            block_rowmins <- SparseArray:::colMins_dgCMatrix(block, na.rm=na.rm)
+            tblock <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+            block_rowmins <-
+                SparseArray:::colMins_dgCMatrix(tblock, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMins().
             block_rowmins <- MatrixGenerics::rowMins(block, na.rm=na.rm,
@@ -365,8 +368,12 @@ BLOCK_colMins <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    if (nrow(x) == 0L)
-        return(rep.int(Inf, ncol(x)))
+    if (nrow(x) == 0L) {
+        ans <- rep.int(Inf, ncol(x))
+        if (useNames)
+            names(ans) <- colnames(x)
+        return(ans)
+    }
 
     INIT <- function(j, grid) NULL
     INIT_MoreArgs <- list()
@@ -427,7 +434,6 @@ setMethod("colMins", "DelayedMatrix", .colMins_DelayedMatrix)
 ### row/colMaxs()
 ###
 ### The methods for ordinary matrices are defined in the matrixStats package.
-### They do NOT propagate the rownames or colnames.
 ###
 
 BLOCK_rowMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
@@ -439,8 +445,12 @@ BLOCK_rowMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    if (ncol(x) == 0L)
-        return(rep.int(-Inf, nrow(x)))
+    if (ncol(x) == 0L) {
+        ans <- rep.int(-Inf, nrow(x))
+        if (useNames)
+            names(ans) <- rownames(x)
+        return(ans)
+    }
 
     INIT <- function(i, grid) NULL
     INIT_MoreArgs <- list()
@@ -450,8 +460,9 @@ BLOCK_rowMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
             ## Transposing a SparseArraySeed object is faster than transposing
             ## a CsparseMatrix derivative so we transpose **before** coercion
             ## to CsparseMatrix.
-            block <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-            block_rowmaxs <- SparseArray:::colMaxs_dgCMatrix(block, na.rm=na.rm)
+            tblock <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+            block_rowmaxs <-
+                SparseArray:::colMaxs_dgCMatrix(tblock, na.rm=na.rm)
         } else {
             ## Dispatch on matrixStats::rowMaxs().
             block_rowmaxs <- MatrixGenerics::rowMaxs(block, na.rm=na.rm,
@@ -481,8 +492,12 @@ BLOCK_colMaxs <- function(x, na.rm=FALSE, useNames=TRUE,
     if (!isTRUEorFALSE(useNames))
         stop(wmsg("'useNames' must be TRUE or FALSE"))
 
-    if (nrow(x) == 0L)
-        return(rep.int(-Inf, ncol(x)))
+    if (nrow(x) == 0L) {
+        ans <- rep.int(-Inf, ncol(x))
+        if (useNames)
+            names(ans) <- colnames(x)
+        return(ans)
+    }
 
     INIT <- function(j, grid) NULL
     INIT_MoreArgs <- list()
@@ -536,51 +551,118 @@ setMethod("colMaxs", "DelayedMatrix", .colMaxs_DelayedMatrix)
 ### row/colRanges()
 ###
 ### The methods for ordinary matrices are defined in the matrixStats package.
-### They do NOT propagate the rownames or colnames.
 ###
 
-### TODO:
-### - Use hstrip_apply() instead of blockApply() to walk on 'x'.
-### - Support arguments 'useNames', 'as.sparse', 'BPPARAM', and 'verbose'.
-### See BLOCK_rowMins() and BLOCK_rowMaxs() above for examples.
-BLOCK_rowRanges <- function(x, na.rm=FALSE, grid=NULL)
+BLOCK_rowRanges <- function(x, na.rm=FALSE, useNames=TRUE,
+                            grid=NULL, as.sparse=NA,
+                            BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
     if (!isTRUEorFALSE(na.rm))
         stop("'na.rm' must be TRUE or FALSE")
-    .get_ans_type(x, must.be.numeric=TRUE)  # only to check input type (we
-                                            # ignore returned ans type)
-    block_results <- blockApply(x, MatrixGenerics::rowRanges,
-                                   na.rm=na.rm, useNames=FALSE,
-                                   grid=grid, as.sparse=FALSE)
-    combined_results <- do.call(rbind, block_results)
-    row_mins <- rowMins(matrix(combined_results[ , 1L], nrow=nrow(x)),
-                        useNames=FALSE)
-    row_maxs <- rowMaxs(matrix(combined_results[ , 2L], nrow=nrow(x)),
-                        useNames=FALSE)
-    ans <- cbind(row_mins, row_maxs, deparse.level=0)
-    ## 'ans' can have unexpected dimnames because of the following bug
-    ## in cbind/rbind:
-    ##   https://stat.ethz.ch/pipermail/r-devel/2017-December/075288.html
-    ## TODO: Remove the line below once the above bug is fixed.
-    dimnames(ans) <- NULL
+    if (!isTRUEorFALSE(useNames))
+        stop(wmsg("'useNames' must be TRUE or FALSE"))
+
+    if (ncol(x) == 0L) {
+        ans <- cbind(rep.int(Inf, nrow(x)), rep.int(-Inf, nrow(x)))
+        if (useNames)
+            rownames(ans) <- rownames(x)
+        return(ans)
+    }
+
+    INIT <- function(i, grid) NULL
+    INIT_MoreArgs <- list()
+
+    FUN <- function(init, block, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed")) {
+            ## Transposing a SparseArraySeed object is faster than transposing
+            ## a CsparseMatrix derivative so we transpose **before** coercion
+            ## to CsparseMatrix.
+            tblock <- as(t(block), "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+            block_rowranges <-
+                SparseArray:::colRanges_dgCMatrix(tblock, na.rm=na.rm)
+        } else {
+            ## Dispatch on matrixStats::rowRanges().
+            block_rowranges <- MatrixGenerics::rowRanges(block, na.rm=na.rm,
+                                                         useNames=FALSE)
+        }
+        if (is.null(init))
+            return(block_rowranges)
+        cbind(pmin(init[ , 1L], block_rowranges[ , 1L]),
+              pmax(init[ , 2L], block_rowranges[ , 2L]))
+    }
+    FUN_MoreArgs <- list(na.rm=na.rm)
+
+    strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- do.call(rbind, strip_results)
+    if (useNames)
+        rownames(ans) <- rownames(x)
+    ans
+}
+
+BLOCK_colRanges <- function(x, na.rm=FALSE, useNames=TRUE,
+                            grid=NULL, as.sparse=NA,
+                            BPPARAM=getAutoBPPARAM(), verbose=NA)
+{
+    if (!isTRUEorFALSE(na.rm))
+        stop("'na.rm' must be TRUE or FALSE")
+    if (!isTRUEorFALSE(useNames))
+        stop(wmsg("'useNames' must be TRUE or FALSE"))
+
+    if (nrow(x) == 0L) {
+        ans <- cbind(rep.int(Inf, ncol(x)), rep.int(-Inf, ncol(x)))
+        if (useNames)
+            rownames(ans) <- colnames(x)
+        return(ans)
+    }
+
+    INIT <- function(i, grid) NULL
+    INIT_MoreArgs <- list()
+
+    FUN <- function(init, block, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed")) {
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+            block_colranges <-
+                SparseArray:::colRanges_dgCMatrix(block, na.rm=na.rm)
+        } else {
+            ## Dispatch on matrixStats::colRanges().
+            block_colranges <- MatrixGenerics::colRanges(block, na.rm=na.rm,
+                                                         useNames=FALSE)
+        }
+        if (is.null(init))
+            return(block_colranges)
+        cbind(pmin(init[ , 1L], block_colranges[ , 1L]),
+              pmax(init[ , 2L], block_colranges[ , 2L]))
+    }
+    FUN_MoreArgs <- list(na.rm=na.rm)
+
+    strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    ans <- do.call(rbind, strip_results)
+    if (useNames)
+        rownames(ans) <- colnames(x)
     ans
 }
 
 ### MatrixGenerics::rowRanges() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.rowRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
+.rowRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
+                                     useNames=TRUE)
 {
     .check_rows_cols(rows, cols, "rowRanges")
-    BLOCK_rowRanges(x, na.rm=na.rm)
+    BLOCK_rowRanges(x, na.rm=na.rm, useNames=useNames)
 }
 setMethod("rowRanges", "DelayedMatrix", .rowRanges_DelayedMatrix)
 
 ### MatrixGenerics::colRanges() has the 'rows' and 'cols' arguments.
 ### We do NOT support them.
-.colRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
+.colRanges_DelayedMatrix <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
+                                     useNames=TRUE)
 {
     .check_rows_cols(rows, cols, "colRanges")
-    BLOCK_rowRanges(t(x), na.rm=na.rm)
+    BLOCK_colRanges(x, na.rm=na.rm, useNames=useNames)
 }
 setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
 
@@ -589,7 +671,6 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
 ### row/colVars()
 ###
 ### The methods for ordinary matrices are defined in the matrixStats package.
-### They do NOT propagate the rownames or colnames.
 ###
 
 .compute_rowVars_for_full_width_blocks <-
