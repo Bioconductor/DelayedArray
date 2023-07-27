@@ -11,7 +11,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 URL: https://bioconductor.org/packages/DelayedArray
 BugReports: https://github.com/Bioconductor/DelayedArray/issues
-Version: 0.27.9
+Version: 0.27.10
 License: Artistic-2.0
 Encoding: UTF-8
 Authors@R: c(

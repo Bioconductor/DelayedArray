@@ -366,6 +366,8 @@ best_grid_for_hstrip_apply <- function(x, grid=NULL)
 {
     if (!is.null(grid))
         return(normarg_grid(grid, x))  # only to check the supplied 'grid'
+    if (length(x) == 0L)
+        return(defaultAutoGrid(x))  # one empty block
     x_chunkdim <- chunkdim(x)
     if (is.null(x_chunkdim)) {
         if (is.matrix(x))
@@ -388,6 +390,8 @@ best_grid_for_vstrip_apply <- function(x, grid=NULL)
 {
     if (!is.null(grid))
         return(normarg_grid(grid, x))  # only to check the supplied 'grid'
+    if (length(x) == 0L)
+        return(defaultAutoGrid(x))  # one empty block
     x_chunkdim <- chunkdim(x)
     if (is.null(x_chunkdim)) {
         if (is.matrix(x))
