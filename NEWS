@@ -1,3 +1,29 @@
+CHANGES IN VERSION 0.28.0
+-------------------------
+
+NEW FEATURES
+
+    o Add coercion from DelayedArray to SparseArray.
+
+    o Add efficient rowVars/colVars methods for DelayedMatrix objects.
+      These methods, like all other row/col summarization methods implemented
+      in the DelayedArray package, use block processing and can handle blocks
+      of **arbitrary** geometry, that is, they can handle a grid of class
+      ArbitraryArrayGrid (the most general type of grid).
+
+    o Add 'useNames' arg to row/colMins, row/colMaxs, row/colRanges, and
+      row/colVars methods for DelayedMatrix objects.
+
+    o Add 'current_viewport' argument to set_grid_context().
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o DelayedArray now depends on S4Arrays and SparseArray.
+
+    o Some improvements to the rowMeans/colMeans methods for DelayedMatrix
+      objects.
+
+
 CHANGES IN VERSION 0.26.0
 -------------------------
 
