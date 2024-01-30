@@ -63,16 +63,16 @@ test_DelayedArray_unary_iso_ops <- function()
     }
 
     a1 <- as.array(.make_toy_sas1())  # integer 3D array
-    A1 <- realize(a1)
+    A1 <- DelayedArray(realize(a1))
     a2 <- .make_toy_a2()  # numeric 3D array
-    A2 <- realize(a2)
+    A2 <- DelayedArray(realize(a2))
     for (.Generic in c("is.na", "is.finite", "is.infinite", "is.nan")) {
         do_tests(.Generic, a1, A1)
         do_tests(.Generic, a2, A2)
     }
 
     a3 <- as.array(.make_toy_sas3())  # character 3D array
-    A3 <- realize(a3)
+    A3 <- DelayedArray(realize(a3))
     for (.Generic in c("nchar", "tolower", "toupper")) {
         do_tests(.Generic, a3, A3)
     }
@@ -109,28 +109,28 @@ test_DelayedArray_Math_ans_Arith <- function()
     }
 
     a1 <- as.array(.make_toy_sas1())  # integer 3D array
-    A1 <- realize(a1)
+    A1 <- DelayedArray(realize(a1))
     a2 <- .make_toy_a2()  # numeric 3D array
-    A2 <- realize(a2)
+    A2 <- DelayedArray(realize(a2))
     do_tests(a1, A1)
     do_tests(a2, A2)
 
     a <- a1[ , 10:4, -2]
     A <- A1[ , 10:4, -2]
     do_tests(a, A)
-    do_tests(a, realize(A))
+    do_tests(a, DelayedArray(realize(A)))
     a <- a2[ , 10:4, -2]
     A <- A2[ , 10:4, -2]
     do_tests(a, A)
-    do_tests(a, realize(A))
+    do_tests(a, DelayedArray(realize(A)))
 
     ## with a numeric matrix
     m <- a2[ , , 2]
     M <- A2[ , , 2]
     do_tests(m, M)
-    do_tests(m, realize(M))
+    do_tests(m, DelayedArray(realize(M)))
     do_tests(t(m), t(M))
-    do_tests(t(m), realize(t(M)))
+    do_tests(t(m), DelayedArray(realize(t(M))))
     checkIdentical(t(toto1(m)), as.matrix(t(toto1(M))))
 }
 
@@ -166,17 +166,17 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
     }
 
     a2 <- .make_toy_a2()  # numeric 3D array
-    A2 <- realize(a2)
+    A2 <- DelayedArray(realize(a2))
     m <- a2[ , , 2]
-    M <- realize(m)
+    M <- DelayedArray(realize(m))
     for (.Generic in c(.ARITH_MEMBERS, .COMPARE_MEMBERS))
         do_tests(.Generic, a2, A2, m, M)
 
     a1 <- as.array(.make_toy_sas1())  # integer 3D array
     a <- a1 >= 1L  # logical 3D array
-    A <- realize(a)
+    A <- DelayedArray(realize(a))
     m <- a[ , , 2]
-    M <- realize(m)
+    M <- DelayedArray(realize(m))
     for (.Generic in .LOGIC_MEMBERS)
         do_tests(.Generic, a2, A2, m, M)
 }
@@ -184,12 +184,12 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
 test_DelayedArray_Ops_with_conformable_args <- function()
 {
     a1 <- as.array(.make_toy_sas1())  # integer 3D array
-    A1 <- realize(a1)
+    A1 <- DelayedArray(realize(a1))
     a2 <- .make_toy_a2()  # numeric 3D array
-    A2 <- realize(a2)
+    A2 <- DelayedArray(realize(a2))
     a3 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))
     a3[2, 9, 2] <- NA  # same as a3[[92]] <- NA
-    A3 <- realize(a3)
+    A3 <- DelayedArray(realize(a3))
     for (.Generic in c(.ARITH_MEMBERS, .COMPARE_MEMBERS)) {
         GENERIC <- match.fun(.Generic)
         target1 <- GENERIC(a1, a2)
@@ -201,9 +201,9 @@ test_DelayedArray_Ops_with_conformable_args <- function()
     }
 
     x <- a1 >= 6L  # logical 3D array
-    X <- realize(x)
+    X <- DelayedArray(realize(x))
     y <- a1 >= 1L & a1 <= 10L  # logical 3D array
-    Y <- realize(y)
+    Y <- DelayedArray(realize(y))
     for (.Generic in .LOGIC_MEMBERS) {
         GENERIC <- match.fun(.Generic)
         target <- GENERIC(x, y)
@@ -218,9 +218,9 @@ test_DelayedArray_anyNA <- function()
     BLOCK_anyNA <- DelayedArray:::.BLOCK_anyNA
 
     a1 <- as.array(.make_toy_sas1())   # integer 3D array
-    A1 <- realize(a1)
+    A1 <- DelayedArray(realize(a1))
     a1b <- as.array(.make_toy_sas1b()) # integer 3D array with no zeros or NAs
-    A1b <- realize(a1b)
+    A1b <- DelayedArray(realize(a1b))
 
     for (block_size in .BLOCK_SIZES1) {
         suppressMessages(setAutoBlockSize(block_size))
@@ -238,7 +238,7 @@ test_DelayedArray_which <- function()
 
     a1 <- as.array(.make_toy_sas1())  # integer 3D array
     a <- a1 >= 1L  # logical 3D array
-    A <- realize(a)
+    A <- DelayedArray(realize(a))
     target1 <- which(a)
     target2 <- which(a, arr.ind=TRUE, useNames=FALSE)
     for (block_size in .BLOCK_SIZES1) {
@@ -249,7 +249,7 @@ test_DelayedArray_which <- function()
     }
 
     a <- a1 == -100L    # all FALSE
-    A <- realize(a)
+    A <- DelayedArray(realize(a))
     target1 <- integer(0)
     target2 <- matrix(integer(0), ncol=3)
     for (block_size in .BLOCK_SIZES1) {
@@ -269,7 +269,7 @@ test_DelayedArray_Summary <- function()
         GENERIC <- match.fun(.Generic)
         target1 <- GENERIC(a)
         target2 <- GENERIC(a, na.rm=TRUE)
-        A <- realize(a)
+        A <- DelayedArray(realize(a))
         for (block_size in block_sizes) {
             suppressMessages(setAutoBlockSize(block_size))
             checkFun(target1, GENERIC(A))
@@ -312,7 +312,7 @@ test_DelayedArray_mean <- function()
         target1 <- mean(a)
         target2 <- mean(a, na.rm=TRUE)
         target3 <- mean(a[ , 10:4, -2])
-        A <- realize(a)
+        A <- DelayedArray(realize(a))
         for (block_size in block_sizes) {
             suppressMessages(setAutoBlockSize(block_size))
             checkEquals(target1, mean(A))
@@ -339,7 +339,7 @@ test_DelayedArray_mean <- function()
 test_DelayedArray_apply <- function()
 {
     do_tests <- function(a) {
-        A <- realize(a)
+        A <- DelayedArray(realize(a))
         for (MARGIN in seq_along(dim(a))) {
             checkIdentical(apply(a, MARGIN, dim),
                            apply(A, MARGIN, dim))
@@ -401,7 +401,7 @@ test_DelayedArray_scale <- function()
     m[4, 4] <- -Inf
     m[5:6, 5] <- c(NaN, Inf)
     m[6:8, 6] <- c(NaN, NA, -Inf)
-    M <- realize(m)
+    M <- DelayedArray(realize(m))
 
     ## 'center' is TRUE:
     target <- scale(m)

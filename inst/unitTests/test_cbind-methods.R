@@ -24,9 +24,9 @@ test_DelayedMatrix_arbind_acbind <- function()
     m1 <- .TEST_matrices[[1]]
     m2 <- .TEST_matrices[[2]]
     m3 <- .TEST_matrices[[3]]
-    M1 <- realize(m1)
-    M2 <- realize(m2)
-    M3 <- realize(m3)
+    M1 <- DelayedArray(realize(m1))
+    M2 <- DelayedArray(realize(m2))
+    M3 <- DelayedArray(realize(m3))
 
     target <- rbind(a=m1, b=m2, c=m3)
     current <- arbind(a=M1, b=M2, c=M3)
@@ -61,8 +61,8 @@ test_DelayedMatrix_arbind_acbind <- function()
 
     m1 <- matrix(nrow=0, ncol=3, dimnames=list(NULL, letters[1:3]))
     m2 <- matrix(1:15, ncol=3, dimnames=list(NULL, LETTERS[1:3]))
-    M1 <- realize(m1)
-    M2 <- realize(m2)
+    M1 <- DelayedArray(realize(m1))
+    M2 <- DelayedArray(realize(m2))
 
     target <- rbind(a=m1, a=m2)
     current <- arbind(a=M1, b=M2)
@@ -91,21 +91,21 @@ test_DelayedMatrix_arbind_acbind <- function()
 
 test_DelayedArray_arbind <- function()
 {
-    TEST_hdf5arrays <- lapply(.TEST_arrays, realize)
+    TEST_ARRAYS <- lapply(.TEST_arrays, function(x) DelayedArray(realize(x)))
 
     target <- do.call(arbind, .TEST_arrays)
-    current <- do.call(arbind, TEST_hdf5arrays)
+    current <- do.call(arbind, TEST_ARRAYS)
     checkTrue(is(current, "DelayedArray"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.array(current))
-    checkIdentical(current, do.call(rbind, TEST_hdf5arrays))
-    checkIdentical(current, bindROWS(TEST_hdf5arrays[[1]], TEST_hdf5arrays[-1]))
+    checkIdentical(current, do.call(rbind, TEST_ARRAYS))
+    checkIdentical(current, bindROWS(TEST_ARRAYS[[1]], TEST_ARRAYS[-1]))
 
     ## For some mysterious reason, the code below fails in the context
     ## of 'R CMD check' but not when running the tests interactively with
     ## DelayedArray:::.test().
     #check_2D_slice <- function(k) {
-    #    slices <- lapply(TEST_hdf5arrays, `[`, , , k)
+    #    slices <- lapply(TEST_ARRAYS, `[`, , , k)
     #    target_slice <- do.call(rbind, slices)
     #    checkIdentical(as.matrix(target_slice), as.matrix(current[ , , k]))
     #}
@@ -156,21 +156,21 @@ test_DelayedArray_acbind <- function()
             dimnames(a) <- a_dimnames
             a
     })
-    TEST_hdf5arrays <- lapply(arrays, realize)
+    TEST_ARRAYS <- lapply(arrays, function(x) DelayedArray(realize(x)))
 
     target <- do.call(acbind, arrays)
-    current <- do.call(acbind, TEST_hdf5arrays)
+    current <- do.call(acbind, TEST_ARRAYS)
     checkTrue(is(current, "DelayedArray"))
     checkTrue(validObject(current, complete=TRUE))
     checkIdentical(target, as.array(current))
-    current2 <- do.call(cbind, TEST_hdf5arrays)
+    current2 <- do.call(cbind, TEST_ARRAYS)
     checkIdentical(current, current2)
 
     ## For some mysterious reason, the code below fails in the context
     ## of 'R CMD check' but not when running the tests interactively with
     ## DelayedArray:::.test().
     #check_2D_slice <- function(k) {
-    #    slices <- lapply(TEST_hdf5arrays, `[`, , , k),
+    #    slices <- lapply(TEST_ARRAYS, `[`, , , k),
     #    target_slice <- do.call(cbind, slices)
     #    checkIdentical(as.matrix(target_slice), as.matrix(current[ , , k]))
     #}

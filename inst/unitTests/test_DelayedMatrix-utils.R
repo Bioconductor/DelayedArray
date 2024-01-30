@@ -68,13 +68,13 @@ test_DelayedMatrix_Ops <- function()
     toto <- function(x) t((5 * x[ , 1:2] ^ 3 + 1L) * log(x)[, 10:9])[ , -1]
 
     m <- a[ , , 2]
-    M <- realize(m)
+    M <- DelayedArray(realize(m))
     checkIdentical(toto(m), as.array(toto(M)))
     ## "Logic" members currently untested.
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)
 
-    M <- realize(a)[ , , 2]
+    M <- DelayedArray(realize(a)[ , , 2])
     checkIdentical(toto(m), as.array(toto(M)))
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)
@@ -86,7 +86,7 @@ test_DelayedMatrix_mult <- function()
     m[2, 4] <- NA
     m[5, 4] <- Inf
     m[6, 3] <- -Inf
-    M <- realize(m)
+    M <- DelayedArray(realize(m))
 
     # These two need to be smaller than 'M' to test both schemes.
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))

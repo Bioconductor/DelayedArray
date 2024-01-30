@@ -344,7 +344,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
         ans <- do.call(cbind, out)
     }
 
-    realize(ans)
+    DelayedArray(realize(ans))
 }
 
 setMethod("%*%", c("DelayedMatrix", "ANY"), function(x, y) {
@@ -433,7 +433,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
         ans <- Reduce("+", ans)
     }
 
-    realize(ans)
+    DelayedArray(realize(ans))
 }
 
 setMethod("crossprod", c("DelayedMatrix", "missing"), function(x, y) 

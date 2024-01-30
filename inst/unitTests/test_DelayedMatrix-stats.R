@@ -42,7 +42,7 @@ test_DelayedMatrix_row_col_summarization <- function()
 
     ## on an integer matrix
     m <- a1[ , , 1]
-    A1 <- realize(a1)
+    A1 <- DelayedArray(realize(a1))
     M <- A1[ , , 1]
     for (FUN in FUNS) {
         test_row_col_summary(FUN, m, M, block_sizes2)
@@ -54,7 +54,7 @@ test_DelayedMatrix_row_col_summarization <- function()
     m[2, 4] <- NA
     m[5, 4] <- Inf
     m[6, 3] <- -Inf
-    M <- realize(m)
+    M <- DelayedArray(realize(m))
     for (FUN in FUNS)
         test_row_col_summary(FUN, m, M, block_sizes2)
     library(genefilter)

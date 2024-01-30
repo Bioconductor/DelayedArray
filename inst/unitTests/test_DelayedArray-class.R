@@ -146,7 +146,7 @@ test_DelayedArray_subsetting <- function()
 {
     a <- array(runif(78000), dim=c(600, 26, 5),
                              dimnames=list(NULL, LETTERS, letters[1:5]))
-    A <- realize(a)
+    A <- DelayedArray(realize(a))
     checkTrue(is(A, "DelayedArray"))
     checkTrue(validObject(A, complete=TRUE))
 

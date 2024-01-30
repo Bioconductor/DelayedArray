@@ -33,6 +33,8 @@
            read_sparse_block() method defined in DelayedArray and its revdeps.
 
   5. Switch from .OLD_read_block() to .NEW_read_block() in S4Arrays.
+     Also coerce to SparseArray instead of SparseArraySeed in the default
+     realize() method (and update man page).
 
   6. Then, all the OLD_extract_sparse_array() and read_sparse_block() methods
      can be deprecated.
