@@ -111,6 +111,9 @@ setMethod("matrixClass", "DelayedArray", function(x) "DelayedMatrix")
 ### Validity
 ###
 
+### Note that, because DelayedArray extends DelayedUnaryOp, validation of
+### a DelayedArray object is mostly taken care of by the validity method
+### for DelayedUnaryOp objects, which is defined in DelayedOp-class.R.
 .validate_DelayedArray <- function(x)
 {
     pkgversion <- .get_DelayedArray_pkgversion(x)
@@ -133,8 +136,8 @@ setValidity2("DelayedArray", .validate_DelayedArray)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Seed contract
 ###
-### We overwrite the methods for DelayedUnaryOp objects only to detect
-### DelayedArray objects with old internals.
+### We overwrite the methods for DelayedUnaryOp objects for the sole purpose
+### of detecting DelayedArray objects with old internals.
 ###
 
 setMethod("dim", "DelayedArray",

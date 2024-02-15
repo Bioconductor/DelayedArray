@@ -11,9 +11,20 @@
 \alias{colsum,DelayedMatrix-method}
 
 \alias{\%*\%}
-\alias{\%*\%,ANY,DelayedMatrix-method}
 \alias{\%*\%,DelayedMatrix,ANY-method}
+\alias{\%*\%,ANY,DelayedMatrix-method}
+\alias{crossprod}
+\alias{crossprod,DelayedMatrix,ANY-method}
+\alias{crossprod,ANY,DelayedMatrix-method}
+\alias{tcrossprod}
+\alias{tcrossprod,DelayedMatrix,ANY-method}
+\alias{tcrossprod,ANY,DelayedMatrix-method}
+
 \alias{\%*\%,DelayedMatrix,DelayedMatrix-method}
+\alias{crossprod,DelayedMatrix,DelayedMatrix-method}
+\alias{tcrossprod,DelayedMatrix,DelayedMatrix-method}
+\alias{crossprod,DelayedMatrix,missing-method}
+\alias{tcrossprod,DelayedMatrix,missing-method}
 
 \title{Common operations on DelayedMatrix objects}
 
@@ -33,10 +44,40 @@
   Block-processed operations:
   \itemize{
     \item \code{rowsum} and \code{colsum}
-    \item matrix multiplication (\%*\%) of an ordinary matrix by a
-          \link{DelayedMatrix} object
+    \item matrix multiplication (\%*\%) where at least one of the two
+          operands is a \link{DelayedMatrix} object
     \item matrix row/col summarization (see
           \code{?`\link{DelayedMatrix-stats}`})
+  }
+
+  Note that matrix multiplication is not delayed: the output matrix is
+  realized block by block. The \emph{automatic realization backend}
+  controls where realization happens e.g. in memory as an ordinary matrix
+  if not set (i.e. set to \code{NULL}), or in an HDF5 file if set to
+  \code{"HDF5Array"}.
+  See \code{?\link{setAutoRealizationBackend}} for more information about
+  realization backends.
+}
+
+\value{
+  The object returned by matrix multiplication involving at least one
+  \link{DelayedMatrix} object will be either:
+  \itemize{
+    \item An ordinary matrix if the \emph{automatic realization backend}
+          is \code{NULL} (the default).
+
+    \item A \link{DelayedMatrix} object if the \emph{automatic realization
+          backend} is not \code{NULL}. In this case, the returned
+          \link{DelayedMatrix} object will be either \emph{pristine}
+          or made of several \emph{pristine} \link{DelayedMatrix} objects
+          bound together (via \code{rbind()} or \code{cbind()}, both
+          are delayed operations).
+
+          For example, if the \emph{automatic realization backend} is
+          \code{"HDF5Array"}, then the returned \link{DelayedMatrix} object
+          will be either an \link[HDF5Array]{HDF5Array} object, or it will
+          be a \link{DelayedMatrix} object made of several
+          \link[HDF5Array]{HDF5Array} objects bound together.
   }
 }
 
@@ -55,8 +96,9 @@
     \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
           summarization.
 
-    \item \code{\link{setAutoRealizationBackend}} for how to set a
-          \emph{automatic realization backend}.
+    \item \code{\link{getAutoRealizationBackend}} and
+          \code{\link{setAutoRealizationBackend}} for getting and setting
+          the \emph{automatic realization backend}.
 
     \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
           package for writing an array-like object to an HDF5 file and other
@@ -126,40 +168,24 @@ toy_h5 <- system.file("extdata", "toy.h5", package="HDF5Array")
 h5ls(toy_h5)
 M1 <- HDF5Array(toy_h5, "M1")
 
-## Matrix multiplication is not delayed: the output matrix is realized
-## block by block. The current "automatic realization backend" controls
-## where realization happens e.g. in memory as an ordinary matrix if not
-## (i.e. set to NULL) or in an HDF5 file if set to "HDF5Array".
-## See '?setAutoRealizationBackend' for more information about
-## "realization backends".
-## The output matrix is returned as a DelayedMatrix object with no delayed
-## operations on it. The exact class of the object depends on the backend
-## e.g. it will be HDF5Matrix with "HDF5Array" backend.
-
 m <- matrix(runif(50000), ncol=nrow(M1))
 
 ## Set backend to NULL for in-memory realization:
 setAutoRealizationBackend()
-P1 <- m \%*\% M1
-P1
+p1 <- m \%*\% M1  # an ordinary matrix
 
 ## Set backend to HDF5Array for realization in HDF5 file:
 setAutoRealizationBackend("HDF5Array")
-
-## With the HDF5Array backend, the output matrix will be written to an
-## automatic location on disk:
-getHDF5DumpFile()  # HDF5 file where the output matrix will be written
-lsHDF5DumpFile()
-
-P2 <- m \%*\% M1
+P2 <- m \%*\% M1  # an HDF5Array object
 P2
+path(P2)  # HDF5 file where the result got written
 
-lsHDF5DumpFile()
-
-## Use setHDF5DumpFile() and setHDF5DumpName() from the HDF5Array package
-## to control the location of automatically created HDF5 datasets.
-
-stopifnot(identical(dim(P1), dim(P2)),
-          all.equal(as.array(P1), as.array(P2)))
+## Sanity checks:
+stopifnot(
+  is.matrix(p1),
+  all.equal(p1, m \%*\% as.matrix(M1)),
+  is(P2, "HDF5Array"),
+  all.equal(as.matrix(P2), p1)
+)
 }
 \keyword{methods}

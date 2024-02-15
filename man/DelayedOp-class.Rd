@@ -88,11 +88,14 @@ is_noop(x)
   ------------------------------------------------------------------
   }
 
-  All the nodes are array-like objects that must comply with the \emph{seed
-  contract} i.e. they must support \code{dim()}, \code{dimnames()}, and
-  \code{extract_array()}. See \code{?\link[S4Arrays]{extract_array}}
-  in the \pkg{S4Arrays} package for more information about the
-  \emph{seed contract}.
+  All DelayedOp objects must comply with the \emph{seed contract} i.e. they
+  must support \code{dim()}, \code{dimnames()}, and \code{extract_array()}.
+  See \code{?\link[S4Arrays]{extract_array}} in the \pkg{S4Arrays} package
+  for more information about the \emph{seed contract}.
+  This makes them de facto array-like objects. However, end users will never
+  interact with them directly, except for the root of the tree which is the
+  DelayedArray object itself and the only node in the tree that they are able
+  to see and touch.
 
   \code{is_noop()} can only be called on a DelayedSubset, DelayedAperm,
   or DelayedSetDimnames object at the moment, and will return \code{TRUE}

@@ -472,7 +472,9 @@ reduce_grid_vstrip <- function(j, grid, x, INIT, INIT_MoreArgs,
     init
 }
 
-### Walk on the horizontal grid strips.
+### Walk on the horizontal grid strips:
+### - strips are processed in parallel;
+### - blocks within each strip are processed sequentially from left to right.
 ### Return a list with one list element per strip.
 hstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
                             FINAL=NULL, FINAL_MoreArgs=list(),
@@ -494,7 +496,9 @@ hstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
     )
 }
 
-### Walk on the vertical grid strips.
+### Walk on the vertical grid strips:
+### - strips are processed in parallel;
+### - blocks within each strip are processed sequentially from top to bottom.
 ### Return a list with one list element per strip.
 vstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
                             FINAL=NULL, FINAL_MoreArgs=list(),

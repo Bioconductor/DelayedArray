@@ -1,16 +1,34 @@
 #setAutoRealizationBackend("RleArray")
 #setAutoRealizationBackend("HDF5Array")
 
+### Temporary workaround to make read_block(..., as.sparse=TRUE) work on
+### a SVT_SparseArray object. Won't be needed anymore once read_block()
+### gets switch from OLD_extract_sparse_array() to extract_sparse_array().
+### TODO: Make sure to get rid of this when switching read_block()
+### from OLD_extract_sparse_array() to extract_sparse_array().
+setAs("COO_SparseArray", "SparseArraySeed",
+    function(from)
+        SparseArraySeed(dim(from), nzindex=nzcoo(from),
+                                   nzdata=nzdata(from),
+                                   dimnames=dimnames(from))
+)
+setMethod(OLD_extract_sparse_array, "SVT_SparseArray",
+    function(x, index) {
+        svt <- extract_sparse_array(x, index)
+        as(as(svt, "COO_SparseArray"), "SparseArraySeed")
+    }
+)
+
 Arith_members <- c("+", "-", "*", "/", "^", "%%", "%/%")
 Compare_members <- c("==", "!=", "<=", ">=", "<", ">")
 Logic_members <- c("&", "|")  # currently untested
 
-a1 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))  # integer array
-a2 <- a1 + runif(150) - 0.5                              # numeric array
-m2 <- matrix(runif(60), ncol=6)                          # numeric matrix
+TEST_a1 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))  # integer array
+TEST_a2 <- TEST_a1 + runif(150) - 0.5                         # numeric array
+TEST_m2 <- matrix(runif(60), ncol=6)                          # numeric matrix
 
-block_sizes1 <- c(12L, 20L, 50L, 15000L)
-block_sizes2 <- 2L * block_sizes1
+TEST_block_sizes1 <- c(12L, 20L, 50L, 15000L)
+TEST_block_sizes2 <- 2L * TEST_block_sizes1
 
 test_DelayedMatrix_Ops <- function()
 {
@@ -62,7 +80,7 @@ test_DelayedMatrix_Ops <- function()
         }
     }
 
-    a <- a2
+    a <- TEST_a2
     a[2, 9, 2] <- NA  # same as a[[92]] <- NA
 
     toto <- function(x) t((5 * x[ , 1:2] ^ 3 + 1L) * log(x)[, 10:9])[ , -1]
@@ -74,26 +92,167 @@ test_DelayedMatrix_Ops <- function()
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)
 
-    M <- DelayedArray(realize(a)[ , , 2])
+    M <- DelayedArray(realize(a))[ , , 2]
     checkIdentical(toto(m), as.array(toto(M)))
     for (.Generic in c(Arith_members, Compare_members))
         test_delayed_Ops_on_matrix(.Generic, m, M)
 }
 
+test_BLOCK_mult_Lgrid_or_Rgrid <- function()
+{
+    ## BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid() are the workhorses behind
+    ## block matrix multiplication between a matrix-like object and an ordinary
+    ## matrix (or other supported matrix-like object e.g. sparseMatrix or
+    ## SparseMatrix).
+    BLOCK_mult_Lgrid <- DelayedArray:::BLOCK_mult_Lgrid
+    BLOCK_mult_Rgrid <- DelayedArray:::BLOCK_mult_Rgrid
+
+    do_checks <- function(expected, x, y,
+                          block_len, as.sparse, BACKEND, BPPARAM=NULL,
+                          op=c("mult", "crossprod", "tcrossprod"))
+    {
+        op <- match.arg(op)
+        grid1 <- defaultAutoGrid(x, block.length=block_len)
+        current <- BLOCK_mult_Lgrid(x, y, Lgrid=grid1, as.sparse=as.sparse,
+                                          BACKEND=BACKEND, BPPARAM=BPPARAM,
+                                          op=op)
+        checkEquals(as.matrix(current), expected)
+        grid2 <- defaultAutoGrid(y, block.length=block_len)
+        current <- BLOCK_mult_Rgrid(x, y, Rgrid=grid2, as.sparse=as.sparse,
+                                          BACKEND=BACKEND, BPPARAM=BPPARAM,
+                                          op=op)
+        checkEquals(as.matrix(current), expected)
+    }
+
+    ## Block %*%, serial evaluation
+    ##   <matrix> %*% <matrix>
+    ##   <matrix> %*% <SVT_SparseMatrix>
+    ##   <SVT_SparseMatrix> %*% <matrix>
+    ##   <SVT_SparseMatrix> %*% <SVT_SparseMatrix>
+
+    library(HDF5Array)
+    m1 <- matrix(1:12, ncol=3, dimnames=list(letters[1:4], NULL))
+    m2 <- matrix(101:115, nrow=3, dimnames=list(NULL, LETTERS[1:5]))
+    m0 <- m1 %*% m2
+    for (block_len in c(1:4, 6L, length(m1), length(m2), 1000L)) {
+      for (x in list(m1, as(m1, "SVT_SparseMatrix"))) {
+        for (y in list(m2, as(m2, "SVT_SparseMatrix"))) {
+          do_checks(m0, x, y, block_len,
+                    as.sparse=FALSE, BACKEND=NULL)
+          do_checks(m0, x, y, block_len,
+                    as.sparse=TRUE, BACKEND=NULL)
+          do_checks(m0, x, y, block_len,
+                    as.sparse=FALSE, BACKEND="HDF5Array")
+          do_checks(m0, x, y, block_len,
+                    as.sparse=TRUE, BACKEND="HDF5Array")
+          do_checks(m0, t(x), y, block_len,
+                    as.sparse=FALSE, BACKEND=NULL, op="crossprod")
+          do_checks(m0, t(x), y, block_len,
+                    as.sparse=TRUE, BACKEND=NULL, op="crossprod")
+          do_checks(m0, t(x), y, block_len,
+                    as.sparse=FALSE, BACKEND="HDF5Array", op="crossprod")
+          do_checks(m0, t(x), y, block_len,
+                    as.sparse=TRUE, BACKEND="HDF5Array", op="crossprod")
+          do_checks(m0, x, t(y), block_len,
+                    as.sparse=FALSE, BACKEND=NULL, op="tcrossprod")
+          do_checks(m0, x, t(y), block_len,
+                    as.sparse=TRUE, BACKEND=NULL, op="tcrossprod")
+          do_checks(m0, x, t(y), block_len,
+                    as.sparse=FALSE, BACKEND="HDF5Array", op="tcrossprod")
+          do_checks(m0, x, t(y), block_len,
+                    as.sparse=TRUE, BACKEND="HDF5Array", op="tcrossprod")
+        }
+      }
+    }
+
+    ## Block %*%, parallel evaluation
+    ##   <matrix> %*% <matrix>
+
+    snow2 <- BiocParallel::SnowParam(workers=2)
+    do_checks(m0, m1, m2, block_len=1L,
+              as.sparse=FALSE, BACKEND=NULL, BPPARAM=snow2)
+    do_checks(m0, m1, m2, block_len=1L,
+              as.sparse=FALSE, BACKEND="HDF5Array", BPPARAM=snow2)
+    do_checks(m0, m1, m2, block_len=6L,
+              as.sparse=FALSE, BACKEND=NULL, BPPARAM=snow2)
+    do_checks(m0, m1, m2, block_len=6L,
+              as.sparse=FALSE, BACKEND="HDF5Array", BPPARAM=snow2)
+
+    ## Block %*%, serial evaluation
+    ##   <DelayedMatrix> %*% <matrix>
+    ##   <DelayedMatrix> %*% <SVT_SparseMatrix>
+    ##   <matrix> %*% <DelayedMatrix>
+    ##   <SVT_SparseMatrix> %*% <DelayedMatrix>
+
+    M1 <- writeHDF5Array(m1, chunkdim=c(2, 2))
+    M3 <- cbind(log(as(m2, "HDF5Array")), t(M1))
+    m3 <- as.matrix(M3)
+    m0 <- m1 %*% m3
+    for (block_len in c(1:4, 6L, length(m1), length(m3), 1000L)) {
+      for (y in list(m3, as(m3, "SVT_SparseMatrix"))) {
+        grid1 <- defaultAutoGrid(M1, block.length=block_len)
+        current <- BLOCK_mult_Lgrid(M1, y, Lgrid=grid1, as.sparse=FALSE,
+                                           BACKEND=NULL, BPPARAM=NULL)
+        checkEquals(current, m0)
+        current <- BLOCK_mult_Lgrid(M1, y, Lgrid=grid1, as.sparse=FALSE,
+                                           BACKEND="HDF5Array", BPPARAM=NULL)
+        checkTrue(is(current, "DelayedMatrix"))
+        checkTrue(validObject(current, complete=TRUE))
+        checkEquals(as.matrix(current), m0)
+      }
+      for (x in list(m1, as(m1, "SVT_SparseMatrix"))) {
+        grid3 <- defaultAutoGrid(M3, block.length=block_len)
+        current <- BLOCK_mult_Rgrid(x, M3, Rgrid=grid3, as.sparse=FALSE,
+                                           BACKEND=NULL, BPPARAM=NULL)
+        checkEquals(current, m0)
+        current <- BLOCK_mult_Rgrid(x, M3, Rgrid=grid3, as.sparse=FALSE,
+                                           BACKEND="HDF5Array", BPPARAM=NULL)
+        checkTrue(is(current, "DelayedMatrix"))
+        checkTrue(validObject(current, complete=TRUE))
+        checkEquals(as.matrix(current), m0)
+      }
+    }
+
+    ## Block %*%, parallel evaluation
+    ##   <DelayedMatrix> %*% <matrix>
+    ##   <matrix> %*% <DelayedMatrix>
+
+    grid1 <- defaultAutoGrid(M1, block.length=1L)
+    current <- BLOCK_mult_Lgrid(M1, m3, Lgrid=grid1, as.sparse=FALSE,
+                                        BACKEND=NULL, BPPARAM=snow2)
+    checkEquals(current, m0)
+    current <- BLOCK_mult_Lgrid(M1, m3, Lgrid=grid1, as.sparse=FALSE,
+                                        BACKEND="HDF5Array", BPPARAM=snow2)
+    checkTrue(is(current, "DelayedMatrix"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkEquals(as.matrix(current), m0)
+
+    grid3 <- defaultAutoGrid(M3, block.length=2L)
+    current <- BLOCK_mult_Rgrid(m1, M3, Rgrid=grid3, as.sparse=FALSE,
+                                        BACKEND=NULL, BPPARAM=snow2)
+    checkEquals(current, m0)
+    current <- BLOCK_mult_Rgrid(m1, M3, Rgrid=grid3, as.sparse=FALSE,
+                                        BACKEND="HDF5Array", BPPARAM=NULL)
+    checkTrue(is(current, "DelayedMatrix"))
+    checkTrue(validObject(current, complete=TRUE))
+    checkEquals(as.matrix(current), m0)
+}
+
+### <matrix> %*% <DelayedMatrix> and <DelayedMatrix> %*% <matrix>
 test_DelayedMatrix_mult <- function()
 {
-    m <- m2
+    m <- TEST_m2
     m[2, 4] <- NA
     m[5, 4] <- Inf
     m[6, 3] <- -Inf
     M <- DelayedArray(realize(m))
 
-    # These two need to be smaller than 'M' to test both schemes.
     Lm <- rbind(rep(1L, 10), rep(c(1L, 0L), 5), rep(-100L, 10))
-    Rm <- rbind(Lm + 7.05, 0.1 * Lm)[,1:5]
-
+    Rm <- rbind(Lm + 7.05, 0.1 * Lm)[ , 1:5]
     on.exit(suppressMessages(setAutoBlockSize()))
-    for (block_size in block_sizes2) {
+
+    ## With a dense DelayedMatrix.
+    for (block_size in TEST_block_sizes2) {
         suppressMessages(setAutoBlockSize(block_size))
 
         P <- Lm %*% M
@@ -107,32 +266,47 @@ test_DelayedMatrix_mult <- function()
         checkEquals(tcrossprod(m, t(Rm)), as.matrix(P))
     }
 
-    # Handles sparse inputs.
-    s <- Matrix::rsparsematrix(nrow(m2), ncol(m2), density=0.2)
-    S <- DelayedArray(s)
-
-    for (block_size in block_sizes2) {
+    ## With a sparse DelayedMatrix.
+    s1 <- Matrix::rsparsematrix(nrow(TEST_m2), ncol(TEST_m2), density=0.2)
+    s2 <- as(s1, "SVT_SparseMatrix")
+    s0 <- as.matrix(s1)
+    for (S in list(DelayedArray(s1), DelayedArray(s2))) {
+      for (block_size in TEST_block_sizes2) {
         suppressMessages(setAutoBlockSize(block_size))
 
-        P <- Lm %*% S 
-        checkEquals(unname(as.matrix(Lm %*% s)), as.matrix(P))
+        P <- Lm %*% S
+        checkEquals(unname(as.matrix(Lm %*% s0)), as.matrix(P))
         P <- S %*% Rm
-        checkEquals(unname(as.matrix(s %*% Rm)), as.matrix(P))
+        checkEquals(unname(as.matrix(s0 %*% Rm)), as.matrix(P))
 
         P <- crossprod(t(Lm), S)
-        checkEquals(unname(as.matrix(crossprod(t(Lm), s))), as.matrix(P))
+        checkEquals(unname(as.matrix(crossprod(t(Lm), s0))), as.matrix(P))
         P <- tcrossprod(S, t(Rm))
-        checkEquals(unname(as.matrix(tcrossprod(s, t(Rm)))), as.matrix(P))
+        checkEquals(unname(as.matrix(tcrossprod(s0, t(Rm)))), as.matrix(P))
+      }
     }
 
-    # Handles two DelayedMatrices being multiplied togehter.
+    ## Parallel evaluation.
+    setAutoBPPARAM(BiocParallel::SnowParam(workers=2))
+    on.exit(setAutoBPPARAM(), add=TRUE)
+    suppressMessages(setAutoBlockSize(20))
+    P <- Lm %*% M
+    checkEquals(Lm %*% m, as.matrix(P))
+    P <- M %*% Rm
+    checkEquals(m %*% Rm, as.matrix(P))
+}
+
+### <DelayedMatrix> %*% <DelayedMatrix>
+### Based on DelayedArray:::.super_BLOCK_mult().
+test_DelayedMatrix_mult_DelayedMatrix <- function()
+{
     y1 <- matrix(runif(100), ncol=5)
     y2 <- matrix(runif(100), nrow=5)
-    Y1 <- DelayedArray(y1)
-    Y2 <- DelayedArray(y2)
+    Y1 <- DelayedArray(realize(y1))
+    Y2 <- DelayedArray(realize(y2))
     ref <- y1 %*% y2
 
-    for (block_size in block_sizes2) {
+    for (block_size in TEST_block_sizes2) {
         suppressMessages(setAutoBlockSize(block_size))
         out <- Y1 %*% Y2
         checkEquals(ref, as.matrix(out))
@@ -146,49 +320,31 @@ test_DelayedMatrix_mult <- function()
     checkException(Lm[,1,drop=FALSE] %*% m, msg="non-conformable")
 }
 
+### Based on DelayedArray:::.super_BLOCK_self()
 test_DelayedMatrix_crossprod_self <- function()
 {
-    M <- DelayedArray(m2)
+    M <- DelayedArray(realize(TEST_m2))
 
-    # Checking self-product in a core-agnostic way. 
-    on.exit(suppressMessages(setAutoBlockSize()))
-    for (block_size in block_sizes2) {
-        suppressMessages(setAutoBlockSize(block_size))
-        checkEquals(as.matrix(crossprod(M)), crossprod(m2))
-        checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
-    }
-
-    # Checking self-product in a non-core-agnostic way. 
-    DelayedArray:::setAutoMultParallelAgnostic(FALSE)
     on.exit(DelayedArray:::setAutoMultParallelAgnostic())
-    for (block_size in block_sizes2) {
-        suppressMessages(setAutoBlockSize(block_size))
-        checkEquals(as.matrix(crossprod(M)), crossprod(m2))
-        checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
+    on.exit(suppressMessages(setAutoBlockSize()), add=TRUE)
+    on.exit(setAutoBPPARAM(), add=TRUE)
+
+    ## Check self-product in non-core-agnostic and core-agnostic ways.
+    for (agnostic in c(FALSE, TRUE)) {
+        ## Serial evaluation.
+        setAutoBPPARAM()
+        DelayedArray:::setAutoMultParallelAgnostic(agnostic)
+        for (block_size in TEST_block_sizes2) {
+            suppressMessages(setAutoBlockSize(block_size))
+            checkEquals(as.matrix(crossprod(M)), crossprod(TEST_m2))
+            checkEquals(as.matrix(tcrossprod(M)), tcrossprod(TEST_m2))
+        }
+
+        ## Parallel evaluation.
+        setAutoBPPARAM(BiocParallel::SnowParam(workers=2))
+        suppressMessages(setAutoBlockSize(20))
+        checkEquals(as.matrix(crossprod(M)), crossprod(TEST_m2))
+        checkEquals(as.matrix(tcrossprod(M)), tcrossprod(TEST_m2))
     }
 }
 
-test_DelayedMatrix_mult_parallel <- function()
-{
-    setAutoBPPARAM(BiocParallel::SnowParam(2))
-    on.exit(setAutoBPPARAM())
-    suppressMessages(setAutoBlockSize(10000))
-    on.exit(suppressMessages(setAutoBlockSize()), add=TRUE)
-
-    M <- DelayedArray(m2)
-    Lm <- matrix(runif(20), ncol=10)
-    Rm <- matrix(runif(12), nrow=6)
-
-    P <- Lm %*% M
-    checkEquals(Lm %*% m2, as.matrix(P))
-    P <- M %*% Rm
-    checkEquals(m2 %*% Rm, as.matrix(P))
-
-    checkEquals(as.matrix(crossprod(M)), crossprod(m2))
-    checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
-
-    DelayedArray:::setAutoMultParallelAgnostic(FALSE)
-    on.exit(DelayedArray:::setAutoMultParallelAgnostic(), add=TRUE)
-    checkEquals(as.matrix(crossprod(M)), crossprod(m2))
-    checkEquals(as.matrix(tcrossprod(M)), tcrossprod(m2))
-}

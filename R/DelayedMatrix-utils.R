@@ -8,7 +8,7 @@
     block <- read_block(..., as.sparse=NA)
     if (is(block, "SparseArraySeed"))
         block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-    block 
+    block
 }
 
 
@@ -28,6 +28,7 @@
     group2 <- extractROWS(group, ranges(viewport)[1L])
     rowsum(block, group2, reorder=FALSE, na.rm=na.rm)
 }
+
 .compute_colsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
 {
     viewport <- grid[[i, j]]
@@ -57,6 +58,7 @@
     }
     ans
 }
+
 .compute_colsum_for_grid_row <- function(x, grid, i, group, ugroup,
                                          na.rm=FALSE, verbose=FALSE)
 {
@@ -86,7 +88,7 @@
     ans
 }
 
-.BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
+BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
     ugroup <- as.character(S4Arrays:::compute_ugroup(group, nrow(x), reorder))
     if (!isTRUEorFALSE(na.rm))
@@ -107,7 +109,8 @@
     dimnames(ans) <- list(ugroup, colnames(x))
     ans
 }
-.BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
+
+BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
 {
     ugroup <- as.character(S4Arrays:::compute_ugroup(group, ncol(x), reorder))
     if (!isTRUEorFALSE(na.rm))
@@ -135,105 +138,256 @@
 
 ### S3/S4 combo for rowsum.DelayedMatrix
 rowsum.DelayedMatrix <- function(x, group, reorder=TRUE, ...)
-    .BLOCK_rowsum(x, group, reorder=reorder, ...)
-setMethod("rowsum", "DelayedMatrix", .BLOCK_rowsum)
+    BLOCK_rowsum(x, group, reorder=reorder, ...)
+setMethod("rowsum", "DelayedMatrix", BLOCK_rowsum)
 
-setMethod("colsum", "DelayedMatrix", .BLOCK_colsum)
+setMethod("colsum", "DelayedMatrix", BLOCK_colsum)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Matrix multiplication
+### The two workhorses behind block matrix multiplication between:
+###   - **any** matrix-like object (typically a DelayedMatrix),
+###   - an ordinary matrix (or other supported matrix-like object,
+###     see .is_supported() below).
 ###
-### We only support multiplication of an ordinary matrix (typically
-### small) by a DelayedMatrix object (typically big). Multiplication of 2
-### DelayedMatrix objects is not supported.
+### Should be able to handle any type() supported by base::`%*%`, that is,
+### integer, double, and complex. However, the realization backend specified
+### via `BACKEND` might introduce some restrictions e.g. will it support
+### realization of a matrix of type complex?
 ###
 
-.BLOCK_mult_by_left_matrix <- function(x, y)
+### Supported matrix-like objects must support [ as well as native %*%,
+### crossprod(), and tcrossprod() with the blocks returned by read_block()
+### (i.e. which are either ordinary matrices or SparseMatrix objects).
+.is_supported <- function(x)
+    is.matrix(x) || is(x, "sparseMatrix") || is(x, "SparseMatrix")
+
+### x: a matrix-like object (typically a DelayedMatrix).
+### y: an ordinary matrix or other supported object (see .is_supported).
+### Walks on the grid defined on matrix-like object 'x'.
+### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
+### a DelayedMatrix object that is either pristine or the result of rbind'ing
+### several pristine DelayedMatrix objects together (delayed rbind()).
+BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
+                                   BACKEND=getAutoRealizationBackend(),
+                                   BPPARAM=getAutoBPPARAM(), verbose=NA,
+                                   op=c("mult", "crossprod", "tcrossprod"))
 {
-    stopifnot(is.matrix(x),
-              is(y, "DelayedMatrix") || is.matrix(y),
-              ncol(x) == nrow(y))
-
-    ans_dim <- c(nrow(x), ncol(y))
-    ans_dimnames <- S4Arrays:::simplify_NULL_dimnames(list(rownames(x),
-                                                           colnames(y)))
-    ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
-    sink <- AutoRealizationSink(ans_dim, ans_dimnames, ans_type)
-    on.exit(close(sink))
-
-    y_grid <- colAutoGrid(y)
-    ans_spacings <- c(ans_dim[[1L]], ncol(y_grid[[1L]]))
-    ans_grid <- RegularArrayGrid(ans_dim, ans_spacings)  # parallel to 'y_grid'
-    nblock <- length(y_grid)  # same as 'length(ans_grid)'
-    for (bid in seq_len(nblock)) {
-        if (get_verbose_block_processing())
-            message("Processing block ", bid, "/", nblock, " ... ",
-                    appendLF=FALSE)
-        y_viewport <- y_grid[[bid]]
-        block <- .read_matrix_block(y, y_viewport)
-        block_ans <- x %*% block
-        write_block(sink, ans_grid[[bid]], block_ans)
-        if (get_verbose_block_processing())
-            message("OK")
+    if (!.is_supported(y))
+        stop(wmsg("this operation does not support 'y' ",
+                  "of class ", class(y)[[1L]]))
+    stopifnot(length(dim(x)) == 2L)
+    op <- match.arg(op)
+    if (op == "mult") {
+        stopifnot(ncol(x) == nrow(y))
+        STRIP_APPLY <- hstrip_apply
+        INIT <- function(i, grid, y) {
+            matrix(0L, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
+        }
+    } else if (op == "crossprod") {
+        stopifnot(nrow(x) == nrow(y))
+        STRIP_APPLY <- vstrip_apply
+        INIT <- function(j, grid, y) {
+            matrix(0L, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
+        }
+    } else {
+        stopifnot(ncol(x) == ncol(y))
+        STRIP_APPLY <- hstrip_apply
+        INIT <- function(i, grid, y) {
+            matrix(0L, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
+        }
     }
-    as(sink, "DelayedArray")
+    INIT_MoreArgs <- list(y=y)
+
+    FUN <- function(init, block, y, op) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        vp <- currentViewport()
+        vp_ranges <- ranges(vp)
+        if (op == "mult") {
+            idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+            block_ans <- base::`%*%`(block, y[idx, , drop=FALSE])
+        } else if (op == "crossprod") {
+            idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+            block_ans <- base::crossprod(block, y[idx, , drop=FALSE])
+        } else {
+            idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+            block_ans <- base::tcrossprod(block, y[ , idx, drop=FALSE])
+        }
+        if (!is.matrix(block_ans))
+            block_ans <- as.matrix(block_ans)
+        init + block_ans
+    }
+    FUN_MoreArgs <- list(y=y, op=op)
+
+    ## No-op if 'BACKEND' is NULL.
+    FINAL <- function(init, BACKEND) realize(init, BACKEND=BACKEND)
+    FINAL_MoreArgs <- list(BACKEND=BACKEND)
+
+    strip_results <- STRIP_APPLY(x, INIT, INIT_MoreArgs,
+                                    FUN, FUN_MoreArgs,
+                                    FINAL, FINAL_MoreArgs,
+                                    grid=Lgrid, as.sparse=as.sparse,
+                                    BPPARAM=BPPARAM, verbose=verbose)
+    do.call(rbind, strip_results)
 }
 
-setMethod("%*%", c("ANY", "DelayedMatrix"),
-    function(x, y)
-    {
-        if (!is.matrix(x)) {
-            if (!is.vector(x))
-                stop(wmsg("matrix multiplication of a ", class(x), " object ",
-                          "by a ", class(y), " object is not supported"))
-            x_len <- length(x)
-            y_nrow <- nrow(y)
-            if (x_len != 0L && x_len != y_nrow)
-                stop(wmsg("non-conformable arguments"))
-            x <- matrix(x, ncol=y_nrow)
+### x: an ordinary matrix or other supported object (see .is_supported).
+### y: a matrix-like object (typically a DelayedMatrix).
+### Walks on the grid defined on matrix-like object 'y'.
+### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
+### a DelayedMatrix object that is either pristine or the result of cbind'ing
+### several pristine DelayedMatrix objects together (delayed cbind()).
+BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
+                                   BACKEND=getAutoRealizationBackend(),
+                                   BPPARAM=getAutoBPPARAM(), verbose=NA,
+                                   op=c("mult", "crossprod", "tcrossprod"))
+{
+    if (!.is_supported(x))
+        stop(wmsg("this operation does not support 'x' ",
+                  "of class ", class(x)[[1L]]))
+    stopifnot(length(dim(y)) == 2L)
+    op <- match.arg(op)
+    if (op == "mult") {
+        stopifnot(ncol(x) == nrow(y))
+        STRIP_APPLY <- vstrip_apply
+        INIT <- function(j, grid, x) {
+            matrix(0L, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
         }
-        .BLOCK_mult_by_left_matrix(x, y)
+    } else if (op == "crossprod") {
+        stopifnot(nrow(x) == nrow(y))
+        STRIP_APPLY <- vstrip_apply
+        INIT <- function(j, grid, x) {
+            matrix(0L, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
+        }
+    } else {
+        stopifnot(ncol(x) == ncol(y))
+        STRIP_APPLY <- hstrip_apply
+        INIT <- function(i, grid, x) {
+            matrix(0L, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
+        }
     }
-)
+    INIT_MoreArgs <- list(x=x)
+
+    FUN <- function(init, block, x, op) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        vp <- currentViewport()
+        vp_ranges <- ranges(vp)
+        if (op == "mult") {
+            idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+            block_ans <- base::`%*%`(x[ , idx, drop=FALSE], block)
+        } else if (op == "crossprod") {
+            idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+            block_ans <- base::crossprod(x[idx, , drop=FALSE], block)
+        } else {
+            idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+            block_ans <- base::tcrossprod(x[ , idx, drop=FALSE], block)
+        }
+        if (!is.matrix(block_ans))
+            block_ans <- as.matrix(block_ans)
+        init + block_ans
+    }
+    FUN_MoreArgs <- list(x=x, op=op)
+
+    ## No-op if 'BACKEND' is NULL.
+    FINAL <- function(init, BACKEND) realize(init, BACKEND=BACKEND)
+    FINAL_MoreArgs <- list(BACKEND=BACKEND)
+
+    strip_results <- STRIP_APPLY(y, INIT, INIT_MoreArgs,
+                                    FUN, FUN_MoreArgs,
+                                    FINAL, FINAL_MoreArgs,
+                                    grid=Rgrid, as.sparse=as.sparse,
+                                    BPPARAM=BPPARAM, verbose=verbose)
+    do.call(cbind, strip_results)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### %*%, crossprod(), and tcrossprod() methods between:
+###   - a DelayedMatrix object,
+###   - an ordinary matrix or vector (or other supported matrix-like
+###     object, see .is_supported() above)
+###
 
 setMethod("%*%", c("DelayedMatrix", "ANY"),
     function(x, y)
     {
-        if (!is.matrix(y)) {
-            if (!is.vector(y))
-                stop(wmsg("matrix multiplication of a ", class(x), " object ",
-                          "by a ", class(y), " object is not supported"))
-            y_len <- length(y)
-            x_ncol <- ncol(x)
-            if (y_len != 0L && y_len != x_ncol)
-                stop(wmsg("non-conformable arguments"))
-            y <- matrix(y, nrow=x_ncol)
+        if (is.atomic(y) && is.vector(y)) {
+            ## Returns a 1-col ordinary matrix (like base::`%*%` does).
+            y <- cbind(y, deparse.level=0)
+            BLOCK_mult_Lgrid(x, y, BACKEND=NULL)
+        } else {
+            BLOCK_mult_Lgrid(x, y)
         }
-        t(t(y) %*% t(x))
+    }
+)
+setMethod("%*%", c("ANY", "DelayedMatrix"),
+    function(x, y)
+    {
+        if (is.atomic(x) && is.vector(x)) {
+            ## Returns a 1-row ordinary matrix (like base::`%*%` does).
+            x <- rbind(x, deparse.level=0)
+            BLOCK_mult_Rgrid(x, y, BACKEND=NULL)
+        } else {
+            BLOCK_mult_Rgrid(x, y)
+        }
     }
 )
 
-.BLOCK_matrix_mult <- function(x, y)
-{
-    stop(wmsg("Matrix multiplication of 2 DelayedMatrix derivatives is not ",
-              "supported at the moment. Only matrix multiplication between ",
-              "a DelayedMatrix derivative and an ordinary matrix or vector ",
-              "is supported for now."))
+setMethod("crossprod", c("DelayedMatrix", "ANY"),
+    function(x, y)
+    {
+        if (is.atomic(y) && is.vector(y)) {
+            ## Returns a 1-col ordinary matrix (like base::crossprod() does).
+            y <- cbind(y, deparse.level=0)
+            BLOCK_mult_Lgrid(x, y, BACKEND=NULL, op="crossprod")
+        } else {
+            BLOCK_mult_Lgrid(x, y, op="crossprod")
+        }
+    }
+)
+setMethod("crossprod", c("ANY", "DelayedMatrix"),
+    function(x, y)
+    {
+        if (is.atomic(x) && is.vector(x)) {
+            ## Returns a 1-row ordinary matrix (like base::crossprod() does).
+            x <- cbind(x, deparse.level=0)
+            BLOCK_mult_Rgrid(x, y, BACKEND=NULL, op="crossprod")
+        } else {
+            BLOCK_mult_Rgrid(x, y, op="crossprod")
+        }
+    }
+)
 
-    x_dim <- dim(x)
-    y_dim <- dim(y)
-    stopifnot(length(x_dim) == 2L, length(y_dim) == 2L, ncol(x) == nrow(y))
+setMethod("tcrossprod", c("DelayedMatrix", "ANY"),
+    function(x, y)
+    {
+        if (is.atomic(y) && is.vector(y)) {
+            ## Note that base::tcrossprod() does not work with a vector on
+            ## the right!
+            ## Returns a 1-col ordinary matrix (like base::tcrossprod() would
+            ## probably do if it were supporting a vector on the right).
+            y <- rbind(y, deparse.level=0)
+            BLOCK_mult_Lgrid(x, y, BACKEND=NULL, op="tcrossprod")
+        } else {
+            BLOCK_mult_Lgrid(x, y, op="tcrossprod")
+        }
+    }
+)
+setMethod("tcrossprod", c("ANY", "DelayedMatrix"),
+    function(x, y)
+    {
+        if (is.atomic(x) && is.vector(x)) {
+            ## Returns a 1-row ordinary matrix (like base::tcrossprod() does).
+            x <- rbind(x, deparse.level=0)
+            BLOCK_mult_Rgrid(x, y, BACKEND=NULL, op="tcrossprod")
+        } else {
+            BLOCK_mult_Rgrid(x, y, op="tcrossprod")
+        }
+    }
+)
 
-    ans_dim <- c(nrow(x), ncol(y))
-    ans_dimnames <- S4Arrays:::simplify_NULL_dimnames(list(rownames(x),
-                                                           colnames(y)))
-    ans_type <- typeof(vector(type(x), 1L) * vector(type(y), 1L))
-    sink <- AutoRealizationSink(ans_dim, ans_dimnames, ans_type)
-    on.exit(close(sink))
-}
-
-setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Parallelized schemes for matrix multiplication.
@@ -271,7 +425,7 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
 .left_mult <- function(bid, grid, x, y, MULT) {
     # this, and all other calls, had better yield a non-DA, otherwise MULT will recurse endlessly.
-    block <- .read_matrix_block(x, grid[[bid]]) 
+    block <- .read_matrix_block(x, grid[[bid]])
     MULT(block, y)
 }
 
@@ -330,60 +484,30 @@ setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), .BLOCK_matrix_mult)
 
     if (chosen_scheme=="x") {
         out <- S4Arrays:::bplapply2(seq_len(length(x_grid)),
-                         FUN=.left_mult, 
-                         x=x, y=y, grid=x_grid, 
-                         MULT=MULT, 
+                         FUN=.left_mult,
+                         x=x, y=y, grid=x_grid,
+                         MULT=MULT,
                          BPPARAM=BPPARAM)
         ans <- do.call(rbind, out)
     } else if (chosen_scheme=="y") {
         out <- S4Arrays:::bplapply2(seq_len(length(y_grid)),
-                         FUN=.right_mult, 
-                         x=x, y=y, grid=y_grid, 
-                         MULT=MULT, 
+                         FUN=.right_mult,
+                         x=x, y=y, grid=y_grid,
+                         MULT=MULT,
                          BPPARAM=BPPARAM)
         ans <- do.call(cbind, out)
     }
 
-    DelayedArray(realize(ans))
+    realize(ans)
 }
-
-setMethod("%*%", c("DelayedMatrix", "ANY"), function(x, y) {
-    if (is.null(dim(y))) y <- cbind(y)
-    .super_BLOCK_mult(x, y, MULT=`%*%`)
-})
-
-setMethod("%*%", c("ANY", "DelayedMatrix"), function(x, y) {
-    if (is.null(dim(x))) x <- rbind(x)
-    .super_BLOCK_mult(x, y, MULT=`%*%`)
-})
 
 setMethod("%*%", c("DelayedMatrix", "DelayedMatrix"), function(x, y) .super_BLOCK_mult(x, y, MULT=`%*%`))
 
-setMethod("crossprod", c("DelayedMatrix", "ANY"), function(x, y) {
-    if (is.null(dim(y))) y <- cbind(y)
-    .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE)
-})
-
-setMethod("crossprod", c("ANY", "DelayedMatrix"), function(x, y) {
-    if (is.null(dim(x))) x <- rbind(x)
-    .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE)
-})
-
-setMethod("crossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) 
+setMethod("crossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
     .super_BLOCK_mult(x, y, MULT=crossprod, transposed.x=TRUE)
 )
 
-# tcrossprod with vector 'y' doesn't work in base, and so it won't work here either.
-setMethod("tcrossprod", c("DelayedMatrix", "ANY"), function(x, y) 
-    .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE)
-)
-
-setMethod("tcrossprod", c("ANY", "DelayedMatrix"), function(x, y) {
-    if (is.null(dim(x))) x <- rbind(x)
-    .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE)
-})
-
-setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y) 
+setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
     .super_BLOCK_mult(x, y, MULT=tcrossprod, transposed.y=TRUE)
 )
 
@@ -418,7 +542,7 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
 
     if (getAutoMultParallelAgnostic()) {
         out <- S4Arrays:::bplapply2(seq_len(length(slow)),
-                         FUN=.left_mult, 
+                         FUN=.left_mult,
                          x=x, y=x, grid=slow,
                          MULT=MULT,
                          BPPARAM=BPPARAM)
@@ -436,21 +560,22 @@ setMethod("tcrossprod", c("DelayedMatrix", "DelayedMatrix"), function(x, y)
     DelayedArray(realize(ans))
 }
 
-setMethod("crossprod", c("DelayedMatrix", "missing"), function(x, y) 
+setMethod("crossprod", c("DelayedMatrix", "missing"), function(x, y)
     .super_BLOCK_self(x, MULT=crossprod)
 )
 
-setMethod("tcrossprod", c("DelayedMatrix", "missing"), function(x, y) 
+setMethod("tcrossprod", c("DelayedMatrix", "missing"), function(x, y)
     .super_BLOCK_self(x, MULT=tcrossprod, transposed=TRUE)
 )
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### User-visible global settings for parallelized matrix multiplication.
 ###
 ### by Aaron Lun
 ###
-### This allows the user to specify whether or not they want to guarantee 
-### the identical matrix products regardless of the number of workers. 
+### This allows the user to specify whether or not they want to guarantee
+### the identical matrix products regardless of the number of workers.
 ### This is because splitting by the common dimension does not preserve the
 ### order of addition operations, which changes the output due to numerical
 ### imprecision in the inner products of each vector.
@@ -463,3 +588,4 @@ setAutoMultParallelAgnostic <- function(agnostic=TRUE) {
 getAutoMultParallelAgnostic <- function() {
     S4Arrays:::get_user_option("auto.mult.parallel.agnostic")
 }
+

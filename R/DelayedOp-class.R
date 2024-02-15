@@ -31,8 +31,12 @@
 ###     o DelayedAbind                 abind()
 ###   -------------------------------------------------------------------
 ###
-### All the nodes are array-like objects that must comply with the "seed
-### contract" i.e. they must support dim(), dimnames(), and extract_array().
+### All DelayedOp objects must comply with the "seed contract" i.e. they must
+### support dim(), dimnames(), and extract_array(). This makes them de facto
+### array-like objects. However, end users will never interact with them
+### directly, except for the root of the tree which is the DelayedArray
+### object itself and the only node in the tree that they are able to see
+### and touch.
 ###
 
 ### This virtual class and its 8 concrete subclasses are for internal use
@@ -45,9 +49,7 @@ setGeneric("is_noop", function(x) standardGeneric("is_noop"))
 ### S3/S4 combo for summary.DelayedOp
 
 .DelayedOp_summary <- function(object) sprintf("%s object", class(object))
-
 summary.DelayedOp <- function(object, ...) .DelayedOp_summary(object, ...)
-
 setMethod("summary", "DelayedOp", summary.DelayedOp)
 
 
@@ -71,6 +73,9 @@ setClass("DelayedUnaryOp",
 {
     if (length(dim(x@seed)) == 0L)
         return("the supplied seed must have dimensions")
+    res <- try(S4Arrays:::extract_empty_array(x@seed), silent=TRUE)
+    if (inherits(res, "try-error"))
+        return("the supplied seed must support extract_array()")
     TRUE
 }
 
@@ -141,8 +146,21 @@ setClass("DelayedNaryOp",
 
 .validate_DelayedNaryOp <- function(x)
 {
+    if (!is.list(x@seeds))
+        return("'x@seeds' must be a list")
     if (length(x@seeds) == 0L)
         return("'x@seeds' cannot be empty")
+    for (i in seq_along(x@seeds)) {
+        seed <- x@seeds[[i]]
+        if (length(dim(seed)) == 0L)
+            return(paste0("x@seeds[[", i, "]] has no dimensions ",
+                          "(all the supplied seeds must have dimensions)"))
+        res <- try(S4Arrays:::extract_empty_array(seed), silent=TRUE)
+        if (inherits(res, "try-error"))
+            return(paste0("x@seeds[[", i, "]] does not support ",
+                          "extract_array() (all the supplied seeds ",
+                          "must support extract_array())"))
+    }
     TRUE
 }
 

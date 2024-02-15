@@ -1,0 +1,2 @@
+CHECKprepend: _R_CHECK_CODETOOLS_PROFILE_="suppressFundefMismatch=TRUE"
+CHECKprepend.win: set _R_CHECK_CODETOOLS_PROFILE_='suppressFundefMismatch=TRUE'&&
