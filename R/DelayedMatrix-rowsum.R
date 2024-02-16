@@ -5,123 +5,101 @@
 ### These methods are block processed.
 ###
 
-### TODO: Provide the option to write the data to a RealizationSink object
-### as we go. See https://github.com/Bioconductor/DelayedArray/issues/41
-### and bsseq/R/DelayedArray_utils.R (in bsseq package).
 
-.compute_rowsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
+### x: a matrix-like object (typically a DelayedMatrix).
+### Walks on the grid defined on matrix-like object 'x'.
+### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
+### a DelayedMatrix object that is either pristine or the result of cbind'ing
+### several pristine DelayedMatrix objects together (delayed cbind()).
+BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
+                         grid=NULL, as.sparse=NA,
+                         BACKEND=getAutoRealizationBackend(),
+                         BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
-    viewport <- grid[[i, j]]
-    block <- read_matrix_block(x, viewport)
-    group2 <- extractROWS(group, ranges(viewport)[1L])
-    rowsum(block, group2, reorder=FALSE, na.rm=na.rm)
-}
-
-.compute_colsum_for_block <- function(x, grid, i, j, group, na.rm=FALSE)
-{
-    viewport <- grid[[i, j]]
-    block <- read_matrix_block(x, viewport)
-    group2 <- extractROWS(group, ranges(viewport)[2L])
-    colsum(block, group2, reorder=FALSE, na.rm=na.rm)
-}
-
-.compute_rowsum_for_grid_col <- function(x, grid, j, group, ugroup,
-                                         na.rm=FALSE, verbose=FALSE)
-{
-    grid_nrow <- nrow(grid)
-    grid_ncol <- ncol(grid)
-    ans <- matrix(0L, nrow=length(ugroup), ncol=ncol(grid[[1L, j]]))
-    ## Inner loop on the grid rows. Sequential.
-    for (i in seq_len(grid_nrow)) {
-        if (verbose)
-            message("Processing block [[", i, "/", grid_nrow, ", ",
-                                           j, "/", grid_ncol, "]] ... ",
-                    appendLF=FALSE)
-        block_ans <- .compute_rowsum_for_block(x, grid, i, j,
-                                               group, na.rm=na.rm)
-        m <- match(rownames(block_ans), ugroup)
-        ans[m, ] <- ans[m, ] + block_ans
-        if (verbose)
-            message("OK")
-    }
-    ans
-}
-
-.compute_colsum_for_grid_row <- function(x, grid, i, group, ugroup,
-                                         na.rm=FALSE, verbose=FALSE)
-{
-    grid_nrow <- nrow(grid)
-    grid_ncol <- ncol(grid)
-    ans <- matrix(0L, nrow=nrow(grid[[i, 1L]]), ncol=length(ugroup))
-    ## For a colsum() that does 'rowsum(t(x), ...)' (rather than
-    ## the current 't(rowsum(t(x), ...))'), do this instead:
-    #ans <- matrix(0L, nrow=length(ugroup), ncol=nrow(grid[[i, 1L]]))
-    ## Inner loop on the grid cols. Sequential.
-    for (j in seq_len(grid_ncol)) {
-        if (verbose)
-            message("Processing block [[", i, "/", grid_nrow, ", ",
-                                           j, "/", grid_ncol, "]] ... ",
-                    appendLF=FALSE)
-        block_ans <- .compute_colsum_for_block(x, grid, i, j,
-                                               group, na.rm=na.rm)
-        m <- match(colnames(block_ans), ugroup)
-        ans[ , m] <- ans[ , m] + block_ans
-        ## For a colsum() that does 'rowsum(t(x), ...)' (rather than
-        ## the current 't(rowsum(t(x), ...))'), do this instead:
-        #m <- match(rownames(block_ans), ugroup)
-        #ans[m, ] <- ans[m, ] + block_ans
-        if (verbose)
-            message("OK")
-    }
-    ans
-}
-
-BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
-{
+    stopifnot(length(dim(x)) == 2L)  # matrix-like object
     ugroup <- as.character(S4Arrays:::compute_ugroup(group, nrow(x), reorder))
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
-    grid <- normarg_grid(grid, x)
 
-    ## Outer loop on the grid columns. Parallelized.
-    block_results <- S4Arrays:::bplapply2(seq_len(ncol(grid)),
-        function(j) {
-            .compute_rowsum_for_grid_col(x, grid, j, group, ugroup,
-                                         na.rm=na.rm,
-                                         verbose=get_verbose_block_processing())
-        },
-        BPPARAM=getAutoBPPARAM()
-    )
+    INIT <- function(j, grid, ugroup, x_colnames) {
+        vp <- grid[[1L, j]]
+        dn <- list(ugroup, extractROWS(x_colnames, ranges(vp)[2L]))
+        matrix(0L, nrow=length(ugroup), ncol=ncol(vp), dimnames=dn)
+    }
+    INIT_MoreArgs <- list(ugroup=ugroup, x_colnames=colnames(x))
 
-    ans <- do.call(cbind, block_results)
-    dimnames(ans) <- list(ugroup, colnames(x))
-    ans
+    FUN <- function(init, block, group, ugroup, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        vp <- currentViewport()
+        group2 <- extractROWS(group, ranges(vp)[1L])
+        block_ans <- rowsum(block, group2, reorder=FALSE, na.rm=na.rm)
+        if (!is.matrix(block_ans))
+            block_ans <- as.matrix(block_ans)
+        m <- match(rownames(block_ans), ugroup)
+        init[m, ] <- init[m, ] + block_ans
+        init
+    }
+    FUN_MoreArgs <- list(group=group, ugroup=ugroup, na.rm=na.rm)
+
+    ## No-op if 'BACKEND' is NULL.
+    FINAL <- function(init, BACKEND) realize(init, BACKEND=BACKEND)
+    FINAL_MoreArgs <- list(BACKEND=BACKEND)
+
+    strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs,
+                                     FUN, FUN_MoreArgs,
+                                     FINAL, FINAL_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    do.call(cbind, strip_results)
 }
 
-BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE, grid=NULL)
+### x: a matrix-like object (typically a DelayedMatrix).
+### Walks on the grid defined on matrix-like object 'x'.
+### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
+### a DelayedMatrix object that is either pristine or the result of rbind'ing
+### several pristine DelayedMatrix objects together (delayed rbind()).
+BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
+                         grid=NULL, as.sparse=NA,
+                         BACKEND=getAutoRealizationBackend(),
+                         BPPARAM=getAutoBPPARAM(), verbose=NA)
 {
+    stopifnot(length(dim(x)) == 2L)  # matrix-like object
     ugroup <- as.character(S4Arrays:::compute_ugroup(group, ncol(x), reorder))
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
-    grid <- normarg_grid(grid, x)
 
-    ## Outer loop on the grid rows. Parallelized.
-    block_results <- S4Arrays:::bplapply2(seq_len(nrow(grid)),
-        function(i) {
-            .compute_colsum_for_grid_row(x, grid, i, group, ugroup,
-                                         na.rm=na.rm,
-                                         verbose=get_verbose_block_processing())
-        },
-        BPPARAM=getAutoBPPARAM()
-    )
+    INIT <- function(i, grid, ugroup, x_rownames) {
+        vp <- grid[[i, 1L]]
+        dn <- list(extractROWS(x_rownames, ranges(vp)[1L]), ugroup)
+        matrix(0L, nrow=nrow(vp), ncol=length(ugroup), dimnames=dn)
+    }
+    INIT_MoreArgs <- list(ugroup=ugroup, x_rownames=rownames(x))
 
-    ans <- do.call(rbind, block_results)
-    dimnames(ans) <- list(rownames(x), ugroup)
-    ## For a colsum() that does 'rowsum(t(x), ...)' (rather than
-    ## the current 't(rowsum(t(x), ...))'), do this instead:
-    #ans <- do.call(cbind, block_results)
-    #dimnames(ans) <- list(ugroup, rownames(x))
-    ans
+    FUN <- function(init, block, group, ugroup, na.rm=FALSE) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        vp <- currentViewport()
+        group2 <- extractROWS(group, ranges(vp)[2L])
+        block_ans <- colsum(block, group2, reorder=FALSE, na.rm=na.rm)
+        if (!is.matrix(block_ans))
+            block_ans <- as.matrix(block_ans)
+        m <- match(colnames(block_ans), ugroup)
+        init[ , m] <- init[ , m] + block_ans
+        init
+    }
+    FUN_MoreArgs <- list(group=group, ugroup=ugroup, na.rm=na.rm)
+
+    ## No-op if 'BACKEND' is NULL.
+    FINAL <- function(init, BACKEND) realize(init, BACKEND=BACKEND)
+    FINAL_MoreArgs <- list(BACKEND=BACKEND)
+
+    strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs,
+                                     FUN, FUN_MoreArgs,
+                                     FINAL, FINAL_MoreArgs,
+                                     grid=grid, as.sparse=as.sparse,
+                                     BPPARAM=BPPARAM, verbose=verbose)
+    do.call(rbind, strip_results)
 }
 
 ### S3/S4 combo for rowsum.DelayedMatrix

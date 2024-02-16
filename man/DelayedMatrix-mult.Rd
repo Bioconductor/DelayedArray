@@ -91,7 +91,7 @@ M1 <- HDF5Array(toy_h5, "M1")
 
 m <- matrix(runif(50000), ncol=nrow(M1))
 
-## Set backend to NULL for in-memory realization:
+## Set backend to NULL for in-memory realization (this is the default):
 setAutoRealizationBackend()
 p1 <- m \%*\% M1  # an ordinary matrix
 
@@ -108,6 +108,7 @@ stopifnot(
   is(P2, "HDF5Array"),
   all.equal(as.matrix(P2), p1)
 )
+setAutoRealizationBackend()  # restore default (NULL)
 }
 \keyword{array}
 \keyword{methods}

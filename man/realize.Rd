@@ -129,6 +129,7 @@ realize(M3)  # realization as RleArray object
 
 setAutoRealizationBackend("HDF5Array")
 realize(M3)  # on-disk realization (as HDF5Array object)
-}
 
+setAutoRealizationBackend()  # restore default (NULL)
+}
 \keyword{methods}

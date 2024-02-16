@@ -318,6 +318,8 @@ D
 ## See '?setAutoRealizationBackend' for more information about
 ## "realization backends".
 
+setAutoRealizationBackend()  # restore default (NULL)
+
 ## ---------------------------------------------------------------------
 ## E. MODIFY THE PATH OF A DelayedArray OBJECT
 ## ---------------------------------------------------------------------

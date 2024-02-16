@@ -52,7 +52,7 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
     if (!.is_supported(y))
         stop(wmsg("this operation does not support 'y' ",
                   "of class ", class(y)[[1L]]))
-    stopifnot(length(dim(x)) == 2L)
+    stopifnot(length(dim(x)) == 2L)  # matrix-like object
     op <- match.arg(op)
     if (op == "mult") {
         stopifnot(ncol(x) == nrow(y))
@@ -122,7 +122,7 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
     if (!.is_supported(x))
         stop(wmsg("this operation does not support 'x' ",
                   "of class ", class(x)[[1L]]))
-    stopifnot(length(dim(y)) == 2L)
+    stopifnot(length(dim(y)) == 2L)  # matrix-like object
     op <- match.arg(op)
     if (op == "mult") {
         stopifnot(ncol(x) == nrow(y))

@@ -410,6 +410,13 @@ best_grid_for_vstrip_apply <- function(x, grid=NULL)
     colAutoGrid(x, ncol=block_ncol)  # "full height" blocks
 }
 
+.message_2Dwalk_progress <- function(i, j, grid_nrow, grid_ncol, sparse)
+{
+    message("Processing ", if (sparse) "sparse " else "", "block ",
+            "[[", i, "/", grid_nrow, ", ", j, "/", grid_ncol, "]] ... ",
+            appendLF=FALSE)
+}
+
 reduce_grid_hstrip <- function(i, grid, x, INIT, INIT_MoreArgs,
                                            FUN, FUN_MoreArgs,
                                            FINAL, FINAL_MoreArgs,
@@ -429,9 +436,8 @@ reduce_grid_hstrip <- function(i, grid, x, INIT, INIT_MoreArgs,
         block <- read_block(x, viewport, as.sparse=as.sparse)
         set_grid_context(grid, NULL, viewport)
         if (verbose)
-            message("Processing block [[", i, "/", grid_nrow, ", ",
-                                           j, "/", grid_ncol, "]] ... ",
-                    appendLF=FALSE)
+            .message_2Dwalk_progress(i, j, grid_nrow, grid_ncol,
+                                     is_sparse(block))
         init <- do.call(FUN, c(list(init, block), FUN_MoreArgs))
         if (verbose)
             message("OK")
@@ -460,9 +466,8 @@ reduce_grid_vstrip <- function(j, grid, x, INIT, INIT_MoreArgs,
         block <- read_block(x, viewport, as.sparse=as.sparse)
         set_grid_context(grid, NULL, viewport)
         if (verbose)
-            message("Processing block [[", i, "/", grid_nrow, ", ",
-                                           j, "/", grid_ncol, "]] ... ",
-                    appendLF=FALSE)
+            .message_2Dwalk_progress(i, j, grid_nrow, grid_ncol,
+                                     is_sparse(block))
         init <- do.call(FUN, c(list(init, block), FUN_MoreArgs))
         if (verbose)
             message("OK")

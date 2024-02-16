@@ -325,7 +325,7 @@ close(sink)
 A <- as(sink, "DelayedArray")
 A
 
-setAutoRealizationBackend()  # unset automatic realization backend
+setAutoRealizationBackend()  # restore default (NULL)
 
 ## ---------------------------------------------------------------------
 ## USING THE "RealizationSink API": EXAMPLE 2
@@ -411,7 +411,7 @@ M
 ## Sanity check:
 stopifnot(identical(collapse_3rd_dim(a), as.array(M)))
 
-setAutoRealizationBackend()  # unset automatic realization backend
+setAutoRealizationBackend()  # restore default (NULL)
 
 ## ---------------------------------------------------------------------
 ## USING THE "RealizationSink API": AN ADVANCED EXAMPLE
@@ -500,7 +500,7 @@ close(U_sink)
 U <- as(U_sink, "DelayedArray")
 U
 
-setAutoRealizationBackend()  # unset automatic realization backend
+setAutoRealizationBackend()  # restore default (NULL)
 
 ## ---------------------------------------------------------------------
 ## VERY BASIC (BUT ALSO VERY ARTIFICIAL) USAGE OF THE
@@ -614,6 +614,6 @@ close(sink)
 A <- as(sink, "DelayedArray")
 A
 
-setAutoRealizationBackend()  # unset automatic realization backend
+setAutoRealizationBackend()  # restore default (NULL)
 }
 \keyword{utilities}

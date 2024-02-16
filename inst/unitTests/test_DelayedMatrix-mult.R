@@ -24,7 +24,7 @@ setMethod(OLD_extract_sparse_array, "SVT_SparseArray",
 ### Test BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid()
 ###
 
-test_BLOCK_mult_Lgrid_or_Rgrid <- function()
+test_BLOCK_mult_Lgrid_Rgrid <- function()
 {
     ## BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid() are the workhorses behind
     ## block matrix multiplication between a matrix-like object and an ordinary
@@ -50,7 +50,7 @@ test_BLOCK_mult_Lgrid_or_Rgrid <- function()
         checkEquals(as.matrix(current), expected)
     }
 
-    ## Block %*%, serial evaluation
+    ## Serial evaluation of:
     ##   <matrix> %*% <matrix>
     ##   <matrix> %*% <SVT_SparseMatrix>
     ##   <SVT_SparseMatrix> %*% <matrix>
@@ -91,7 +91,7 @@ test_BLOCK_mult_Lgrid_or_Rgrid <- function()
       }
     }
 
-    ## Block %*%, parallel evaluation
+    ## Parallel evaluation of:
     ##   <matrix> %*% <matrix>
 
     snow2 <- BiocParallel::SnowParam(workers=2)
@@ -104,7 +104,7 @@ test_BLOCK_mult_Lgrid_or_Rgrid <- function()
     do_checks(m12, m1, m2, block_len=6L,
               as.sparse=FALSE, BACKEND="HDF5Array", BPPARAM=snow2)
 
-    ## Block %*%, serial evaluation
+    ## Serial evaluation of:
     ##   <DelayedMatrix> %*% <matrix>
     ##   <DelayedMatrix> %*% <SVT_SparseMatrix>
     ##   <matrix> %*% <DelayedMatrix>
@@ -139,7 +139,7 @@ test_BLOCK_mult_Lgrid_or_Rgrid <- function()
       }
     }
 
-    ## Block %*%, parallel evaluation
+    ## Parallel evaluation of:
     ##   <DelayedMatrix> %*% <matrix>
     ##   <matrix> %*% <DelayedMatrix>
 
@@ -173,8 +173,8 @@ TEST_m0 <- matrix(runif(60), ncol=6)
 TEST_m0[2, 4] <- NA
 TEST_m0[5, 4] <- Inf
 TEST_m0[6, 3] <- -Inf
-
-TEST_blocksizes0 <- c(24L, 40L, 120L, 8000L)
+TEST_blocklengths0 <- c(3L, 5L, 15L, 1000L)
+TEST_blocksizes0 <- TEST_blocklengths0 * get_type_size(type(TEST_m0))
 
 ### <matrix> %*% <DelayedMatrix> and <DelayedMatrix> %*% <matrix>
 test_DelayedMatrix_mult <- function()
