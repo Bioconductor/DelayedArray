@@ -18,6 +18,33 @@
 \details{
   Note that the \code{rowsum()} and \code{colsum()} operations are not
   delayed: the output matrix is realized block by block.
+  The \emph{automatic realization backend} controls where realization
+  happens e.g. in memory as an ordinary matrix if not set (i.e. set to
+  \code{NULL}), or in an HDF5 file if set to \code{"HDF5Array"}.
+  See \code{?\link{setAutoRealizationBackend}} for more information
+  about realization backends.
+}
+
+\value{
+  The object returned by the \code{rowsum()} or \code{colsum()} method
+  for \link{DelayedMatrix} objects will be either:
+  \itemize{
+    \item An ordinary matrix if the \emph{automatic realization backend}
+          is \code{NULL} (the default).
+
+    \item A \link{DelayedMatrix} object if the \emph{automatic realization
+          backend} is not \code{NULL}. In this case, the returned
+          \link{DelayedMatrix} object will be either \emph{pristine}
+          or made of several \emph{pristine} \link{DelayedMatrix} objects
+          bound together (via \code{rbind()} or \code{cbind()}, both
+          are delayed operations).
+
+          For example, if the \emph{automatic realization backend} is
+          \code{"HDF5Array"}, then the returned \link{DelayedMatrix} object
+          will be either an \link[HDF5Array]{HDF5Array} object, or it will
+          be a \link{DelayedMatrix} object made of several
+          \link[HDF5Array]{HDF5Array} objects bound together.
+  }
 }
 
 \seealso{
@@ -28,6 +55,10 @@
           package for the \code{rowsum()} and \code{colsum()} S4 generic
           functions.
 
+    \item \code{\link{getAutoRealizationBackend}} and
+          \code{\link{setAutoRealizationBackend}} for getting and setting
+          the \emph{automatic realization backend}.
+
     \item \link{DelayedMatrix-mult} for \link{DelayedMatrix} multiplication
           and cross-product.
 
@@ -35,6 +66,13 @@
           summarization.
 
     \item \link{DelayedArray} objects.
+
+    \item \code{\link[HDF5Array]{writeHDF5Array}} in the \pkg{HDF5Array}
+          package for writing an array-like object to an HDF5 file and other
+          low-level utilities to control the location of automatically created
+          HDF5 datasets.
+
+    \item \link[HDF5Array]{HDF5Array} objects in the \pkg{HDF5Array} package.
   }
 }
 

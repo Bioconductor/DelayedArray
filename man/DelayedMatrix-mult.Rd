@@ -28,12 +28,12 @@
 
 \details{
   Note that matrix multiplication is not delayed: the output matrix is
-  realized block by block. The \emph{automatic realization backend}
-  controls where realization happens e.g. in memory as an ordinary matrix
-  if not set (i.e. set to \code{NULL}), or in an HDF5 file if set to
-  \code{"HDF5Array"}.
-  See \code{?\link{setAutoRealizationBackend}} for more information about
-  realization backends.
+  realized block by block.
+  The \emph{automatic realization backend} controls where realization
+  happens e.g. in memory as an ordinary matrix if not set (i.e. set to
+  \code{NULL}), or in an HDF5 file if set to \code{"HDF5Array"}.
+  See \code{?\link{setAutoRealizationBackend}} for more information
+  about realization backends.
 }
 
 \value{
@@ -62,15 +62,15 @@
   \itemize{
     \item \code{\link[base]{\%*\%}} and \code{\link[base]{crossprod}} in base R.
 
+    \item \code{\link{getAutoRealizationBackend}} and
+          \code{\link{setAutoRealizationBackend}} for getting and setting
+          the \emph{automatic realization backend}.
+
     \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
           summarization.
 
     \item \link{DelayedMatrix-rowsum} for \code{rowsum()} and
           \code{colsum()} methods for \link{DelayedMatrix} objects.
-
-    \item \code{\link{getAutoRealizationBackend}} and
-          \code{\link{setAutoRealizationBackend}} for getting and setting
-          the \emph{automatic realization backend}.
 
     \item \link{DelayedArray} objects.
 
