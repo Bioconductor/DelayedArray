@@ -178,8 +178,8 @@ type(x)
 
 \seealso{
   \itemize{
-    \item \code{\link{showtree}} for \link{DelayedArray} accessors
-          \code{nseed}, \code{seed}, and \code{path}.
+    \item \code{\link{showtree}} for DelayedArray accessors \code{nseed},
+          \code{seed}, and \code{path}.
 
     \item \code{\link{realize}} for realizing a DelayedArray object in memory
           or on disk.
@@ -190,14 +190,17 @@ type(x)
     \item \link{DelayedArray-utils} for common operations on
           DelayedArray objects.
 
-    \item \link{DelayedMatrix-utils} for common operations on
-          DelayedMatrix objects.
-
     \item \link{DelayedArray-stats} for statistical functions on
           DelayedArray objects.
 
+    \item \link{DelayedMatrix-mult} for DelayedMatrix multiplication
+          and cross-product.
+
     \item \link{DelayedMatrix-stats} for DelayedMatrix row/col
           summarization.
+
+    \item \link{DelayedMatrix-rowsum} for \code{rowsum()} and
+          \code{colsum()} methods for DelayedMatrix objects.
 
     \item \link{ConstantArray} objects for mimicking an array containing
           a constant value, without actually creating said array in memory.

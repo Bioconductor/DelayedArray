@@ -11,7 +11,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 URL: https://bioconductor.org/packages/DelayedArray
 BugReports: https://github.com/Bioconductor/DelayedArray/issues
-Version: 0.29.2
+Version: 0.29.3
 License: Artistic-2.0
 Encoding: UTF-8
 Authors@R: c(
@@ -57,9 +57,10 @@ Collate: compress_atomic_vector.R
 	RealizationSink-class.R
 	realize.R
 	DelayedArray-utils.R
-	DelayedMatrix-utils.R
 	DelayedArray-stats.R
+	DelayedMatrix-mult.R
 	DelayedMatrix-stats.R
+	DelayedMatrix-rowsum.R
 	ConstantArray-class.R
 	RleArraySeed-class.R
 	RleArray-class.R

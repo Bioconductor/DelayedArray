@@ -134,9 +134,6 @@
           \pkg{base} package for the corresponding operations on ordinary
           arrays or matrices.
 
-    \item \link{DelayedMatrix-utils} for common operations on
-          \link{DelayedMatrix} objects.
-
     \item \link{DelayedArray-stats} for statistical functions on
           \link{DelayedArray} objects.
 

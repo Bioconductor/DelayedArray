@@ -88,9 +88,6 @@
           in the \pkg{MatrixGenerics} package e.g.
           \code{MatrixGenerics::\link[MatrixGenerics]{colVars}} etc...
 
-    \item \link{DelayedMatrix-utils} for other common operations on
-          \link{DelayedMatrix} objects.
-
     \item \link[base]{matrix} objects in base R.
   }
 }

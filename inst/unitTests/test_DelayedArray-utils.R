@@ -1,9 +1,9 @@
 #setAutoRealizationBackend("RleArray")
 #setAutoRealizationBackend("HDF5Array")
 
-.ARITH_MEMBERS <- c("+", "-", "*", "/", "^", "%%", "%/%")
-.COMPARE_MEMBERS <- c("==", "!=", "<=", ">=", "<", ">")
-.LOGIC_MEMBERS <- c("&", "|")  # currently untested
+ARITH_OPS   <- c("+", "-", "*", "/", "^", "%%", "%/%")
+COMPARE_OPS <- c("==", "!=", "<=", ">=", "<", ">")
+LOGIC_OPS   <- c("&", "|")  # currently untested
 
 ### Toy integer 3D SparseArraySeed.
 .make_toy_sas1 <- function()
@@ -169,7 +169,7 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
     A2 <- DelayedArray(realize(a2))
     m <- a2[ , , 2]
     M <- DelayedArray(realize(m))
-    for (.Generic in c(.ARITH_MEMBERS, .COMPARE_MEMBERS))
+    for (.Generic in c(ARITH_OPS, COMPARE_OPS))
         do_tests(.Generic, a2, A2, m, M)
 
     a1 <- as.array(.make_toy_sas1())  # integer 3D array
@@ -177,7 +177,7 @@ test_DelayedArray_Ops_with_left_or_right_vector <- function()
     A <- DelayedArray(realize(a))
     m <- a[ , , 2]
     M <- DelayedArray(realize(m))
-    for (.Generic in .LOGIC_MEMBERS)
+    for (.Generic in LOGIC_OPS)
         do_tests(.Generic, a2, A2, m, M)
 }
 
@@ -190,7 +190,7 @@ test_DelayedArray_Ops_with_conformable_args <- function()
     a3 <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))
     a3[2, 9, 2] <- NA  # same as a3[[92]] <- NA
     A3 <- DelayedArray(realize(a3))
-    for (.Generic in c(.ARITH_MEMBERS, .COMPARE_MEMBERS)) {
+    for (.Generic in c(ARITH_OPS, COMPARE_OPS)) {
         GENERIC <- match.fun(.Generic)
         target1 <- GENERIC(a1, a2)
         target2 <- GENERIC(a2, a1)
@@ -204,12 +204,82 @@ test_DelayedArray_Ops_with_conformable_args <- function()
     X <- DelayedArray(realize(x))
     y <- a1 >= 1L & a1 <= 10L  # logical 3D array
     Y <- DelayedArray(realize(y))
-    for (.Generic in .LOGIC_MEMBERS) {
+    for (.Generic in LOGIC_OPS) {
         GENERIC <- match.fun(.Generic)
         target <- GENERIC(x, y)
         checkIdentical(target, as.array(GENERIC(X, Y)))
         checkIdentical(target, as.array(GENERIC(Y, X)))
     }
+}
+
+test_DelayedMatrix_Ops <- function()
+{
+    test_delayed_Ops_on_matrix <- function(.Generic, m, M) {
+        GENERIC <- match.fun(.Generic)
+
+        target_current <- list(
+            list(GENERIC(m, m[ , 1]), GENERIC(M, M[ , 1])),
+            list(GENERIC(m[ , 2], m), GENERIC(M[ , 2], M))
+        )
+        for (i in seq_along(target_current)) {
+            target <- target_current[[i]][[1L]]
+            current <- target_current[[i]][[2L]]
+            checkIdentical(target, as.matrix(current))
+            checkIdentical(t(target), as.matrix(t(current)))
+            checkIdentical(target[-2, 8:5], as.matrix(current[-2, 8:5]))
+            checkIdentical(t(target[-2, 8:5]), as.matrix(t(current[-2, 8:5])))
+            checkIdentical(target[-2, 0], as.matrix(current[-2, 0]))
+            checkIdentical(t(target[-2, 0]), as.matrix(t(current[-2, 0])))
+            checkIdentical(target[0, ], as.matrix(current[0, ]))
+            checkIdentical(t(target[0, ]), as.matrix(t(current[0, ])))
+        }
+
+        target_current <- list(
+            list(GENERIC(t(m), 8:-1), GENERIC(t(M), 8:-1)),
+            list(GENERIC(8:-1, t(m)), GENERIC(8:-1, t(M))),
+
+            list(GENERIC(t(m), m[1 , ]), GENERIC(t(M), M[1 , ])),
+            list(GENERIC(m[2 , ], t(m)), GENERIC(M[2 , ], t(M))),
+
+            list(GENERIC(t(m), m[1 , 6:10]), GENERIC(t(M), M[1 , 6:10])),
+            list(GENERIC(m[2 , 8:7], t(m)), GENERIC(M[2 , 8:7], t(M)))
+        )
+        for (i in seq_along(target_current)) {
+            target <- target_current[[i]][[1L]]
+            current <- target_current[[i]][[2L]]
+            checkIdentical(target, as.matrix(current))
+            checkIdentical(target[1:3 , ], as.matrix(current[1:3 , ]))
+            checkIdentical(target[ , 1:3], as.matrix(current[ , 1:3]))
+            checkIdentical(t(target), as.matrix(t(current)))
+            checkIdentical(t(target)[1:3 , ], as.matrix(t(current)[1:3 , ]))
+            checkIdentical(t(target)[ , 1:3], as.matrix(t(current)[ , 1:3]))
+            checkIdentical(target[8:5, -2], as.matrix(current[8:5, -2]))
+            checkIdentical(t(target[8:5, -2]), as.matrix(t(current[8:5, -2])))
+            checkIdentical(target[0, -2], as.matrix(current[0, -2]))
+            checkIdentical(t(target[0, -2]), as.matrix(t(current[0, -2])))
+            checkIdentical(target[ , 0], as.matrix(current[ , 0]))
+            checkIdentical(t(target[ , 0]), as.matrix(t(current[ , 0])))
+        }
+    }
+
+    a <- array(sample(5L, 150, replace=TRUE), c(5, 10, 3))  # integer array
+    a <- a + runif(150) - 0.5                               # numeric array
+    a[2, 9, 2] <- NA  # same as a[[92]] <- NA
+
+    toto <- function(x) t((5 * x[ , 1:2] ^ 3 + 1L) * log(x)[, 10:9])[ , -1]
+
+    m <- a[ , , 2]
+    M <- DelayedArray(realize(m))
+    checkIdentical(toto(m), as.array(toto(M)))
+    ## Logic ops currently untested.
+    for (.Generic in c(ARITH_OPS, COMPARE_OPS))
+        test_delayed_Ops_on_matrix(.Generic, m, M)
+
+    M <- DelayedArray(realize(a))[ , , 2]
+    checkIdentical(toto(m), as.array(toto(M)))
+    ## Logic ops currently untested.
+    for (.Generic in c(ARITH_OPS, COMPARE_OPS))
+        test_delayed_Ops_on_matrix(.Generic, m, M)
 }
 
 test_DelayedArray_anyNA <- function()
