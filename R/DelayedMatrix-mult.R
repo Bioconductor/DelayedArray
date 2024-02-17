@@ -7,17 +7,6 @@
 ###
 
 
-### A thin wrapper around read_block().
-### TODO: Get rid of this when we switch from SparseArraySeed to
-### SVT_SparseArray (then callers should just call read_block() directly).
-read_matrix_block <- function(...) {
-    block <- read_block(..., as.sparse=NA)
-    if (is(block, "SparseArraySeed"))
-        block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-    block
-}
-
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid()
 ###
@@ -54,23 +43,27 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
                   "of class ", class(y)[[1L]]))
     stopifnot(length(dim(x)) == 2L)  # matrix-like object
     op <- match.arg(op)
+
+    ## All INIT() functions must return a matrix of type "double" rather
+    ## than "integer". This is to avoid integer overflows during the
+    ## within-strip walks.
     if (op == "mult") {
         stopifnot(ncol(x) == nrow(y))
         STRIP_APPLY <- hstrip_apply
         INIT <- function(i, grid, y) {
-            matrix(0L, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
+            matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
         }
     } else if (op == "crossprod") {
         stopifnot(nrow(x) == nrow(y))
         STRIP_APPLY <- vstrip_apply
         INIT <- function(j, grid, y) {
-            matrix(0L, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
+            matrix(0.0, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
         }
     } else {
         stopifnot(ncol(x) == ncol(y))
         STRIP_APPLY <- hstrip_apply
         INIT <- function(i, grid, y) {
-            matrix(0L, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
+            matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
         }
     }
     INIT_MoreArgs <- list(y=y)
@@ -97,7 +90,7 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
     FUN_MoreArgs <- list(y=y, op=op)
 
     ## No-op if 'BACKEND' is NULL.
-    FINAL <- function(init, BACKEND) realize(init, BACKEND=BACKEND)
+    FINAL <- function(init, i, grid, BACKEND) realize(init, BACKEND=BACKEND)
     FINAL_MoreArgs <- list(BACKEND=BACKEND)
 
     strip_results <- STRIP_APPLY(x, INIT, INIT_MoreArgs,
@@ -124,23 +117,27 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
                   "of class ", class(x)[[1L]]))
     stopifnot(length(dim(y)) == 2L)  # matrix-like object
     op <- match.arg(op)
+
+    ## All INIT() functions must return a matrix of type "double" rather
+    ## than "integer". This is to avoid integer overflows during the
+    ## within-strip walks.
     if (op == "mult") {
         stopifnot(ncol(x) == nrow(y))
         STRIP_APPLY <- vstrip_apply
         INIT <- function(j, grid, x) {
-            matrix(0L, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
+            matrix(0.0, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
         }
     } else if (op == "crossprod") {
         stopifnot(nrow(x) == nrow(y))
         STRIP_APPLY <- vstrip_apply
         INIT <- function(j, grid, x) {
-            matrix(0L, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
+            matrix(0.0, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
         }
     } else {
         stopifnot(ncol(x) == ncol(y))
         STRIP_APPLY <- hstrip_apply
         INIT <- function(i, grid, x) {
-            matrix(0L, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
+            matrix(0.0, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
         }
     }
     INIT_MoreArgs <- list(x=x)
@@ -167,7 +164,7 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
     FUN_MoreArgs <- list(x=x, op=op)
 
     ## No-op if 'BACKEND' is NULL.
-    FINAL <- function(init, BACKEND) realize(init, BACKEND=BACKEND)
+    FINAL <- function(init, j, grid, BACKEND) realize(init, BACKEND=BACKEND)
     FINAL_MoreArgs <- list(BACKEND=BACKEND)
 
     strip_results <- STRIP_APPLY(y, INIT, INIT_MoreArgs,
@@ -275,6 +272,16 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"),
 ### This also requires care to respect the maximum block size.
 ###
 
+### A thin wrapper around read_block().
+### TODO: Get rid of this when we switch from SparseArraySeed to
+### SVT_SparseArray (then callers should just call read_block() directly).
+.read_matrix_block <- function(...) {
+    block <- read_block(..., as.sparse=NA)
+    if (is(block, "SparseArraySeed"))
+        block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+    block
+}
+
 .grid_by_dimension <- function(x, nworkers)
 # Splits a dimension of the matrix into at least 'nworkers' blocks.
 # If the block size is too large, it is reduced to obtain the desired
@@ -301,12 +308,12 @@ setMethod("tcrossprod", c("ANY", "DelayedMatrix"),
 
 .left_mult <- function(bid, grid, x, y, MULT) {
     # this, and all other calls, had better yield a non-DA, otherwise MULT will recurse endlessly.
-    block <- read_matrix_block(x, grid[[bid]])
+    block <- .read_matrix_block(x, grid[[bid]])
     MULT(block, y)
 }
 
 .right_mult <- function(bid, grid, x, y, MULT) {
-    block <- read_matrix_block(y, grid[[bid]])
+    block <- .read_matrix_block(y, grid[[bid]])
     MULT(x, block)
 }
 

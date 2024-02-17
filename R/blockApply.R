@@ -443,7 +443,7 @@ reduce_grid_hstrip <- function(i, grid, x, INIT, INIT_MoreArgs,
             message("OK")
     }
     if (!is.null(FINAL))
-        init <- do.call(FINAL, c(list(init), FINAL_MoreArgs))
+        init <- do.call(FINAL, c(list(init, i, grid), FINAL_MoreArgs))
     init
 }
 
@@ -473,7 +473,7 @@ reduce_grid_vstrip <- function(j, grid, x, INIT, INIT_MoreArgs,
             message("OK")
     }
     if (!is.null(FINAL))
-        init <- do.call(FINAL, c(list(init), FINAL_MoreArgs))
+        init <- do.call(FINAL, c(list(init, j, grid), FINAL_MoreArgs))
     init
 }
 

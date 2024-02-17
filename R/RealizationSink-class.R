@@ -224,9 +224,12 @@ AutoRealizationSink <- function(dim, dimnames=NULL, type="double",
     do.call(realization_sink_constructor, args)
 }
 
-RealizationSink <- function(...)
+### Not exported.
+RealizationSink <- function(BACKEND, ...)
 {
-    .Defunct("AutoRealizationSink")
+    OLD_BACKEND <- getAutoRealizationBackend()
+    setAutoRealizationBackend(BACKEND)
+    on.exit(setAutoRealizationBackend(OLD_BACKEND))
     AutoRealizationSink(...)
 }
 

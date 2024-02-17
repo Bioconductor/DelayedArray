@@ -158,7 +158,7 @@ BLOCK_rowMeans <- function(x, na.rm=FALSE, useNames=TRUE,
     }
     FUN_MoreArgs <- list(na.rm=na.rm)
 
-    FINAL <- function(init) { init$sum / init$nval }
+    FINAL <- function(init, i, grid) { init$sum / init$nval }
 
     strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
                                      FINAL=FINAL,
@@ -190,7 +190,7 @@ BLOCK_colMeans <- function(x, na.rm=FALSE, useNames=TRUE,
     }
     FUN_MoreArgs <- list(na.rm=na.rm)
 
-    FINAL <- function(init) { init$sum / init$nval }
+    FINAL <- function(init, j, grid) { init$sum / init$nval }
 
     strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
                                      FINAL=FINAL,
@@ -660,7 +660,7 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
                     init + .row_sums_and_nvals(block, na.rm=na.rm)
             },
             FUN_MoreArgs=list(na.rm=na.rm),
-            FINAL=function(init, n) {
+            FINAL=function(init, i, grid, n) {
                     center <- init$sum / init$nval
                     data.frame(sum2=numeric(n), nval=init$nval, center=center)
             },
@@ -672,7 +672,7 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
     INIT_MoreArgs <- list(x=x, na.rm=na.rm, center=center,
                           as.sparse=as.sparse, verbose=verbose)
 
-    FINAL <- function(init) { init$sum2 / (init$nval - 1L) }
+    FINAL <- function(init, i, grid) { init$sum2 / (init$nval - 1L) }
 
     FUN <- function(init, block, na.rm, center) {
         if (is(block, "SparseArraySeed"))
@@ -726,7 +726,7 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
                     init + .col_sums_and_nvals(block, na.rm=na.rm)
             },
             FUN_MoreArgs=list(na.rm=na.rm),
-            FINAL=function(init, n) {
+            FINAL=function(init, j, grid, n) {
                     center <- init$sum / init$nval
                     data.frame(sum2=numeric(n), nval=init$nval, center=center)
             },
@@ -738,7 +738,7 @@ setMethod("colRanges", "DelayedMatrix", .colRanges_DelayedMatrix)
     INIT_MoreArgs <- list(x=x, na.rm=na.rm, center=center,
                           as.sparse=as.sparse, verbose=verbose)
 
-    FINAL <- function(init) { init$sum2 / (init$nval - 1L) }
+    FINAL <- function(init, j, grid) { init$sum2 / (init$nval - 1L) }
 
     FUN <- function(init, block, na.rm, center) {
         if (is(block, "SparseArraySeed"))

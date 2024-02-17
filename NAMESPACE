@@ -268,7 +268,7 @@ export(
     supportedRealizationBackends,
     getAutoRealizationBackend, setAutoRealizationBackend,
     getRealizationBackend, setRealizationBackend,
-    AutoRealizationSink, RealizationSink,
+    AutoRealizationSink,
     sinkApply,
 
     ## realize.R:
