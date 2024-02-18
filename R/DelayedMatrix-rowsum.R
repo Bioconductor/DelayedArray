@@ -63,9 +63,9 @@
     }
 }
 
-### The blocks on 'sink_grid' are made of full columns so each block is
-### a vertical strip.
-.chunking_is_compatible_with_vstrips <- function(sink_chunkdim, sink_grid)
+### Note that each block on 'sink_grid' is a vertical strip made of one or
+### more columns.
+.sink_chunking_is_compatible_with_vstrips <- function(sink_chunkdim, sink_grid)
 {
     stopifnot(is(sink_grid, "ArrayGrid"),
               length(dim(sink_grid)) == 2L,
@@ -95,9 +95,9 @@
     FALSE
 }
 
-### The blocks on 'sink_grid' are made of full rows so each block is
-### a horizontal strip.
-.chunking_is_compatible_with_hstrips <- function(sink_chunkdim, sink_grid)
+### Note that each block on 'sink_grid' is a horizontal strip made of one or
+### more rows.
+.sink_chunking_is_compatible_with_hstrips <- function(sink_chunkdim, sink_grid)
 {
     stopifnot(is(sink_grid, "ArrayGrid"),
               length(dim(sink_grid)) == 2L,
@@ -121,6 +121,47 @@
     FALSE
 }
 
+### Return a "shared sink" if we can take the "shared sink" route, or NULL
+### if we can't.
+.make_shared_sink_along_vstrips <- function(BACKEND, sink_grid, sink_dimnames,
+                                            input_grid, BPPARAM)
+{
+    ## Note that, at the moment, we don't try the "shared sink" route if
+    ## parallel processing is enabled because there's no guarantee that the
+    ## sink will support concurrent writes (e.g. HDF5 does not).
+    if (!is.null(BPPARAM))
+        return(NULL)
+    if (ncol(input_grid) == 1L || !.compatible_BACKEND(BACKEND))
+        return(NULL)
+    sink <- RealizationSink(BACKEND, refdim(sink_grid), dimnames=sink_dimnames,
+                                     type="double")
+    ## We take the "shared sink" route only if the chunks are "compatible"
+    ## with the writing of full sink columns by callback function FINAL()
+    ## below (this callback function will get called at the end of processing
+    ## each vertical strip).
+    ok <- .sink_chunking_is_compatible_with_vstrips(chunkdim(sink), sink_grid)
+    if (ok) sink else NULL
+}
+
+### Return a "shared sink" if we can take the "shared sink" route, or NULL
+### if we can't.
+.make_shared_sink_along_hstrips <- function(BACKEND, sink_grid, sink_dimnames,
+                                            input_grid, BPPARAM)
+{
+    if (!is.null(BPPARAM))
+        return(NULL)
+    if (nrow(input_grid) == 1L || !.compatible_BACKEND(BACKEND))
+        return(NULL)
+    sink <- RealizationSink(BACKEND, refdim(sink_grid), dimnames=sink_dimnames,
+                                     type="double")
+    ## We take the "shared sink" route only if the chunks are "compatible"
+    ## with the writing of full sink rows by callback function FINAL()
+    ## below (this callback function will get called at the end of processing
+    ## each horizontal strip).
+    ok <- .sink_chunking_is_compatible_with_hstrips(chunkdim(sink), sink_grid)
+    if (ok) sink else NULL
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### BLOCK_rowsum() and BLOCK_colsum()
@@ -141,6 +182,8 @@ BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
 
+    ## --- define INIT() ---
+
     ## INIT() must return a matrix of type "double" rather than "integer".
     ## This is to avoid integer overflows during the within-strip walks.
     INIT <- function(j, grid, ugroup, x_colnames) {
@@ -149,6 +192,8 @@ BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
         matrix(0.0, nrow=length(ugroup), ncol=ncol(vp), dimnames=dn)
     }
     INIT_MoreArgs <- list(ugroup=ugroup, x_colnames=colnames(x))
+
+    ## --- define FUN() ---
 
     FUN <- function(init, block, group, ugroup, na.rm=FALSE) {
         if (is(block, "SparseArraySeed"))
@@ -164,46 +209,45 @@ BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
     }
     FUN_MoreArgs <- list(group=group, ugroup=ugroup, na.rm=na.rm)
 
-    use_shared_sink <- FALSE
+    ## --- define FINAL() ---
+
+    ## The "shared sink" route consists in using a single realization sink
+    ## shared across all strips. Can we take this route?
+    ## .make_shared_sink_along_vstrips() will return a RealizationSink
+    ## object if we can, or NULL we can't.
     grid <- best_grid_for_vstrip_apply(x, grid)
-    if (ncol(grid) >= 2L && .compatible_BACKEND(BACKEND) && is.null(BPPARAM)) {
-        ## Try the "shared sink" route which consists in using a single
-        ## realization sink shared across all strips. Note that we don't try
-        ## it in the context of parallel processing at the moment because
-        ## there's no guarantee that the sink will support concurrent
-        ## writes (e.g. HDF5 does not).
-        sink <- RealizationSink(BACKEND, c(length(ugroup), ncol(x)),
-                                         dimnames=list(ugroup, colnames(x)),
-                                         type="double")
-        sink_grid <- .make_sink_grid_of_vstrips(grid, nrow(sink))
-        ## We take the "shared sink" route only if the chunks are "compatible"
-        ## with the writing of full sink columns by callback function FINAL()
-        ## below (this callback function will get called at the end of
-        ## processing each vertical strip).
-        use_shared_sink <- .chunking_is_compatible_with_vstrips(chunkdim(sink),
-                                                                sink_grid)
-    }
-    if (use_shared_sink) {
+    sink_grid <- .make_sink_grid_of_vstrips(grid, length(ugroup))
+    sink_dimnames <- list(ugroup, colnames(x))
+    sink <- .make_shared_sink_along_vstrips(BACKEND, sink_grid, sink_dimnames,
+                                            grid, BPPARAM)
+    if (is.null(sink)) {
+        ## FINAL() is a no-op if 'BACKEND' is NULL.
+        FINAL <- function(init, j, grid, BACKEND) realize(init, BACKEND=BACKEND)
+        FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    } else {
+        ## "shared sink" route.
         FINAL <- function(init, j, grid, sink, sink_grid) {
             write_block(sink, sink_grid[[1L, j]], init)  # write full sink cols
         }
         FINAL_MoreArgs <- list(sink=sink, sink_grid=sink_grid)
-    } else {
-        ## No-op if 'BACKEND' is NULL.
-        FINAL <- function(init, j, grid, BACKEND) realize(init, BACKEND=BACKEND)
-        FINAL_MoreArgs <- list(BACKEND=BACKEND)
     }
+
+    ## --- block processing ---
 
     strip_results <- vstrip_apply(x, INIT, INIT_MoreArgs,
                                      FUN, FUN_MoreArgs,
                                      FINAL, FINAL_MoreArgs,
                                      grid=grid, as.sparse=as.sparse,
                                      BPPARAM=BPPARAM, verbose=verbose)
-    if (use_shared_sink) {
+
+    ## --- turn output of block processing into object and return it ---
+
+    if (is.null(sink)) {
+        do.call(cbind, strip_results)
+    } else {
+        ## "shared sink" route.
         close(sink)
         as(sink, "DelayedArray")
-    } else {
-        do.call(cbind, strip_results)
     }
 }
 
@@ -222,6 +266,8 @@ BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
     if (!isTRUEorFALSE(na.rm))
         stop(wmsg("'na.rm' must be TRUE or FALSE"))
 
+    ## --- define INIT() ---
+
     ## INIT() must return a matrix of type "double" rather than "integer".
     ## This is to avoid integer overflows during the within-strip walks.
     INIT <- function(i, grid, ugroup, x_rownames) {
@@ -230,6 +276,8 @@ BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
         matrix(0.0, nrow=nrow(vp), ncol=length(ugroup), dimnames=dn)
     }
     INIT_MoreArgs <- list(ugroup=ugroup, x_rownames=rownames(x))
+
+    ## --- define FUN() ---
 
     FUN <- function(init, block, group, ugroup, na.rm=FALSE) {
         if (is(block, "SparseArraySeed"))
@@ -245,46 +293,45 @@ BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
     }
     FUN_MoreArgs <- list(group=group, ugroup=ugroup, na.rm=na.rm)
 
-    use_shared_sink <- FALSE
+    ## --- define FINAL() ---
+
+    ## The "shared sink" route consists in using a single realization sink
+    ## shared across all strips. Can we take this route?
+    ## .make_shared_sink_along_hstrips() will return a RealizationSink
+    ## object if we can, or NULL we can't.
     grid <- best_grid_for_hstrip_apply(x, grid)
-    if (nrow(grid) >= 2L && .compatible_BACKEND(BACKEND) && is.null(BPPARAM)) {
-        ## Try the "shared sink" route which consists in using a single
-        ## realization sink shared across all strips. Note that we don't try
-        ## it in the context of parallel processing at the moment because
-        ## there's no guarantee that the sink will support concurrent
-        ## writes (e.g. HDF5 does not).
-        sink <- RealizationSink(BACKEND, c(nrow(x), length(ugroup)),
-                                         dimnames=list(rownames(x), ugroup),
-                                         type="double")
-        sink_grid <- .make_sink_grid_of_hstrips(grid, ncol(sink))
-        ## We take the "shared sink" route only if the chunks are "compatible"
-        ## with the writing of full sink rows by callback function FINAL()
-        ## below (this callback function will get called at the end of
-        ## processing each horizontal strip).
-        use_shared_sink <- .chunking_is_compatible_with_hstrips(chunkdim(sink),
-                                                                sink_grid)
-    }
-    if (use_shared_sink) {
+    sink_grid <- .make_sink_grid_of_hstrips(grid, length(ugroup))
+    sink_dimnames <- list(rownames(x), ugroup)
+    sink <- .make_shared_sink_along_hstrips(BACKEND, sink_grid, sink_dimnames,
+                                            grid, BPPARAM)
+    if (is.null(sink)) {
+        ## FINAL() is a no-op if 'BACKEND' is NULL.
+        FINAL <- function(init, i, grid, BACKEND) realize(init, BACKEND=BACKEND)
+        FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    } else {
+        ## "shared sink" route.
         FINAL <- function(init, i, grid, sink, sink_grid) {
             write_block(sink, sink_grid[[i, 1L]], init)  # write full sink rows
         }
         FINAL_MoreArgs <- list(sink=sink, sink_grid=sink_grid)
-    } else {
-        ## No-op if 'BACKEND' is NULL.
-        FINAL <- function(init, i, grid, BACKEND) realize(init, BACKEND=BACKEND)
-        FINAL_MoreArgs <- list(BACKEND=BACKEND)
     }
+
+    ## --- block processing ---
 
     strip_results <- hstrip_apply(x, INIT, INIT_MoreArgs,
                                      FUN, FUN_MoreArgs,
                                      FINAL, FINAL_MoreArgs,
                                      grid=grid, as.sparse=as.sparse,
                                      BPPARAM=BPPARAM, verbose=verbose)
-    if (use_shared_sink) {
+
+    ## --- turn output of block processing into object and return it ---
+
+    if (is.null(sink)) {
+        do.call(rbind, strip_results)
+    } else {
+        ## "shared sink" route.
         close(sink)
         as(sink, "DelayedArray")
-    } else {
-        do.call(rbind, strip_results)
     }
 }
 
