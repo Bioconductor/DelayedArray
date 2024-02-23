@@ -59,11 +59,11 @@
           \code{\link{setAutoRealizationBackend}} for getting and setting
           the \emph{automatic realization backend}.
 
-    \item \link{DelayedMatrix-mult} for \link{DelayedMatrix} multiplication
-          and cross-product.
-
     \item \link{DelayedMatrix-stats} for \link{DelayedMatrix} row/col
           summarization.
+
+    \item \link{DelayedMatrix-mult} for \link{DelayedMatrix} multiplication
+          and cross-product.
 
     \item \link{DelayedArray} objects.
 

@@ -79,8 +79,6 @@
 
 \seealso{
   \itemize{
-    \item \link{DelayedMatrix} objects.
-
     \item The \pkg{DelayedMatrixStats} package for more row/col summarization
           methods for \link{DelayedMatrix} objects.
 
@@ -88,7 +86,13 @@
           in the \pkg{MatrixGenerics} package e.g.
           \code{MatrixGenerics::\link[MatrixGenerics]{colVars}} etc...
 
-    \item \link[base]{matrix} objects in base R.
+    \item \link{DelayedMatrix-rowsum} for \code{rowsum()} and
+          \code{colsum()} methods for \link{DelayedMatrix} objects.
+
+    \item \link{DelayedMatrix-mult} for DelayedMatrix multiplication
+          and cross-product.
+
+    \item \link{DelayedArray} objects.
   }
 }
 
@@ -139,4 +143,7 @@ stopifnot(
   all.equal(cvars, colVars(m12))
 )
 }
+\keyword{array}
 \keyword{methods}
+\keyword{algebra}
+\keyword{arith}

@@ -44,61 +44,124 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
     stopifnot(length(dim(x)) == 2L)  # matrix-like object
     op <- match.arg(op)
 
+    ## --- set 'STRIP_APPLY', define INIT() and BLOCK_OP() ---
+    ## We will also set 'input_grid', 'sink_ncol', 'sink_rownames',
+    ## and 'sink_colnames'. We will need them for the call to
+    ## make_shared_sink_and_grid_along_hstrips() below.
+
+    STRIP_APPLY <- hstrip_apply
+    sink_ncol <- ncol(y)
+    sink_rownames <- rownames(x)
+    sink_colnames <- colnames(y)
+
     ## All INIT() functions must return a matrix of type "double" rather
     ## than "integer". This is to avoid integer overflows during the
     ## within-strip walks.
-    if (op == "mult") {
-        stopifnot(ncol(x) == nrow(y))
-        STRIP_APPLY <- hstrip_apply
-        INIT <- function(i, grid, y) {
-            matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
-        }
-    } else if (op == "crossprod") {
-        stopifnot(nrow(x) == nrow(y))
-        STRIP_APPLY <- vstrip_apply
-        INIT <- function(j, grid, y) {
-            matrix(0.0, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
-        }
-    } else {
-        stopifnot(ncol(x) == ncol(y))
-        STRIP_APPLY <- hstrip_apply
-        INIT <- function(i, grid, y) {
-            matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
-        }
-    }
+    switch(op,
+        mult={
+            stopifnot(ncol(x) == nrow(y))
+            Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
+            input_grid <- Lgrid
+
+            INIT <- function(i, grid, y) {
+                matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
+            }
+            BLOCK_OP <- function(x_block, y, vp_ranges) {
+                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+                base::`%*%`(x_block, y[idx, , drop=FALSE])
+            }
+        },
+        crossprod={
+            stopifnot(nrow(x) == nrow(y))
+            Lgrid <- best_grid_for_vstrip_apply(x, Lgrid)
+            input_grid <- t(Lgrid)
+
+            ## Overwrite 'STRIP_APPLY' and 'sink_rownames'.
+            STRIP_APPLY <- vstrip_apply
+            sink_rownames <- colnames(x)
+
+            INIT <- function(j, grid, y) {
+                matrix(0.0, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
+            }
+            BLOCK_OP <- function(x_block, y, vp_ranges) {
+                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+                base::crossprod(x_block, y[idx, , drop=FALSE])
+            }
+        },
+        tcrossprod={
+            stopifnot(ncol(x) == ncol(y))
+            Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
+            input_grid <- Lgrid
+
+            ## Overwrite 'sink_ncol' and 'sink_colnames'.
+            sink_ncol <- nrow(y)
+            sink_colnames <- rownames(y)
+
+            INIT <- function(i, grid, y) {
+                matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
+            }
+            BLOCK_OP <- function(x_block, y, vp_ranges) {
+                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+                base::tcrossprod(x_block, y[ , idx, drop=FALSE])
+            }
+        },
+        stop(wmsg("invalid 'op'"))  # should never happen
+    )
     INIT_MoreArgs <- list(y=y)
 
-    FUN <- function(init, block, y, op) {
+    ## --- define FUN() ---
+
+    FUN <- function(init, block, y, BLOCK_OP) {
         if (is(block, "SparseArraySeed"))
             block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
         vp <- currentViewport()
-        vp_ranges <- ranges(vp)
-        if (op == "mult") {
-            idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
-            block_ans <- base::`%*%`(block, y[idx, , drop=FALSE])
-        } else if (op == "crossprod") {
-            idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
-            block_ans <- base::crossprod(block, y[idx, , drop=FALSE])
-        } else {
-            idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
-            block_ans <- base::tcrossprod(block, y[ , idx, drop=FALSE])
-        }
+        block_ans <- BLOCK_OP(block, y, ranges(vp))
         if (!is.matrix(block_ans))
             block_ans <- as.matrix(block_ans)
         init + block_ans
     }
-    FUN_MoreArgs <- list(y=y, op=op)
+    FUN_MoreArgs <- list(y=y, BLOCK_OP=BLOCK_OP)
 
-    ## No-op if 'BACKEND' is NULL.
-    FINAL <- function(init, i, grid, BACKEND) realize(init, BACKEND=BACKEND)
-    FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    ## --- define FINAL() ---
+
+    ## The "shared sink" route consists in using a single realization sink
+    ## shared across all strips. Can we take this route?
+    ## make_shared_sink_and_grid_along_hstrips() will figure it out and return
+    ## a RealizationSink + its associated grid in a named list if it turns out
+    ## that we can take the "shared sink" route, or NULL if we can't.
+    sink_and_grid <- make_shared_sink_and_grid_along_hstrips(BACKEND,
+                                               input_grid, sink_ncol,
+                                               sink_rownames, sink_colnames,
+                                               BPPARAM)
+    if (is.null(sink_and_grid)) {
+        ## FINAL() is a no-op if 'BACKEND' is NULL.
+        FINAL <- function(init, i, grid, BACKEND) realize(init, BACKEND=BACKEND)
+        FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    } else {
+        ## "shared sink" route.
+        FINAL <- function(init, i, grid, sink, sink_grid) {
+            write_block(sink, sink_grid[[i, 1L]], init)  # write full sink rows
+        }
+        FINAL_MoreArgs <- sink_and_grid
+    }
+
+    ## --- block processing ---
 
     strip_results <- STRIP_APPLY(x, INIT, INIT_MoreArgs,
                                     FUN, FUN_MoreArgs,
                                     FINAL, FINAL_MoreArgs,
                                     grid=Lgrid, as.sparse=as.sparse,
                                     BPPARAM=BPPARAM, verbose=verbose)
-    do.call(rbind, strip_results)
+
+    ## --- turn output of block processing into object and return it ---
+
+    if (is.null(sink_and_grid)) {
+        do.call(rbind, strip_results)
+    } else {
+        ## "shared sink" route.
+        close(sink_and_grid$sink)
+        as(sink_and_grid$sink, "DelayedArray")
+    }
 }
 
 ### x: an ordinary matrix or other supported object (see .is_supported).
@@ -118,61 +181,124 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
     stopifnot(length(dim(y)) == 2L)  # matrix-like object
     op <- match.arg(op)
 
+    ## --- set 'STRIP_APPLY', define INIT() and BLOCK_OP() ---
+    ## We will also set 'input_grid', 'sink_nrow', 'sink_rownames',
+    ## and 'sink_colnames'. We will need them for the call to
+    ## make_shared_sink_and_grid_along_vstrips() below.
+
+    STRIP_APPLY <- vstrip_apply
+    sink_nrow <- nrow(x)
+    sink_rownames <- rownames(x)
+    sink_colnames <- colnames(y)
+
     ## All INIT() functions must return a matrix of type "double" rather
     ## than "integer". This is to avoid integer overflows during the
     ## within-strip walks.
-    if (op == "mult") {
-        stopifnot(ncol(x) == nrow(y))
-        STRIP_APPLY <- vstrip_apply
-        INIT <- function(j, grid, x) {
-            matrix(0.0, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
-        }
-    } else if (op == "crossprod") {
-        stopifnot(nrow(x) == nrow(y))
-        STRIP_APPLY <- vstrip_apply
-        INIT <- function(j, grid, x) {
-            matrix(0.0, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
-        }
-    } else {
-        stopifnot(ncol(x) == ncol(y))
-        STRIP_APPLY <- hstrip_apply
-        INIT <- function(i, grid, x) {
-            matrix(0.0, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
-        }
-    }
+    switch(op,
+        mult={
+            stopifnot(ncol(x) == nrow(y))
+            Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
+            input_grid <- Rgrid
+
+            INIT <- function(j, grid, x) {
+                matrix(0.0, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
+            }
+            BLOCK_OP <- function(x, y_block, vp_ranges) {
+                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+                base::`%*%`(x[ , idx, drop=FALSE], y_block)
+            }
+        },
+        crossprod={
+            stopifnot(nrow(x) == nrow(y))
+            Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
+            input_grid <- Rgrid
+
+            ## Overwrite 'sink_nrow' and 'sink_rownames'.
+            sink_nrow <- ncol(x)
+            sink_rownames <- colnames(x)
+
+            INIT <- function(j, grid, x) {
+                matrix(0.0, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
+            }
+            BLOCK_OP <- function(x, y_block, vp_ranges) {
+                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+                base::crossprod(x[idx, , drop=FALSE], y_block)
+            }
+        },
+        tcrossprod={
+            stopifnot(ncol(x) == ncol(y))
+            Rgrid <- best_grid_for_hstrip_apply(y, Rgrid)
+            input_grid <- t(Rgrid)
+
+            ## Overwrite 'STRIP_APPLY' and 'sink_colnames'.
+            STRIP_APPLY <- hstrip_apply
+            sink_colnames <- rownames(y)
+
+            INIT <- function(i, grid, x) {
+                matrix(0.0, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
+            }
+            BLOCK_OP <- function(x, y_block, vp_ranges) {
+                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+                base::tcrossprod(x[ , idx, drop=FALSE], y_block)
+            }
+        },
+        stop(wmsg("invalid 'op'"))  # should never happen
+    )
     INIT_MoreArgs <- list(x=x)
 
-    FUN <- function(init, block, x, op) {
+    ## --- define FUN() ---
+
+    FUN <- function(init, block, x, BLOCK_OP) {
         if (is(block, "SparseArraySeed"))
             block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
         vp <- currentViewport()
-        vp_ranges <- ranges(vp)
-        if (op == "mult") {
-            idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
-            block_ans <- base::`%*%`(x[ , idx, drop=FALSE], block)
-        } else if (op == "crossprod") {
-            idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
-            block_ans <- base::crossprod(x[idx, , drop=FALSE], block)
-        } else {
-            idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
-            block_ans <- base::tcrossprod(x[ , idx, drop=FALSE], block)
-        }
+        block_ans <- BLOCK_OP(x, block, ranges(vp))
         if (!is.matrix(block_ans))
             block_ans <- as.matrix(block_ans)
         init + block_ans
     }
-    FUN_MoreArgs <- list(x=x, op=op)
+    FUN_MoreArgs <- list(x=x, BLOCK_OP=BLOCK_OP)
 
-    ## No-op if 'BACKEND' is NULL.
-    FINAL <- function(init, j, grid, BACKEND) realize(init, BACKEND=BACKEND)
-    FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    ## --- define FINAL() ---
+
+    ## The "shared sink" route consists in using a single realization sink
+    ## shared across all strips. Can we take this route?
+    ## make_shared_sink_and_grid_along_vstrips() will figure it out and return
+    ## a RealizationSink + its associated grid in a named list if it turns out
+    ## that we can take the "shared sink" route, or NULL if we can't.
+    sink_and_grid <- make_shared_sink_and_grid_along_vstrips(BACKEND,
+                                               input_grid, sink_nrow,
+                                               sink_rownames, sink_colnames,
+                                               BPPARAM)
+    if (is.null(sink_and_grid)) {
+        ## FINAL() is a no-op if 'BACKEND' is NULL.
+        FINAL <- function(init, j, grid, BACKEND) realize(init, BACKEND=BACKEND)
+        FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    } else {
+        ## "shared sink" route.
+        FINAL <- function(init, j, grid, sink, sink_grid) {
+            write_block(sink, sink_grid[[1L, j]], init)  # write full sink cols
+        }
+        FINAL_MoreArgs <- sink_and_grid
+    }
+
+    ## --- block processing ---
 
     strip_results <- STRIP_APPLY(y, INIT, INIT_MoreArgs,
                                     FUN, FUN_MoreArgs,
                                     FINAL, FINAL_MoreArgs,
                                     grid=Rgrid, as.sparse=as.sparse,
                                     BPPARAM=BPPARAM, verbose=verbose)
-    do.call(cbind, strip_results)
+
+    ## --- turn output of block processing into object and return it ---
+
+    if (is.null(sink_and_grid)) {
+        do.call(cbind, strip_results)
+    } else {
+        ## "shared sink" route.
+        close(sink_and_grid$sink)
+        as(sink_and_grid$sink, "DelayedArray")
+    }
 }
 
 
