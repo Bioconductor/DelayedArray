@@ -258,8 +258,9 @@ BLOCK_rowsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
 
     ## The "shared sink" route consists in using a single realization sink
     ## shared across all strips. Can we take this route?
-    ## make_shared_sink_and_grid_along_vstrips() will return a RealizationSink
-    ## + its associated grid in a named list if we can, or NULL if we can't.
+    ## make_shared_sink_and_grid_along_vstrips() will figure it out and return
+    ## a RealizationSink + its associated grid in a named list if it turns out
+    ## that we can take the "shared sink" route, or NULL if we can't.
     grid <- best_grid_for_vstrip_apply(x, grid)
     sink_and_grid <- make_shared_sink_and_grid_along_vstrips(BACKEND,
                                                grid, length(ugroup),
@@ -342,8 +343,9 @@ BLOCK_colsum <- function(x, group, reorder=TRUE, na.rm=FALSE,
 
     ## The "shared sink" route consists in using a single realization sink
     ## shared across all strips. Can we take this route?
-    ## make_shared_sink_and_grid_along_hstrips() will return a RealizationSink
-    ## + its associated grid in a named list if we can, or NULL if we can't.
+    ## make_shared_sink_and_grid_along_hstrips() will figure it out and return
+    ## a RealizationSink + its associated grid in a named list if it turns out
+    ## that we can take the "shared sink" route, or NULL if we can't.
     grid <- best_grid_for_hstrip_apply(x, grid)
     sink_and_grid <- make_shared_sink_and_grid_along_hstrips(BACKEND,
                                                grid, length(ugroup),
