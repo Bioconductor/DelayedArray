@@ -122,7 +122,7 @@ M3
 setAutoRealizationBackend(NULL)
 m3 <- realize(M3)  # in-memory realization
 
-supportedRealizationBackends()
+registeredRealizationBackends()
 
 setAutoRealizationBackend("RleArray")
 realize(M3)  # realization as RleArray object

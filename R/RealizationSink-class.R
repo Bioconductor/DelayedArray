@@ -96,7 +96,7 @@ getRealizationBackend <- function()
     getAutoRealizationBackend()
 }
 
-.SUPPORTED_REALIZATION_BACKENDS <- data.frame(
+.REGISTERED_REALIZATION_BACKENDS <- data.frame(
     BACKEND=c("RleArray", "HDF5Array", "TENxMatrix"),
     package=c("DelayedArray", "HDF5Array", "HDF5Array"),
     realization_sink_class=c("RleRealizationSink",
@@ -105,9 +105,9 @@ getRealizationBackend <- function()
     stringsAsFactors=FALSE
 )
 
-supportedRealizationBackends <- function()
+registeredRealizationBackends <- function()
 {
-    ans <- .SUPPORTED_REALIZATION_BACKENDS[ , c("BACKEND", "package")]
+    ans <- .REGISTERED_REALIZATION_BACKENDS[ , c("BACKEND", "package")]
     backend <- getAutoRealizationBackend()
     Lcol <- ifelse(ans[ , "BACKEND"] %in% backend, "->", "")
     Rcol <- ifelse(ans[ , "BACKEND"] %in% backend, "<-", "")
@@ -116,17 +116,23 @@ supportedRealizationBackends <- function()
           data.frame(` `=Rcol, check.names=FALSE))
 }
 
+supportedRealizationBackends <- function()
+{
+    .Deprecated("registeredRealizationBackends")
+    registeredRealizationBackends()
+}
+
 ### NOT exported.
 load_BACKEND_package <- function(BACKEND)
 {
     if (!isSingleString(BACKEND))
         stop(wmsg("'BACKEND' must be a single string or NULL"))
-    backends <- .SUPPORTED_REALIZATION_BACKENDS
+    backends <- .REGISTERED_REALIZATION_BACKENDS
     m <- match(BACKEND, backends[ , "BACKEND"])
     if (is.na(m))
-        stop(wmsg("\"", BACKEND, "\" is not a supported backend. Please ",
-                  "use supportedRealizationBackends() to get the list of ",
-                  "\"realization backends\" that are currently supported."))
+        stop(wmsg("\"", BACKEND, "\" is not a registered realization backend. ",
+                  "Please use registeredRealizationBackends() to get the list ",
+                  "of realization backends that are currently registered."))
     package <- backends[ , "package"][[m]]
     class_package <- attr(BACKEND, "package")
     if (is.null(class_package)) {
@@ -134,7 +140,7 @@ load_BACKEND_package <- function(BACKEND)
     } else if (!identical(package, class_package)) {
         stop(wmsg("\"package\" attribute on supplied 'BACKEND' is ",
                   "inconsistent with package normally associated with ",
-                  "this backend"))
+                  "this realization backend"))
     }
     library(package, character.only=TRUE)
     stopifnot(getClass(BACKEND)@package == package)
@@ -159,7 +165,7 @@ load_BACKEND_package <- function(BACKEND)
 
 .get_realization_sink_constructor <- function(BACKEND)
 {
-    backends <- .SUPPORTED_REALIZATION_BACKENDS
+    backends <- .REGISTERED_REALIZATION_BACKENDS
     m <- match(BACKEND, backends[ , "BACKEND"])
     realization_sink_class <- backends[ , "realization_sink_class"][[m]]
     package <- backends[ , "package"][[m]]

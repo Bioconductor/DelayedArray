@@ -131,7 +131,16 @@
 
     ## Note that, at the moment, we don't try the "shared sink" route if
     ## parallel processing is enabled because there's no guarantee that the
-    ## sink will support concurrent writes (e.g. HDF5 does not).
+    ## realization sink will support concurrent writes (e.g. HDF5 does not).
+    ## TODO (maybe):
+    ## - For registered realization backends, we could register
+    ##   their ability to do concurrent writes, and decide based on that.
+    ## - Alternatively, we could introduce a new generic (e.g.
+    ##   supports_concurrent_writing() or concurrent_writes(), to define
+    ##   in RealizationSink-class.R) with a method defined for RealizationSink
+    ##   objects that returns FALSE. Then concrete subclasses that support
+    ##   concurrent writes (e.g. TileDBRealizationSink?) would overwrite it
+    ##   with a method that returns TRUE.
     if (!is.null(BPPARAM))
         return(NULL)
     if (ncol(input_grid) == 1L || !.compatible_BACKEND(BACKEND))

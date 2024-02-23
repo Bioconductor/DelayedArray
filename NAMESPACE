@@ -265,7 +265,7 @@ export(
     new_DelayedArray,
 
     ## RealizationSink-class.R:
-    supportedRealizationBackends,
+    registeredRealizationBackends, supportedRealizationBackends,
     getAutoRealizationBackend, setAutoRealizationBackend,
     getRealizationBackend, setRealizationBackend,
     AutoRealizationSink,

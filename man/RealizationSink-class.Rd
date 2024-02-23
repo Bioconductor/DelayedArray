@@ -16,6 +16,7 @@
 \alias{AutoRealizationSink}
 
 \alias{supportedRealizationBackends}
+\alias{registeredRealizationBackends}
 \alias{getAutoRealizationBackend}
 \alias{setAutoRealizationBackend}
 \alias{getRealizationBackend}
@@ -31,7 +32,7 @@
   data to disk.
 
   RealizationSink is a virtual class with various concrete subclasses
-  supporting writing data to specific formats.
+  that support writing data into specific formats.
 
   \code{sinkApply()} is a convenience function for walking on a
   RealizationSink object, typically for the purpose of filling it
@@ -51,7 +52,7 @@ AutoRealizationSink(dim, dimnames=NULL, type="double", as.sparse=FALSE)
 ## Get/set the "automatic realization backend":
 getAutoRealizationBackend()
 setAutoRealizationBackend(BACKEND=NULL)
-supportedRealizationBackends()
+registeredRealizationBackends()
 }
 
 \arguments{
@@ -186,8 +187,8 @@ supportedRealizationBackends()
   Use \code{getAutoRealizationBackend()} or \code{setAutoRealizationBackend()}
   to get or set the \emph{automatic realization backend}.
 
-  Use \code{supportedRealizationBackends()} to get the list of realization
-  backends that are currently supported.
+  Use \code{registeredRealizationBackends()} to get the list of realization
+  backends that are currently registered.
 
   *** Cross realization backend compatibility ***
 
@@ -244,8 +245,8 @@ supportedRealizationBackends()
   or a single string specifying the name of the \emph{automatic realization
   backend} currently in use.
 
-  For \code{supportedRealizationBackends}, a data frame with 1 row
-  per supported realization backend.
+  For \code{registeredRealizationBackends}, a data frame with 1 row
+  per registered realization backend.
 }
 
 \seealso{
@@ -583,15 +584,15 @@ for (i in seq_len(dim(grid1)[[1]])) {
 m1b
 
 ## ---------------------------------------------------------------------
-## supportedRealizationBackends() AND FAMILY
+## registeredRealizationBackends() AND FAMILY
 ## ---------------------------------------------------------------------
 
 getAutoRealizationBackend()  # no backend set yet
 
-supportedRealizationBackends()
+registeredRealizationBackends()
 setAutoRealizationBackend("HDF5Array")
 getAutoRealizationBackend()  # backend is set to "HDF5Array"
-supportedRealizationBackends()
+registeredRealizationBackends()
 
 getHDF5DumpChunkLength()
 setHDF5DumpChunkLength(500L)
