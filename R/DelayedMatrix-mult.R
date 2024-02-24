@@ -8,106 +8,42 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid()
-###
-### These are the 2 workhorses behind block matrix multiplication between:
-###   - **any** matrix-like object (typically a DelayedMatrix),
-###   - an ordinary matrix (or other supported matrix-like object,
-###     see .is_supported() below).
-###
-### Should be able to handle any type() supported by base::`%*%`, that is,
-### integer, double, and complex. However, the realization backend specified
-### via `BACKEND` might introduce some restrictions e.g. will it support
-### realization of a matrix of type complex?
+### Helpers for BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid()
 ###
 
-### Supported matrix-like objects must support [ as well as native %*%,
-### crossprod(), and tcrossprod() with the blocks returned by read_block()
-### (i.e. which are either ordinary matrices or SparseMatrix objects).
-.is_supported <- function(x)
-    is.matrix(x) || is(x, "sparseMatrix") || is(x, "SparseMatrix")
-
-### x: a matrix-like object (typically a DelayedMatrix).
-### y: an ordinary matrix or other supported object (see .is_supported).
-### Walks on the grid defined on matrix-like object 'x'.
-### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
-### a DelayedMatrix object that is either pristine or the result of rbind'ing
-### several pristine DelayedMatrix objects together (delayed rbind()).
-BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
-                                   BACKEND=getAutoRealizationBackend(),
-                                   BPPARAM=getAutoBPPARAM(), verbose=NA,
-                                   op=c("mult", "crossprod", "tcrossprod"))
+### INIT, BLOCK_OP: callback functions.
+### INIT() must take 3 arguments: i (or j), grid, y.
+### BLOCK_OP() must take 3 arguments: x_block, y, vp_ranges.
+### See BLOCK_mult_Lgrid() below for the other arguments.
+### Walks on the "left grid" which is defined on matrix-like object 'x'.
+.Lgrid_apply <- function(x, y, Lgrid, as.sparse, BACKEND, BPPARAM, verbose,
+                               INIT, BLOCK_OP,
+                               transpose.x=FALSE, transpose.y=FALSE)
 {
-    if (!.is_supported(y))
-        stop(wmsg("this operation does not support 'y' ",
-                  "of class ", class(y)[[1L]]))
-    stopifnot(length(dim(x)) == 2L)  # matrix-like object
-    op <- match.arg(op)
-
-    ## --- set 'STRIP_APPLY', define INIT() and BLOCK_OP() ---
-    ## We will also set 'input_grid', 'sink_ncol', 'sink_rownames',
-    ## and 'sink_colnames'. We will need them for the call to
+    ## Set 'STRIP_APPLY', 'input_grid', and 'sink_rownames'.
+    ## We will need 'input_grid' and 'sink_rownames' for the call to
     ## make_shared_sink_and_grid_along_hstrips() below.
+    if (transpose.x) {
+        STRIP_APPLY <- vstrip_apply
+        Lgrid <- best_grid_for_vstrip_apply(x, Lgrid)
+        input_grid <- t(Lgrid)
+        sink_rownames <- colnames(x)
+    } else {
+        STRIP_APPLY <- hstrip_apply
+        Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
+        input_grid <- Lgrid
+        sink_rownames <- rownames(x)
+    }
 
-    STRIP_APPLY <- hstrip_apply
-    sink_ncol <- ncol(y)
-    sink_rownames <- rownames(x)
-    sink_colnames <- colnames(y)
-
-    ## All INIT() functions must return a matrix of type "double" rather
-    ## than "integer". This is to avoid integer overflows during the
-    ## within-strip walks.
-    switch(op,
-        mult={
-            stopifnot(ncol(x) == nrow(y))
-            Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
-            input_grid <- Lgrid
-
-            INIT <- function(i, grid, y) {
-                matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
-            }
-            BLOCK_OP <- function(x_block, y, vp_ranges) {
-                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
-                base::`%*%`(x_block, y[idx, , drop=FALSE])
-            }
-        },
-        crossprod={
-            stopifnot(nrow(x) == nrow(y))
-            Lgrid <- best_grid_for_vstrip_apply(x, Lgrid)
-            input_grid <- t(Lgrid)
-
-            ## Overwrite 'STRIP_APPLY' and 'sink_rownames'.
-            STRIP_APPLY <- vstrip_apply
-            sink_rownames <- colnames(x)
-
-            INIT <- function(j, grid, y) {
-                matrix(0.0, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
-            }
-            BLOCK_OP <- function(x_block, y, vp_ranges) {
-                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
-                base::crossprod(x_block, y[idx, , drop=FALSE])
-            }
-        },
-        tcrossprod={
-            stopifnot(ncol(x) == ncol(y))
-            Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
-            input_grid <- Lgrid
-
-            ## Overwrite 'sink_ncol' and 'sink_colnames'.
-            sink_ncol <- nrow(y)
-            sink_colnames <- rownames(y)
-
-            INIT <- function(i, grid, y) {
-                matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
-            }
-            BLOCK_OP <- function(x_block, y, vp_ranges) {
-                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
-                base::tcrossprod(x_block, y[ , idx, drop=FALSE])
-            }
-        },
-        stop(wmsg("invalid 'op'"))  # should never happen
-    )
-    INIT_MoreArgs <- list(y=y)
+    ## Set 'sink_ncol' and 'sink_colnames'. Also needed for the call to
+    ## make_shared_sink_and_grid_along_hstrips() below.
+    if (transpose.y) {
+        sink_ncol <- nrow(y)
+        sink_colnames <- rownames(y)
+    } else {
+        sink_ncol <- ncol(y)
+        sink_colnames <- colnames(y)
+    }
 
     ## --- define FUN() ---
 
@@ -147,6 +83,7 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
 
     ## --- block processing ---
 
+    INIT_MoreArgs <- list(y=y)
     strip_results <- STRIP_APPLY(x, INIT, INIT_MoreArgs,
                                     FUN, FUN_MoreArgs,
                                     FINAL, FINAL_MoreArgs,
@@ -164,87 +101,39 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
     }
 }
 
-### x: an ordinary matrix or other supported object (see .is_supported).
-### y: a matrix-like object (typically a DelayedMatrix).
-### Walks on the grid defined on matrix-like object 'y'.
-### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
-### a DelayedMatrix object that is either pristine or the result of cbind'ing
-### several pristine DelayedMatrix objects together (delayed cbind()).
-BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
-                                   BACKEND=getAutoRealizationBackend(),
-                                   BPPARAM=getAutoBPPARAM(), verbose=NA,
-                                   op=c("mult", "crossprod", "tcrossprod"))
+### INIT and BLOCK_OP: callback functions.
+### INIT() must take 3 arguments: j (or i), grid, x.
+### BLOCK_OP() must take 3 arguments: x, y_block, vp_ranges.
+### See BLOCK_mult_Rgrid() below for the other arguments.
+### Walks on the "right grid" which is defined on matrix-like object 'y'.
+.Rgrid_apply <- function(x, y, Rgrid, as.sparse, BACKEND, BPPARAM, verbose,
+                               INIT, BLOCK_OP,
+                               transpose.x=FALSE, transpose.y=FALSE)
 {
-    if (!.is_supported(x))
-        stop(wmsg("this operation does not support 'x' ",
-                  "of class ", class(x)[[1L]]))
-    stopifnot(length(dim(y)) == 2L)  # matrix-like object
-    op <- match.arg(op)
-
-    ## --- set 'STRIP_APPLY', define INIT() and BLOCK_OP() ---
-    ## We will also set 'input_grid', 'sink_nrow', 'sink_rownames',
-    ## and 'sink_colnames'. We will need them for the call to
+    ## Set 'STRIP_APPLY', 'input_grid', and 'sink_colnames'.
+    ## We will need 'input_grid' and 'sink_colnames' for the call to
     ## make_shared_sink_and_grid_along_vstrips() below.
+    if (transpose.y) {
+        STRIP_APPLY <- hstrip_apply
+        Rgrid <- best_grid_for_hstrip_apply(y, Rgrid)
+        input_grid <- t(Rgrid)
+        sink_colnames <- rownames(y)
+    } else {
+        STRIP_APPLY <- vstrip_apply
+        Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
+        input_grid <- Rgrid
+        sink_colnames <- colnames(y)
+    }
 
-    STRIP_APPLY <- vstrip_apply
-    sink_nrow <- nrow(x)
-    sink_rownames <- rownames(x)
-    sink_colnames <- colnames(y)
-
-    ## All INIT() functions must return a matrix of type "double" rather
-    ## than "integer". This is to avoid integer overflows during the
-    ## within-strip walks.
-    switch(op,
-        mult={
-            stopifnot(ncol(x) == nrow(y))
-            Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
-            input_grid <- Rgrid
-
-            INIT <- function(j, grid, x) {
-                matrix(0.0, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
-            }
-            BLOCK_OP <- function(x, y_block, vp_ranges) {
-                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
-                base::`%*%`(x[ , idx, drop=FALSE], y_block)
-            }
-        },
-        crossprod={
-            stopifnot(nrow(x) == nrow(y))
-            Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
-            input_grid <- Rgrid
-
-            ## Overwrite 'sink_nrow' and 'sink_rownames'.
-            sink_nrow <- ncol(x)
-            sink_rownames <- colnames(x)
-
-            INIT <- function(j, grid, x) {
-                matrix(0.0, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
-            }
-            BLOCK_OP <- function(x, y_block, vp_ranges) {
-                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
-                base::crossprod(x[idx, , drop=FALSE], y_block)
-            }
-        },
-        tcrossprod={
-            stopifnot(ncol(x) == ncol(y))
-            Rgrid <- best_grid_for_hstrip_apply(y, Rgrid)
-            input_grid <- t(Rgrid)
-
-            ## Overwrite 'STRIP_APPLY' and 'sink_colnames'.
-            STRIP_APPLY <- hstrip_apply
-            sink_colnames <- rownames(y)
-
-            INIT <- function(i, grid, x) {
-                matrix(0.0, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
-            }
-            BLOCK_OP <- function(x, y_block, vp_ranges) {
-                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
-                base::tcrossprod(x[ , idx, drop=FALSE], y_block)
-            }
-        },
-        stop(wmsg("invalid 'op'"))  # should never happen
-    )
-    INIT_MoreArgs <- list(x=x)
+    ## Set 'sink_nrow' and 'sink_rownames'. Also needed for the call to
+    ## make_shared_sink_and_grid_along_vstrips() below.
+    if (transpose.x) {
+        sink_nrow <- ncol(x)
+        sink_rownames <- colnames(x)
+    } else {
+        sink_nrow <- nrow(x)
+        sink_rownames <- rownames(x)
+    }
 
     ## --- define FUN() ---
 
@@ -284,6 +173,7 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
 
     ## --- block processing ---
 
+    INIT_MoreArgs <- list(x=x)
     strip_results <- STRIP_APPLY(y, INIT, INIT_MoreArgs,
                                     FUN, FUN_MoreArgs,
                                     FINAL, FINAL_MoreArgs,
@@ -299,6 +189,151 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
         close(sink_and_grid$sink)
         as(sink_and_grid$sink, "DelayedArray")
     }
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid()
+###
+### These are the 2 workhorses behind block matrix multiplication between:
+###   - **any** matrix-like object (typically a DelayedMatrix),
+###   - an ordinary matrix (or other supported matrix-like object,
+###     see .is_supported() above).
+###
+### Should be able to handle any type() supported by base::`%*%`, that is,
+### integer, double, and complex. However, the realization backend specified
+### via `BACKEND` might introduce some restrictions e.g. will it support
+### realization of a matrix of type complex?
+###
+
+### Supported matrix-like objects must support [ as well as native %*%,
+### crossprod(), and tcrossprod() with the blocks returned by read_block()
+### (i.e. which are either ordinary matrices or SparseMatrix objects).
+.is_supported <- function(x)
+    is.matrix(x) || is(x, "sparseMatrix") || is(x, "SparseMatrix")
+
+### x: a matrix-like object (typically a DelayedMatrix).
+### y: an ordinary matrix or other supported object (see .is_supported above).
+### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
+### a DelayedMatrix object that is either pristine or the result of rbind'ing
+### several pristine DelayedMatrix objects together (delayed rbind()).
+BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
+                                   BACKEND=getAutoRealizationBackend(),
+                                   BPPARAM=getAutoBPPARAM(), verbose=NA,
+                                   op=c("mult", "crossprod", "tcrossprod"))
+{
+    ## See the BLOCK_OP() callback functions below for what operations will
+    ## effectively be performed on 'y'.
+    if (!.is_supported(y))
+        stop(wmsg("this operation does not support 'y' ",
+                  "of class ", class(y)[[1L]]))
+    stopifnot(length(dim(x)) == 2L)
+    op <- match.arg(op)
+    transpose.x <- transpose.y <- FALSE
+
+    ## All INIT() callback functions must return a matrix of type "double"
+    ## rather than "integer". This is to avoid integer overflows during the
+    ## within-strip walks.
+    switch(op,
+        mult={
+            stopifnot(ncol(x) == nrow(y))
+            INIT <- function(i, grid, y) {
+                matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=ncol(y))
+            }
+            BLOCK_OP <- function(x_block, y, vp_ranges) {
+                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+                base::`%*%`(x_block, y[idx, , drop=FALSE])
+            }
+        },
+        crossprod={
+            transpose.x <- TRUE
+            stopifnot(nrow(x) == nrow(y))
+            INIT <- function(j, grid, y) {
+                matrix(0.0, nrow=ncol(grid[[1L, j]]), ncol=ncol(y))
+            }
+            BLOCK_OP <- function(x_block, y, vp_ranges) {
+                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+                base::crossprod(x_block, y[idx, , drop=FALSE])
+            }
+        },
+        tcrossprod={
+            transpose.y <- TRUE
+            stopifnot(ncol(x) == ncol(y))
+            INIT <- function(i, grid, y) {
+                matrix(0.0, nrow=nrow(grid[[i, 1L]]), ncol=nrow(y))
+            }
+            BLOCK_OP <- function(x_block, y, vp_ranges) {
+                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+                base::tcrossprod(x_block, y[ , idx, drop=FALSE])
+            }
+        },
+        stop(wmsg("invalid 'op'"))  # should never happen
+    )
+
+    .Lgrid_apply(x, y, Lgrid, as.sparse, BACKEND, BPPARAM, verbose,
+                       INIT, BLOCK_OP, transpose.x, transpose.y)
+}
+
+### x: an ordinary matrix or other supported object (see .is_supported above).
+### y: a matrix-like object (typically a DelayedMatrix).
+### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
+### a DelayedMatrix object that is either pristine or the result of cbind'ing
+### several pristine DelayedMatrix objects together (delayed cbind()).
+BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
+                                   BACKEND=getAutoRealizationBackend(),
+                                   BPPARAM=getAutoBPPARAM(), verbose=NA,
+                                   op=c("mult", "crossprod", "tcrossprod"))
+{
+    ## See the BLOCK_OP() callback functions below for what operations will
+    ## effectively be performed on 'x'.
+    if (!.is_supported(x))
+        stop(wmsg("this operation does not support 'x' ",
+                  "of class ", class(x)[[1L]]))
+    stopifnot(length(dim(y)) == 2L)
+    op <- match.arg(op)
+    transpose.x <- transpose.y <- FALSE
+
+    ## All INIT() callback functions must return a matrix of type "double"
+    ## rather than "integer". This is to avoid integer overflows during the
+    ## within-strip walks.
+    switch(op,
+        mult={
+            stopifnot(ncol(x) == nrow(y))
+            INIT <- function(j, grid, x) {
+                matrix(0.0, nrow=nrow(x), ncol=ncol(grid[[1L, j]]))
+            }
+            BLOCK_OP <- function(x, y_block, vp_ranges) {
+                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+                base::`%*%`(x[ , idx, drop=FALSE], y_block)
+            }
+        },
+        crossprod={
+            transpose.x <- TRUE
+            stopifnot(nrow(x) == nrow(y))
+            INIT <- function(j, grid, x) {
+                matrix(0.0, nrow=ncol(x), ncol=ncol(grid[[1L, j]]))
+            }
+            BLOCK_OP <- function(x, y_block, vp_ranges) {
+                idx <- (start(vp_ranges)[[1L]]):(end(vp_ranges)[[1L]])
+                base::crossprod(x[idx, , drop=FALSE], y_block)
+            }
+        },
+        tcrossprod={
+            transpose.y <- TRUE
+            stopifnot(ncol(x) == ncol(y))
+            INIT <- function(i, grid, x) {
+                matrix(0.0, nrow=nrow(x), ncol=nrow(grid[[i, 1L]]))
+            }
+            BLOCK_OP <- function(x, y_block, vp_ranges) {
+                idx <- (start(vp_ranges)[[2L]]):(end(vp_ranges)[[2L]])
+                base::tcrossprod(x[ , idx, drop=FALSE], y_block)
+            }
+        },
+        stop(wmsg("invalid 'op'"))  # should never happen
+    )
+
+    .Rgrid_apply(x, y, Rgrid, as.sparse, BACKEND, BPPARAM, verbose,
+                       INIT, BLOCK_OP, transpose.x, transpose.y)
 }
 
 
