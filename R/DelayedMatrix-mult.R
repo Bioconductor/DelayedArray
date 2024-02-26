@@ -11,6 +11,54 @@
 ### Helpers for BLOCK_mult_Lgrid() and BLOCK_mult_Rgrid()
 ###
 
+.make_shared_sink_and_grid_for_Lgrid_apply <-
+    function(x, y, Lgrid, BACKEND, BPPARAM,
+                   transpose.x=FALSE, transpose.y=FALSE)
+{
+    if (transpose.x) {
+        input_grid <- t(best_grid_for_vstrip_apply(x, Lgrid))
+        sink_rownames <- colnames(x)
+    } else {
+        input_grid <- best_grid_for_hstrip_apply(x, Lgrid)
+        sink_rownames <- rownames(x)
+    }
+    if (transpose.y) {
+        sink_ncol <- nrow(y)
+        sink_colnames <- rownames(y)
+    } else {
+        sink_ncol <- ncol(y)
+        sink_colnames <- colnames(y)
+    }
+    make_shared_sink_and_grid_along_hstrips(BACKEND,
+                                            input_grid, sink_ncol,
+                                            sink_rownames, sink_colnames,
+                                            BPPARAM)
+}
+
+.make_shared_sink_and_grid_for_Rgrid_apply <-
+    function(x, y, Rgrid, BACKEND, BPPARAM,
+                   transpose.x=FALSE, transpose.y=FALSE)
+{
+    if (transpose.y) {
+        input_grid <- t(best_grid_for_hstrip_apply(y, Rgrid))
+        sink_colnames <- rownames(y)
+    } else {
+        input_grid <- best_grid_for_vstrip_apply(y, Rgrid)
+        sink_colnames <- colnames(y)
+    }
+    if (transpose.x) {
+        sink_nrow <- ncol(x)
+        sink_rownames <- colnames(x)
+    } else {
+        sink_nrow <- nrow(x)
+        sink_rownames <- rownames(x)
+    }
+    make_shared_sink_and_grid_along_vstrips(BACKEND,
+                                            input_grid, sink_nrow,
+                                            sink_rownames, sink_colnames,
+                                            BPPARAM)
+}
+
 ### INIT, BLOCK_OP: callback functions.
 ### INIT() must take 3 arguments: i (or j), grid, y.
 ### BLOCK_OP() must take 3 arguments: x_block, y, vp_ranges.
@@ -20,30 +68,6 @@
                                INIT, BLOCK_OP,
                                transpose.x=FALSE, transpose.y=FALSE)
 {
-    ## Set 'STRIP_APPLY', 'input_grid', and 'sink_rownames'.
-    ## We will need 'input_grid' and 'sink_rownames' for the call to
-    ## make_shared_sink_and_grid_along_hstrips() below.
-    if (transpose.x) {
-        STRIP_APPLY <- vstrip_apply
-        Lgrid <- best_grid_for_vstrip_apply(x, Lgrid)
-        input_grid <- t(Lgrid)
-        sink_rownames <- colnames(x)
-    } else {
-        STRIP_APPLY <- hstrip_apply
-        Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
-        input_grid <- Lgrid
-        sink_rownames <- rownames(x)
-    }
-
-    ## Set 'sink_ncol' and 'sink_colnames'. Also needed for the call to
-    ## make_shared_sink_and_grid_along_hstrips() below.
-    if (transpose.y) {
-        sink_ncol <- nrow(y)
-        sink_colnames <- rownames(y)
-    } else {
-        sink_ncol <- ncol(y)
-        sink_colnames <- colnames(y)
-    }
 
     ## --- define FUN() ---
 
@@ -60,29 +84,37 @@
 
     ## --- define FINAL() ---
 
-    ## The "shared sink" route consists in using a single realization sink
-    ## shared across all strips. Can we take this route?
-    ## make_shared_sink_and_grid_along_hstrips() will figure it out and return
-    ## a RealizationSink + its associated grid in a named list if it turns out
-    ## that we can take the "shared sink" route, or NULL if we can't.
-    sink_and_grid <- make_shared_sink_and_grid_along_hstrips(BACKEND,
-                                               input_grid, sink_ncol,
-                                               sink_rownames, sink_colnames,
-                                               BPPARAM)
-    if (is.null(sink_and_grid)) {
-        ## FINAL() is a no-op if 'BACKEND' is NULL.
-        FINAL <- function(init, i, grid, BACKEND) realize(init, BACKEND=BACKEND)
-        FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    if (is.null(BACKEND)) {
+        FINAL <- NULL
+        FINAL_MoreArgs <- list()
     } else {
-        ## "shared sink" route.
-        FINAL <- function(init, i, grid, sink, sink_grid) {
-            write_block(sink, sink_grid[[i, 1L]], init)  # write full sink rows
+        ## The "shared sink" route consists in using a single realization sink
+        ## shared across all strips. Can we take this route?
+        ## .make_shared_sink_and_grid_for_Lgrid_apply() will figure it out and
+        ## return a RealizationSink + its associated grid in a named list if
+        ## it turns out that we can take the "shared sink" route, or NULL if
+        ## we can't.
+        sink_and_grid <- .make_shared_sink_and_grid_for_Lgrid_apply(x, y,
+                                                    Lgrid, BACKEND, BPPARAM,
+                                                    transpose.x, transpose.y)
+        if (is.null(sink_and_grid)) {
+            FINAL <- function(init, i, grid, BACKEND) {
+                realize(init, BACKEND=BACKEND)
+            }
+            FINAL_MoreArgs <- list(BACKEND=BACKEND)
+        } else {
+            ## "shared sink" route.
+            FINAL <- function(init, i, grid, sink, sink_grid) {
+                ## Write full sink rows.
+                write_block(sink, sink_grid[[i, 1L]], init)
+            }
+            FINAL_MoreArgs <- sink_and_grid
         }
-        FINAL_MoreArgs <- sink_and_grid
     }
 
     ## --- block processing ---
 
+    STRIP_APPLY <- if (transpose.x) vstrip_apply else hstrip_apply
     INIT_MoreArgs <- list(y=y)
     strip_results <- STRIP_APPLY(x, INIT, INIT_MoreArgs,
                                     FUN, FUN_MoreArgs,
@@ -92,7 +124,7 @@
 
     ## --- turn output of block processing into object and return it ---
 
-    if (is.null(sink_and_grid)) {
+    if (is.null(BACKEND) || is.null(sink_and_grid)) {
         do.call(rbind, strip_results)
     } else {
         ## "shared sink" route.
@@ -110,30 +142,6 @@
                                INIT, BLOCK_OP,
                                transpose.x=FALSE, transpose.y=FALSE)
 {
-    ## Set 'STRIP_APPLY', 'input_grid', and 'sink_colnames'.
-    ## We will need 'input_grid' and 'sink_colnames' for the call to
-    ## make_shared_sink_and_grid_along_vstrips() below.
-    if (transpose.y) {
-        STRIP_APPLY <- hstrip_apply
-        Rgrid <- best_grid_for_hstrip_apply(y, Rgrid)
-        input_grid <- t(Rgrid)
-        sink_colnames <- rownames(y)
-    } else {
-        STRIP_APPLY <- vstrip_apply
-        Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
-        input_grid <- Rgrid
-        sink_colnames <- colnames(y)
-    }
-
-    ## Set 'sink_nrow' and 'sink_rownames'. Also needed for the call to
-    ## make_shared_sink_and_grid_along_vstrips() below.
-    if (transpose.x) {
-        sink_nrow <- ncol(x)
-        sink_rownames <- colnames(x)
-    } else {
-        sink_nrow <- nrow(x)
-        sink_rownames <- rownames(x)
-    }
 
     ## --- define FUN() ---
 
@@ -150,29 +158,37 @@
 
     ## --- define FINAL() ---
 
-    ## The "shared sink" route consists in using a single realization sink
-    ## shared across all strips. Can we take this route?
-    ## make_shared_sink_and_grid_along_vstrips() will figure it out and return
-    ## a RealizationSink + its associated grid in a named list if it turns out
-    ## that we can take the "shared sink" route, or NULL if we can't.
-    sink_and_grid <- make_shared_sink_and_grid_along_vstrips(BACKEND,
-                                               input_grid, sink_nrow,
-                                               sink_rownames, sink_colnames,
-                                               BPPARAM)
-    if (is.null(sink_and_grid)) {
-        ## FINAL() is a no-op if 'BACKEND' is NULL.
-        FINAL <- function(init, j, grid, BACKEND) realize(init, BACKEND=BACKEND)
-        FINAL_MoreArgs <- list(BACKEND=BACKEND)
+    if (is.null(BACKEND)) {
+        FINAL <- NULL
+        FINAL_MoreArgs <- list()
     } else {
-        ## "shared sink" route.
-        FINAL <- function(init, j, grid, sink, sink_grid) {
-            write_block(sink, sink_grid[[1L, j]], init)  # write full sink cols
+        ## The "shared sink" route consists in using a single realization sink
+        ## shared across all strips. Can we take this route?
+        ## .make_shared_sink_and_grid_for_Rgrid_apply() will figure it out and
+        ## return a RealizationSink + its associated grid in a named list if
+        ## it turns out that we can take the "shared sink" route, or NULL if
+        ## we can't.
+        sink_and_grid <- .make_shared_sink_and_grid_for_Rgrid_apply(x, y,
+                                                    Rgrid, BACKEND, BPPARAM,
+                                                    transpose.x, transpose.y)
+        if (is.null(sink_and_grid)) {
+            FINAL <- function(init, j, grid, BACKEND) {
+                realize(init, BACKEND=BACKEND)
+            }
+            FINAL_MoreArgs <- list(BACKEND=BACKEND)
+        } else {
+            ## "shared sink" route.
+            FINAL <- function(init, j, grid, sink, sink_grid) {
+                ## Write full sink columns.
+                write_block(sink, sink_grid[[1L, j]], init)
+            }
+            FINAL_MoreArgs <- sink_and_grid
         }
-        FINAL_MoreArgs <- sink_and_grid
     }
 
     ## --- block processing ---
 
+    STRIP_APPLY <- if (transpose.y) hstrip_apply else vstrip_apply
     INIT_MoreArgs <- list(x=x)
     strip_results <- STRIP_APPLY(y, INIT, INIT_MoreArgs,
                                     FUN, FUN_MoreArgs,
@@ -182,7 +198,7 @@
 
     ## --- turn output of block processing into object and return it ---
 
-    if (is.null(sink_and_grid)) {
+    if (is.null(BACKEND) || is.null(sink_and_grid)) {
         do.call(cbind, strip_results)
     } else {
         ## "shared sink" route.
