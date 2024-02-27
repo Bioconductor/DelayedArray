@@ -51,10 +51,11 @@ normarg_verbose <- function(verbose)
 verbose_read_block <- function(x, viewport, x_is_sparse, as.sparse, bid, nblock)
 {
     what_as_what <- .realize_what_as_what(x_is_sparse, as.sparse)
-    message("/ Reading and realizing ", what_as_what$what, " ",
-            bid, "/", nblock, what_as_what$as_what, " ... ", appendLF=FALSE)
+    message(wmsg("/ reading and realizing ", what_as_what$what, " ",
+                 bid, "/", nblock, what_as_what$as_what, " ..."),
+            " ", appendLF=FALSE)
     block <- read_block(x, viewport, as.sparse=as.sparse)
-    message("OK")
+    message("ok")
     block
 }
 
@@ -200,14 +201,14 @@ gridApply <- function(grid, FUN, ..., BPPARAM=getAutoBPPARAM(), verbose=NA)
     {
         if (verbose) {
             nblock <- length(grid)
-            message("\\ Processing viewport ", bid, "/", nblock, " ... ",
-                    appendLF=FALSE)
+            message(wmsg("\\ processing viewport ", bid, "/", nblock, " ..."),
+                    " ", appendLF=FALSE)
         }
         viewport <- grid[[bid]]
         set_grid_context(grid, bid, viewport)
         ans <- FUN(viewport, ...)
         if (verbose)
-            message("OK")
+            message("ok")
         ans
     }
     S4Arrays:::bplapply2(seq_along(grid), FUN_WRAPPER, grid, verbose,
@@ -244,10 +245,10 @@ blockApply <- function(x, FUN, ..., grid=NULL, as.sparse=FALSE,
         }
         set_grid_context(effective_grid, current_block_id, viewport)
         if (verbose)
-            message("\\ Processing it ... ", appendLF=FALSE)
+            message(wmsg("\\ processing it ..."), " ", appendLF=FALSE)
         ans <- FUN(block, ...)
         if (verbose)
-            message("OK")
+            message("ok")
         ans
     }
     gridApply(grid, FUN_WRAPPER,
@@ -276,11 +277,11 @@ gridReduce <- function(FUN, grid, init, ..., BREAKIF=NULL, verbose=NA)
         viewport <- grid[[bid]]
         set_grid_context(grid, bid, viewport)
         if (verbose)
-            message("\\ Processing viewport ", bid, "/", nblock, " ... ",
-                    appendLF=FALSE)
+            message(wmsg("\\ processing viewport ", bid, "/", nblock, " ..."),
+                    " ", appendLF=FALSE)
         init <- FUN(viewport, init, ...)
         if (verbose)
-            message("OK")
+            message("ok")
         if (!is.null(BREAKIF) && BREAKIF(init)) {
             if (verbose)
                 message("BREAK condition encountered")
@@ -322,10 +323,10 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
         }
         set_grid_context(effective_grid, current_block_id, viewport)
         if (verbose)
-            message("\\ Processing it ... ", appendLF=FALSE)
+            message(wmsg("\\ processing it ..."), " ", appendLF=FALSE)
         init <- FUN(block, init, ...)
         if (verbose)
-            message("OK")
+            message("ok")
         init
     }
     if (!is.null(BREAKIF) && verbose) {
@@ -362,10 +363,15 @@ blockReduce <- function(FUN, x, init, ..., BREAKIF=NULL,
 ### In case of any uncertainty about the physical layout of the data (i.e.
 ### if 'chunkdim(x)' is NULL), we just use square blocks to lower the risk
 ### of using completely inappropriate block geometry.
+### The returned grid should always have at least one row.
 best_grid_for_hstrip_apply <- function(x, grid=NULL)
 {
-    if (!is.null(grid))
-        return(normarg_grid(grid, x))  # only to check the supplied 'grid'
+    if (!is.null(grid)) {
+        grid <- normarg_grid(grid, x)  # sanity checks on supplied 'grid'
+        if (nrow(grid) == 0L)
+            stop(wmsg("the supplied grid must have at least one row"))
+        return(grid)
+    }
     if (length(x) == 0L)
         return(defaultAutoGrid(x))  # one empty block
     x_chunkdim <- chunkdim(x)
@@ -386,10 +392,15 @@ best_grid_for_hstrip_apply <- function(x, grid=NULL)
     rowAutoGrid(x, nrow=block_nrow)  # "full width" blocks
 }
 
+### The returned grid should always have at least one column.
 best_grid_for_vstrip_apply <- function(x, grid=NULL)
 {
-    if (!is.null(grid))
-        return(normarg_grid(grid, x))  # only to check the supplied 'grid'
+    if (!is.null(grid)) {
+        grid <- normarg_grid(grid, x)  # sanity checks on supplied 'grid'
+        if (ncol(grid) == 0L)
+            stop(wmsg("the supplied grid must have at least one column"))
+        return(grid)
+    }
     if (length(x) == 0L)
         return(defaultAutoGrid(x))  # one empty block
     x_chunkdim <- chunkdim(x)
@@ -410,11 +421,14 @@ best_grid_for_vstrip_apply <- function(x, grid=NULL)
     colAutoGrid(x, ncol=block_ncol)  # "full height" blocks
 }
 
-.message_2Dwalk_progress <- function(i, j, grid_nrow, grid_ncol, sparse)
+.message_2Dwalk_progress <- function(block, grid, i, j)
 {
-    message("Processing ", if (sparse) "sparse " else "", "block ",
-            "[[", i, "/", grid_nrow, ", ", j, "/", grid_ncol, "]] ... ",
-            appendLF=FALSE)
+    what <- paste0("<", paste0(dim(block), collapse=" x "), ">")
+    if (is_sparse(block))
+        what <- paste0(what, " sparse")
+    what <- paste0(what, " block from grid position ",
+                   "[[", i, "/", nrow(grid), ", ", j, "/", ncol(grid), "]]")
+    message("  ", wmsg("| processing ", what, " ..."), " ", appendLF=FALSE)
 }
 
 reduce_grid_hstrip <- function(i, grid, x, INIT, INIT_MoreArgs,
@@ -427,23 +441,37 @@ reduce_grid_hstrip <- function(i, grid, x, INIT, INIT_MoreArgs,
     if (!is.null(FINAL))
         FINAL <- match.fun(FINAL)
     verbose <- normarg_verbose(verbose)
-    init <- do.call(INIT, c(list(i, grid), INIT_MoreArgs))
     grid_nrow <- nrow(grid)
     grid_ncol <- ncol(grid)
+    init <- do.call(INIT, c(list(i, grid), INIT_MoreArgs))
+    if (verbose)
+        message(wmsg("=== START walking on horizontal strip ",
+                     i, "/", grid_nrow, " ==="))
     ## Walk on the blocks of the i-th horizontal strip. Sequential.
     for (j in seq_len(grid_ncol)) {
         viewport <- grid[[i, j]]
         block <- read_block(x, viewport, as.sparse=as.sparse)
         set_grid_context(grid, NULL, viewport)
         if (verbose)
-            .message_2Dwalk_progress(i, j, grid_nrow, grid_ncol,
-                                     is_sparse(block))
+            .message_2Dwalk_progress(block, grid, i, j)
         init <- do.call(FUN, c(list(init, block), FUN_MoreArgs))
         if (verbose)
-            message("OK")
+            message("ok")
     }
-    if (!is.null(FINAL))
+    if (verbose)
+        message(wmsg("=== DONE walking on horizontal strip ",
+                     i, "/", grid_nrow, " ==="))
+    if (!is.null(FINAL)) {
+        if (verbose)
+            message(wmsg("--- START finalizing result for ",
+                         "horizonal strip ", i, "/", grid_nrow, " ---"))
         init <- do.call(FINAL, c(list(init, i, grid), FINAL_MoreArgs))
+        if (verbose)
+            message(wmsg("--- DONE finalizing result for ",
+                         "horizonal strip ", i, "/", grid_nrow, " ---"))
+    }
+    if (verbose)
+        message()
     init
 }
 
@@ -457,30 +485,44 @@ reduce_grid_vstrip <- function(j, grid, x, INIT, INIT_MoreArgs,
     if (!is.null(FINAL))
         FINAL <- match.fun(FINAL)
     verbose <- normarg_verbose(verbose)
-    init <- do.call(INIT, c(list(j, grid), INIT_MoreArgs))
     grid_nrow <- nrow(grid)
     grid_ncol <- ncol(grid)
+    init <- do.call(INIT, c(list(j, grid), INIT_MoreArgs))
+    if (verbose)
+        message(wmsg("=== START walking on vertical strip ",
+                     j, "/", grid_ncol, " ==="))
     ## Walk on the blocks of the j-th vertical strip. Sequential.
     for (i in seq_len(grid_nrow)) {
         viewport <- grid[[i, j]]
         block <- read_block(x, viewport, as.sparse=as.sparse)
         set_grid_context(grid, NULL, viewport)
         if (verbose)
-            .message_2Dwalk_progress(i, j, grid_nrow, grid_ncol,
-                                     is_sparse(block))
+            .message_2Dwalk_progress(block, grid, i, j)
         init <- do.call(FUN, c(list(init, block), FUN_MoreArgs))
         if (verbose)
-            message("OK")
+            message("ok")
     }
-    if (!is.null(FINAL))
+    if (verbose)
+        message(wmsg("=== DONE walking on vertical strip ",
+                     j, "/", grid_ncol, " ==="))
+    if (!is.null(FINAL)) {
+        if (verbose)
+            message(wmsg("--- START finalizing result for ",
+                         "vertical strip ", j, "/", grid_ncol, " ---"))
         init <- do.call(FINAL, c(list(init, j, grid), FINAL_MoreArgs))
+        if (verbose)
+            message(wmsg("--- DONE finalizing result for ",
+                         "vertical strip ", j, "/", grid_ncol, " ---"))
+    }
+    if (verbose)
+        message()
     init
 }
 
 ### Walk on the horizontal grid strips:
 ### - strips are processed in parallel;
 ### - blocks within each strip are processed sequentially from left to right.
-### Return a list with one list element per strip.
+### Returns a list of length >= 1 with one list element per strip.
 hstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
                             FINAL=NULL, FINAL_MoreArgs=list(),
                             grid=NULL, as.sparse=FALSE,
@@ -504,7 +546,7 @@ hstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
 ### Walk on the vertical grid strips:
 ### - strips are processed in parallel;
 ### - blocks within each strip are processed sequentially from top to bottom.
-### Return a list with one list element per strip.
+### Returns a list of length >= 1 with one list element per strip.
 vstrip_apply <- function(x, INIT, INIT_MoreArgs, FUN, FUN_MoreArgs,
                             FINAL=NULL, FINAL_MoreArgs=list(),
                             grid=NULL, as.sparse=FALSE,
@@ -551,8 +593,8 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
     lapply(seq_len(nblock),
         function(bid) {
             if (get_verbose_block_processing())
-                message("Processing block ", bid, "/", nblock, " ... ",
-                        appendLF=FALSE)
+                message(wmsg("- processing block ", bid, "/", nblock, " ..."),
+                        " ", appendLF=FALSE)
             viewport <- grid[[bid]]
             block <- read_block(x, viewport)
             block_ans <- APPLY(block, ...)
@@ -561,7 +603,7 @@ block_APPLY <- function(x, APPLY, ..., sink=NULL, block_maxlen=NULL)
                 block_ans <- NULL
             }
             if (get_verbose_block_processing())
-                message("OK")
+                message("ok")
             block_ans
         })
 }

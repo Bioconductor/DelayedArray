@@ -227,7 +227,7 @@ normarg_grid <- function(grid, x)
         if (!is(grid, "ArrayGrid"))
             stop(wmsg("'grid' must be NULL or an ArrayGrid object"))
         if (!identical(refdim(grid), dim(x)))
-            stop(wmsg("supplied 'grid' is incompatible with 'x'"))
+            stop(wmsg("the supplied grid is incompatible with 'x'"))
     }
     grid
 }

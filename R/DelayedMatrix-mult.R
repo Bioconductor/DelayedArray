@@ -68,6 +68,7 @@
                                INIT, BLOCK_OP,
                                transpose.x=FALSE, transpose.y=FALSE)
 {
+    verbose <- normarg_verbose(verbose)
 
     ## --- define FUN() ---
 
@@ -85,7 +86,11 @@
     ## --- define FINAL() ---
 
     if (is.null(BACKEND)) {
-        FINAL <- NULL
+        if (verbose) {
+            FINAL <- if (transpose.x) final_vstrip_noop else final_hstrip_noop
+        } else {
+            FINAL <- NULL
+        }
         FINAL_MoreArgs <- list()
     } else {
         ## The "shared sink" route consists in using a single realization sink
@@ -98,17 +103,16 @@
                                                     Lgrid, BACKEND, BPPARAM,
                                                     transpose.x, transpose.y)
         if (is.null(sink_and_grid)) {
-            FINAL <- function(init, i, grid, BACKEND) {
-                realize(init, BACKEND=BACKEND)
+            FINAL <- function(init, i, grid, BACKEND, verbose) {
+                realize_matrix(init, BACKEND, verbose)
             }
-            FINAL_MoreArgs <- list(BACKEND=BACKEND)
+            FINAL_MoreArgs <- list(BACKEND=BACKEND, verbose=verbose)
         } else {
             ## "shared sink" route.
-            FINAL <- function(init, i, grid, sink, sink_grid) {
-                ## Write full sink rows.
-                write_block(sink, sink_grid[[i, 1L]], init)
+            FINAL <- function(init, i, grid, sink, sink_grid, verbose) {
+                write_full_sink_rows(sink, sink_grid, i, init, verbose)
             }
-            FINAL_MoreArgs <- sink_and_grid
+            FINAL_MoreArgs <- c(sink_and_grid, list(verbose=verbose))
         }
     }
 
@@ -125,11 +129,10 @@
     ## --- turn output of block processing into object and return it ---
 
     if (is.null(BACKEND) || is.null(sink_and_grid)) {
-        do.call(rbind, strip_results)
+        combine_strip_results("rbind", strip_results, verbose)
     } else {
         ## "shared sink" route.
-        close(sink_and_grid$sink)
-        as(sink_and_grid$sink, "DelayedArray")
+        shared_sink_as_DelayedArray(sink_and_grid$sink, verbose)
     }
 }
 
@@ -142,6 +145,7 @@
                                INIT, BLOCK_OP,
                                transpose.x=FALSE, transpose.y=FALSE)
 {
+    verbose <- normarg_verbose(verbose)
 
     ## --- define FUN() ---
 
@@ -159,7 +163,11 @@
     ## --- define FINAL() ---
 
     if (is.null(BACKEND)) {
-        FINAL <- NULL
+        if (verbose) {
+            FINAL <- if (transpose.y) final_hstrip_noop else final_vstrip_noop
+        } else {
+            FINAL <- NULL
+        }
         FINAL_MoreArgs <- list()
     } else {
         ## The "shared sink" route consists in using a single realization sink
@@ -172,17 +180,16 @@
                                                     Rgrid, BACKEND, BPPARAM,
                                                     transpose.x, transpose.y)
         if (is.null(sink_and_grid)) {
-            FINAL <- function(init, j, grid, BACKEND) {
-                realize(init, BACKEND=BACKEND)
+            FINAL <- function(init, j, grid, BACKEND, verbose) {
+                realize_matrix(init, BACKEND=BACKEND, verbose)
             }
-            FINAL_MoreArgs <- list(BACKEND=BACKEND)
+            FINAL_MoreArgs <- list(BACKEND=BACKEND, verbose=verbose)
         } else {
             ## "shared sink" route.
-            FINAL <- function(init, j, grid, sink, sink_grid) {
-                ## Write full sink columns.
-                write_block(sink, sink_grid[[1L, j]], init)
+            FINAL <- function(init, j, grid, sink, sink_grid, verbose) {
+                write_full_sink_cols(sink, sink_grid, j, init, verbose)
             }
-            FINAL_MoreArgs <- sink_and_grid
+            FINAL_MoreArgs <- c(sink_and_grid, list(verbose=verbose))
         }
     }
 
@@ -199,11 +206,10 @@
     ## --- turn output of block processing into object and return it ---
 
     if (is.null(BACKEND) || is.null(sink_and_grid)) {
-        do.call(cbind, strip_results)
+        combine_strip_results("cbind", strip_results, verbose)
     } else {
         ## "shared sink" route.
-        close(sink_and_grid$sink)
-        as(sink_and_grid$sink, "DelayedArray")
+        shared_sink_as_DelayedArray(sink_and_grid$sink, verbose)
     }
 }
 

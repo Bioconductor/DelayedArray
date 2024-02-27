@@ -130,9 +130,11 @@ load_BACKEND_package <- function(BACKEND)
     backends <- .REGISTERED_REALIZATION_BACKENDS
     m <- match(BACKEND, backends[ , "BACKEND"])
     if (is.na(m))
-        stop(wmsg("\"", BACKEND, "\" is not a registered realization backend. ",
-                  "Please use registeredRealizationBackends() to get the list ",
-                  "of realization backends that are currently registered."))
+        stop(wmsg("Realization backend ", BACKEND, " is not registered ",
+                  "in the DelayedArray package. Please use ",
+                  "registeredRealizationBackends() to get the list of ",
+                  "realization backends that are currently registered ",
+                  "in the package."))
     package <- backends[ , "package"][[m]]
     class_package <- attr(BACKEND, "package")
     if (is.null(class_package)) {
@@ -142,7 +144,8 @@ load_BACKEND_package <- function(BACKEND)
                   "inconsistent with package normally associated with ",
                   "this realization backend"))
     }
-    library(package, character.only=TRUE)
+    S4Arrays:::load_package_gracefully(package, "using the ",
+                                       BACKEND, " realization backend")
     stopifnot(getClass(BACKEND)@package == package)
 }
 
