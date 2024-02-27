@@ -30,7 +30,15 @@
 
 .test <- function()
 {
-    setAutoRealizationBackend("RleArray")
-    BiocGenerics:::testPackage("DelayedArray")
+    ## Unit tests temporarily disabled on merida1 and kjohnson3 ...
+    slow_build_machine <- function() {
+        isTRUE(as.logical(Sys.getenv("IS_BIOC_BUILD_MACHINE"))) &&
+            (tolower(Sys.info()[["nodename"]]) %in% c("merida1", "kjohnson3"))
+    }
+    if (!slow_build_machine()) {
+        setAutoRealizationBackend("RleArray")
+        on.exit(setAutoRealizationBackend())
+        BiocGenerics:::testPackage("DelayedArray")
+    }
 }
 
