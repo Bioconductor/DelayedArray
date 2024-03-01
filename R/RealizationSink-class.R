@@ -222,15 +222,22 @@ setRealizationBackend <- function(...)
     auto_realization_sink_constructor
 }
 
-AutoRealizationSink <- function(dim, dimnames=NULL, type="double",
-                                as.sparse=FALSE)
+.AutoRealizationSink <- function(dim, dimnames=NULL, type="double",
+                                 as.sparse=FALSE, ...)
 {
     realization_sink_constructor <- .get_auto_realization_sink_constructor()
     args <- list(dim, dimnames, type)
     formal_args <- formalArgs(realization_sink_constructor)
     if (length(formal_args) >= 4L && formal_args[[4L]] == "as.sparse")
         args <- c(args, list(as.sparse=as.sparse))
+    args <- c(args, list(...))
     do.call(realization_sink_constructor, args)
+}
+
+AutoRealizationSink <- function(dim, dimnames=NULL, type="double",
+                                as.sparse=FALSE)
+{
+    .AutoRealizationSink(dim, dimnames, type, as.sparse)
 }
 
 ### Not exported.
@@ -239,7 +246,7 @@ RealizationSink <- function(BACKEND, ...)
     OLD_BACKEND <- getAutoRealizationBackend()
     setAutoRealizationBackend(BACKEND)
     on.exit(setAutoRealizationBackend(OLD_BACKEND))
-    AutoRealizationSink(...)
+    .AutoRealizationSink(...)
 }
 
 

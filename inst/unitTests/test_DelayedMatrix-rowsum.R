@@ -35,26 +35,26 @@ test_BLOCK_rowsum_colsum <- function()
                 current <- BLOCK_rowsum(m1, group1,
                                         reorder=reorder, na.rm=na.rm,
                                         grid=grid1, as.sparse=NA,
-                                        BACKEND=NULL, BPPARAM=NULL)
+                                        BPPARAM=NULL, BACKEND=NULL)
                 checkEquals(current, rs1)
                 current <- BLOCK_colsum(m2, group2,
                                         reorder=reorder, na.rm=na.rm,
                                         grid=grid2, as.sparse=NA,
-                                        BACKEND=NULL, BPPARAM=NULL)
+                                        BPPARAM=NULL, BACKEND=NULL)
                 checkEquals(current, cs2)
 
                 ## On-disk realization (HDF5 file).
                 current <- BLOCK_rowsum(m1, group1,
                                         reorder=reorder, na.rm=na.rm,
                                         grid=grid1, as.sparse=NA,
-                                        BACKEND="HDF5Array", BPPARAM=NULL)
+                                        BPPARAM=NULL, BACKEND="HDF5Array")
                 checkTrue(is(current, "DelayedMatrix"))
                 checkTrue(validObject(current, complete=TRUE))
                 checkEquals(as.matrix(current), rs1)
                 current <- BLOCK_colsum(m2, group2,
                                         reorder=reorder, na.rm=na.rm,
                                         grid=grid2, as.sparse=NA,
-                                        BACKEND="HDF5Array", BPPARAM=NULL)
+                                        BPPARAM=NULL, BACKEND="HDF5Array")
                 checkTrue(is(current, "DelayedMatrix"))
                 checkTrue(validObject(current, complete=TRUE))
                 checkEquals(as.matrix(current), cs2)
@@ -69,23 +69,23 @@ test_BLOCK_rowsum_colsum <- function()
             ## In-memory realization.
             current <- BLOCK_rowsum(m1, group1, reorder=reorder, na.rm=na.rm,
                                     grid=grid1, as.sparse=NA,
-                                    BACKEND=NULL, BPPARAM=snow2)
+                                    BPPARAM=snow2, BACKEND=NULL)
             checkEquals(current, rs1)
             current <- BLOCK_colsum(m2, group2, reorder=reorder, na.rm=na.rm,
                                     grid=grid2, as.sparse=NA,
-                                    BACKEND=NULL, BPPARAM=snow2)
+                                    BPPARAM=snow2, BACKEND=NULL)
             checkEquals(current, cs2)
 
             ## On-disk realization (HDF5 file).
             current <- BLOCK_rowsum(m1, group1, reorder=reorder, na.rm=na.rm,
                                     grid=grid1, as.sparse=NA,
-                                    BACKEND="HDF5Array", BPPARAM=snow2)
+                                    BPPARAM=snow2, BACKEND="HDF5Array")
             checkTrue(is(current, "DelayedMatrix"))
             checkTrue(validObject(current, complete=TRUE))
             checkEquals(as.matrix(current), rs1)
             current <- BLOCK_colsum(m2, group2, reorder=reorder, na.rm=na.rm,
                                     grid=grid2, as.sparse=NA,
-                                    BACKEND="HDF5Array", BPPARAM=snow2)
+                                    BPPARAM=snow2, BACKEND="HDF5Array")
             checkTrue(is(current, "DelayedMatrix"))
             checkTrue(validObject(current, complete=TRUE))
             checkEquals(as.matrix(current), cs2)
@@ -127,6 +127,7 @@ test_rowsum_colsum_DelayedMatrix <- function()
             checkEquals(as.matrix(current), rs1)
             current <- colsum(M2, group2, reorder=reorder, na.rm=na.rm)
             checkEquals(as.matrix(current), cs2)
+            setAutoBPPARAM()
        }
    }
 }

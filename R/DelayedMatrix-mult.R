@@ -12,14 +12,13 @@
 ###
 
 .make_shared_sink_and_grid_for_Lgrid_apply <-
-    function(x, y, Lgrid, BACKEND, BPPARAM,
-                   transpose.x=FALSE, transpose.y=FALSE)
+    function(x, y, transpose.x, transpose.y, Lgrid, BPPARAM, BACKEND, ...)
 {
     if (transpose.x) {
-        input_grid <- t(best_grid_for_vstrip_apply(x, Lgrid))
+        input_grid <- t(Lgrid)
         sink_rownames <- colnames(x)
     } else {
-        input_grid <- best_grid_for_hstrip_apply(x, Lgrid)
+        input_grid <- Lgrid
         sink_rownames <- rownames(x)
     }
     if (transpose.y) {
@@ -29,21 +28,19 @@
         sink_ncol <- ncol(y)
         sink_colnames <- colnames(y)
     }
-    make_shared_sink_and_grid_along_hstrips(BACKEND,
-                                            input_grid, sink_ncol,
-                                            sink_rownames, sink_colnames,
-                                            BPPARAM)
+    make_shared_sink_and_grid_along_hstrips(BPPARAM,
+                         input_grid, sink_ncol,
+                         BACKEND, sink_rownames, sink_colnames, ...)
 }
 
 .make_shared_sink_and_grid_for_Rgrid_apply <-
-    function(x, y, Rgrid, BACKEND, BPPARAM,
-                   transpose.x=FALSE, transpose.y=FALSE)
+    function(x, y, transpose.x, transpose.y, Rgrid, BPPARAM, BACKEND, ...)
 {
     if (transpose.y) {
-        input_grid <- t(best_grid_for_hstrip_apply(y, Rgrid))
+        input_grid <- t(Rgrid)
         sink_colnames <- rownames(y)
     } else {
-        input_grid <- best_grid_for_vstrip_apply(y, Rgrid)
+        input_grid <- Rgrid
         sink_colnames <- colnames(y)
     }
     if (transpose.x) {
@@ -53,10 +50,9 @@
         sink_nrow <- nrow(x)
         sink_rownames <- rownames(x)
     }
-    make_shared_sink_and_grid_along_vstrips(BACKEND,
-                                            input_grid, sink_nrow,
-                                            sink_rownames, sink_colnames,
-                                            BPPARAM)
+    make_shared_sink_and_grid_along_vstrips(BPPARAM,
+                         input_grid, sink_nrow,
+                         BACKEND, sink_rownames, sink_colnames, ...)
 }
 
 ### INIT, BLOCK_OP: callback functions.
@@ -64,28 +60,27 @@
 ### BLOCK_OP() must take 3 arguments: x_block, y, vp_ranges.
 ### See BLOCK_mult_Lgrid() below for the other arguments.
 ### Walks on the "left grid" which is defined on matrix-like object 'x'.
-.Lgrid_apply <- function(x, y, Lgrid, as.sparse, BACKEND, BPPARAM, verbose,
-                               INIT, BLOCK_OP,
-                               transpose.x=FALSE, transpose.y=FALSE)
+.Lgrid_apply <- function(x, y, transpose.x, transpose.y,
+                               Lgrid, as.sparse, BPPARAM, verbose,
+                               INIT, BLOCK_OP, BACKEND, ..., dry.run)
 {
     verbose <- normarg_verbose(verbose)
 
-    ## --- define FUN() ---
-
-    FUN <- function(init, block, y, BLOCK_OP) {
-        if (is(block, "SparseArraySeed"))
-            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-        vp <- currentViewport()
-        block_ans <- BLOCK_OP(block, y, ranges(vp))
-        if (!is.matrix(block_ans))
-            block_ans <- as.matrix(block_ans)
-        init + block_ans
+    if (transpose.x) {
+        Lgrid <- best_grid_for_vstrip_apply(x, Lgrid)
+        ans_nrow <- ncol(x)
+    } else {
+        Lgrid <- best_grid_for_hstrip_apply(x, Lgrid)
+        ans_nrow <- nrow(x)
     }
-    FUN_MoreArgs <- list(y=y, BLOCK_OP=BLOCK_OP)
+    ans_ncol <- if (transpose.y) nrow(y) else ncol(y)
+    ans_dim <- c(ans_nrow, ans_ncol)
 
     ## --- define FINAL() ---
 
     if (is.null(BACKEND)) {
+        if (dry.run)
+            return(list(class="matrix", dim=ans_dim, type="double"))
         if (verbose) {
             FINAL <- if (transpose.x) final_vstrip_noop else final_hstrip_noop
         } else {
@@ -100,21 +95,42 @@
         ## it turns out that we can take the "shared sink" route, or NULL if
         ## we can't.
         sink_and_grid <- .make_shared_sink_and_grid_for_Lgrid_apply(x, y,
-                                                    Lgrid, BACKEND, BPPARAM,
-                                                    transpose.x, transpose.y)
+                                               transpose.x, transpose.y,
+                                               Lgrid, BPPARAM, BACKEND, ...)
         if (is.null(sink_and_grid)) {
+            if (dry.run) {
+                nseed <- if (transpose.x) ncol(Lgrid) else nrow(Lgrid)
+                return(list(class="DelayedMatrix", dim=ans_dim, type="double",
+                            nseed=nseed))
+            }
             FINAL <- function(init, i, grid, BACKEND, verbose) {
                 realize_matrix(init, BACKEND, verbose)
             }
             FINAL_MoreArgs <- list(BACKEND=BACKEND, verbose=verbose)
         } else {
             ## "shared sink" route.
+            if (dry.run)
+                return(list(class=BACKEND, dim=ans_dim, type="double",
+                            nseed=1L))
             FINAL <- function(init, i, grid, sink, sink_grid, verbose) {
                 write_full_sink_rows(sink, sink_grid, i, init, verbose)
             }
             FINAL_MoreArgs <- c(sink_and_grid, list(verbose=verbose))
         }
     }
+
+    ## --- define FUN() ---
+
+    FUN <- function(init, block, y, BLOCK_OP) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        vp <- currentViewport()
+        block_ans <- BLOCK_OP(block, y, ranges(vp))
+        if (!is.matrix(block_ans))
+            block_ans <- as.matrix(block_ans)
+        init + block_ans
+    }
+    FUN_MoreArgs <- list(y=y, BLOCK_OP=BLOCK_OP)
 
     ## --- block processing ---
 
@@ -136,33 +152,32 @@
     }
 }
 
-### INIT and BLOCK_OP: callback functions.
+### INIT, BLOCK_OP: callback functions.
 ### INIT() must take 3 arguments: j (or i), grid, x.
 ### BLOCK_OP() must take 3 arguments: x, y_block, vp_ranges.
 ### See BLOCK_mult_Rgrid() below for the other arguments.
 ### Walks on the "right grid" which is defined on matrix-like object 'y'.
-.Rgrid_apply <- function(x, y, Rgrid, as.sparse, BACKEND, BPPARAM, verbose,
-                               INIT, BLOCK_OP,
-                               transpose.x=FALSE, transpose.y=FALSE)
+.Rgrid_apply <- function(x, y, transpose.x, transpose.y,
+                               Rgrid, as.sparse, BPPARAM, verbose,
+                               INIT, BLOCK_OP, BACKEND, ..., dry.run)
 {
     verbose <- normarg_verbose(verbose)
 
-    ## --- define FUN() ---
-
-    FUN <- function(init, block, x, BLOCK_OP) {
-        if (is(block, "SparseArraySeed"))
-            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
-        vp <- currentViewport()
-        block_ans <- BLOCK_OP(x, block, ranges(vp))
-        if (!is.matrix(block_ans))
-            block_ans <- as.matrix(block_ans)
-        init + block_ans
+    if (transpose.y) {
+        Rgrid <- best_grid_for_hstrip_apply(y, Rgrid)
+        ans_ncol <- nrow(y)
+    } else {
+        Rgrid <- best_grid_for_vstrip_apply(y, Rgrid)
+        ans_ncol <- ncol(y)
     }
-    FUN_MoreArgs <- list(x=x, BLOCK_OP=BLOCK_OP)
+    ans_nrow <- if (transpose.x) ncol(x) else nrow(x)
+    ans_dim <- c(ans_nrow, ans_ncol)
 
     ## --- define FINAL() ---
 
     if (is.null(BACKEND)) {
+        if (dry.run)
+            return(list(class="matrix", dim=ans_dim, type="double"))
         if (verbose) {
             FINAL <- if (transpose.y) final_hstrip_noop else final_vstrip_noop
         } else {
@@ -177,21 +192,42 @@
         ## it turns out that we can take the "shared sink" route, or NULL if
         ## we can't.
         sink_and_grid <- .make_shared_sink_and_grid_for_Rgrid_apply(x, y,
-                                                    Rgrid, BACKEND, BPPARAM,
-                                                    transpose.x, transpose.y)
+                                               transpose.x, transpose.y,
+                                               Rgrid, BPPARAM, BACKEND, ...)
         if (is.null(sink_and_grid)) {
+            if (dry.run) {
+                nseed <- if (transpose.y) nrow(Rgrid) else ncol(Rgrid)
+                return(list(class="DelayedMatrix", dim=ans_dim, type="double",
+                            nseed=nseed))
+            }
             FINAL <- function(init, j, grid, BACKEND, verbose) {
                 realize_matrix(init, BACKEND=BACKEND, verbose)
             }
             FINAL_MoreArgs <- list(BACKEND=BACKEND, verbose=verbose)
         } else {
             ## "shared sink" route.
+            if (dry.run)
+                return(list(class=BACKEND, dim=ans_dim, type="double",
+                            nseed=1L))
             FINAL <- function(init, j, grid, sink, sink_grid, verbose) {
                 write_full_sink_cols(sink, sink_grid, j, init, verbose)
             }
             FINAL_MoreArgs <- c(sink_and_grid, list(verbose=verbose))
         }
     }
+
+    ## --- define FUN() ---
+
+    FUN <- function(init, block, x, BLOCK_OP) {
+        if (is(block, "SparseArraySeed"))
+            block <- as(block, "CsparseMatrix")  # to dgCMatrix or lgCMatrix
+        vp <- currentViewport()
+        block_ans <- BLOCK_OP(x, block, ranges(vp))
+        if (!is.matrix(block_ans))
+            block_ans <- as.matrix(block_ans)
+        init + block_ans
+    }
+    FUN_MoreArgs <- list(x=x, BLOCK_OP=BLOCK_OP)
 
     ## --- block processing ---
 
@@ -236,13 +272,23 @@
 
 ### x: a matrix-like object (typically a DelayedMatrix).
 ### y: an ordinary matrix or other supported object (see .is_supported above).
+### Lgrid: an array grid (ArrayGrid object) defined on 'x'.
+### Walks on the matrix blocks defined by 'Lgrid'.
 ### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
 ### a DelayedMatrix object that is either pristine or the result of rbind'ing
 ### several pristine DelayedMatrix objects together (delayed rbind()).
+### Calling nseed() on the returned object will return 1 in the pristine case
+### or the number of objects bound together in the non-pristine case. In the
+### pristine case, arguments specified thru the ellipsis will be passed to the
+### RealizationSink constructor associated with 'BACKEND'. Note that the first
+### 3 arguments of **any** RealizationSink constructor are guaranteed to
+### be 'dim', 'dimnames', and 'type', and the arguments specified thru the
+### ellipsis here can not be any of these. 'as.sparse' is not allowed either.
 BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
-                                   BACKEND=getAutoRealizationBackend(),
                                    BPPARAM=getAutoBPPARAM(), verbose=NA,
-                                   op=c("mult", "crossprod", "tcrossprod"))
+                                   op=c("mult", "crossprod", "tcrossprod"),
+                                   BACKEND=getAutoRealizationBackend(), ...,
+                                   dry.run=FALSE)
 {
     ## See the BLOCK_OP() callback functions below for what operations will
     ## effectively be performed on 'y'.
@@ -292,19 +338,25 @@ BLOCK_mult_Lgrid <- function(x, y, Lgrid=NULL, as.sparse=NA,
         stop(wmsg("invalid 'op'"))  # should never happen
     )
 
-    .Lgrid_apply(x, y, Lgrid, as.sparse, BACKEND, BPPARAM, verbose,
-                       INIT, BLOCK_OP, transpose.x, transpose.y)
+    .Lgrid_apply(x, y, transpose.x, transpose.y,
+                       Lgrid, as.sparse, BPPARAM, verbose,
+                       INIT, BLOCK_OP, BACKEND, ..., dry.run=dry.run)
 }
 
 ### x: an ordinary matrix or other supported object (see .is_supported above).
 ### y: a matrix-like object (typically a DelayedMatrix).
+### Rgrid: an array grid (ArrayGrid object) defined on 'y'.
+### Walks on the matrix blocks defined by 'Rgrid'.
 ### If 'BACKEND' is NULL, returns an ordinary matrix. Otherwise, returns
 ### a DelayedMatrix object that is either pristine or the result of cbind'ing
 ### several pristine DelayedMatrix objects together (delayed cbind()).
+### See BLOCK_mult_Lgrid() above for what arguments can be specified thru the
+### ellipsis.
 BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
-                                   BACKEND=getAutoRealizationBackend(),
                                    BPPARAM=getAutoBPPARAM(), verbose=NA,
-                                   op=c("mult", "crossprod", "tcrossprod"))
+                                   op=c("mult", "crossprod", "tcrossprod"),
+                                   BACKEND=getAutoRealizationBackend(), ...,
+                                   dry.run=FALSE)
 {
     ## See the BLOCK_OP() callback functions below for what operations will
     ## effectively be performed on 'x'.
@@ -354,8 +406,9 @@ BLOCK_mult_Rgrid <- function(x, y, Rgrid=NULL, as.sparse=NA,
         stop(wmsg("invalid 'op'"))  # should never happen
     )
 
-    .Rgrid_apply(x, y, Rgrid, as.sparse, BACKEND, BPPARAM, verbose,
-                       INIT, BLOCK_OP, transpose.x, transpose.y)
+    .Rgrid_apply(x, y, transpose.x, transpose.y,
+                       Rgrid, as.sparse, BPPARAM, verbose,
+                       INIT, BLOCK_OP, BACKEND, ..., dry.run=dry.run)
 }
 
 

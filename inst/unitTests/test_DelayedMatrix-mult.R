@@ -34,19 +34,20 @@ test_BLOCK_mult_Lgrid_Rgrid <- function()
     BLOCK_mult_Rgrid <- DelayedArray:::BLOCK_mult_Rgrid
 
     do_checks <- function(expected, x, y,
-                          block_len, as.sparse, BACKEND, BPPARAM=NULL,
-                          op=c("mult", "crossprod", "tcrossprod"))
+                          block_len, as.sparse, BPPARAM=NULL,
+                          op=c("mult", "crossprod", "tcrossprod"),
+                          BACKEND=NULL)
     {
         op <- match.arg(op)
         grid1 <- defaultAutoGrid(x, block.length=block_len)
         current <- BLOCK_mult_Lgrid(x, y, Lgrid=grid1, as.sparse=as.sparse,
-                                          BACKEND=BACKEND, BPPARAM=BPPARAM,
-                                          op=op)
+                                          BPPARAM=BPPARAM, op=op,
+                                          BACKEND=BACKEND)
         checkEquals(as.matrix(current), expected)
         grid2 <- defaultAutoGrid(y, block.length=block_len)
         current <- BLOCK_mult_Rgrid(x, y, Rgrid=grid2, as.sparse=as.sparse,
-                                          BACKEND=BACKEND, BPPARAM=BPPARAM,
-                                          op=op)
+                                          BPPARAM=BPPARAM, op=op,
+                                          BACKEND=BACKEND)
         checkEquals(as.matrix(current), expected)
     }
 
@@ -63,30 +64,22 @@ test_BLOCK_mult_Lgrid_Rgrid <- function()
     for (block_len in c(1:4, 6L, length(m1), length(m2), 1000L)) {
       for (x in list(m1, as(m1, "SVT_SparseMatrix"))) {
         for (y in list(m2, as(m2, "SVT_SparseMatrix"))) {
-          do_checks(m12, x, y, block_len,
-                    as.sparse=FALSE, BACKEND=NULL)
-          do_checks(m12, x, y, block_len,
-                    as.sparse=TRUE, BACKEND=NULL)
-          do_checks(m12, x, y, block_len,
-                    as.sparse=FALSE, BACKEND="HDF5Array")
-          do_checks(m12, x, y, block_len,
-                    as.sparse=TRUE, BACKEND="HDF5Array")
-          do_checks(m12, t(x), y, block_len,
-                    as.sparse=FALSE, BACKEND=NULL, op="crossprod")
-          do_checks(m12, t(x), y, block_len,
-                    as.sparse=TRUE, BACKEND=NULL, op="crossprod")
-          do_checks(m12, t(x), y, block_len,
-                    as.sparse=FALSE, BACKEND="HDF5Array", op="crossprod")
-          do_checks(m12, t(x), y, block_len,
-                    as.sparse=TRUE, BACKEND="HDF5Array", op="crossprod")
-          do_checks(m12, x, t(y), block_len,
-                    as.sparse=FALSE, BACKEND=NULL, op="tcrossprod")
-          do_checks(m12, x, t(y), block_len,
-                    as.sparse=TRUE, BACKEND=NULL, op="tcrossprod")
-          do_checks(m12, x, t(y), block_len,
-                    as.sparse=FALSE, BACKEND="HDF5Array", op="tcrossprod")
-          do_checks(m12, x, t(y), block_len,
-                    as.sparse=TRUE, BACKEND="HDF5Array", op="tcrossprod")
+          do_checks(m12, x, y, block_len, as.sparse=FALSE)
+          do_checks(m12, x, y, block_len, as.sparse=FALSE, BACKEND="HDF5Array")
+          do_checks(m12, x, y, block_len, as.sparse=TRUE)
+          do_checks(m12, x, y, block_len, as.sparse=TRUE, BACKEND="HDF5Array")
+          do_checks(m12, t(x), y, block_len, as.sparse=FALSE, op="crossprod")
+          do_checks(m12, t(x), y, block_len, as.sparse=FALSE, op="crossprod",
+                                  BACKEND="HDF5Array")
+          do_checks(m12, t(x), y, block_len, as.sparse=TRUE, op="crossprod")
+          do_checks(m12, t(x), y, block_len, as.sparse=TRUE, op="crossprod",
+                                  BACKEND="HDF5Array")
+          do_checks(m12, x, t(y), block_len, as.sparse=FALSE, op="tcrossprod")
+          do_checks(m12, x, t(y), block_len, as.sparse=FALSE, op="tcrossprod",
+                                  BACKEND="HDF5Array")
+          do_checks(m12, x, t(y), block_len, as.sparse=TRUE, op="tcrossprod")
+          do_checks(m12, x, t(y), block_len, as.sparse=TRUE, op="tcrossprod",
+                                  BACKEND="HDF5Array")
         }
       }
     }
@@ -96,13 +89,13 @@ test_BLOCK_mult_Lgrid_Rgrid <- function()
 
     snow2 <- BiocParallel::SnowParam(workers=2)
     do_checks(m12, m1, m2, block_len=1L,
-              as.sparse=FALSE, BACKEND=NULL, BPPARAM=snow2)
+              as.sparse=FALSE, BPPARAM=snow2)
     do_checks(m12, m1, m2, block_len=1L,
-              as.sparse=FALSE, BACKEND="HDF5Array", BPPARAM=snow2)
+              as.sparse=FALSE, BPPARAM=snow2, BACKEND="HDF5Array")
     do_checks(m12, m1, m2, block_len=6L,
-              as.sparse=FALSE, BACKEND=NULL, BPPARAM=snow2)
+              as.sparse=FALSE, BPPARAM=snow2)
     do_checks(m12, m1, m2, block_len=6L,
-              as.sparse=FALSE, BACKEND="HDF5Array", BPPARAM=snow2)
+              as.sparse=FALSE, BPPARAM=snow2, BACKEND="HDF5Array")
 
     ## Serial evaluation of:
     ##   <DelayedMatrix> %*% <matrix>
@@ -118,10 +111,10 @@ test_BLOCK_mult_Lgrid_Rgrid <- function()
       for (y in list(m3, as(m3, "SVT_SparseMatrix"))) {
         grid1 <- defaultAutoGrid(M1, block.length=block_len)
         current <- BLOCK_mult_Lgrid(M1, y, Lgrid=grid1, as.sparse=FALSE,
-                                           BACKEND=NULL, BPPARAM=NULL)
+                                           BPPARAM=NULL, BACKEND=NULL)
         checkEquals(current, m13)
         current <- BLOCK_mult_Lgrid(M1, y, Lgrid=grid1, as.sparse=FALSE,
-                                           BACKEND="HDF5Array", BPPARAM=NULL)
+                                           BPPARAM=NULL, BACKEND="HDF5Array")
         checkTrue(is(current, "DelayedMatrix"))
         checkTrue(validObject(current, complete=TRUE))
         checkEquals(as.matrix(current), m13)
@@ -129,10 +122,10 @@ test_BLOCK_mult_Lgrid_Rgrid <- function()
       for (x in list(m1, as(m1, "SVT_SparseMatrix"))) {
         grid3 <- defaultAutoGrid(M3, block.length=block_len)
         current <- BLOCK_mult_Rgrid(x, M3, Rgrid=grid3, as.sparse=FALSE,
-                                           BACKEND=NULL, BPPARAM=NULL)
+                                           BPPARAM=NULL, BACKEND=NULL)
         checkEquals(current, m13)
         current <- BLOCK_mult_Rgrid(x, M3, Rgrid=grid3, as.sparse=FALSE,
-                                           BACKEND="HDF5Array", BPPARAM=NULL)
+                                           BPPARAM=NULL, BACKEND="HDF5Array")
         checkTrue(is(current, "DelayedMatrix"))
         checkTrue(validObject(current, complete=TRUE))
         checkEquals(as.matrix(current), m13)
@@ -145,20 +138,20 @@ test_BLOCK_mult_Lgrid_Rgrid <- function()
 
     grid1 <- defaultAutoGrid(M1, block.length=1L)
     current <- BLOCK_mult_Lgrid(M1, m3, Lgrid=grid1, as.sparse=FALSE,
-                                        BACKEND=NULL, BPPARAM=snow2)
+                                        BPPARAM=snow2, BACKEND=NULL)
     checkEquals(current, m13)
     current <- BLOCK_mult_Lgrid(M1, m3, Lgrid=grid1, as.sparse=FALSE,
-                                        BACKEND="HDF5Array", BPPARAM=snow2)
+                                        BPPARAM=snow2, BACKEND="HDF5Array")
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkEquals(as.matrix(current), m13)
 
     grid3 <- defaultAutoGrid(M3, block.length=2L)
     current <- BLOCK_mult_Rgrid(m1, M3, Rgrid=grid3, as.sparse=FALSE,
-                                        BACKEND=NULL, BPPARAM=snow2)
+                                        BPPARAM=snow2, BACKEND=NULL)
     checkEquals(current, m13)
     current <- BLOCK_mult_Rgrid(m1, M3, Rgrid=grid3, as.sparse=FALSE,
-                                        BACKEND="HDF5Array", BPPARAM=NULL)
+                                        BPPARAM=snow2, BACKEND="HDF5Array")
     checkTrue(is(current, "DelayedMatrix"))
     checkTrue(validObject(current, complete=TRUE))
     checkEquals(as.matrix(current), m13)
