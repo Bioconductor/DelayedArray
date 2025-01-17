@@ -196,9 +196,10 @@ setMethod("DelayedArray", "DelayedOp",
     function(seed)
     {
         if (getOption("DelayedArray.simplify", default=TRUE)) {
-            seed <- simplify(seed, incremental=TRUE)
-            if (!is(seed, "DelayedOp"))
-                return(DelayedArray(seed))
+            simplified_seed <- simplify(seed, incremental=TRUE)
+            if (!identical(simplified_seed, seed))  # avoid infinite recursion
+                return(DelayedArray(simplified_seed))
+            seed <- simplified_seed
         }
         new_DelayedArray(seed)
     }
