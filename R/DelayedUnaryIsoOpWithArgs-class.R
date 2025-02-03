@@ -250,35 +250,16 @@ setMethod("is_sparse", "DelayedUnaryIsoOpWithArgs",
     }
 )
 
-### TODO: Revisit this. Can we come up with a better/more efficient
-### implementation that operates directly on the SVT_SparseArray object
-### returned by 'extract_sparse_array(x@seed, index)' and avoids the
-### back and forth to the COO_SparseArray representation. Seems like at
-### least we would need the nzvals() getter and setter for SVT_SparseArray
-### objects to be ready and fully operational for this.
 setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
     function(x, index)
     {
-        ## Assuming that the caller respected the "extract_sparse_array()
-        ## contract", 'is_sparse(x)' should be TRUE so we can assume that
-        ## the operation in 'x@OP' preserves the zeros which means that we
-        ## only need to apply it to the nonzero data.
-        coo <- as(extract_sparse_array(x@seed, index), "COO_SparseArray")
+        svt <- extract_sparse_array(x@seed, index)
 
         ## Subset the left and right arguments that go along a dimension.
         Largs <- subset_args(x@Largs, x@Lalong, index)
         Rargs <- subset_args(x@Rargs, x@Ralong, index)
 
-        ## Expanding to match the non-zero values.
-        coo_nzcoo <- coo@nzcoo
-        nzremap <- function(arg, MARGIN) {
-            extractROWS(arg, coo_nzcoo[,MARGIN])
-        }
-        Largs <- mapply(nzremap, arg=Largs, MARGIN=x@Lalong, SIMPLIFY=FALSE)
-        Rargs <- mapply(nzremap, arg=Rargs, MARGIN=x@Ralong, SIMPLIFY=FALSE)
-
-        coo@nzdata <- do.call(x@OP, c(Largs, list(coo@nzdata), Rargs))
-        as(coo, "SVT_SparseArray")
+        ans <- do.call(x@OP, c(Largs, list(svt), Rargs))
     }
 )
 
