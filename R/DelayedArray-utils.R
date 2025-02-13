@@ -198,10 +198,20 @@ setMethod("Ops", c("DelayedArray", "vector"),
     function(e1, e2)
         .DelayedArray_Ops_with_right_vector(.Generic, e1, e2)
 )
+setMethod("Ops", c("DelayedArray", "array"),
+    function(e1, e2)
+        stop(wmsg("'", .Generic, "' between a DelayedArray object and ",
+                  "an array is not supported yet"))
+)
 
 setMethod("Ops", c("vector", "DelayedArray"),
     function(e1, e2)
         .DelayedArray_Ops_with_left_vector(.Generic, e1, e2)
+)
+setMethod("Ops", c("array", "DelayedArray"),
+    function(e1, e2)
+        stop(wmsg("'", .Generic, "' between an array and ",
+                  "a DelayedArray object is not supported yet"))
 )
 
 setMethod("Ops", c("DelayedArray", "DelayedArray"),
@@ -297,9 +307,19 @@ for (.Generic in c("pmax2", "pmin2")) {
         function(e1, e2)
             .DelayedArray_Ops_with_right_vector(.Generic, e1, e2)
     )
+    setMethod(.Generic, c("DelayedArray", "array"),
+        function(e1, e2)
+            stop(wmsg(.Generic, "() between a DelayedArray object and ",
+                  "an array is not supported yet"))
+    )
     setMethod(.Generic, c("vector", "DelayedArray"),
         function(e1, e2)
             .DelayedArray_Ops_with_left_vector(.Generic, e1, e2)
+    )
+    setMethod(.Generic, c("array", "DelayedArray"),
+        function(e1, e2)
+            stop(wmsg(.Generic, "() between an array and ",
+                      "a DelayedArray object is not supported yet"))
     )
     setMethod(.Generic, c("DelayedArray", "DelayedArray"),
         function(e1, e2)
@@ -902,9 +922,19 @@ setMethod("paste2", c("DelayedArray", "vector"),
     function(x, y)
         .DelayedArray_Ops_with_right_vector("paste2", x, y)
 )
+setMethod("paste2", c("DelayedArray", "array"),
+    function(x, y)
+        stop(wmsg("paste2() between a DelayedArray object and ",
+                  "an array is not supported yet"))
+)
 setMethod("paste2", c("vector", "DelayedArray"),
     function(x, y)
         .DelayedArray_Ops_with_left_vector("paste2", x, y)
+)
+setMethod("paste2", c("array", "DelayedArray"),
+    function(x, y)
+        stop(wmsg("paste2() between an array and ",
+                  "a DelayedArray object is not supported yet"))
 )
 setMethod("paste2", c("DelayedArray", "DelayedArray"),
     function(x, y)

@@ -18,9 +18,13 @@
 \alias{pmax2,ANY,ANY-method}
 \alias{pmin2,ANY,ANY-method}
 \alias{pmax2,DelayedArray,vector-method}
+\alias{pmax2,DelayedArray,array-method}
 \alias{pmin2,DelayedArray,vector-method}
+\alias{pmin2,DelayedArray,array-method}
 \alias{pmax2,vector,DelayedArray-method}
+\alias{pmax2,array,DelayedArray-method}
 \alias{pmin2,vector,DelayedArray-method}
+\alias{pmin2,array,DelayedArray-method}
 \alias{pmax2,DelayedArray,DelayedArray-method}
 \alias{pmin2,DelayedArray,DelayedArray-method}
 
@@ -76,7 +80,9 @@
 
 \alias{paste2}
 \alias{paste2,DelayedArray,vector-method}
+\alias{paste2,DelayedArray,array-method}
 \alias{paste2,vector,DelayedArray-method}
+\alias{paste2,array,DelayedArray-method}
 \alias{paste2,DelayedArray,DelayedArray-method}
 
 \title{Common operations on DelayedArray objects}
