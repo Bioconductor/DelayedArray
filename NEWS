@@ -1,3 +1,41 @@
+CHANGES IN VERSION 0.34.0
+-------------------------
+
+NEW FEATURES
+
+    o Implement delayed paste2() for DelayedArray objects. This makes
+      BiocGenerics::add_prefix() and BiocGenerics::add_suffix() work
+      out-of-the box on DelayedArray objects.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Binary operations between a DelayedArray object and an array now
+      raise an error. This is temporary and only to prevent users from
+      trying to use a tile object (new in S4Arrays 1.7.3) on the left or
+      right side of the operation, and get the wrong result.
+
+    o Revisit implementation of the path() getter (and setter) for DelayedOp.
+      The new implementation is recursive so will acknowledge path() methods
+      defined for custom DelayedOp derivatives like the path() getter defined
+      for ReloadedArraySeed objects in the alabaster.matrix package.
+
+DEPRECATED AND DEFUNCT
+
+    o SparseArraySeed objects, OLD_extract_sparse_array(), and
+      read_sparse_block() are now defunct after being deprecated in BioC 3.20.
+
+    o Get rid of previously defunct stuff. This is:
+      - blockGrid(): replaced with defaultAutoGrid()
+      - rowGrid(): replaced with rowAutoGrid()
+      - colGrid(): replaced with colAutoGrid()
+      - multGrids(): replaced with defaultMultAutoGrids()
+      - viewportApply(): replaced with gridApply()
+      - viewportReduce(): replaced with gridReduce()
+      - getRealizationBackend(): replaced with getAutoRealizationBackend()
+      - setRealizationBackend(): replaced with setAutoRealizationBackend()
+      All these functions went defunct 2.5 years ago in BioC 3.15.
+
+
 CHANGES IN VERSION 0.32.0
 -------------------------
 

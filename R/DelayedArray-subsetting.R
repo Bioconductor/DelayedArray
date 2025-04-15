@@ -327,7 +327,16 @@ setAs("DelayedArray", "SparseArraySeed",
 }
 
 setAs("DelayedArray", "COO_SparseArray",
-    function(from) .BLOCK_from_DelayedArray_to_COO_SparseArray(from)
+    function(from)
+    {
+        if (!is_sparse(from)) {
+            return(.BLOCK_from_DelayedArray_to_COO_SparseArray(from))
+        }
+        ans <- SparseArray:::.as.SparseArray(from)
+        if (!is(ans, "COO_SparseArray"))
+            ans <- as(ans, "COO_SparseArray")
+        ans
+    }
 )
 
 
