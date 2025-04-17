@@ -327,16 +327,20 @@ setAs("DelayedArray", "SparseArraySeed",
 }
 
 setAs("DelayedArray", "COO_SparseArray",
-    function(from)
-    {
-        if (!is_sparse(from)) {
-            return(.BLOCK_from_DelayedArray_to_COO_SparseArray(from))
-        }
-        ans <- SparseArray:::.as.SparseArray(from)
-        if (!is(ans, "COO_SparseArray"))
-            ans <- as(ans, "COO_SparseArray")
-        ans
-    }
+    function(from) .BLOCK_from_DelayedArray_to_COO_SparseArray(from)
+    ## Shouldn't we use .BLOCK_from_DelayedArray_to_COO_SparseArray() in the
+    ## dense case only and switch to SparseArray:::.as_SparseArray() in the
+    ## sparse case? That is, maybe do something like this (test this before
+    ## making this change):
+    #function(from)
+    #{
+    #    if (!is_sparse(from))
+    #        return(.BLOCK_from_DelayedArray_to_COO_SparseArray(from))
+    #    ans <- SparseArray:::.as_SparseArray(from)
+    #    if (!is(ans, "COO_SparseArray"))
+    #        ans <- as(ans, "COO_SparseArray")
+    #    ans
+    #}
 )
 
 
