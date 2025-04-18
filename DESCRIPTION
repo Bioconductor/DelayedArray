@@ -11,7 +11,7 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 URL: https://bioconductor.org/packages/DelayedArray
 BugReports: https://github.com/Bioconductor/DelayedArray/issues
-Version: 0.35.1
+Version: 0.35.2
 License: Artistic-2.0
 Encoding: UTF-8
 Authors@R: c(
@@ -33,9 +33,6 @@ Suggests: BiocParallel, HDF5Array (>= 1.17.12), genefilter,
 	knitr, rmarkdown, BiocStyle, RUnit
 VignetteBuilder: knitr
 Collate: compress_atomic_vector.R
-	SparseArraySeed-class.R
-	SparseArraySeed-utils.R
-	read_sparse_block.R
 	makeCappedVolumeBox.R
 	AutoBlock-global-settings.R
 	AutoGrid.R

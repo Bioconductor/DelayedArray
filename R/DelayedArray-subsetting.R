@@ -297,15 +297,6 @@ setMethod("[", "DelayedArray", .subset_DelayedArray)
 ### Coercion to sparse matrix
 ###
 
-setAs("DelayedArray", "SparseArraySeed",
-    function(from)
-    {
-        msg <- c("coercion from DelayedArray to SparseArraySeed ",
-                 "is defunct in BioC >= 3.21")
-        .Defunct(msg=wmsg(msg))
-    }
-)
-
 .BLOCK_from_DelayedArray_to_COO_SparseArray <- function(x, grid=NULL)
 {
     FUN <- function(block, arr.ind) {

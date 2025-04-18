@@ -40,7 +40,6 @@
 \alias{[,DelayedArray-method}
 \alias{[<-,DelayedArray-method}
 
-\alias{coerce,DelayedArray,SparseArraySeed-method}
 \alias{coerce,DelayedArray,COO_SparseArray-method}
 
 \alias{[[,DelayedArray-method}

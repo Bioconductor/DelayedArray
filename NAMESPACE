@@ -24,9 +24,6 @@ import(SparseArray)
 ###
 
 exportClasses(
-    ## SparseArraySeed-class.R:
-    SparseArraySeed,
-
     ## DelayedOp-class.R:
     DelayedOp,
     DelayedUnaryOp,
@@ -83,17 +80,10 @@ exportClasses(
 ### Export S3 methods
 ###
 
-S3method(aperm, SparseArraySeed)
 S3method(aperm, DelayedArray)
 
-S3method(as.array, SparseArraySeed)
-
-S3method(as.matrix, SparseArraySeed)
-
-S3method(mean, SparseArraySeed)
 S3method(mean, DelayedArray)
 
-S3method(range, SparseArraySeed)
 S3method(range, DelayedArray)
 
 S3method(rowsum, DelayedMatrix)
@@ -118,17 +108,10 @@ S3method(unique, DelayedArray)
 ### and (c) methods() doesn't asterisk them.
 
 export(
-    aperm.SparseArraySeed,
     aperm.DelayedArray,
 
-    as.array.SparseArraySeed,
-
-    as.matrix.SparseArraySeed,
-
-    mean.SparseArraySeed,
     mean.DelayedArray,
 
-    range.SparseArraySeed,
     range.DelayedArray,
 
     rowsum.DelayedMatrix,
@@ -231,9 +214,6 @@ exportMethods(
 ###
 
 export(
-    ## SparseArraySeed-class.R:
-    SparseArraySeed, dense2sparse, sparse2dense,
-
     ## makeCappedVolumeBox.R:
     makeCappedVolumeBox, makeRegularArrayGridOfCappedLengthViewports,
 
@@ -288,12 +268,6 @@ export(
 ###
 
 export(
-    ## SparseArraySeed-class.R:
-    nzindex, OLD_extract_sparse_array,
-
-    ## read_sparse_block.R:
-    read_sparse_block,
-
     ## makeCappedVolumeBox.R:
     isLinear,
 
@@ -327,8 +301,6 @@ export(
 
 ### Same list as above.
 exportMethods(
-    nzindex, OLD_extract_sparse_array,
-    read_sparse_block,
     isLinear,
     is_noop,
     nseed, seed, "seed<-",
