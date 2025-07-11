@@ -1,6 +1,4 @@
-[<img src="https://www.bioconductor.org/images/logo/jpg/bioconductor_logo_rgb.jpg" width="200" align="right"/>](https://bioconductor.org/)
-
-# DelayedArray
+# DelayedArray [<img src="https://www.bioconductor.org/images/logo/jpg/bioconductor_logo_rgb.jpg" width="200" align="right"/>](https://bioconductor.org/)
 
 [![Bioc](https://bioconductor.org/shields/years-in-bioc/DelayedArray.svg)](https://bioconductor.org/packages/DelayedArray)
 [![BioC_status](https://bioconductor.org/shields/build/release/bioc/DelayedArray.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/DelayedArray/)
