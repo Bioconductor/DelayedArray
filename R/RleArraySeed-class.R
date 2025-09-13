@@ -182,7 +182,7 @@ setValidity2("RleRealizationSink", .validate_RleRealizationSink)
 {
     ## 'breakpoints' slot.
     if (!is.numeric(x@breakpoints)
-     || S4Vectors:::anyMissing(x@breakpoints)
+     || anyNA(x@breakpoints)
      || is.unsorted(x@breakpoints, strictly=TRUE)
      || length(x@breakpoints) != 0L && x@breakpoints[[1L]] <= 0L)
         return(paste0("'x@breakpoints' must be a numeric vector containing ",
