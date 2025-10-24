@@ -138,8 +138,8 @@ load_BACKEND_package <- function(BACKEND)
                   "inconsistent with package normally associated with ",
                   "this realization backend"))
     }
-    S4Arrays:::load_package_gracefully(package, "using the ",
-                                       BACKEND, " realization backend")
+    S4Vectors:::load_package_gracefully(package, "to use the ",
+                                        BACKEND, " realization backend")
     stopifnot(getClass(BACKEND)@package == package)
 }
 

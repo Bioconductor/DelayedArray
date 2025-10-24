@@ -73,9 +73,8 @@ verbose_read_block <- function(x, viewport, x_is_sparse, as.sparse, bid, nblock)
 setAutoBPPARAM <- function(BPPARAM=NULL)
 {
     if (!is.null(BPPARAM)) {
-        if (!requireNamespace("BiocParallel", quietly=TRUE))
-            stop(wmsg("Couldn't load the BiocParallel package. Please ",
-                      "install the BiocParallel package and try again."))
+        S4Vectors:::load_package_gracefully("BiocParallel",
+                                            "for this operation")
         if (!is(BPPARAM, "BiocParallelParam"))
             stop(wmsg("'BPPARAM' must be a BiocParallelParam ",
                       "object from the BiocParallel package"))
