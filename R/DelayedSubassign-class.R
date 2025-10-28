@@ -291,7 +291,7 @@ subset_DelayedSubassign <- function(x, index=NULL)
         return(a2)
     }
     a <- extract_array(x2@seed@seed, x2@seed@index)
-    S4Arrays:::replace_by_Nindex(a, x2@Lindex, a2)
+    S4Arrays:::subassign_by_Nindex(a, x2@Lindex, a2)
 }
 
 setMethod("extract_array", "DelayedSubassign",
