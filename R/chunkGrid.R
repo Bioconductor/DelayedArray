@@ -54,7 +54,7 @@ setClassUnion("integer_OR_NULL", c("integer", "NULL"))
     class_package <- attr(Class, "package")
     if (!is.null(class_package))
         msg <- c(msg, " (defined in the ", class_package, " package)")
-    c(msg, " about this and point him/her to the man page for ",
+    c(msg, " about this and point them to the man page for ",
            "extract_array() in the DelayedArray package (?extract_array).")
 }
 
@@ -69,8 +69,10 @@ setGeneric("chunkdim",
             return(ans)
         msg <- .check_chunkdim(ans, x_dim)
         if (!isTRUE(msg))
-            stop(wmsg("The \"chunkdim\" method for ", class(x), " objects ",
-                      msg, .contact_author_msg(class(x))))
+            stop(wmsg("The \"chunkdim\" method for ", class(x), " ",
+                      "objects ", msg),
+                 "\n  ",
+                 wmsg(.contact_author_msg(class(x))))
         ans
     }
 )

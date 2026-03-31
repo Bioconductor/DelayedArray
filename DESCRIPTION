@@ -11,12 +11,13 @@ Description: Wrapping an array-like object (typically an on-disk object) in
 biocViews: Infrastructure, DataRepresentation, Annotation, GenomeAnnotation
 URL: https://bioconductor.org/packages/DelayedArray
 BugReports: https://github.com/Bioconductor/DelayedArray/issues
-Version: 0.37.0
+Version: 0.37.1
 License: Artistic-2.0
 Encoding: UTF-8
 Authors@R: c(
 	person("Hervé", "Pagès", role=c("aut", "cre"),
-		email="hpages.on.github@gmail.com"),
+		email="hpages.on.github@gmail.com",
+		comment=c(ORCID="0009-0002-8272-4522")),
 	person("Aaron", "Lun", role="ctb",
 		email="infinite.monkeys.with.keyboards@gmail.com"),
 	person("Peter", "Hickey", role="ctb",
@@ -27,7 +28,6 @@ Depends: R (>= 4.0.0), methods, stats4, Matrix,
 	S4Vectors (>= 0.47.6), IRanges (>= 2.17.3),
 	S4Arrays (>= 1.9.3), SparseArray (>= 1.7.5)
 Imports: stats
-LinkingTo: S4Vectors
 Suggests: BiocParallel, HDF5Array (>= 1.17.12), genefilter,
 	SummarizedExperiment, airway, lobstr, DelayedMatrixStats,
 	knitr, rmarkdown, BiocStyle, RUnit

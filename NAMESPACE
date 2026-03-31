@@ -1,5 +1,3 @@
-useDynLib(DelayedArray)
-
 import(methods)
 importFrom(utils, object.size)
 importFrom(stats, setNames,
