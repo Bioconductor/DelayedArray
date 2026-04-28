@@ -1,3 +1,11 @@
+CHANGES IN VERSION 0.38.0
+-------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o The package no longer contains C code.
+
+
 CHANGES IN VERSION 0.36.0
 -------------------------
 
