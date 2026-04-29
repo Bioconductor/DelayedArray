@@ -18,7 +18,8 @@
 ###
 ### Examples of RealizationSink concrete subclasses: arrayRealizationSink
 ### (see below), RleRealizationSink (see RleArray-class.R),
-### HDF5RealizationSink and TENxRealizationSink (see HDF5Array package).
+### HDF5RealizationSink and TENxRealizationSink (see HDF5Array package),
+### ZarrRealizationSink (see ZarrArray package).
 
 setClass("RealizationSink", representation("VIRTUAL"))
 
@@ -91,11 +92,12 @@ getAutoRealizationBackend <- function()
 }
 
 .REGISTERED_REALIZATION_BACKENDS <- data.frame(
-    BACKEND=c("RleArray", "HDF5Array", "TENxMatrix"),
-    package=c("DelayedArray", "HDF5Array", "HDF5Array"),
+    BACKEND=c("RleArray", "HDF5Array", "TENxMatrix", "ZarrArray"),
+    package=c("DelayedArray", "HDF5Array", "HDF5Array", "ZarrArray"),
     realization_sink_class=c("RleRealizationSink",
                              "HDF5RealizationSink",
-                             "TENxRealizationSink"),
+                             "TENxRealizationSink",
+                             "ZarrRealizationSink"),
     stringsAsFactors=FALSE
 )
 
