@@ -114,8 +114,7 @@ registeredRealizationBackends <- function()
 
 supportedRealizationBackends <- function()
 {
-    .Deprecated("registeredRealizationBackends")
-    registeredRealizationBackends()
+    .Defunct("registeredRealizationBackends")
 }
 
 ### NOT exported.
