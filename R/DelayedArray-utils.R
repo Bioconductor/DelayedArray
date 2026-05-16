@@ -504,13 +504,12 @@ setMethod("unique", "DelayedArray", .BLOCK_unique)
 
 ### table()
 
-.BLOCK_table <- function(..., grid=NULL)
+.BLOCK_table <- function(x, ..., grid=NULL)
 {
-    objects <- list(...)
-    if (length(objects) != 1L)
-        stop(wmsg("the \"table\" method for DelayedArray objects ",
-                  "only works on a single object at the moment"))
-    x <- objects[[1L]]
+    dotargs <- list(...)
+    if (length(dotargs) != 0L)
+        stop(wmsg("the table() method for DelayedArray objects only ",
+                  "takes one input object at the moment"))
 
     block_tables <- blockApply(x, table, grid=grid)
 
@@ -531,24 +530,15 @@ setMethod("unique", "DelayedArray", .BLOCK_unique)
     ## 'tab' is a naked integer vector. We need to decorate it (see
     ## selectMethod("table", "Rle")).
     ans_dimnames <- list(ans_names)
-    names(ans_dimnames) <- S4Vectors:::.list.names(...)
+    ## skip this for now (H.P. May 2026)
+    #names(ans_dimnames) <- S4Vectors:::list.names(...)
     ans <- array(tab, length(tab), dimnames=ans_dimnames)
     class(ans) <- "table"
     ans
 }
 
-### The table() S4 generic is defined in BiocGenerics with dispatch on the
-### ellipsis (...). Unfortunately specifying 'grid' when calling table()
-### breaks dispatch. For example:
-###   a <- array(sample(100L, 20000L, replace=TRUE), c(20, 4, 250))
-###   A <- DelayedArray(a)
-###   table(A)  # ok
-###   table(A, grid=defaultAutoGrid(A, 500))
-###   # Error in .BLOCK_unique(x, incomparables = incomparables, ...) :
-###   #   unused argument (nmax = nmax)
-### A workaround is to call .BLOCK_table():
-###   DelayedArray:::.BLOCK_table(A, grid=defaultAutoGrid(A, 500))  # ok
-.table_DelayedArray <- function(...) .BLOCK_table(...)
+.table_DelayedArray <-
+    function(x, ..., grid=NULL) .BLOCK_table(x, ..., grid=grid)
 setMethod("table", "DelayedArray", .table_DelayedArray)
 
 
