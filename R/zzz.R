@@ -23,11 +23,6 @@
         setAutoMultParallelAgnostic()
 }
 
-.onUnload <- function(libpath)
-{
-    library.dynam.unload("DelayedArray", libpath)
-}
-
 .test <- function()
 {
     ## Unit tests temporarily disabled on merida1 and kjohnson3 ...
