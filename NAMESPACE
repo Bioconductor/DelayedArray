@@ -174,12 +174,13 @@ exportMethods(
     crossprod, tcrossprod,
 
     ## Methods for generics defined in the BiocGenerics package:
-    cbind, rbind,
     aperm,
+    cbind, rbind,
     dims,
     grepl,
     paste2,
     path, "path<-",
+    scale,
     table,
     type, "type<-",
     updateObject,
@@ -291,7 +292,7 @@ export(
     realize,
 
     ## DelayedArray-utils.R:
-    pmax2, pmin2, apply, sweep, scale,
+    pmax2, pmin2, apply, sweep,
 
     ## matrixStats-methods.R:
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
@@ -307,7 +308,7 @@ exportMethods(
     chunkdim, chunkGrid,
     close,
     realize,
-    pmax2, pmin2, apply, sweep, scale,
+    pmax2, pmin2, apply, sweep,
     rowMaxs, colMaxs, rowMins, colMins, rowRanges, colRanges
 )
 

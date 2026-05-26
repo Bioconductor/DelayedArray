@@ -864,10 +864,8 @@ setMethod("sweep", "DelayedArray",
 ### scale()
 ###
 
-setGeneric("scale", signature="x")
-
 ### S3/S4 combo for scale.DelayedMatrix
-scale.DelayedMatrix <- function(x, center=TRUE, scale=TRUE)
+.scale.DelayedMatrix <- function(x, center=TRUE, scale=TRUE)
 {
     tx <- t(x)
     if (!isFALSE(center)) {
@@ -900,6 +898,7 @@ scale.DelayedMatrix <- function(x, center=TRUE, scale=TRUE)
         attr(ans, "scaled:scale") <- scale
     ans
 }
+scale.DelayedMatrix <- function(x, ...) .scale.DelayedMatrix(x, ...)
 setMethod("scale", "DelayedMatrix", scale.DelayedMatrix)
 
 
