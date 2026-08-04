@@ -178,6 +178,7 @@ exportMethods(
     cbind, rbind,
     dims,
     grepl,
+    group,
     paste2,
     path, "path<-",
     scale,

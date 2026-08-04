@@ -262,3 +262,23 @@ setReplaceMethod("path", "DelayedOp",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### group() getter
+###
+
+### Same approach as for path(). See above.
+setMethod("group", "DelayedOp",
+    function(object)
+    {
+        if (is(object, "DelayedNaryOp")) {
+            ## Tree is not linear.
+            stop(wmsg("group() ", IS_NOT_SUPPORTED_IF_MULTIPLE_SEEDS,
+                      " You can use 'seedApply(object, group)' to extract ",
+                      "all the seed groups as a list."))
+        }
+        object <- object@seed
+        callGeneric()
+    }
+)
+

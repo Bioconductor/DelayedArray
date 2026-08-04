@@ -15,20 +15,24 @@
 \alias{path,DelayedOp-method}
 \alias{path<-,DelayedOp-method}
 
+\alias{group}
+\alias{group,DelayedOp-method}
+
 \alias{seedApply}
 \alias{modify_seeds}
 
 \title{Visualize and access the leaves of a tree of delayed operations}
 
 \description{
-  \code{showtree} can be used to visualize the tree of delayed operations
-  carried by a \link{DelayedArray} object.
+  Use \code{showtree()} to visualize the tree of delayed operations
+  carried by a \link{DelayedArray} object or derivative.
 
-  Use \code{nseed}, \code{seed}, or \code{path} to access the number of seeds,
-  the seed, or the seed path of a \link{DelayedArray} object, respectively.
+  Use \code{nseed()}, \code{seed()}, \code{path()}, or \code{group()} to
+  access the number of seeds, the seed, the seed path, or the seed group
+  of a \link{DelayedArray} object or derivative, respectively.
 
-  Use \code{seedApply} to apply a function to the seeds of a
-  \link{DelayedArray} object.
+  Use \code{seedApply()} to apply a function to the seeds of a
+  \link{DelayedArray} object or derivative.
 }
 
 \usage{
@@ -37,6 +41,7 @@ showtree(x, show.node.dim=TRUE)
 nseed(x)            # seed counter
 seed(x)             # seed getter and setter
 path(object, ...)   # path getter and setter
+group(object)       # group getter
 
 seedApply(x, FUN, ...)
 }
@@ -44,7 +49,7 @@ seedApply(x, FUN, ...)
 \arguments{
   \item{x, object}{
     Typically a \link{DelayedArray} object but can also be a \link{DelayedOp}
-    object or a list where each element is a \link{DelayedArray} or
+    object or a list where each element is either a \link{DelayedArray} or
     \link{DelayedOp} object.
   }
   \item{show.node.dim}{
@@ -62,13 +67,15 @@ seedApply(x, FUN, ...)
 }
 
 \value{
-  The number of seeds contained in \code{x} for \code{nseed}.
+  The number of seeds contained in \code{x} for \code{nseed()}.
 
-  The seed contained in \code{x} for \code{seed}.
+  The seed contained in \code{x} for \code{seed()}.
 
-  The path of the seed contained in \code{object} for \code{path}.
+  The path of the seed contained in \code{object} for \code{path()}.
 
-  A list of length \code{nseed(x)} for \code{seedApply}.
+  The group of the seed contained in \code{object} for \code{group()}.
+
+  A list of length \code{nseed(x)} for \code{seedApply()}.
 }
 
 \seealso{
@@ -112,6 +119,13 @@ nseed(Y)  # the tree is not linear
 Z <- t(Y[10:1, ])[1:15, ] + 0.4 * M1
 showtree(Z)
 nseed(Z)  # the tree is not linear
+
+## ---------------------------------------------------------------------
+## path() and group()
+## ---------------------------------------------------------------------
+
+## See '?HDF5Array::TENxMatrix' and '?HDF5Array::H5SparseMatrix' in the
+## HDF5Array package for some examples using path() and group().
 
 ## ---------------------------------------------------------------------
 ## seedApply()
