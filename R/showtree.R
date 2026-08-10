@@ -269,8 +269,12 @@ setReplaceMethod("path", "DelayedOp",
 
 ### Same approach as for path(). See above.
 setMethod("group", "DelayedOp",
-    function(object)
+    function(object, ...)
     {
+        if (length(list(...)) != 0L)
+            stop(wmsg("the group() method for DelayedOp objects does ",
+		      "not accept additional arguments passed thru ",
+                      "the ellipsis (...)"))
         if (is(object, "DelayedNaryOp")) {
             ## Tree is not linear.
             stop(wmsg("group() ", IS_NOT_SUPPORTED_IF_MULTIPLE_SEEDS,
