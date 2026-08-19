@@ -41,7 +41,7 @@ showtree(x, show.node.dim=TRUE)
 nseed(x)            # seed counter
 seed(x)             # seed getter and setter
 path(object, ...)   # path getter and setter
-group(object)       # group getter
+group(object, ...)  # group getter
 
 seedApply(x, FUN, ...)
 }
@@ -60,9 +60,10 @@ seedApply(x, FUN, ...)
     The function to be applied to each leaf in \code{x}.
   }
   \item{...}{
-    Optional arguments to \code{FUN} for \code{seedApply()}.
+    For \code{path()} and \code{group()}: Additional arguments passed
+    to methods.
 
-    Additional arguments passed to methods for \code{path()}.
+    For \code{seedApply()}: Additional arguments passed to \code{FUN}.
   }
 }
 
