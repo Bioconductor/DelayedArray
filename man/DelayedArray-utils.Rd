@@ -139,9 +139,9 @@
     \item \code{\link[base]{cbind}} in the \pkg{base} package for
           rbind/cbind'ing ordinary arrays.
 
-    \item \code{\link{arbind}} and \code{\link{acbind}} in this package
-          (\pkg{DelayedArray}) for binding ordinary arrays of arbitrary
-          dimensions along their rows or columns.
+    \item \code{\link[S4Arrays]{arbind}} and \code{\link[S4Arrays]{acbind}}
+          in the \pkg{S4Arrays} package for binding ordinary arrays of
+          arbitrary dimensions along their rows or columns.
 
     \item \code{\link[base]{is.na}}, \code{\link[base]{!}},
           \code{\link[base]{table}}, \code{\link[base]{mean}},
