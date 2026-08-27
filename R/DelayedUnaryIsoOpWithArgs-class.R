@@ -259,7 +259,13 @@ setMethod("extract_sparse_array", "DelayedUnaryIsoOpWithArgs",
         Largs <- subset_args(x@Largs, x@Lalong, index)
         Rargs <- subset_args(x@Rargs, x@Ralong, index)
 
+        ## SparseArray does not support all operations between an
+        ## SVT_SparseArray and a vector-like argument (e.g. addition with a
+        ## vector). Since 'is_sparse(x)' guarantees that the dense result is
+        ## structurally sparse, realize this block and convert it back.
+        if (length(Largs) != 0L || length(Rargs) != 0L)
+            return(as(extract_array(x, index), "SVT_SparseArray"))
+
         ans <- do.call(x@OP, c(Largs, list(svt), Rargs))
     }
 )
-
