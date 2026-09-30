@@ -20,8 +20,8 @@
 \alias{DelayedArray,ANY-method}
 \alias{DelayedArray,DelayedArray-method}
 \alias{DelayedArray,DelayedOp-method}
-\alias{coerce,array,DelayedArray-method}
-\alias{coerce,matrix,DelayedMatrix-method}
+\alias{coerce,ANY,DelayedArray-method}
+\alias{coerce,ANY,DelayedMatrix-method}
 
 \alias{class:DelayedArray1}
 \alias{DelayedArray1-class}

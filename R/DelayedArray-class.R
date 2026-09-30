@@ -205,9 +205,11 @@ setMethod("DelayedArray", "DelayedOp",
     }
 )
 
-### Coercion from array/matrix to DelayedArray/DelayedMatrix.
-setAs("array", "DelayedArray", function(from) new_DelayedArray(from))
-setAs("matrix", "DelayedMatrix", function(from) new_DelayedArray(from))
+### Coerce arbitrary object to DelayedArray/DelayedMatrix.
+### Not guaranteed to succeed e.g. 'new_DelayedArray(from)' will fail if
+### 'from' has no dimensions or does not support extract_array().
+setAs("ANY", "DelayedArray", function(from) new_DelayedArray(from))
+setAs("ANY", "DelayedMatrix", function(from) new_DelayedArray(from))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
