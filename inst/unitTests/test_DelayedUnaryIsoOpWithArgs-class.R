@@ -89,7 +89,6 @@ test_DelayedUnaryIsoOpWithArgs_constructor <- function(silent=FALSE)
     #checkIdentical(FALSE, is_noop(x))
 }
 
-### TODO: Also test for extract_sparse_array().
 test_DelayedUnaryIsoOpWithArgs_API <- function()
 {
     ## 1. Ordinary array seed -- no-op
@@ -131,5 +130,15 @@ test_DelayedUnaryIsoOpWithArgs_API <- function()
     .basic_checks_on_DelayedOp_with_DIM3(a4, x4)
 
     checkIdentical(FALSE, is_sparse(x4))
-}
 
+    ## 5. Sparse seed with a vector-like argument
+
+    x5 <- new_DelayedUnaryIsoOpWithArgs(
+        ConstantArraySeed(c(2, 4), value=0), `+`,
+        Rargs=list(e2=c(0, 0)), Ralong=1L
+    )
+    checkTrue(is_sparse(x5))
+    a5 <- matrix(0, nrow=2, ncol=4)
+    checkIdentical(a5, as.array(x5))
+    checkIdentical(a5, as.array(as(x5, "SVT_SparseArray")))
+}
