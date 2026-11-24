@@ -1,3 +1,26 @@
+CHANGES IN VERSION 0.40.0
+-------------------------
+
+NEW FEATURES
+
+    o Add abind() method for DelayedArray objects.
+
+    o Add coercion from array/matrix to DelayedArray/DelayedMatrix. This
+      coercion is equivalent to calling the constructor function DelayedArray()
+      on the object to coerce. Having this coercion work has the effect of
+      making rbind() and cbind() work on a mix of DelayedMatrix objects and
+      ordinary matrices.
+
+    o Register ZarrArray as a supported realization backend.
+
+    o Add group() method for DelayedOp objects.
+
+DEPRECATED AND DEFUNCT
+
+    o supportedRealizationBackends() is now defunct after being
+      deprecated for 2 years (in BioC 3.19).
+
+
 CHANGES IN VERSION 0.38.0
 -------------------------
 
